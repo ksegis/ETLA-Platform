@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200">
             <div className="flex items-center">
               <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-semibold text-gray-900">PayrollETL</span>
+              <span className="ml-2 text-xl font-semibold text-gray-900">ETLA</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -74,7 +74,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200 shadow-sm">
           <div className="flex h-16 items-center px-4 border-b border-gray-200">
             <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-semibold text-gray-900">PayrollETL</span>
+            <span className="ml-2 text-xl font-semibold text-gray-900">ETLA</span>
           </div>
           
           {/* Tenant info */}

@@ -2,7 +2,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import './globals.css'
 
 export const metadata = {
-  title: 'PayrollETL - Multi-tenant ETL Platform',
+  title: 'Invictus - ETLA - Extract Transform Load Audit',
   description: 'Secure, scalable payroll and benefits ETL platform',
 }
 
