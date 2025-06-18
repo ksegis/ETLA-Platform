@@ -195,7 +195,7 @@ export default function ValidationEnginePage() {
                     <AlertTriangle className="h-4 w-4 text-red-600 mr-2" />
                     <span className="text-sm font-medium text-red-800">Employment Gap Alert</span>
                   </div>
-                  <p className="text-xs text-red-700 mb-2">8 employees with >30 day gaps in history</p>
+                  <p className="text-xs text-red-700 mb-2">8 employees with &gt;30 day gaps in history</p>
                   <div className="text-xs text-red-600">
                     Max gap: 45 days | Data integrity issue
                   </div>
