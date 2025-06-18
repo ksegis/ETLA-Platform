@@ -1,7 +1,11 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
+
+interface User {
+  id: string
+  email?: string
+}
 
 interface Tenant {
   id: string
@@ -33,7 +37,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>({
+    id: '1',
+    email: 'demo@company.com'
+  })
   const [tenant, setTenant] = useState<Tenant | null>({
     id: '1',
     name: 'Demo Company',
@@ -41,7 +48,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   })
-  const [tenantUser, setTenantUser] = useState<TenantUser | null>(null)
+  const [tenantUser, setTenantUser] = useState<TenantUser | null>({
+    id: '1',
+    tenant_id: '1',
+    user_id: '1',
+    role: 'admin',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  })
   const [loading, setLoading] = useState(false)
 
   const refreshTenant = async () => {
