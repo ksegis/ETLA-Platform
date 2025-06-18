@@ -13,7 +13,13 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  Shield,
+  CheckCircle,
+  Database,
+  TrendingUp,
+  Cog,
+  Eye
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
@@ -27,8 +33,11 @@ const navigation = [
   { name: 'Payroll', href: '/payroll', icon: FileText },
   { name: 'Benefits', href: '/benefits', icon: Building2 },
   { name: 'File Upload', href: '/upload', icon: Upload },
-  { name: 'Job History', href: '/jobs', icon: FileText },
-  { name: 'Audit Logs', href: '/audit', icon: BarChart3 },
+  { name: 'Job Management', href: '/jobs-enhanced', icon: Cog },
+  { name: 'Data Validation', href: '/validation', icon: CheckCircle },
+  { name: 'Audit Trail', href: '/audit', icon: Eye },
+  { name: 'Access Control', href: '/access-control', icon: Shield },
+  { name: 'Reporting', href: '/reporting', icon: TrendingUp },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
@@ -81,7 +90,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {tenant && (
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
               <div className="text-sm font-medium text-gray-900">{tenant.name}</div>
-              <div className="text-xs text-gray-500 capitalize">{tenantUser?.role || 'admin'} Access</div>
+              <div className="text-xs text-gray-500 capitalize">{tenantUser?.role} Access</div>
             </div>
           )}
 
@@ -105,13 +114,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="flex-shrink-0">
                   <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
                     <span className="text-sm font-medium text-white">
-                      U
+                      {user?.email?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-700 truncate">
-                    demo@company.com
+                    {user?.email}
                   </p>
                 </div>
               </div>
