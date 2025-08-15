@@ -1,9 +1,14 @@
-import { AuthProvider } from '@/contexts/AuthContext'
+// app/layout.tsx
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import { TenantProvider } from '@/contexts/TenantContext'
 
-export const metadata = {
-  title: 'Invictus - ETLA - Extract Transform Load Audit',
-  description: 'Secure, scalable payroll and benefits ETL platform',
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'ETLA Platform',
+  description: 'Enterprise payroll and HR management platform',
 }
 
 export default function RootLayout({
@@ -13,10 +18,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
+      <body className={inter.className}>
+        <TenantProvider>
           {children}
-        </AuthProvider>
+        </TenantProvider>
       </body>
     </html>
   )
