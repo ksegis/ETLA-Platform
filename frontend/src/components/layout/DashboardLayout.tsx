@@ -19,7 +19,9 @@ import {
   Database,
   TrendingUp,
   Cog,
-  Eye
+  Eye,
+  Briefcase,
+  Calendar
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
@@ -29,6 +31,8 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { name: 'Work Requests', href: '/work-requests', icon: Briefcase },
+  { name: 'Project Management', href: '/project-management', icon: Calendar },
   { name: 'Employees', href: '/employees', icon: Users },
   { name: 'Payroll', href: '/payroll', icon: FileText },
   { name: 'Benefits', href: '/benefits', icon: Building2 },
