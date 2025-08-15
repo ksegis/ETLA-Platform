@@ -171,7 +171,8 @@ export default function TeamResourcesPage() {
     return matchesAvailability && matchesSkill
   })
 
-  const allSkills = [...new Set(mockTeamMembers.flatMap(member => member.skills))]
+  // Fixed: Convert Set to Array properly for TypeScript compatibility
+  const allSkills = Array.from(new Set(mockTeamMembers.flatMap(member => member.skills)))
 
   const getTeamStats = () => {
     const totalCapacity = mockTeamMembers.reduce((sum, member) => sum + member.weeklyCapacity, 0)
