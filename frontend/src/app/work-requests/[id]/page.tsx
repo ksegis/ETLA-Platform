@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Calendar, Clock, DollarSign, User, MessageCircle, Paperclip, Edit, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, MessageSquare, Paperclip, Calendar, User, Building, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 interface WorkRequest {
@@ -17,86 +17,31 @@ interface WorkRequest {
   estimatedHours?: number
   budget?: number
   requiredCompletionDate?: string
-  assignedTo?: string
-  scheduledStartDate?: string
-  scheduledEndDate?: string
-  actualStartDate?: string
-  actualEndDate?: string
   tags: string[]
   attachments: Array<{
     id: string
-    filename: string
+    name: string
     size: number
-    uploadedAt: string
+    type: string
+    url: string
   }>
-  comments: Array<{
-    id: string
-    authorName: string
-    authorRole: 'customer' | 'program_manager'
-    content: string
-    createdAt: string
-    isInternal: boolean
-  }>
+  customer: {
+    name: string
+    email: string
+    company: string
+  }
+  assignedTo?: {
+    name: string
+    email: string
+  }
 }
 
-const mockRequest: WorkRequest = {
-  id: '1',
-  title: 'Payroll System Integration',
-  description: 'Need to integrate new payroll system with existing HR database. This includes mapping employee data, setting up automated data sync, and ensuring compliance with current reporting requirements. The integration should support bi-directional data flow and include error handling for data validation.',
-  category: 'system_integration',
-  priority: 'high',
-  urgency: 'medium',
-  status: 'in_progress',
-  submittedAt: '2024-08-10T09:00:00Z',
-  updatedAt: '2024-08-14T14:30:00Z',
-  estimatedHours: 40,
-  budget: 8000,
-  requiredCompletionDate: '2024-09-15',
-  assignedTo: 'Sarah Johnson',
-  scheduledStartDate: '2024-08-12',
-  scheduledEndDate: '2024-08-30',
-  actualStartDate: '2024-08-12',
-  tags: ['payroll', 'integration', 'hr-system', 'urgent'],
-  attachments: [
-    {
-      id: '1',
-      filename: 'current_hr_schema.pdf',
-      size: 2048000,
-      uploadedAt: '2024-08-10T09:15:00Z'
-    },
-    {
-      id: '2',
-      filename: 'payroll_requirements.docx',
-      size: 1024000,
-      uploadedAt: '2024-08-10T09:16:00Z'
-    }
-  ],
-  comments: [
-    {
-      id: '1',
-      authorName: 'John Smith',
-      authorRole: 'customer',
-      content: 'Initial request submitted. Looking forward to getting this integration completed before the next payroll cycle.',
-      createdAt: '2024-08-10T09:00:00Z',
-      isInternal: false
-    },
-    {
-      id: '2',
-      authorName: 'Sarah Johnson',
-      authorRole: 'program_manager',
-      content: 'Request approved and assigned to our integration team. We\'ll begin analysis of the current HR schema this week.',
-      createdAt: '2024-08-12T10:30:00Z',
-      isInternal: false
-    },
-    {
-      id: '3',
-      authorName: 'Sarah Johnson',
-      authorRole: 'program_manager',
-      content: 'Initial analysis complete. The integration is more complex than initially estimated due to custom fields in the HR system.',
-      createdAt: '2024-08-14T14:30:00Z',
-      isInternal: false
-    }
-  ]
+interface Comment {
+  id: string
+  author: string
+  content: string
+  timestamp: string
+  type: 'customer' | 'internal'
 }
 
 const statusConfig = {
@@ -117,17 +62,111 @@ const priorityColors = {
   critical: 'bg-red-100 text-red-800'
 }
 
-export default function WorkRequestDetailsPage({ params }: { params: { id: string } }) {
-  const [request, setRequest] = useState<WorkRequest>(mockRequest)
-  const [newComment, setNewComment] = useState('')
-  const [isAddingComment, setIsAddingComment] = useState(false)
-
-  const formatStatus = (status: string) => {
-    return status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+// Mock data
+const mockRequest: WorkRequest = {
+  id: '1',
+  title: 'Payroll System Integration',
+  description: 'Need to integrate new payroll system with existing HR database. This includes setting up data synchronization, user authentication, and ensuring compliance with current security protocols.',
+  category: 'system_integration',
+  priority: 'high',
+  urgency: 'medium',
+  status: 'in_progress',
+  submittedAt: '2024-08-10',
+  updatedAt: '2024-08-14',
+  estimatedHours: 40,
+  budget: 8000,
+  requiredCompletionDate: '2024-08-30',
+  tags: ['payroll', 'integration', 'hr-system', 'security'],
+  attachments: [
+    {
+      id: '1',
+      name: 'system-requirements.pdf',
+      size: 2048000,
+      type: 'application/pdf',
+      url: '#'
+    },
+    {
+      id: '2',
+      name: 'current-database-schema.xlsx',
+      size: 1024000,
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      url: '#'
+    }
+  ],
+  customer: {
+    name: 'John Smith',
+    email: 'john.smith@acme.com',
+    company: 'Acme Corporation'
+  },
+  assignedTo: {
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@etla.com'
   }
+}
 
-  const formatCategory = (category: string) => {
-    return category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+const mockComments: Comment[] = [
+  {
+    id: '1',
+    author: 'John Smith',
+    content: 'We need this integration completed before the end of the month for our Q3 payroll processing.',
+    timestamp: '2024-08-10T10:30:00Z',
+    type: 'customer'
+  },
+  {
+    id: '2',
+    author: 'Sarah Johnson',
+    content: 'I\'ve reviewed the requirements and started the initial analysis. Will provide an updated timeline by end of week.',
+    timestamp: '2024-08-12T14:15:00Z',
+    type: 'internal'
+  },
+  {
+    id: '3',
+    author: 'John Smith',
+    content: 'Thanks for the update. Please let me know if you need any additional information from our IT team.',
+    timestamp: '2024-08-13T09:45:00Z',
+    type: 'customer'
+  }
+]
+
+interface PageProps {
+  params: Promise<{ id: string }>
+}
+
+export default function WorkRequestDetailsPage({ params }: PageProps) {
+  const [request, setRequest] = useState<WorkRequest | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [newComment, setNewComment] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+      const resolvedParams = await params
+      const requestId = resolvedParams.id
+      
+      // Simulate API call
+      setTimeout(() => {
+        setRequest(mockRequest)
+        setComments(mockComments)
+        setIsLoading(false)
+      }, 500)
+    }
+
+    loadData()
+  }, [params])
+
+  const handleAddComment = () => {
+    if (!newComment.trim()) return
+
+    const comment: Comment = {
+      id: Date.now().toString(),
+      author: 'Current User',
+      content: newComment,
+      timestamp: new Date().toISOString(),
+      type: 'customer'
+    }
+
+    setComments(prev => [...prev, comment])
+    setNewComment('')
   }
 
   const formatFileSize = (bytes: number) => {
@@ -138,40 +177,41 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  const formatStatus = (status: string) => {
+    return status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return
+  const formatCategory = (category: string) => {
+    return category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  }
 
-    setIsAddingComment(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const comment = {
-        id: Date.now().toString(),
-        authorName: 'John Smith',
-        authorRole: 'customer' as const,
-        content: newComment,
-        createdAt: new Date().toISOString(),
-        isInternal: false
-      }
-      
-      setRequest(prev => ({
-        ...prev,
-        comments: [...prev.comments, comment]
-      }))
-      
-      setNewComment('')
-      setIsAddingComment(false)
-    }, 1000)
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="space-y-4">
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!request) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Request Not Found</h1>
+          <p className="text-gray-600 mb-4">The work request you're looking for doesn't exist.</p>
+          <Button onClick={() => window.location.href = '/work-requests'}>
+            Back to Requests
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const StatusIcon = statusConfig[request.status].icon
@@ -191,15 +231,15 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
           </Button>
         </div>
         
-        <div className="flex items-start justify-between">
+        <div className="flex justify-between items-start mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">{request.title}</h1>
             <div className="flex items-center gap-3">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusConfig[request.status].color}`}>
-                <StatusIcon className="h-4 w-4 mr-1" />
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig[request.status].color}`}>
+                <StatusIcon className="h-3 w-3 mr-1" />
                 {formatStatus(request.status)}
               </span>
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${priorityColors[request.priority]}`}>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority]}`}>
                 {request.priority.toUpperCase()} PRIORITY
               </span>
               <span className="text-sm text-gray-600">
@@ -207,38 +247,69 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
               </span>
             </div>
           </div>
-          
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Request
-            </Button>
-          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Description */}
+          {/* Request Details */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
-            <p className="text-gray-700 leading-relaxed">{request.description}</p>
-          </div>
-
-          {/* Tags */}
-          {request.tags.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {request.tags.map(tag => (
-                  <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                    {tag}
-                  </span>
-                ))}
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Details</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
+                <p className="text-gray-900">{request.description}</p>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">Category</h3>
+                  <p className="text-gray-900">{formatCategory(request.category)}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">Urgency</h3>
+                  <p className="text-gray-900 capitalize">{request.urgency}</p>
+                </div>
+              </div>
+
+              {request.estimatedHours && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">Estimated Hours</h3>
+                    <p className="text-gray-900">{request.estimatedHours}h</p>
+                  </div>
+                  {request.budget && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-1">Budget</h3>
+                      <p className="text-gray-900">${request.budget.toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {request.requiredCompletionDate && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">Required Completion</h3>
+                  <p className="text-gray-900">{new Date(request.requiredCompletionDate).toLocaleDateString()}</p>
+                </div>
+              )}
+
+              {request.tags.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {request.tags.map(tag => (
+                      <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Attachments */}
           {request.attachments.length > 0 && (
@@ -251,10 +322,8 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
                 {request.attachments.map(attachment => (
                   <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">{attachment.filename}</p>
-                      <p className="text-sm text-gray-600">
-                        {formatFileSize(attachment.size)} • Uploaded {formatDate(attachment.uploadedAt)}
-                      </p>
+                      <p className="font-medium text-gray-900">{attachment.name}</p>
+                      <p className="text-sm text-gray-600">{formatFileSize(attachment.size)}</p>
                     </div>
                     <Button variant="outline" size="sm">
                       Download
@@ -268,45 +337,35 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
           {/* Comments */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              <MessageCircle className="h-5 w-5 inline mr-2" />
-              Comments & Updates
+              <MessageSquare className="h-5 w-5 inline mr-2" />
+              Comments
             </h2>
             
             <div className="space-y-4 mb-6">
-              {request.comments.map(comment => (
-                <div key={comment.id} className="border-l-4 border-blue-200 pl-4 py-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-medium text-gray-900">{comment.authorName}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      comment.authorRole === 'customer' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {comment.authorRole === 'customer' ? 'Customer' : 'Program Manager'}
+              {comments.map(comment => (
+                <div key={comment.id} className="border-l-4 border-blue-500 pl-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-medium text-gray-900">{comment.author}</span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(comment.timestamp).toLocaleDateString()} at {new Date(comment.timestamp).toLocaleTimeString()}
                     </span>
-                    <span className="text-sm text-gray-500">{formatDate(comment.createdAt)}</span>
                   </div>
                   <p className="text-gray-700">{comment.content}</p>
                 </div>
               ))}
             </div>
 
-            {/* Add Comment */}
             <div className="border-t pt-4">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment or update..."
+                placeholder="Add a comment..."
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <div className="flex justify-end mt-2">
-                <Button 
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim() || isAddingComment}
-                  size="sm"
-                >
-                  {isAddingComment ? 'Adding...' : 'Add Comment'}
+                <Button onClick={handleAddComment} disabled={!newComment.trim()}>
+                  Add Comment
                 </Button>
               </div>
             </div>
@@ -315,119 +374,71 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Request Details */}
+          {/* Customer Info */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Details</h2>
-            
-            <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <User className="h-5 w-5 inline mr-2" />
+              Customer Information
+            </h3>
+            <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium text-gray-600">Category</label>
-                <p className="text-gray-900">{formatCategory(request.category)}</p>
+                <p className="text-sm font-medium text-gray-700">Name</p>
+                <p className="text-gray-900">{request.customer.name}</p>
               </div>
-              
               <div>
-                <label className="text-sm font-medium text-gray-600">Priority</label>
-                <p className="text-gray-900 capitalize">{request.priority}</p>
+                <p className="text-sm font-medium text-gray-700">Email</p>
+                <p className="text-gray-900">{request.customer.email}</p>
               </div>
-              
               <div>
-                <label className="text-sm font-medium text-gray-600">Urgency</label>
-                <p className="text-gray-900 capitalize">{request.urgency}</p>
+                <p className="text-sm font-medium text-gray-700">Company</p>
+                <p className="text-gray-900">{request.customer.company}</p>
               </div>
-
-              {request.estimatedHours && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <Clock className="h-4 w-4 inline mr-1" />
-                    Estimated Hours
-                  </label>
-                  <p className="text-gray-900">{request.estimatedHours} hours</p>
-                </div>
-              )}
-
-              {request.budget && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <DollarSign className="h-4 w-4 inline mr-1" />
-                    Budget
-                  </label>
-                  <p className="text-gray-900">${request.budget.toLocaleString()}</p>
-                </div>
-              )}
-
-              {request.requiredCompletionDate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Required Completion
-                  </label>
-                  <p className="text-gray-900">
-                    {new Date(request.requiredCompletionDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Timeline */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Submitted</label>
-                <p className="text-gray-900">{formatDate(request.submittedAt)}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-600">Last Updated</label>
-                <p className="text-gray-900">{formatDate(request.updatedAt)}</p>
-              </div>
-
-              {request.scheduledStartDate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Scheduled Start</label>
-                  <p className="text-gray-900">
-                    {new Date(request.scheduledStartDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-
-              {request.scheduledEndDate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Scheduled End</label>
-                  <p className="text-gray-900">
-                    {new Date(request.scheduledEndDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-
-              {request.actualStartDate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Actual Start</label>
-                  <p className="text-gray-900">
-                    {new Date(request.actualStartDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Assignment */}
+          {/* Assignment Info */}
           {request.assignedTo && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Assignment</h2>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
-                  <User className="h-5 w-5 text-white" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <Building className="h-5 w-5 inline mr-2" />
+                Assignment
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Assigned To</p>
+                  <p className="text-gray-900">{request.assignedTo.name}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{request.assignedTo}</p>
-                  <p className="text-sm text-gray-600">Program Manager</p>
+                  <p className="text-sm font-medium text-gray-700">Email</p>
+                  <p className="text-gray-900">{request.assignedTo.email}</p>
                 </div>
               </div>
             </div>
           )}
+
+          {/* Timeline */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <Calendar className="h-5 w-5 inline mr-2" />
+              Timeline
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Submitted</p>
+                <p className="text-gray-900">{new Date(request.submittedAt).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Last Updated</p>
+                <p className="text-gray-900">{new Date(request.updatedAt).toLocaleDateString()}</p>
+              </div>
+              {request.requiredCompletionDate && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Due Date</p>
+                  <p className="text-gray-900">{new Date(request.requiredCompletionDate).toLocaleDateString()}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

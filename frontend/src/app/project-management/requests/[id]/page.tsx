@@ -1,29 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
-  DollarSign, 
-  User, 
-  MessageCircle, 
-  Paperclip, 
-  Check, 
-  X,
-  AlertTriangle,
-  Users,
-  FileText,
-  Send
-} from 'lucide-react'
+import { ArrowLeft, CheckCircle, XCircle, Calendar, User, Building, MessageSquare, Paperclip, Clock, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 interface WorkRequest {
   id: string
   title: string
   description: string
-  customerName: string
-  customerEmail: string
   category: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   urgency: 'low' | 'medium' | 'high' | 'urgent'
@@ -33,93 +17,196 @@ interface WorkRequest {
   estimatedHours?: number
   budget?: number
   requiredCompletionDate?: string
-  assignedTo?: string
-  scheduledStartDate?: string
-  scheduledEndDate?: string
   tags: string[]
   attachments: Array<{
     id: string
-    filename: string
+    name: string
     size: number
-    uploadedAt: string
+    type: string
+    url: string
   }>
-  comments: Array<{
-    id: string
-    authorName: string
-    authorRole: 'customer' | 'program_manager'
-    content: string
-    createdAt: string
-    isInternal: boolean
-  }>
+  customer: {
+    name: string
+    email: string
+    company: string
+  }
+  assignedTo?: {
+    name: string
+    email: string
+  }
 }
 
+interface Comment {
+  id: string
+  author: string
+  content: string
+  timestamp: string
+  type: 'customer' | 'internal'
+}
+
+interface TeamMember {
+  id: string
+  name: string
+  email: string
+  role: string
+  availability: 'available' | 'busy' | 'vacation'
+  currentWorkload: number
+  weeklyCapacity: number
+}
+
+const mockTeamMembers: TeamMember[] = [
+  {
+    id: '1',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@etla.com',
+    role: 'Senior Consultant',
+    availability: 'busy',
+    currentWorkload: 35,
+    weeklyCapacity: 40
+  },
+  {
+    id: '2',
+    name: 'Mike Chen',
+    email: 'mike.chen@etla.com',
+    role: 'Technical Lead',
+    availability: 'available',
+    currentWorkload: 25,
+    weeklyCapacity: 40
+  },
+  {
+    id: '3',
+    name: 'Lisa Wang',
+    email: 'lisa.wang@etla.com',
+    role: 'Project Manager',
+    availability: 'available',
+    currentWorkload: 20,
+    weeklyCapacity: 40
+  }
+]
+
 const mockRequest: WorkRequest = {
-  id: '2',
-  title: 'Benefits Enrollment Setup',
-  description: 'Configure benefits enrollment for Q4 open enrollment period. Need to set up automated enrollment workflows, configure benefit plans, and integrate with existing HRIS system. This includes setting up employee self-service portal and manager approval workflows.',
-  customerName: 'TechStart Inc',
-  customerEmail: 'hr@techstart.com',
-  category: 'benefits_configuration',
-  priority: 'medium',
-  urgency: 'low',
-  status: 'submitted',
-  submittedAt: '2024-08-12T10:30:00Z',
-  updatedAt: '2024-08-12T10:30:00Z',
-  estimatedHours: 20,
-  budget: 4000,
-  requiredCompletionDate: '2024-09-30',
-  tags: ['benefits', 'enrollment', 'q4', 'automation'],
+  id: '1',
+  title: 'Payroll System Integration',
+  description: 'Need to integrate new payroll system with existing HR database. This includes setting up data synchronization, user authentication, and ensuring compliance with current security protocols.',
+  category: 'system_integration',
+  priority: 'high',
+  urgency: 'medium',
+  status: 'under_review',
+  submittedAt: '2024-08-10',
+  updatedAt: '2024-08-14',
+  estimatedHours: 40,
+  budget: 8000,
+  requiredCompletionDate: '2024-08-30',
+  tags: ['payroll', 'integration', 'hr-system', 'security'],
   attachments: [
     {
       id: '1',
-      filename: 'benefit_plans_overview.pdf',
-      size: 1536000,
-      uploadedAt: '2024-08-12T10:35:00Z'
-    },
-    {
-      id: '2',
-      filename: 'current_enrollment_process.docx',
-      size: 768000,
-      uploadedAt: '2024-08-12T10:36:00Z'
+      name: 'system-requirements.pdf',
+      size: 2048000,
+      type: 'application/pdf',
+      url: '#'
     }
   ],
-  comments: [
-    {
-      id: '1',
-      authorName: 'HR Manager',
-      authorRole: 'customer',
-      content: 'We need this completed before October 1st for our Q4 open enrollment. Current process is manual and error-prone.',
-      createdAt: '2024-08-12T10:30:00Z',
-      isInternal: false
-    }
-  ]
+  customer: {
+    name: 'John Smith',
+    email: 'john.smith@acme.com',
+    company: 'Acme Corporation'
+  }
 }
 
-const teamMembers = [
-  { id: '1', name: 'Sarah Johnson', role: 'Senior Consultant', availability: 'Available', expertise: ['Benefits', 'HRIS'] },
-  { id: '2', name: 'Mike Chen', role: 'Technical Lead', availability: 'Busy until 8/20', expertise: ['Integration', 'Automation'] },
-  { id: '3', name: 'Lisa Wang', role: 'Project Manager', availability: 'Available', expertise: ['Project Management', 'Benefits'] },
-  { id: '4', name: 'David Kim', role: 'Developer', availability: 'Available', expertise: ['Frontend', 'Workflows'] }
+const mockComments: Comment[] = [
+  {
+    id: '1',
+    author: 'John Smith',
+    content: 'We need this integration completed before the end of the month for our Q3 payroll processing.',
+    timestamp: '2024-08-10T10:30:00Z',
+    type: 'customer'
+  }
 ]
 
-export default function RequestReviewPage({ params }: { params: { id: string } }) {
-  const [request, setRequest] = useState<WorkRequest>(mockRequest)
-  const [reviewNotes, setReviewNotes] = useState('')
-  const [estimatedEffort, setEstimatedEffort] = useState('')
-  const [proposedTimeline, setProposedTimeline] = useState('')
-  const [selectedAssignee, setSelectedAssignee] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [showApprovalForm, setShowApprovalForm] = useState(false)
-  const [showRejectionForm, setShowRejectionForm] = useState(false)
+interface PageProps {
+  params: Promise<{ id: string }>
+}
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+export default function RequestReviewPage({ params }: PageProps) {
+  const [request, setRequest] = useState<WorkRequest | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [internalComment, setInternalComment] = useState('')
+  const [customerComment, setCustomerComment] = useState('')
+  const [selectedAssignee, setSelectedAssignee] = useState('')
+  const [estimatedHours, setEstimatedHours] = useState('')
+  const [scheduledStartDate, setScheduledStartDate] = useState('')
+  const [scheduledEndDate, setScheduledEndDate] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  useEffect(() => {
+    const loadData = async () => {
+      const resolvedParams = await params
+      const requestId = resolvedParams.id
+      
+      // Simulate API call
+      setTimeout(() => {
+        setRequest(mockRequest)
+        setComments(mockComments)
+        setIsLoading(false)
+      }, 500)
+    }
+
+    loadData()
+  }, [params])
+
+  const handleApprove = async () => {
+    if (!selectedAssignee || !estimatedHours) {
+      alert('Please select an assignee and provide estimated hours')
+      return
+    }
+
+    setIsProcessing(true)
+    
+    // Simulate API call
+    setTimeout(() => {
+      console.log('Approving request with:', {
+        assignee: selectedAssignee,
+        estimatedHours,
+        scheduledStartDate,
+        scheduledEndDate,
+        customerComment
+      })
+      setIsProcessing(false)
+      window.location.href = '/project-management'
+    }, 2000)
+  }
+
+  const handleReject = async () => {
+    if (!customerComment.trim()) {
+      alert('Please provide a reason for rejection')
+      return
+    }
+
+    setIsProcessing(true)
+    
+    // Simulate API call
+    setTimeout(() => {
+      console.log('Rejecting request with reason:', customerComment)
+      setIsProcessing(false)
+      window.location.href = '/project-management'
+    }, 2000)
+  }
+
+  const addInternalComment = () => {
+    if (!internalComment.trim()) return
+
+    const comment: Comment = {
+      id: Date.now().toString(),
+      author: 'Program Manager',
+      content: internalComment,
+      timestamp: new Date().toISOString(),
+      type: 'internal'
+    }
+
+    setComments(prev => [...prev, comment])
+    setInternalComment('')
   }
 
   const formatFileSize = (bytes: number) => {
@@ -134,81 +221,43 @@ export default function RequestReviewPage({ params }: { params: { id: string } }
     return category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
-  const handleApprove = async () => {
-    setIsProcessing(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const comment = {
-        id: Date.now().toString(),
-        authorName: 'Program Manager',
-        authorRole: 'program_manager' as const,
-        content: `Request approved. ${reviewNotes}`,
-        createdAt: new Date().toISOString(),
-        isInternal: false
-      }
-      
-      setRequest(prev => ({
-        ...prev,
-        status: 'approved',
-        assignedTo: selectedAssignee || undefined,
-        comments: [...prev.comments, comment],
-        updatedAt: new Date().toISOString()
-      }))
-      
-      setIsProcessing(false)
-      setShowApprovalForm(false)
-    }, 1500)
+  const getAvailabilityColor = (availability: string) => {
+    switch (availability) {
+      case 'available': return 'text-green-600'
+      case 'busy': return 'text-orange-600'
+      case 'vacation': return 'text-blue-600'
+      default: return 'text-gray-600'
+    }
   }
 
-  const handleReject = async () => {
-    setIsProcessing(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const comment = {
-        id: Date.now().toString(),
-        authorName: 'Program Manager',
-        authorRole: 'program_manager' as const,
-        content: `Request rejected. ${reviewNotes}`,
-        createdAt: new Date().toISOString(),
-        isInternal: false
-      }
-      
-      setRequest(prev => ({
-        ...prev,
-        status: 'rejected',
-        comments: [...prev.comments, comment],
-        updatedAt: new Date().toISOString()
-      }))
-      
-      setIsProcessing(false)
-      setShowRejectionForm(false)
-    }, 1500)
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="space-y-4">
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  const getRiskLevel = () => {
-    const risks = []
-    
-    if (request.priority === 'critical' || request.urgency === 'urgent') {
-      risks.push('High priority/urgency')
-    }
-    
-    if (request.budget && request.budget > 10000) {
-      risks.push('High budget')
-    }
-    
-    if (request.requiredCompletionDate) {
-      const daysUntilDeadline = Math.ceil((new Date(request.requiredCompletionDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-      if (daysUntilDeadline < 30) {
-        risks.push('Tight deadline')
-      }
-    }
-    
-    return risks
+  if (!request) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Request Not Found</h1>
+          <p className="text-gray-600 mb-4">The work request you're looking for doesn't exist.</p>
+          <Button onClick={() => window.location.href = '/project-management'}>
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    )
   }
-
-  const risks = getRiskLevel()
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -221,177 +270,100 @@ export default function RequestReviewPage({ params }: { params: { id: string } }
             onClick={() => window.location.href = '/project-management'}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Queue
+            Back to Dashboard
           </Button>
         </div>
         
-        <div className="flex items-start justify-between">
+        <div className="flex justify-between items-start mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{request.title}</h1>
-            <div className="flex items-center gap-3 mb-4">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                request.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
-                request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                request.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                'bg-yellow-100 text-yellow-800'
-              }`}>
-                {request.status.toUpperCase()}
-              </span>
-              <span className="text-sm text-gray-600">Request #{request.id}</span>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Review Work Request</h1>
+            <p className="text-gray-600">Evaluate and process customer work request</p>
           </div>
-          
-          {request.status === 'submitted' && (
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => setShowApprovalForm(true)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-              <Button 
-                onClick={() => setShowRejectionForm(true)}
-                variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+              <Clock className="h-4 w-4 inline mr-1" />
+              Under Review
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Request Details */}
+          {/* Request Overview */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Details</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{request.title}</h2>
             
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Description</label>
-                <p className="text-gray-900 mt-1 leading-relaxed">{request.description}</p>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">Priority:</span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  request.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                  request.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                  request.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {request.priority.toUpperCase()}
+                </span>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Category</label>
-                  <p className="text-gray-900">{formatCategory(request.category)}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Customer</label>
-                  <p className="text-gray-900">{request.customerName}</p>
-                  <p className="text-sm text-gray-600">{request.customerEmail}</p>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">Urgency:</span>
+                <span className="text-sm text-gray-900 capitalize">{request.urgency}</span>
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Priority</label>
-                  <p className={`text-sm font-medium ${
-                    request.priority === 'critical' ? 'text-red-600' :
-                    request.priority === 'high' ? 'text-orange-600' :
-                    request.priority === 'medium' ? 'text-blue-600' :
-                    'text-gray-600'
-                  }`}>
-                    {request.priority.toUpperCase()}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Urgency</label>
-                  <p className={`text-sm font-medium ${
-                    request.urgency === 'urgent' ? 'text-red-600' :
-                    request.urgency === 'high' ? 'text-orange-600' :
-                    request.urgency === 'medium' ? 'text-blue-600' :
-                    'text-gray-600'
-                  }`}>
-                    {request.urgency.toUpperCase()}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Submitted</label>
-                  <p className="text-gray-900 text-sm">{formatDate(request.submittedAt)}</p>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">Category:</span>
+                <span className="text-sm text-gray-900">{formatCategory(request.category)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">Budget:</span>
+                <span className="text-sm text-gray-900">${request.budget?.toLocaleString() || 'Not specified'}</span>
               </div>
             </div>
-          </div>
 
-          {/* Risk Assessment */}
-          {risks.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                <h3 className="text-lg font-semibold text-yellow-800">Risk Assessment</h3>
-              </div>
-              <ul className="space-y-1">
-                {risks.map((risk, index) => (
-                  <li key={index} className="text-yellow-700 text-sm">• {risk}</li>
-                ))}
-              </ul>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
+              <p className="text-gray-900">{request.description}</p>
             </div>
-          )}
 
-          {/* Budget & Timeline */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Budget & Timeline</h2>
-            
-            <div className="grid grid-cols-3 gap-4">
-              {request.estimatedHours && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <Clock className="h-4 w-4 inline mr-1" />
-                    Estimated Hours
-                  </label>
-                  <p className="text-gray-900 text-lg font-semibold">{request.estimatedHours}h</p>
+            {request.tags.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {request.tags.map(tag => (
+                    <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-              )}
-              
-              {request.budget && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <DollarSign className="h-4 w-4 inline mr-1" />
-                    Budget
-                  </label>
-                  <p className="text-gray-900 text-lg font-semibold">${request.budget.toLocaleString()}</p>
-                </div>
-              )}
-              
-              {request.requiredCompletionDate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Required Completion
-                  </label>
-                  <p className="text-gray-900 text-lg font-semibold">
-                    {new Date(request.requiredCompletionDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {request.requiredCompletionDate && (
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-600">Required by:</span>
+                <span className="text-gray-900">{new Date(request.requiredCompletionDate).toLocaleDateString()}</span>
+              </div>
+            )}
           </div>
 
           {/* Attachments */}
           {request.attachments.length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 <Paperclip className="h-5 w-5 inline mr-2" />
-                Supporting Documents
-              </h2>
+                Attachments
+              </h3>
               <div className="space-y-3">
                 {request.attachments.map(attachment => (
                   <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">{attachment.filename}</p>
-                      <p className="text-sm text-gray-600">
-                        {formatFileSize(attachment.size)} • Uploaded {formatDate(attachment.uploadedAt)}
-                      </p>
+                      <p className="font-medium text-gray-900">{attachment.name}</p>
+                      <p className="text-sm text-gray-600">{formatFileSize(attachment.size)}</p>
                     </div>
                     <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-1" />
-                      View
+                      Download
                     </Button>
                   </div>
                 ))}
@@ -401,109 +373,85 @@ export default function RequestReviewPage({ params }: { params: { id: string } }
 
           {/* Comments */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              <MessageCircle className="h-5 w-5 inline mr-2" />
-              Communication History
-            </h2>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <MessageSquare className="h-5 w-5 inline mr-2" />
+              Communication
+            </h3>
             
-            <div className="space-y-4">
-              {request.comments.map(comment => (
-                <div key={comment.id} className="border-l-4 border-blue-200 pl-4 py-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-medium text-gray-900">{comment.authorName}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      comment.authorRole === 'customer' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {comment.authorRole === 'customer' ? 'Customer' : 'Program Manager'}
+            <div className="space-y-4 mb-6">
+              {comments.map(comment => (
+                <div key={comment.id} className={`border-l-4 pl-4 ${
+                  comment.type === 'internal' ? 'border-orange-500 bg-orange-50' : 'border-blue-500'
+                }`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">{comment.author}</span>
+                      {comment.type === 'internal' && (
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
+                          Internal
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {new Date(comment.timestamp).toLocaleDateString()}
                     </span>
-                    <span className="text-sm text-gray-500">{formatDate(comment.createdAt)}</span>
                   </div>
                   <p className="text-gray-700">{comment.content}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="border-t pt-4">
+              <h4 className="font-medium text-gray-900 mb-2">Add Internal Note</h4>
+              <textarea
+                value={internalComment}
+                onChange={(e) => setInternalComment(e.target.value)}
+                placeholder="Add internal notes for team members..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+              />
+              <Button onClick={addInternalComment} disabled={!internalComment.trim()} size="sm">
+                Add Internal Note
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Team Assignment */}
+          {/* Customer Info */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              <Users className="h-5 w-5 inline mr-2" />
-              Team Assignment
-            </h2>
-            
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <User className="h-5 w-5 inline mr-2" />
+              Customer Information
+            </h3>
             <div className="space-y-3">
-              {teamMembers.map(member => (
-                <div key={member.id} className="p-3 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">{member.name}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      member.availability === 'Available' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {member.availability}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">{member.role}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {member.expertise.map(skill => (
-                      <span key={skill} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <div>
+                <p className="text-sm font-medium text-gray-700">Name</p>
+                <p className="text-gray-900">{request.customer.name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Email</p>
+                <p className="text-gray-900">{request.customer.email}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Company</p>
+                <p className="text-gray-900">{request.customer.company}</p>
+              </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Assignment */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            
-            <div className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => window.location.href = `/project-management/schedule?request=${request.id}`}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Project
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Contact Customer
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Generate Proposal
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Approval Modal */}
-      {showApprovalForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Approve Request</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <Building className="h-5 w-5 inline mr-2" />
+              Assignment
+            </h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assign to Team Member
+                  Assign to Team Member *
                 </label>
                 <select
                   value={selectedAssignee}
@@ -511,85 +459,134 @@ export default function RequestReviewPage({ params }: { params: { id: string } }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Select team member</option>
-                  {teamMembers.filter(m => m.availability === 'Available').map(member => (
-                    <option key={member.id} value={member.name}>{member.name}</option>
+                  {mockTeamMembers.map(member => (
+                    <option key={member.id} value={member.id}>
+                      {member.name} - {member.role}
+                    </option>
                   ))}
                 </select>
               </div>
-              
+
+              {selectedAssignee && (
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  {(() => {
+                    const member = mockTeamMembers.find(m => m.id === selectedAssignee)
+                    return member ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Availability:</span>
+                          <span className={`text-sm font-medium capitalize ${getAvailabilityColor(member.availability)}`}>
+                            {member.availability}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Current Workload:</span>
+                          <span className="text-sm text-gray-900">
+                            {member.currentWorkload}h / {member.weeklyCapacity}h
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${(member.currentWorkload / member.weeklyCapacity) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ) : null
+                  })()}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Approval Notes
+                  Estimated Hours *
                 </label>
-                <textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  rows={3}
+                <input
+                  type="number"
+                  value={estimatedHours}
+                  onChange={(e) => setEstimatedHours(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Add any notes about the approval..."
+                  placeholder="e.g., 40"
+                  min="0"
                 />
               </div>
-            </div>
-            
-            <div className="flex justify-end gap-2 mt-6">
-              <Button 
-                variant="outline"
-                onClick={() => setShowApprovalForm(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleApprove}
-                disabled={isProcessing}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {isProcessing ? 'Processing...' : 'Approve Request'}
-              </Button>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Scheduled Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={scheduledStartDate}
+                    onChange={(e) => setScheduledStartDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Scheduled End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={scheduledEndDate}
+                    onChange={(e) => setScheduledEndDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Rejection Modal */}
-      {showRejectionForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Request</h3>
+          {/* Decision */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Decision</h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rejection Reason *
+                  Message to Customer
                 </label>
                 <textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  rows={4}
+                  value={customerComment}
+                  onChange={(e) => setCustomerComment(e.target.value)}
+                  placeholder="Provide feedback or next steps to the customer..."
+                  rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Please provide a clear reason for rejection..."
-                  required
                 />
               </div>
-            </div>
-            
-            <div className="flex justify-end gap-2 mt-6">
-              <Button 
-                variant="outline"
-                onClick={() => setShowRejectionForm(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleReject}
-                disabled={isProcessing || !reviewNotes.trim()}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isProcessing ? 'Processing...' : 'Reject Request'}
-              </Button>
+
+              <div className="flex flex-col gap-3">
+                <Button 
+                  onClick={handleApprove}
+                  disabled={isProcessing || !selectedAssignee || !estimatedHours}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {isProcessing ? 'Processing...' : 'Approve Request'}
+                </Button>
+                
+                <Button 
+                  onClick={handleReject}
+                  disabled={isProcessing}
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {isProcessing ? 'Processing...' : 'Reject Request'}
+                </Button>
+              </div>
+
+              {(!selectedAssignee || !estimatedHours) && (
+                <div className="flex items-center gap-2 text-sm text-orange-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Please assign team member and estimated hours to approve</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
