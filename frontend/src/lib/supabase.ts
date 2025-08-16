@@ -2,9 +2,9 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonToken = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonToken)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
 export interface WorkRequest {
