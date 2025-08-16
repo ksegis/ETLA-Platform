@@ -19,37 +19,40 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabase'
 
 interface WorkRequest {
   id: string
+  tenant_id: string
   title: string
   description: string
   category: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   urgency: 'low' | 'medium' | 'high' | 'urgent'
-  status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'in_progress' | 'completed' | 'rejected' | 'cancelled'
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+  customer_id: string
+  assigned_to?: string
   estimated_hours?: number
+  actual_hours: number
   budget?: number
   required_completion_date?: string
-  tags: string[]
   created_at: string
   updated_at: string
-  created_by: string
-  customer_name: string
-  customer_email: string
-  company_name?: string
-  assigned_to?: string
+}
+
+interface WorkRequestWithTags extends WorkRequest {
+  work_request_tags?: Array<{ tag_name: string }>
+  work_request_attachments?: Array<{ id: string; filename: string; file_size: number }>
 }
 
 const statusColors = {
-  draft: 'bg-gray-100 text-gray-800',
   submitted: 'bg-blue-100 text-blue-800',
   under_review: 'bg-yellow-100 text-yellow-800',
   approved: 'bg-green-100 text-green-800',
+  rejected: 'bg-red-100 text-red-800',
+  scheduled: 'bg-purple-100 text-purple-800',
   in_progress: 'bg-indigo-100 text-indigo-800',
   completed: 'bg-emerald-100 text-emerald-800',
-  rejected: 'bg-red-100 text-red-800',
   cancelled: 'bg-gray-100 text-gray-800'
 }
 
@@ -61,13 +64,13 @@ const priorityColors = {
 }
 
 const statusIcons = {
-  draft: Edit,
   submitted: PlayCircle,
   under_review: Clock,
   approved: CheckCircle,
+  rejected: XCircle,
+  scheduled: Calendar,
   in_progress: PlayCircle,
   completed: CheckCircle,
-  rejected: XCircle,
   cancelled: Pause
 }
 
@@ -80,20 +83,17 @@ const categoryLabels: Record<string, string> = {
   compliance_audit: 'Compliance Audit',
   training_support: 'Training Support',
   custom_development: 'Custom Development',
-  process_automation: 'Process Automation',
   other: 'Other'
 }
 
 export default function WorkRequestsPage() {
-  const [requests, setRequests] = useState<WorkRequest[]>([])
+  const [requests, setRequests] = useState<WorkRequestWithTags[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedPriority, setSelectedPriority] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
-
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
     loadUserAndRequests()
@@ -102,72 +102,80 @@ export default function WorkRequestsPage() {
   const loadUserAndRequests = async () => {
     try {
       // Get current user
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+      const { data: { user: authUser }, error } = await supabase.auth.getUser()
       
-      if (authError) {
-        console.error('Auth error:', authError)
+      if (error || !authUser) {
+        console.error('No authenticated user:', error)
         setIsLoading(false)
         return
       }
 
-      setUser(authUser)
+      // Try to get user profile from database
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
 
-      if (authUser) {
-        // Load work requests for this user
-        const { data: workRequests, error: requestsError } = await supabase
-          .from('work_requests')
-          .select(`
-            *,
-            work_request_attachments (
-              id,
-              filename,
-              file_size
-            )
-          `)
-          .eq('created_by', authUser.id)
-          .order('created_at', { ascending: false })
-
-        if (requestsError) {
-          console.error('Error loading work requests:', requestsError)
-        } else {
-          setRequests(workRequests || [])
-        }
+      if (profile) {
+        setUser({ ...authUser, profile })
+        await loadRequests(authUser.id)
+      } else {
+        // Fallback to auth user
+        setUser({
+          ...authUser,
+          profile: {
+            id: authUser.id,
+            email: authUser.email,
+            first_name: authUser.user_metadata?.first_name || 'Unknown',
+            last_name: authUser.user_metadata?.last_name || 'User',
+            role: 'client_user',
+            tenant_id: authUser.user_metadata?.tenant_id
+          }
+        })
+        await loadRequests(authUser.id)
       }
     } catch (error) {
-      console.error('Error loading data:', error)
+      console.error('Error loading user and requests:', error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const refreshRequests = async () => {
-    if (!user) return
-    
-    setIsLoading(true)
+  const loadRequests = async (userId: string) => {
     try {
       const { data: workRequests, error } = await supabase
         .from('work_requests')
         .select(`
           *,
+          work_request_tags (
+            tag_name
+          ),
           work_request_attachments (
             id,
             filename,
             file_size
           )
         `)
-        .eq('created_by', user.id)
+        .eq('customer_id', userId)
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error refreshing work requests:', error)
+        console.error('Error loading work requests:', error)
       } else {
         setRequests(workRequests || [])
       }
     } catch (error) {
-      console.error('Error refreshing data:', error)
-    } finally {
-      setIsLoading(false)
+      console.error('Error loading requests:', error)
     }
+  }
+
+  const refreshRequests = async () => {
+    if (!user?.id) return
+    
+    setIsLoading(true)
+    await loadRequests(user.id)
+    setIsLoading(false)
   }
 
   const filteredRequests = requests.filter(request => {
@@ -183,7 +191,7 @@ export default function WorkRequestsPage() {
   const getRequestStats = () => {
     const totalRequests = requests.length
     const pendingRequests = requests.filter(r => ['submitted', 'under_review'].includes(r.status)).length
-    const activeRequests = requests.filter(r => ['approved', 'in_progress'].includes(r.status)).length
+    const activeRequests = requests.filter(r => ['approved', 'scheduled', 'in_progress'].includes(r.status)).length
     const completedRequests = requests.filter(r => r.status === 'completed').length
 
     return { totalRequests, pendingRequests, activeRequests, completedRequests }
@@ -208,7 +216,7 @@ export default function WorkRequestsPage() {
   }
 
   const canEdit = (status: string) => {
-    return ['draft', 'submitted', 'under_review'].includes(status)
+    return ['submitted', 'under_review'].includes(status)
   }
 
   if (isLoading) {
@@ -341,13 +349,13 @@ export default function WorkRequestsPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Status</option>
-              <option value="draft">Draft</option>
               <option value="submitted">Submitted</option>
               <option value="under_review">Under Review</option>
               <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="scheduled">Scheduled</option>
               <option value="in_progress">In Progress</option>
               <option value="completed">Completed</option>
-              <option value="rejected">Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
             
@@ -398,6 +406,8 @@ export default function WorkRequestsPage() {
           ) : (
             filteredRequests.map(request => {
               const StatusIcon = statusIcons[request.status]
+              const tags = request.work_request_tags?.map(t => t.tag_name) || []
+              
               return (
                 <div key={request.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-4">
@@ -434,9 +444,9 @@ export default function WorkRequestsPage() {
                           </span>
                         )}
                       </div>
-                      {request.tags && request.tags.length > 0 && (
+                      {tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {request.tags.map(tag => (
+                          {tags.map(tag => (
                             <span key={tag} className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
                               {tag}
                             </span>
@@ -451,6 +461,9 @@ export default function WorkRequestsPage() {
                       <p>Submitted: {formatDateTime(request.created_at)}</p>
                       {request.assigned_to && (
                         <p>Assigned to: {request.assigned_to}</p>
+                      )}
+                      {request.work_request_attachments && request.work_request_attachments.length > 0 && (
+                        <p>{request.work_request_attachments.length} attachment(s)</p>
                       )}
                     </div>
                     

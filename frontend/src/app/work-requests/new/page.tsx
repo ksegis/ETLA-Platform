@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { ArrowLeft, Upload, X, Calendar, DollarSign, Clock, User } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabase'
 
 interface FormData {
   title: string
@@ -19,11 +19,13 @@ interface FormData {
   attachments: File[]
 }
 
-interface User {
+interface UserProfile {
   id: string
   email: string
-  full_name?: string
-  company_name?: string
+  first_name: string
+  last_name: string
+  role: string
+  tenant_id?: string
 }
 
 const categories = [
@@ -69,10 +71,8 @@ export default function NewWorkRequestPage() {
   const [currentTag, setCurrentTag] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
     loadUser()
@@ -80,38 +80,33 @@ export default function NewWorkRequestPage() {
 
   const loadUser = async () => {
     try {
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+      const { data: { user: authUser }, error } = await supabase.auth.getUser()
       
-      if (authError) {
-        console.error('Auth error:', authError)
+      if (error || !authUser) {
+        console.error('No authenticated user:', error)
         setIsLoading(false)
         return
       }
 
-      if (authUser) {
-        // Get user profile from profiles table
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .single()
+      // Try to get user profile from database
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
 
-        if (profileError) {
-          console.error('Profile error:', profileError)
-          // Use auth user data as fallback
-          setUser({
-            id: authUser.id,
-            email: authUser.email || '',
-            full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Unknown User'
-          })
-        } else {
-          setUser({
-            id: profile.id,
-            email: profile.email || authUser.email || '',
-            full_name: profile.full_name || authUser.user_metadata?.full_name || profile.email?.split('@')[0] || 'Unknown User',
-            company_name: profile.company_name
-          })
-        }
+      if (profile) {
+        setUser(profile)
+      } else {
+        // Fallback to auth user metadata
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          first_name: authUser.user_metadata?.first_name || 'Unknown',
+          last_name: authUser.user_metadata?.last_name || 'User',
+          role: 'client_user',
+          tenant_id: authUser.user_metadata?.tenant_id
+        })
       }
     } catch (error) {
       console.error('Error loading user:', error)
@@ -147,12 +142,31 @@ export default function NewWorkRequestPage() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     
-    // Validate file size (10MB max)
+    // Validate file size (10MB max) and type
     const validFiles = files.filter(file => {
       if (file.size > 10 * 1024 * 1024) {
         alert(`File ${file.name} is too large. Maximum size is 10MB.`)
         return false
       }
+      
+      // Allow common file types
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/png',
+        'image/jpeg',
+        'image/jpg',
+        'text/plain'
+      ]
+      
+      if (!allowedTypes.includes(file.type)) {
+        alert(`File ${file.name} has unsupported format. Please use PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, or TXT files.`)
+        return false
+      }
+      
       return true
     })
 
@@ -187,17 +201,29 @@ export default function NewWorkRequestPage() {
 
     for (const file of formData.attachments) {
       try {
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${workRequestId}/${Date.now()}.${fileExt}`
+        // Create a safe filename
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'bin'
+        const timestamp = Date.now()
+        const randomId = Math.random().toString(36).substring(2, 15)
+        const fileName = `${workRequestId}/${timestamp}_${randomId}.${fileExt}`
         
+        console.log(`Uploading file: ${file.name} (${file.type}) as ${fileName}`)
+        
+        // Upload to Supabase Storage
         const { data, error } = await supabase.storage
           .from('work-request-attachments')
-          .upload(fileName, file)
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          })
 
         if (error) {
           console.error('File upload error:', error)
+          alert(`Failed to upload ${file.name}: ${error.message}`)
           continue
         }
+
+        console.log('File uploaded successfully:', data)
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
@@ -213,6 +239,7 @@ export default function NewWorkRequestPage() {
         })
       } catch (error) {
         console.error('Error uploading file:', file.name, error)
+        alert(`Error uploading ${file.name}: ${error}`)
       }
     }
 
@@ -231,6 +258,8 @@ export default function NewWorkRequestPage() {
     setIsSubmitting(true)
     
     try {
+      console.log('Submitting work request...')
+      
       // Insert work request into database
       const { data: workRequest, error: requestError } = await supabase
         .from('work_requests')
@@ -243,38 +272,65 @@ export default function NewWorkRequestPage() {
           estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
           budget: formData.budget ? parseFloat(formData.budget) : null,
           required_completion_date: formData.requiredCompletionDate || null,
-          tags: formData.tags,
           status: 'submitted',
-          created_by: user.id,
-          customer_name: user.full_name || user.email,
-          customer_email: user.email,
-          company_name: user.company_name || null
+          customer_id: user.id,
+          tenant_id: user.tenant_id,
+          actual_hours: 0
         })
         .select()
         .single()
 
       if (requestError) {
+        console.error('Database error:', requestError)
         throw requestError
       }
 
-      // Upload files if any
+      console.log('Work request created:', workRequest)
+
+      // Upload files if any (but don't fail the whole submission if files fail)
+      let uploadedFiles = []
       if (formData.attachments.length > 0) {
-        const uploadedFiles = await uploadFiles(workRequest.id)
-        
-        // Insert file records into database
-        if (uploadedFiles.length > 0) {
-          const { error: filesError } = await supabase
-            .from('work_request_attachments')
+        try {
+          uploadedFiles = await uploadFiles(workRequest.id)
+          console.log('Files uploaded:', uploadedFiles)
+          
+          // Insert file records into database
+          if (uploadedFiles.length > 0) {
+            const { error: filesError } = await supabase
+              .from('work_request_attachments')
+              .insert(
+                uploadedFiles.map(file => ({
+                  work_request_id: workRequest.id,
+                  ...file
+                }))
+              )
+
+            if (filesError) {
+              console.error('Error saving file records:', filesError)
+            }
+          }
+        } catch (fileError) {
+          console.error('File upload failed, but continuing with submission:', fileError)
+        }
+      }
+
+      // Insert tags if any
+      if (formData.tags.length > 0) {
+        try {
+          const { error: tagsError } = await supabase
+            .from('work_request_tags')
             .insert(
-              uploadedFiles.map(file => ({
+              formData.tags.map(tag => ({
                 work_request_id: workRequest.id,
-                ...file
+                tag_name: tag
               }))
             )
 
-          if (filesError) {
-            console.error('Error saving file records:', filesError)
+          if (tagsError) {
+            console.error('Error saving tags:', tagsError)
           }
+        } catch (tagError) {
+          console.error('Tag save failed, but continuing:', tagError)
         }
       }
 
@@ -285,7 +341,7 @@ export default function NewWorkRequestPage() {
       
     } catch (error) {
       console.error('Error submitting work request:', error)
-      alert('Error submitting work request. Please try again.')
+      alert(`Error submitting work request: ${error.message || error}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -356,11 +412,11 @@ export default function NewWorkRequestPage() {
                 <div className="flex items-center gap-3">
                   <User className="h-5 w-5 text-gray-600" />
                   <div>
-                    <p className="font-medium text-gray-900">Created by: {user.full_name}</p>
+                    <p className="font-medium text-gray-900">
+                      Created by: {user.first_name} {user.last_name}
+                    </p>
                     <p className="text-sm text-gray-600">{user.email}</p>
-                    {user.company_name && (
-                      <p className="text-sm text-gray-600">{user.company_name}</p>
-                    )}
+                    <p className="text-sm text-gray-600">Role: {user.role.replace('_', ' ').toUpperCase()}</p>
                   </div>
                 </div>
               </div>
@@ -578,7 +634,7 @@ export default function NewWorkRequestPage() {
                     onChange={handleFileUpload}
                     className="hidden"
                     id="file-upload"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <Button type="button" variant="outline" size="sm" asChild>
@@ -586,7 +642,7 @@ export default function NewWorkRequestPage() {
                     </Button>
                   </label>
                   <p className="text-xs text-gray-500 mt-2">
-                    Supported formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG (Max 10MB each)
+                    Supported formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, TXT (Max 10MB each)
                   </p>
                 </div>
                 
@@ -596,7 +652,7 @@ export default function NewWorkRequestPage() {
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-900">{file.name}</p>
-                          <p className="text-sm text-gray-600">{formatFileSize(file.size)}</p>
+                          <p className="text-sm text-gray-600">{formatFileSize(file.size)} • {file.type}</p>
                         </div>
                         <button
                           type="button"
