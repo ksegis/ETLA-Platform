@@ -43,6 +43,15 @@ const categories = [
   { value: 'other', label: 'Other' }
 ]
 
+// Generate a valid UUID v4
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c == 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
+
 export default function NewWorkRequestPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -172,8 +181,8 @@ export default function NewWorkRequestPage() {
       console.log('✅ Supabase connection successful!')
       setMessage('Connected to database, saving request...')
 
-      // Get current user (or use demo user)
-      let userId = 'demo-user-id'
+      // Get current user (or generate demo UUID)
+      let userId = generateUUID() // Generate a valid UUID for demo user
       let userEmail = 'demo@example.com'
       
       try {
@@ -181,12 +190,12 @@ export default function NewWorkRequestPage() {
         if (user && !userError) {
           userId = user.id
           userEmail = user.email || 'unknown@example.com'
-          console.log('👤 Using authenticated user:', userEmail)
+          console.log('👤 Using authenticated user:', userEmail, 'ID:', userId)
         } else {
-          console.log('👤 Using demo user (no authentication)')
+          console.log('👤 Using demo user with generated UUID:', userId)
         }
       } catch (authError) {
-        console.log('👤 Auth failed, using demo user:', authError)
+        console.log('👤 Auth failed, using demo user with UUID:', userId, authError)
       }
 
       // Prepare the work request data
@@ -197,17 +206,19 @@ export default function NewWorkRequestPage() {
         priority: formData.priority,
         urgency: formData.urgency,
         status: 'submitted',
-        customer_id: userId,
+        customer_id: userId, // Now using proper UUID
         estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         required_completion_date: formData.requiredCompletionDate || null,
-        tenant_id: 'default-tenant', // Default tenant
+        tenant_id: generateUUID(), // Generate UUID for tenant as well
         internal_notes: formData.tags.join(', '), // Store tags as notes for now
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
 
       console.log('💾 Inserting into work_requests table:', workRequestData)
+      console.log('🔑 Using customer_id (UUID):', userId)
+      console.log('🏢 Using tenant_id (UUID):', workRequestData.tenant_id)
 
       // Insert into work_requests table
       const { data: insertedRequest, error: insertError } = await supabase
@@ -218,6 +229,12 @@ export default function NewWorkRequestPage() {
 
       if (insertError) {
         console.error('❌ Database insert failed:', insertError)
+        console.error('❌ Insert error details:', {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code
+        })
         throw new Error(`Failed to save request: ${insertError.message}`)
       }
 
@@ -259,6 +276,7 @@ export default function NewWorkRequestPage() {
       console.log('🎉 SUBMISSION COMPLETED SUCCESSFULLY!')
       console.log('📊 Request ID:', requestId)
       console.log('👤 Created by:', userEmail)
+      console.log('🔑 Customer UUID:', userId)
 
       // Redirect after success
       setTimeout(() => {
@@ -332,8 +350,8 @@ export default function NewWorkRequestPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-900">Real Database Integration</p>
-                <p className="text-green-700">This form saves directly to your Supabase work_requests table</p>
+                <p className="text-sm font-medium text-green-900">Real Database Integration - UUID Fixed</p>
+                <p className="text-green-700">This form saves directly to your Supabase work_requests table with proper UUID format</p>
                 <p className="text-xs text-green-600">Using environment variables: NEXT_PUBLIC_SUPABASE_URL & NEXT_PUBLIC_SUPABASE_ANON_TOKEN</p>
               </div>
             </div>
