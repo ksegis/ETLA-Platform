@@ -1,86 +1,110 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
 
 interface User {
   id: string
-  email?: string
+  email: string
+  role: string
 }
 
 interface Tenant {
   id: string
   name: string
-  slug: string
-  created_at: string
-  updated_at: string
-}
-
-interface TenantUser {
-  id: string
-  tenant_id: string
-  user_id: string
-  role: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  status: string
 }
 
 interface AuthContextType {
   user: User | null
   tenant: Tenant | null
-  tenantUser: TenantUser | null
   loading: boolean
+  signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
-  refreshTenant: () => Promise<void>
+  setCurrentTenant: (tenant: Tenant) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>({
-    id: '1',
-    email: 'demo@company.com'
-  })
-  const [tenant, setTenant] = useState<Tenant | null>({
-    id: '1',
-    name: 'Demo Company',
-    slug: 'demo-company',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
-  const [tenantUser, setTenantUser] = useState<TenantUser | null>({
-    id: '1',
-    tenant_id: '1',
-    user_id: '1',
-    role: 'admin',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
-  const [loading, setLoading] = useState(false)
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const refreshTenant = async () => {
-    // Mock implementation
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          role: 'user'
+        })
+        // Set a default tenant for demo purposes
+        setTenant({
+          id: '1',
+          name: 'Demo Company',
+          status: 'active'
+        })
+      }
+      setLoading(false)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          role: 'user'
+        })
+        // Set a default tenant for demo purposes
+        setTenant({
+          id: '1',
+          name: 'Demo Company',
+          status: 'active'
+        })
+      } else {
+        setUser(null)
+        setTenant(null)
+      }
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw error
   }
 
   const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
     setUser(null)
     setTenant(null)
-    setTenantUser(null)
   }
 
-  return (
-    <AuthContext.Provider value={{
-      user,
-      tenant,
-      tenantUser,
-      loading,
-      signOut,
-      refreshTenant
-    }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  const setCurrentTenant = (newTenant: Tenant) => {
+    setTenant(newTenant)
+  }
+
+  const value = {
+    user,
+    tenant,
+    loading,
+    signIn,
+    signOut,
+    setCurrentTenant,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
