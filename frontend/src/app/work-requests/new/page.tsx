@@ -341,7 +341,8 @@ export default function NewWorkRequestPage() {
       
     } catch (error) {
       console.error('Error submitting work request:', error)
-      alert(`Error submitting work request: ${error.message || error}`)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`Error submitting work request: ${errorMessage}`)
     } finally {
       setIsSubmitting(false)
     }
