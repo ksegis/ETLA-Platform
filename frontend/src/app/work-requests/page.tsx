@@ -2,249 +2,220 @@
 
 import { useState, useEffect } from 'react'
 import { 
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  Edit,
-  Trash2,
-  Copy,
-  ChevronDown,
-  X,
-  Calendar,
-  User,
-  DollarSign,
-  Clock
+  Plus, 
+  Search, 
+  Filter, 
+  Calendar, 
+  Clock, 
+  DollarSign, 
+  Eye, 
+  Edit, 
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Pause,
+  PlayCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase, WorkRequest } from '@/lib/supabase'
-import { useTenant } from '@/contexts/TenantContext'
 
-interface WorkRequestWithDetails extends WorkRequest {
-  customer: {
-    first_name: string
-    last_name: string
-    email: string
+interface WorkRequest {
+  id: string
+  title: string
+  description: string
+  category: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  urgency: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'in_progress' | 'completed' | 'rejected' | 'cancelled'
+  estimatedHours?: number
+  budget?: number
+  requiredCompletionDate?: string
+  submittedAt: string
+  updatedAt: string
+  assignedTo?: string
+}
+
+// Mock data for demonstration
+const mockRequests: WorkRequest[] = [
+  {
+    id: '1',
+    title: 'Payroll System Integration',
+    description: 'Integration of existing payroll system with new HRIS platform including data migration, API setup, and testing.',
+    category: 'system_integration',
+    priority: 'high',
+    urgency: 'medium',
+    status: 'in_progress',
+    estimatedHours: 40,
+    budget: 8000,
+    requiredCompletionDate: '2024-08-30',
+    submittedAt: '2024-08-10T09:00:00Z',
+    updatedAt: '2024-08-15T14:30:00Z',
+    assignedTo: 'Sarah Johnson'
+  },
+  {
+    id: '2',
+    title: 'Benefits Audit & Compliance Review',
+    description: 'Comprehensive audit of current benefits structure and compliance with new regulations.',
+    category: 'compliance_audit',
+    priority: 'medium',
+    urgency: 'low',
+    status: 'approved',
+    estimatedHours: 30,
+    budget: 6000,
+    requiredCompletionDate: '2024-09-15',
+    submittedAt: '2024-08-08T14:20:00Z',
+    updatedAt: '2024-08-12T10:15:00Z',
+    assignedTo: 'Mike Chen'
+  },
+  {
+    id: '3',
+    title: 'Custom Reporting Dashboard',
+    description: 'Development of custom analytics dashboard for HR metrics and KPI tracking.',
+    category: 'custom_development',
+    priority: 'medium',
+    urgency: 'medium',
+    status: 'completed',
+    estimatedHours: 50,
+    budget: 10000,
+    requiredCompletionDate: '2024-08-05',
+    submittedAt: '2024-07-10T11:30:00Z',
+    updatedAt: '2024-08-05T17:00:00Z',
+    assignedTo: 'Lisa Wang'
+  },
+  {
+    id: '4',
+    title: 'Employee Onboarding Automation',
+    description: 'Automate the employee onboarding process with digital forms and workflow management.',
+    category: 'process_automation',
+    priority: 'low',
+    urgency: 'low',
+    status: 'under_review',
+    estimatedHours: 25,
+    budget: 4500,
+    requiredCompletionDate: '2024-09-30',
+    submittedAt: '2024-08-14T16:45:00Z',
+    updatedAt: '2024-08-14T16:45:00Z'
+  },
+  {
+    id: '5',
+    title: 'Data Migration from Legacy System',
+    description: 'Migrate employee data from legacy HR system to new cloud-based platform.',
+    category: 'data_migration',
+    priority: 'critical',
+    urgency: 'high',
+    status: 'submitted',
+    estimatedHours: 60,
+    budget: 12000,
+    requiredCompletionDate: '2024-08-25',
+    submittedAt: '2024-08-16T09:15:00Z',
+    updatedAt: '2024-08-16T09:15:00Z'
   }
-  assigned_member?: {
-    name: string
-  }
+]
+
+const statusColors = {
+  draft: 'bg-gray-100 text-gray-800',
+  submitted: 'bg-blue-100 text-blue-800',
+  under_review: 'bg-yellow-100 text-yellow-800',
+  approved: 'bg-green-100 text-green-800',
+  in_progress: 'bg-indigo-100 text-indigo-800',
+  completed: 'bg-emerald-100 text-emerald-800',
+  rejected: 'bg-red-100 text-red-800',
+  cancelled: 'bg-gray-100 text-gray-800'
+}
+
+const priorityColors = {
+  low: 'bg-gray-100 text-gray-800',
+  medium: 'bg-blue-100 text-blue-800',
+  high: 'bg-orange-100 text-orange-800',
+  critical: 'bg-red-100 text-red-800'
+}
+
+const statusIcons = {
+  draft: Edit,
+  submitted: PlayCircle,
+  under_review: Clock,
+  approved: CheckCircle,
+  in_progress: PlayCircle,
+  completed: CheckCircle,
+  rejected: XCircle,
+  cancelled: Pause
+}
+
+const categoryLabels: Record<string, string> = {
+  payroll_setup: 'Payroll Setup',
+  data_migration: 'Data Migration',
+  system_integration: 'System Integration',
+  reporting_setup: 'Reporting Setup',
+  benefits_configuration: 'Benefits Configuration',
+  compliance_audit: 'Compliance Audit',
+  training_support: 'Training Support',
+  custom_development: 'Custom Development',
+  process_automation: 'Process Automation',
+  other: 'Other'
 }
 
 export default function WorkRequestsPage() {
-  const { currentTenant } = useTenant()
-  const [requests, setRequests] = useState<WorkRequestWithDetails[]>([])
-  const [loading, setLoading] = useState(true)
+  const [requests, setRequests] = useState<WorkRequest[]>(mockRequests)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [priorityFilter, setPriorityFilter] = useState('all')
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [showFilters, setShowFilters] = useState(false)
-
-  useEffect(() => {
-    if (currentTenant) {
-      fetchWorkRequests()
-      
-      // Set up real-time subscription
-      const subscription = supabase
-        .channel('work_requests')
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'work_requests',
-            filter: `tenant_id=eq.${currentTenant}`
-          },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              fetchWorkRequests() // Refetch to get joined data
-            } else if (payload.eventType === 'UPDATE') {
-              setRequests(prev => prev.map(req => 
-                req.id === payload.new.id ? { ...req, ...payload.new } : req
-              ))
-            } else if (payload.eventType === 'DELETE') {
-              setRequests(prev => prev.filter(req => req.id !== payload.old.id))
-            }
-          }
-        )
-        .subscribe()
-
-      return () => {
-        subscription.unsubscribe()
-      }
-    }
-  }, [currentTenant])
-
-  const fetchWorkRequests = async () => {
-    if (!currentTenant) return
-
-    try {
-      const { data, error } = await supabase
-        .from('work_requests')
-        .select(`
-          *,
-          customer:users!customer_id(first_name, last_name, email),
-          assigned_member:team_members(name)
-        `)
-        .eq('tenant_id', currentTenant)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      setRequests(data || [])
-    } catch (error) {
-      console.error('Error fetching work requests:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCreateRequest = () => {
-    window.location.href = '/work-requests/new'
-  }
-
-  const handleViewRequest = (requestId: string) => {
-    window.location.href = `/work-requests/${requestId}`
-  }
-
-  const handleEditRequest = async (requestId: string) => {
-    // In a real app, this would open an edit modal or navigate to edit page
-    alert(`Edit request ${requestId} - This would open an edit form`)
-  }
-
-  const handleDeleteRequest = async (requestId: string) => {
-    if (!confirm('Are you sure you want to delete this request?')) return
-
-    try {
-      const { error } = await supabase
-        .from('work_requests')
-        .delete()
-        .eq('id', requestId)
-        .eq('tenant_id', currentTenant)
-
-      if (error) throw error
-
-      setRequests(prev => prev.filter(req => req.id !== requestId))
-    } catch (error) {
-      console.error('Error deleting request:', error)
-      alert('Error deleting request')
-    }
-  }
-
-  const handleDuplicateRequest = async (request: WorkRequestWithDetails) => {
-    try {
-      const { data, error } = await supabase
-        .from('work_requests')
-        .insert({
-          tenant_id: currentTenant,
-          title: `${request.title} (Copy)`,
-          description: request.description,
-          category: request.category,
-          priority: request.priority,
-          urgency: request.urgency,
-          customer_id: request.customer_id,
-          estimated_hours: request.estimated_hours,
-          budget: request.budget,
-          required_completion_date: request.required_completion_date
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      // Refetch to get the new request with joined data
-      fetchWorkRequests()
-    } catch (error) {
-      console.error('Error duplicating request:', error)
-      alert('Error duplicating request')
-    }
-  }
-
-  const clearFilters = () => {
-    setSearchTerm('')
-    setStatusFilter('all')
-    setPriorityFilter('all')
-    setCategoryFilter('all')
-  }
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [selectedPriority, setSelectedPriority] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState('all')
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         `${request.customer.first_name} ${request.customer.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === 'all' || request.status === statusFilter
-    const matchesPriority = priorityFilter === 'all' || request.priority === priorityFilter
-    const matchesCategory = categoryFilter === 'all' || request.category === categoryFilter
+                         request.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus
+    const matchesPriority = selectedPriority === 'all' || request.priority === selectedPriority
+    const matchesCategory = selectedCategory === 'all' || request.category === selectedCategory
     
     return matchesSearch && matchesStatus && matchesPriority && matchesCategory
   })
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'submitted': return 'bg-blue-100 text-blue-800'
-      case 'under_review': return 'bg-yellow-100 text-yellow-800'
-      case 'approved': return 'bg-green-100 text-green-800'
-      case 'rejected': return 'bg-red-100 text-red-800'
-      case 'scheduled': return 'bg-purple-100 text-purple-800'
-      case 'in_progress': return 'bg-indigo-100 text-indigo-800'
-      case 'completed': return 'bg-gray-100 text-gray-800'
-      case 'cancelled': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
+  const getRequestStats = () => {
+    const totalRequests = requests.length
+    const pendingRequests = requests.filter(r => ['submitted', 'under_review'].includes(r.status)).length
+    const activeRequests = requests.filter(r => ['approved', 'in_progress'].includes(r.status)).length
+    const completedRequests = requests.filter(r => r.status === 'completed').length
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low': return 'bg-gray-100 text-gray-800'
-      case 'medium': return 'bg-blue-100 text-blue-800'
-      case 'high': return 'bg-orange-100 text-orange-800'
-      case 'critical': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
+    return { totalRequests, pendingRequests, activeRequests, completedRequests }
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-10 bg-gray-200 rounded mb-4"></div>
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-20 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
+  const canEdit = (status: string) => {
+    return ['draft', 'submitted', 'under_review'].includes(status)
   }
+
+  const stats = getRequestStats()
 
   return (
     <DashboardLayout>
-      <div className="p-6">
+      <div className="p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
-              <p className="text-gray-600">Manage and track your project requests</p>
+              <p className="text-gray-600">Submit and track your work requests</p>
             </div>
             <Button 
-              onClick={handleCreateRequest}
+              onClick={() => window.location.href = '/work-requests/new'}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -261,7 +232,7 @@ export default function WorkRequestsPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Total Requests</p>
-                  <p className="text-2xl font-bold text-gray-900">{requests.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalRequests}</p>
                 </div>
               </div>
             </div>
@@ -273,9 +244,19 @@ export default function WorkRequestsPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Pending Review</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {requests.filter(r => r.status === 'submitted' || r.status === 'under_review').length}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.pendingRequests}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="flex items-center">
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <PlayCircle className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-600">Active Projects</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.activeRequests}</p>
                 </div>
               </div>
             </div>
@@ -283,34 +264,18 @@ export default function WorkRequestsPage() {
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <div className="flex items-center">
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <User className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-600">In Progress</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {requests.filter(r => r.status === 'in_progress' || r.status === 'scheduled').length}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-purple-600" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-600">Total Budget</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(requests.reduce((sum, r) => sum + (r.budget || 0), 0))}
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Completed</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.completedRequests}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
@@ -318,196 +283,138 @@ export default function WorkRequestsPage() {
                 placeholder="Search requests..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              variant="outline"
-              className="flex items-center gap-2"
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <Filter className="h-4 w-4" />
-              Filters
-              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </Button>
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="submitted">Submitted</option>
+              <option value="under_review">Under Review</option>
+              <option value="approved">Approved</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+            
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Categories</option>
+              {Object.entries(categoryLabels).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
           </div>
-
-          {/* Filter Panel */}
-          {showFilters && (
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Status</option>
-                  <option value="submitted">Submitted</option>
-                  <option value="under_review">Under Review</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-                
-                <select
-                  value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Priority</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-                
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="system_integration">System Integration</option>
-                  <option value="benefits_configuration">Benefits Configuration</option>
-                  <option value="compliance_audit">Compliance Audit</option>
-                  <option value="data_migration">Data Migration</option>
-                  <option value="custom_development">Custom Development</option>
-                  <option value="training">Training</option>
-                  <option value="support">Support</option>
-                  <option value="consulting">Consulting</option>
-                </select>
-                
-                <Button
-                  onClick={clearFilters}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <X className="h-4 w-4" />
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Requests List */}
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Request
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Priority
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Budget
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredRequests.map((request) => (
-                  <tr key={request.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{request.title}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {request.description}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {request.category.replace('_', ' ').toUpperCase()}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {request.customer.first_name} {request.customer.last_name}
-                      </div>
-                      <div className="text-sm text-gray-500">{request.customer.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                        {request.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(request.priority)}`}>
-                        {request.priority.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.budget ? formatCurrency(request.budget) : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(request.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={() => handleViewRequest(request.id)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleEditRequest(request.id)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDuplicateRequest(request)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteRequest(request.id)}
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {filteredRequests.length === 0 && (
-            <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">No work requests found matching your criteria.</p>
+        <div className="space-y-4">
+          {filteredRequests.length === 0 ? (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 mb-4">No work requests found matching your criteria.</p>
               <Button 
-                onClick={handleCreateRequest}
-                className="mt-4 bg-blue-600 hover:bg-blue-700"
+                onClick={() => window.location.href = '/work-requests/new'}
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 Create Your First Request
               </Button>
             </div>
+          ) : (
+            filteredRequests.map(request => {
+              const StatusIcon = statusIcons[request.status]
+              return (
+                <div key={request.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{request.title}</h3>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[request.status]}`}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {request.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority]}`}>
+                          {request.priority.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 mb-3 line-clamp-2">{request.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>Category: {categoryLabels[request.category] || request.category}</span>
+                        {request.estimatedHours && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {request.estimatedHours}h
+                          </span>
+                        )}
+                        {request.budget && (
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="h-4 w-4" />
+                            ${request.budget.toLocaleString()}
+                          </span>
+                        )}
+                        {request.requiredCompletionDate && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            Due: {formatDate(request.requiredCompletionDate)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-500">
+                      <p>Submitted: {formatDateTime(request.submittedAt)}</p>
+                      {request.assignedTo && (
+                        <p>Assigned to: {request.assignedTo}</p>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.location.href = `/work-requests/${request.id}`}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                      {canEdit(request.status) && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.location.href = `/work-requests/${request.id}/edit`}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })
           )}
         </div>
       </div>
