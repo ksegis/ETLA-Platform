@@ -45,7 +45,6 @@ const categories = [
 
 export default function NewWorkRequestPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const submissionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -65,16 +64,10 @@ export default function NewWorkRequestPage() {
   const [user, setUser] = useState<any>(null)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     loadUser()
-    
-    // Cleanup timeout on unmount
-    return () => {
-      if (submissionTimeoutRef.current) {
-        clearTimeout(submissionTimeoutRef.current)
-      }
-    }
   }, [])
 
   const loadUser = async () => {
@@ -85,7 +78,7 @@ export default function NewWorkRequestPage() {
       } else {
         // Demo user for testing
         setUser({
-          id: 'demo-user',
+          id: 'demo-user-' + Date.now(),
           email: 'demo@company.com',
           user_metadata: {
             first_name: 'Demo',
@@ -97,7 +90,7 @@ export default function NewWorkRequestPage() {
       console.error('Error loading user:', error)
       // Fallback to demo user
       setUser({
-        id: 'demo-user',
+        id: 'demo-user-' + Date.now(),
         email: 'demo@company.com',
         user_metadata: {
           first_name: 'Demo',
@@ -118,8 +111,6 @@ export default function NewWorkRequestPage() {
     console.log('Triggering file upload...')
     if (fileInputRef.current) {
       fileInputRef.current.click()
-    } else {
-      console.error('File input ref not found')
     }
   }
 
@@ -128,12 +119,9 @@ export default function NewWorkRequestPage() {
     const files = Array.from(event.target.files || [])
     
     if (files.length === 0) {
-      console.log('No files selected')
       return
     }
 
-    console.log(`Processing ${files.length} files`)
-    
     // Validate files
     const validFiles = files.filter(file => {
       const maxSize = 10 * 1024 * 1024 // 10MB
@@ -160,8 +148,6 @@ export default function NewWorkRequestPage() {
       
       return true
     })
-
-    console.log(`${validFiles.length} valid files`)
 
     setFormData(prev => ({
       ...prev,
@@ -211,34 +197,6 @@ export default function NewWorkRequestPage() {
     return null
   }
 
-  const saveToLocalStorage = () => {
-    try {
-      const requestData = {
-        id: Date.now().toString(),
-        ...formData,
-        status: 'submitted',
-        customer_id: user?.id || 'demo-user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-
-      // Get existing requests
-      const existingRequests = JSON.parse(localStorage.getItem('work_requests') || '[]')
-      
-      // Add new request
-      existingRequests.push(requestData)
-      
-      // Save back to localStorage
-      localStorage.setItem('work_requests', JSON.stringify(existingRequests))
-      
-      console.log('Request saved to localStorage:', requestData)
-      return true
-    } catch (error) {
-      console.error('Error saving to localStorage:', error)
-      return false
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -258,28 +216,13 @@ export default function NewWorkRequestPage() {
     setIsSubmitting(true)
     setSubmitStatus('idle')
     setErrorMessage('')
-
-    // Set a timeout to prevent hanging
-    submissionTimeoutRef.current = setTimeout(() => {
-      console.log('Submission timeout - falling back to localStorage')
-      if (saveToLocalStorage()) {
-        setSubmitStatus('success')
-        setTimeout(() => {
-          window.location.href = '/work-requests'
-        }, 2000)
-      } else {
-        setErrorMessage('Failed to save request. Please try again.')
-        setSubmitStatus('error')
-      }
-      setIsSubmitting(false)
-    }, 10000) // 10 second timeout
+    setSuccessMessage('')
 
     try {
-      console.log('Attempting database submission...')
+      console.log('Starting form submission...')
       
-      // Try database submission first
+      // Create the work request data
       const workRequestData = {
-        tenant_id: 'default',
         title: formData.title.trim(),
         description: formData.description.trim(),
         category: formData.category,
@@ -290,70 +233,99 @@ export default function NewWorkRequestPage() {
         estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
         budget: formData.budget ? parseInt(formData.budget) : null,
         required_completion_date: formData.requiredCompletionDate || null,
-        actual_hours: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
 
-      console.log('Inserting work request:', workRequestData)
+      console.log('Submitting work request data:', workRequestData)
 
-      // Try database insertion with timeout
-      const insertPromise = supabase
+      // Insert into database
+      const { data: workRequest, error: insertError } = await supabase
         .from('work_requests')
-        .insert(workRequestData)
+        .insert([workRequestData])
         .select()
         .single()
 
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database timeout')), 5000)
-      )
-
-      const { data: workRequest, error: workRequestError } = await Promise.race([
-        insertPromise,
-        timeoutPromise
-      ]) as any
-
-      if (workRequestError) {
-        throw workRequestError
+      if (insertError) {
+        console.error('Database insert error:', insertError)
+        throw new Error(`Database error: ${insertError.message}`)
       }
 
-      console.log('Database submission successful:', workRequest)
-      
-      // Clear timeout since we succeeded
-      if (submissionTimeoutRef.current) {
-        clearTimeout(submissionTimeoutRef.current)
+      console.log('Work request created successfully:', workRequest)
+
+      // Handle tags if any
+      if (formData.tags.length > 0 && workRequest) {
+        console.log('Inserting tags...')
+        const tagData = formData.tags.map(tag => ({
+          work_request_id: workRequest.id,
+          tag_name: tag
+        }))
+
+        const { error: tagError } = await supabase
+          .from('work_request_tags')
+          .insert(tagData)
+
+        if (tagError) {
+          console.warn('Tag insertion failed:', tagError)
+          // Don't fail the whole submission for tag errors
+        }
       }
 
+      // Handle file attachments if any
+      if (formData.attachments.length > 0 && workRequest) {
+        console.log('Processing file attachments...')
+        for (const file of formData.attachments) {
+          try {
+            const fileName = `${workRequest.id}/${Date.now()}-${file.name}`
+            
+            const { error: uploadError } = await supabase.storage
+              .from('work-request-attachments')
+              .upload(fileName, file)
+
+            if (uploadError) {
+              console.warn('File upload failed:', uploadError)
+              continue // Skip this file but don't fail the submission
+            }
+
+            // Save file metadata
+            const { error: metadataError } = await supabase
+              .from('work_request_attachments')
+              .insert([{
+                work_request_id: workRequest.id,
+                filename: file.name,
+                file_path: fileName,
+                file_size: file.size,
+                mime_type: file.type
+              }])
+
+            if (metadataError) {
+              console.warn('File metadata save failed:', metadataError)
+            }
+          } catch (fileError) {
+            console.warn('File processing error:', fileError)
+          }
+        }
+      }
+
+      // Success!
       setSubmitStatus('success')
+      setSuccessMessage(`Work request "${formData.title}" has been submitted successfully! Request ID: ${workRequest.id}`)
       
-      // Redirect after success
+      // Redirect after 3 seconds
       setTimeout(() => {
         window.location.href = '/work-requests'
-      }, 2000)
+      }, 3000)
 
     } catch (error) {
-      console.error('Database submission failed:', error)
+      console.error('Submission error:', error)
+      let errorMsg = 'Failed to submit work request. Please try again.'
       
-      // Clear timeout
-      if (submissionTimeoutRef.current) {
-        clearTimeout(submissionTimeoutRef.current)
+      if (error instanceof Error) {
+        errorMsg = error.message
       }
       
-      // Fall back to localStorage
-      console.log('Falling back to localStorage...')
-      if (saveToLocalStorage()) {
-        setSubmitStatus('success')
-        setTimeout(() => {
-          window.location.href = '/work-requests'
-        }, 2000)
-      } else {
-        let errorMsg = 'Failed to submit work request'
-        if (error instanceof Error) {
-          errorMsg = error.message
-        }
-        setErrorMessage(errorMsg)
-        setSubmitStatus('error')
-      }
+      setErrorMessage(errorMsg)
+      setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)
     }
@@ -404,24 +376,31 @@ export default function NewWorkRequestPage() {
           )}
 
           {/* Status Messages */}
-          {submitStatus === 'success' && (
+          {submitStatus === 'success' && successMessage && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              Work request submitted successfully! Redirecting to requests list...
+              <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Success!</p>
+                <p className="text-sm">{successMessage}</p>
+                <p className="text-sm mt-1">Redirecting to requests list in 3 seconds...</p>
+              </div>
             </div>
           )}
 
           {submitStatus === 'error' && errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              {errorMessage}
+              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Error</p>
+                <p className="text-sm">{errorMessage}</p>
+              </div>
             </div>
           )}
 
           {isSubmitting && (
             <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              Submitting your request... This may take a moment.
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2 flex-shrink-0"></div>
+              <p>Submitting your work request to the database...</p>
             </div>
           )}
         </div>
@@ -630,7 +609,7 @@ export default function NewWorkRequestPage() {
             )}
           </div>
 
-          {/* Supporting Documents */}
+          {/* Supporting Documents - SINGLE UPLOAD BUTTON */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Supporting Documents</h2>
             
@@ -638,39 +617,25 @@ export default function NewWorkRequestPage() {
               <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">Upload files to support your request</p>
               
-              <div className="space-y-4">
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
-                />
-                
-                {/* Primary button */}
-                <button
-                  type="button"
-                  onClick={triggerFileUpload}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Choose Files
-                </button>
-                
-                {/* Visible file input as backup */}
-                <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-2">Or use direct file input:</p>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="block w-full max-w-xs mx-auto text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
-                  />
-                </div>
-              </div>
+              {/* SINGLE FILE INPUT - Hidden */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
+              />
+              
+              {/* SINGLE UPLOAD BUTTON */}
+              <button
+                type="button"
+                onClick={triggerFileUpload}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Choose Files
+              </button>
               
               <p className="text-xs text-gray-500 mt-4">
                 Supported formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, TXT (Max 10MB each)
