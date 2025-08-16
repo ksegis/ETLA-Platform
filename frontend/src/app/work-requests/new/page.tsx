@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
 
 interface FormData {
   title: string
@@ -130,8 +129,8 @@ export default function NewWorkRequestPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    console.log('Submit button clicked!')
-    console.log('Form data:', formData)
+    console.log('🚀 Submit button clicked!')
+    console.log('📝 Form data:', formData)
 
     // Basic validation
     if (!formData.title.trim()) {
@@ -154,147 +153,78 @@ export default function NewWorkRequestPage() {
 
     setIsSubmitting(true)
     setSubmitStatus('idle')
-    setMessage('Submitting your request...')
+    setMessage('Saving your request...')
 
     try {
-      // Try to get current user, but don't fail if not authenticated
-      let userId = 'demo-user-id'
-      let userEmail = 'demo@example.com'
+      // Create unique ID
+      const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        if (user && !userError) {
-          userId = user.id
-          userEmail = user.email || 'authenticated-user@example.com'
-          console.log('Using authenticated user:', userId, userEmail)
-        } else {
-          console.log('No authenticated user, using demo user')
-        }
-      } catch (authError) {
-        console.log('Auth check failed, using demo user:', authError)
-      }
-
-      // Create the work request object matching the database schema
-      const workRequestData = {
+      // Create the work request object
+      const workRequest = {
+        id: requestId,
         title: formData.title.trim(),
         description: formData.description.trim(),
         category: formData.category,
         priority: formData.priority,
         urgency: formData.urgency,
-        status: 'submitted' as const,
-        customer_id: userId,
-        estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
+        status: 'submitted',
+        estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
-        required_completion_date: formData.requiredCompletionDate || null,
-        tenant_id: '00000000-0000-0000-0000-000000000001', // Default tenant
-        internal_notes: formData.tags.length > 0 ? `Tags: ${formData.tags.join(', ')}` : null
+        requiredCompletionDate: formData.requiredCompletionDate || null,
+        tags: formData.tags,
+        attachments: formData.attachments.map(file => ({
+          name: file.name,
+          size: file.size,
+          type: file.type
+        })),
+        createdAt: new Date().toISOString(),
+        createdBy: 'Current User',
+        source: 'form-submission'
       }
 
-      console.log('Attempting database insert:', workRequestData)
+      console.log('💾 Saving to localStorage:', workRequest)
 
-      // Try database insert with timeout
-      const insertPromise = supabase
-        .from('work_requests')
-        .insert([workRequestData])
-        .select()
-        .single()
-
-      // Set a 8-second timeout for database operation
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database timeout')), 8000)
-      )
-
-      const { data: insertedRequest, error: insertError } = await Promise.race([
-        insertPromise,
-        timeoutPromise
-      ]) as any
-
-      if (insertError) {
-        console.error('Database insert error:', insertError)
-        throw new Error(`Database error: ${insertError.message}`)
+      // Get existing requests
+      const existingRequestsJson = localStorage.getItem('etla_work_requests')
+      console.log('📂 Existing requests JSON:', existingRequestsJson)
+      
+      let existingRequests = []
+      try {
+        existingRequests = existingRequestsJson ? JSON.parse(existingRequestsJson) : []
+      } catch (parseError) {
+        console.warn('⚠️ Failed to parse existing requests, starting fresh:', parseError)
+        existingRequests = []
       }
 
-      if (!insertedRequest) {
-        throw new Error('No data returned from database insert')
-      }
+      console.log('📋 Existing requests array:', existingRequests)
 
-      console.log('✅ Database insert successful:', insertedRequest)
-
-      // Try file uploads if any (non-blocking)
-      if (formData.attachments.length > 0) {
-        console.log('Attempting file uploads:', formData.attachments.length)
-        
-        try {
-          for (const file of formData.attachments) {
-            const fileName = `${insertedRequest.id}/${Date.now()}-${file.name}`
-            
-            const { error: uploadError } = await supabase.storage
-              .from('work-request-attachments')
-              .upload(fileName, file)
-
-            if (uploadError) {
-              console.warn('File upload warning:', uploadError)
-            } else {
-              console.log('✅ File uploaded:', fileName)
-            }
-          }
-        } catch (fileError) {
-          console.warn('File upload failed (non-critical):', fileError)
-        }
-      }
+      // Add new request
+      existingRequests.push(workRequest)
+      
+      // Save back to localStorage
+      const updatedJson = JSON.stringify(existingRequests, null, 2)
+      localStorage.setItem('etla_work_requests', updatedJson)
+      
+      console.log('✅ Saved to localStorage successfully!')
+      console.log('📊 Total requests now:', existingRequests.length)
+      
+      // Verify it was saved
+      const verification = localStorage.getItem('etla_work_requests')
+      console.log('🔍 Verification - localStorage now contains:', verification ? JSON.parse(verification).length + ' requests' : 'nothing')
 
       setSubmitStatus('success')
-      setMessage(`✅ Work request "${formData.title}" submitted successfully! Request ID: ${insertedRequest.id}`)
+      setMessage(`✅ Work request "${formData.title}" saved successfully! Request ID: ${requestId}`)
 
-      // Redirect after 3 seconds
+      // Show success for 3 seconds then redirect
       setTimeout(() => {
+        console.log('🔄 Redirecting to work requests list...')
         window.location.href = '/work-requests'
       }, 3000)
 
     } catch (error) {
-      console.error('Submit error:', error)
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      console.log('Database submission failed, saving to localStorage as backup')
-      
-      // Save to localStorage as backup when database fails
-      try {
-        const backupData = {
-          id: `backup-${Date.now()}`,
-          title: formData.title.trim(),
-          description: formData.description.trim(),
-          category: formData.category,
-          priority: formData.priority,
-          urgency: formData.urgency,
-          estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
-          budget: formData.budget ? parseFloat(formData.budget) : null,
-          requiredCompletionDate: formData.requiredCompletionDate || null,
-          tags: formData.tags,
-          status: 'submitted',
-          createdAt: new Date().toISOString(),
-          createdBy: 'backup-save',
-          source: 'localStorage-backup'
-        }
-        
-        const existingRequests = JSON.parse(localStorage.getItem('work_requests') || '[]')
-        existingRequests.push(backupData)
-        localStorage.setItem('work_requests', JSON.stringify(existingRequests))
-        
-        console.log('✅ Backup save successful:', backupData.id)
-        
-        setSubmitStatus('success')
-        setMessage(`✅ Work request "${formData.title}" submitted successfully! Request ID: ${backupData.id} (Saved locally - will sync when database is available)`)
-        
-        // Redirect after 3 seconds
-        setTimeout(() => {
-          window.location.href = '/work-requests'
-        }, 3000)
-        
-      } catch (backupError) {
-        console.error('Backup save failed:', backupError)
-        setSubmitStatus('error')
-        setMessage(`❌ Failed to submit request: ${errorMessage}. Please try again.`)
-      }
+      console.error('❌ Save error:', error)
+      setSubmitStatus('error')
+      setMessage(`Failed to save request: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -335,8 +265,8 @@ export default function NewWorkRequestPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-blue-900">Created by</p>
-                <p className="text-blue-700">Current User (Demo Mode - Authentication Optional)</p>
-                <p className="text-xs text-blue-600">Works with or without login</p>
+                <p className="text-blue-700">Current User (Demo Mode)</p>
+                <p className="text-xs text-blue-600">Saves to localStorage - check browser console for details</p>
               </div>
             </div>
           </div>
@@ -348,7 +278,7 @@ export default function NewWorkRequestPage() {
               <div>
                 <p className="font-medium">Success!</p>
                 <p className="text-sm">{message}</p>
-                <p className="text-xs mt-1">Redirecting to requests list...</p>
+                <p className="text-xs mt-1">Check browser console for save details. Redirecting...</p>
               </div>
             </div>
           )}
@@ -367,9 +297,9 @@ export default function NewWorkRequestPage() {
             <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6 flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
               <div>
-                <p className="font-medium">Submitting...</p>
+                <p className="font-medium">Saving...</p>
                 <p className="text-sm">{message}</p>
-                <p className="text-xs mt-1">Trying database first, localStorage backup if needed</p>
+                <p className="text-xs mt-1">Check browser console for progress</p>
               </div>
             </div>
           )}
@@ -653,7 +583,7 @@ export default function NewWorkRequestPage() {
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Submitting...
+                  Saving...
                 </>
               ) : (
                 'Submit Request'
