@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DashboardLayout } from '@/components/layout/DashboardLayout'
-import { createClient } from '@/lib/supabase'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import { supabase } from '@/lib/supabase'
 import { 
   Users, 
   Building2, 
@@ -59,8 +59,6 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedClients, setSelectedClients] = useState<string[]>([])
-
-  const supabase = createClient()
 
   // Type-safe planColors with Record type
   const planColors: Record<string, string> = {
