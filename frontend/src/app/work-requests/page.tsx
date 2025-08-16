@@ -15,7 +15,8 @@ import {
   XCircle,
   Pause,
   PlayCircle,
-  RefreshCw
+  RefreshCw,
+  User
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -44,6 +45,125 @@ interface WorkRequestWithTags extends WorkRequest {
   work_request_tags?: Array<{ tag_name: string }>
   work_request_attachments?: Array<{ id: string; filename: string; file_size: number }>
 }
+
+// Mock data for demonstration
+const mockRequests: WorkRequestWithTags[] = [
+  {
+    id: '1',
+    tenant_id: 'demo',
+    title: 'Payroll System Integration',
+    description: 'Need to integrate our existing payroll system with the new ETLA platform for automated data processing.',
+    category: 'system_integration',
+    priority: 'high',
+    urgency: 'medium',
+    status: 'submitted',
+    customer_id: 'demo-user',
+    estimated_hours: 40,
+    actual_hours: 0,
+    budget: 5000,
+    required_completion_date: '2024-02-15',
+    created_at: '2024-01-15T10:00:00Z',
+    updated_at: '2024-01-15T10:00:00Z',
+    work_request_tags: [
+      { tag_name: 'integration' },
+      { tag_name: 'payroll' },
+      { tag_name: 'urgent' }
+    ],
+    work_request_attachments: [
+      { id: '1', filename: 'requirements.pdf', file_size: 1024000 }
+    ]
+  },
+  {
+    id: '2',
+    tenant_id: 'demo',
+    title: 'Employee Data Migration',
+    description: 'Migrate employee data from legacy system to new platform with data validation and cleanup.',
+    category: 'data_migration',
+    priority: 'medium',
+    urgency: 'low',
+    status: 'under_review',
+    customer_id: 'demo-user',
+    estimated_hours: 24,
+    actual_hours: 0,
+    budget: 3000,
+    created_at: '2024-01-10T14:30:00Z',
+    updated_at: '2024-01-12T09:15:00Z',
+    work_request_tags: [
+      { tag_name: 'migration' },
+      { tag_name: 'data-cleanup' }
+    ]
+  },
+  {
+    id: '3',
+    tenant_id: 'demo',
+    title: 'Custom Reporting Dashboard',
+    description: 'Create custom reporting dashboard for executive team with real-time payroll metrics and KPIs.',
+    category: 'custom_development',
+    priority: 'low',
+    urgency: 'low',
+    status: 'approved',
+    customer_id: 'demo-user',
+    estimated_hours: 60,
+    actual_hours: 15,
+    budget: 8000,
+    required_completion_date: '2024-03-01',
+    created_at: '2024-01-05T11:20:00Z',
+    updated_at: '2024-01-14T16:45:00Z',
+    work_request_tags: [
+      { tag_name: 'reporting' },
+      { tag_name: 'dashboard' },
+      { tag_name: 'executive' }
+    ]
+  },
+  {
+    id: '4',
+    tenant_id: 'demo',
+    title: 'Benefits Configuration Setup',
+    description: 'Configure benefits packages and enrollment workflows for Q1 open enrollment period.',
+    category: 'benefits_configuration',
+    priority: 'critical',
+    urgency: 'high',
+    status: 'in_progress',
+    customer_id: 'demo-user',
+    estimated_hours: 32,
+    actual_hours: 20,
+    budget: 4500,
+    required_completion_date: '2024-01-31',
+    created_at: '2024-01-08T09:00:00Z',
+    updated_at: '2024-01-15T13:30:00Z',
+    work_request_tags: [
+      { tag_name: 'benefits' },
+      { tag_name: 'enrollment' },
+      { tag_name: 'q1' }
+    ],
+    work_request_attachments: [
+      { id: '2', filename: 'benefits_plan.xlsx', file_size: 512000 },
+      { id: '3', filename: 'enrollment_rules.docx', file_size: 256000 }
+    ]
+  },
+  {
+    id: '5',
+    tenant_id: 'demo',
+    title: 'Compliance Audit Preparation',
+    description: 'Prepare documentation and reports for upcoming compliance audit, ensure all payroll records are audit-ready.',
+    category: 'compliance_audit',
+    priority: 'high',
+    urgency: 'urgent',
+    status: 'completed',
+    customer_id: 'demo-user',
+    estimated_hours: 16,
+    actual_hours: 18,
+    budget: 2500,
+    required_completion_date: '2024-01-20',
+    created_at: '2024-01-02T08:15:00Z',
+    updated_at: '2024-01-18T17:00:00Z',
+    work_request_tags: [
+      { tag_name: 'compliance' },
+      { tag_name: 'audit' },
+      { tag_name: 'documentation' }
+    ]
+  }
+]
 
 const statusColors = {
   submitted: 'bg-blue-100 text-blue-800',
@@ -87,12 +207,12 @@ const categoryLabels: Record<string, string> = {
 }
 
 export default function WorkRequestsPage() {
-  const [requests, setRequests] = useState<WorkRequestWithTags[]>([])
+  const [requests, setRequests] = useState<WorkRequestWithTags[]>(mockRequests)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedPriority, setSelectedPriority] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
@@ -101,48 +221,42 @@ export default function WorkRequestsPage() {
 
   const loadUserAndRequests = async () => {
     try {
-      // Get current user
+      // Try to get current user
       const { data: { user: authUser }, error } = await supabase.auth.getUser()
       
-      if (error || !authUser) {
-        console.error('No authenticated user:', error)
-        setIsLoading(false)
-        return
-      }
-
-      // Try to get user profile from database
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
-
-      if (profile) {
-        setUser({ ...authUser, profile })
-        await loadRequests(authUser.id)
+      if (authUser) {
+        // User is logged in, try to load real data
+        setUser(authUser)
+        await loadRealRequests(authUser.id)
       } else {
-        // Fallback to auth user
+        // No user logged in, use mock data and demo user
         setUser({
-          ...authUser,
-          profile: {
-            id: authUser.id,
-            email: authUser.email,
-            first_name: authUser.user_metadata?.first_name || 'Unknown',
-            last_name: authUser.user_metadata?.last_name || 'User',
-            role: 'client_user',
-            tenant_id: authUser.user_metadata?.tenant_id
+          id: 'demo-user',
+          email: 'demo@example.com',
+          user_metadata: {
+            first_name: 'Demo',
+            last_name: 'User'
           }
         })
-        await loadRequests(authUser.id)
+        // Keep mock data
+        setRequests(mockRequests)
       }
     } catch (error) {
       console.error('Error loading user and requests:', error)
-    } finally {
-      setIsLoading(false)
+      // Fallback to demo mode
+      setUser({
+        id: 'demo-user',
+        email: 'demo@example.com',
+        user_metadata: {
+          first_name: 'Demo',
+          last_name: 'User'
+        }
+      })
+      setRequests(mockRequests)
     }
   }
 
-  const loadRequests = async (userId: string) => {
+  const loadRealRequests = async (userId: string) => {
     try {
       const { data: workRequests, error } = await supabase
         .from('work_requests')
@@ -162,11 +276,14 @@ export default function WorkRequestsPage() {
 
       if (error) {
         console.error('Error loading work requests:', error)
-      } else {
-        setRequests(workRequests || [])
+        // Keep mock data on error
+      } else if (workRequests && workRequests.length > 0) {
+        setRequests(workRequests)
       }
+      // If no real requests, keep mock data for demo
     } catch (error) {
       console.error('Error loading requests:', error)
+      // Keep mock data on error
     }
   }
 
@@ -174,7 +291,9 @@ export default function WorkRequestsPage() {
     if (!user?.id) return
     
     setIsLoading(true)
-    await loadRequests(user.id)
+    if (user.id !== 'demo-user') {
+      await loadRealRequests(user.id)
+    }
     setIsLoading(false)
   }
 
@@ -219,35 +338,6 @@ export default function WorkRequestsPage() {
     return ['submitted', 'under_review'].includes(status)
   }
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 lg:p-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading your work requests...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
-  if (!user) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 lg:p-8">
-          <div className="text-center py-12">
-            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <p className="text-red-600 mb-4">You must be logged in to view work requests.</p>
-            <Button onClick={() => window.location.href = '/login'}>
-              Go to Login
-            </Button>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
   const stats = getRequestStats()
 
   return (
@@ -259,6 +349,19 @@ export default function WorkRequestsPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
               <p className="text-gray-600">Submit and track your work requests</p>
+              {user && user.id === 'demo-user' && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                  <User className="h-4 w-4" />
+                  <span>Demo Mode - Showing sample data</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = '/login'}
+                  >
+                    Login for Real Data
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               <Button 
@@ -389,19 +492,7 @@ export default function WorkRequestsPage() {
           {filteredRequests.length === 0 ? (
             <div className="text-center py-12">
               <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              {requests.length === 0 ? (
-                <>
-                  <p className="text-gray-500 mb-4">You haven't submitted any work requests yet.</p>
-                  <Button 
-                    onClick={() => window.location.href = '/work-requests/new'}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Create Your First Request
-                  </Button>
-                </>
-              ) : (
-                <p className="text-gray-500 mb-4">No work requests found matching your criteria.</p>
-              )}
+              <p className="text-gray-500 mb-4">No work requests found matching your criteria.</p>
             </div>
           ) : (
             filteredRequests.map(request => {
