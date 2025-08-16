@@ -183,12 +183,19 @@ export default function EditWorkRequestPage({ params }: { params: Promise<{ id: 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Update the request
+      // Update the request - FIX: Don't spread formData.attachments into request.attachments
       setRequest(prev => ({
         ...prev,
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        priority: formData.priority,
+        urgency: formData.urgency,
         estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : undefined,
         budget: formData.budget ? parseInt(formData.budget) : undefined,
+        requiredCompletionDate: formData.requiredCompletionDate,
+        tags: formData.tags,
+        // Keep existing attachments structure - don't mix with File objects
         updatedAt: new Date().toISOString()
       }))
       
