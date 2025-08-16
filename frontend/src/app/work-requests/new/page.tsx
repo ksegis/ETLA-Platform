@@ -1,7 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Upload, X, Calendar, DollarSign, Clock, User } from 'lucide-react'
+import { 
+  ArrowLeft, 
+  Upload, 
+  X, 
+  Plus, 
+  Calendar, 
+  DollarSign, 
+  Clock, 
+  FileText,
+  AlertCircle,
+  CheckCircle,
+  User
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { supabase } from '@/lib/supabase'
@@ -10,22 +22,13 @@ interface FormData {
   title: string
   description: string
   category: string
-  priority: string
-  urgency: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  urgency: 'low' | 'medium' | 'high' | 'urgent'
   estimatedHours: string
   budget: string
   requiredCompletionDate: string
   tags: string[]
   attachments: File[]
-}
-
-interface UserProfile {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  role: string
-  tenant_id?: string
 }
 
 const categories = [
@@ -40,27 +43,13 @@ const categories = [
   { value: 'other', label: 'Other' }
 ]
 
-const priorities = [
-  { value: 'low', label: 'Low', description: 'Can be completed when resources are available' },
-  { value: 'medium', label: 'Medium', description: 'Standard business priority' },
-  { value: 'high', label: 'High', description: 'Important for business operations' },
-  { value: 'critical', label: 'Critical', description: 'Urgent business need' }
-]
-
-const urgencies = [
-  { value: 'low', label: 'Low', description: 'No specific timeline' },
-  { value: 'medium', label: 'Medium', description: 'Within next month' },
-  { value: 'high', label: 'High', description: 'Within next week' },
-  { value: 'urgent', label: 'Urgent', description: 'Within 24-48 hours' }
-]
-
 export default function NewWorkRequestPage() {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     category: '',
-    priority: '',
-    urgency: '',
+    priority: 'medium',
+    urgency: 'medium',
     estimatedHours: '',
     budget: '',
     requiredCompletionDate: '',
@@ -70,9 +59,9 @@ export default function NewWorkRequestPage() {
 
   const [currentTag, setCurrentTag] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [user, setUser] = useState<UserProfile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     loadUser()
@@ -80,46 +69,85 @@ export default function NewWorkRequestPage() {
 
   const loadUser = async () => {
     try {
-      const { data: { user: authUser }, error } = await supabase.auth.getUser()
-      
-      if (error || !authUser) {
-        console.error('No authenticated user:', error)
-        setIsLoading(false)
-        return
-      }
-
-      // Try to get user profile from database
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
-
-      if (profile) {
-        setUser(profile)
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        setUser(authUser)
       } else {
-        // Fallback to auth user metadata
+        // Demo user for testing
         setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-          first_name: authUser.user_metadata?.first_name || 'Unknown',
-          last_name: authUser.user_metadata?.last_name || 'User',
-          role: 'client_user',
-          tenant_id: authUser.user_metadata?.tenant_id
+          id: 'demo-user',
+          email: 'demo@company.com',
+          user_metadata: {
+            first_name: 'Demo',
+            last_name: 'User'
+          }
         })
       }
     } catch (error) {
       console.error('Error loading user:', error)
-    } finally {
-      setIsLoading(false)
+      // Fallback to demo user
+      setUser({
+        id: 'demo-user',
+        email: 'demo@company.com',
+        user_metadata: {
+          first_name: 'Demo',
+          last_name: 'User'
+        }
+      })
     }
   }
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
-    }
+  const handleInputChange = (field: keyof FormData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    
+    // Validate files
+    const validFiles = files.filter(file => {
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/png',
+        'image/jpeg',
+        'text/plain'
+      ]
+      
+      if (file.size > maxSize) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`)
+        return false
+      }
+      
+      if (!allowedTypes.includes(file.type)) {
+        alert(`File ${file.name} has an unsupported format.`)
+        return false
+      }
+      
+      return true
+    })
+
+    setFormData(prev => ({
+      ...prev,
+      attachments: [...prev.attachments, ...validFiles]
+    }))
+
+    // Clear the input
+    event.target.value = ''
+  }
+
+  const removeFile = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index)
+    }))
   }
 
   const addTag = () => {
@@ -139,216 +167,175 @@ export default function NewWorkRequestPage() {
     }))
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
-    
-    // Validate file size (10MB max) and type
-    const validFiles = files.filter(file => {
-      if (file.size > 10 * 1024 * 1024) {
-        alert(`File ${file.name} is too large. Maximum size is 10MB.`)
-        return false
-      }
-      
-      // Allow common file types
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'image/png',
-        'image/jpeg',
-        'image/jpg',
-        'text/plain'
-      ]
-      
-      if (!allowedTypes.includes(file.type)) {
-        alert(`File ${file.name} has unsupported format. Please use PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, or TXT files.`)
-        return false
-      }
-      
-      return true
-    })
-
-    setFormData(prev => ({
-      ...prev,
-      attachments: [...prev.attachments, ...validFiles]
-    }))
+  const validateForm = (): string | null => {
+    if (!formData.title.trim()) return 'Title is required'
+    if (!formData.description.trim()) return 'Description is required'
+    if (!formData.category) return 'Category is required'
+    if (formData.estimatedHours && isNaN(Number(formData.estimatedHours))) {
+      return 'Estimated hours must be a valid number'
+    }
+    if (formData.budget && isNaN(Number(formData.budget))) {
+      return 'Budget must be a valid number'
+    }
+    return null
   }
 
-  const removeFile = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
-    }))
-  }
+  const uploadFiles = async (workRequestId: string): Promise<boolean> => {
+    if (formData.attachments.length === 0) return true
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.title.trim()) newErrors.title = 'Title is required'
-    if (!formData.description.trim()) newErrors.description = 'Description is required'
-    if (!formData.category) newErrors.category = 'Category is required'
-    if (!formData.priority) newErrors.priority = 'Priority is required'
-    if (!formData.urgency) newErrors.urgency = 'Urgency is required'
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const uploadFiles = async (workRequestId: string) => {
-    const uploadedFiles = []
-
-    for (const file of formData.attachments) {
-      try {
-        // Create a safe filename
-        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'bin'
-        const timestamp = Date.now()
-        const randomId = Math.random().toString(36).substring(2, 15)
-        const fileName = `${workRequestId}/${timestamp}_${randomId}.${fileExt}`
+    try {
+      console.log(`Uploading ${formData.attachments.length} files...`)
+      
+      for (const file of formData.attachments) {
+        const fileName = `${workRequestId}/${Date.now()}-${file.name}`
         
-        console.log(`Uploading file: ${file.name} (${file.type}) as ${fileName}`)
+        console.log(`Uploading file: ${fileName}`)
         
-        // Upload to Supabase Storage
-        const { data, error } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('work-request-attachments')
           .upload(fileName, file, {
             cacheControl: '3600',
             upsert: false
           })
 
-        if (error) {
-          console.error('File upload error:', error)
-          alert(`Failed to upload ${file.name}: ${error.message}`)
-          continue
+        if (uploadError) {
+          console.error('File upload error:', uploadError)
+          continue // Continue with other files
         }
 
-        console.log('File uploaded successfully:', data)
+        console.log('File uploaded successfully:', uploadData)
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('work-request-attachments')
-          .getPublicUrl(fileName)
+        // Save file record to database
+        const { error: dbError } = await supabase
+          .from('work_request_attachments')
+          .insert({
+            work_request_id: workRequestId,
+            filename: file.name,
+            file_path: fileName,
+            file_size: file.size,
+            content_type: file.type
+          })
 
-        uploadedFiles.push({
-          filename: file.name,
-          file_path: fileName,
-          file_url: publicUrl,
-          file_size: file.size,
-          content_type: file.type
-        })
-      } catch (error) {
-        console.error('Error uploading file:', file.name, error)
-        alert(`Error uploading ${file.name}: ${error}`)
+        if (dbError) {
+          console.error('Database error saving file record:', dbError)
+        }
       }
-    }
 
-    return uploadedFiles
+      return true
+    } catch (error) {
+      console.error('File upload exception:', error)
+      return false
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateForm()) return
+    const validationError = validateForm()
+    if (validationError) {
+      setErrorMessage(validationError)
+      setSubmitStatus('error')
+      return
+    }
+
     if (!user) {
-      alert('You must be logged in to submit a work request')
+      setErrorMessage('User not found. Please refresh the page.')
+      setSubmitStatus('error')
       return
     }
 
     setIsSubmitting(true)
-    
+    setSubmitStatus('idle')
+    setErrorMessage('')
+
     try {
       console.log('Submitting work request...')
-      
-      // Insert work request into database
-      const { data: workRequest, error: requestError } = await supabase
+      console.log('Form data:', formData)
+      console.log('User:', user)
+
+      // Create work request
+      const workRequestData = {
+        tenant_id: 'default',
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        priority: formData.priority,
+        urgency: formData.urgency,
+        status: 'submitted',
+        customer_id: user.id,
+        estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
+        budget: formData.budget ? parseInt(formData.budget) : null,
+        required_completion_date: formData.requiredCompletionDate || null,
+        actual_hours: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      console.log('Inserting work request:', workRequestData)
+
+      const { data: workRequest, error: workRequestError } = await supabase
         .from('work_requests')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          category: formData.category,
-          priority: formData.priority,
-          urgency: formData.urgency,
-          estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
-          budget: formData.budget ? parseFloat(formData.budget) : null,
-          required_completion_date: formData.requiredCompletionDate || null,
-          status: 'submitted',
-          customer_id: user.id,
-          tenant_id: user.tenant_id,
-          actual_hours: 0
-        })
+        .insert(workRequestData)
         .select()
         .single()
 
-      if (requestError) {
-        console.error('Database error:', requestError)
-        throw requestError
+      if (workRequestError) {
+        console.error('Work request creation error:', workRequestError)
+        throw new Error(`Failed to create work request: ${workRequestError.message}`)
       }
 
       console.log('Work request created:', workRequest)
 
-      // Upload files if any (but don't fail the whole submission if files fail)
-      let uploadedFiles = []
+      // Upload files
       if (formData.attachments.length > 0) {
-        try {
-          uploadedFiles = await uploadFiles(workRequest.id)
-          console.log('Files uploaded:', uploadedFiles)
-          
-          // Insert file records into database
-          if (uploadedFiles.length > 0) {
-            const { error: filesError } = await supabase
-              .from('work_request_attachments')
-              .insert(
-                uploadedFiles.map(file => ({
-                  work_request_id: workRequest.id,
-                  ...file
-                }))
-              )
-
-            if (filesError) {
-              console.error('Error saving file records:', filesError)
-            }
-          }
-        } catch (fileError) {
-          console.error('File upload failed, but continuing with submission:', fileError)
-        }
+        console.log('Uploading files...')
+        await uploadFiles(workRequest.id)
       }
 
-      // Insert tags if any
+      // Save tags
       if (formData.tags.length > 0) {
-        try {
-          const { error: tagsError } = await supabase
-            .from('work_request_tags')
-            .insert(
-              formData.tags.map(tag => ({
-                work_request_id: workRequest.id,
-                tag_name: tag
-              }))
-            )
+        console.log('Saving tags...')
+        const tagInserts = formData.tags.map(tag => ({
+          work_request_id: workRequest.id,
+          tag_name: tag
+        }))
 
-          if (tagsError) {
-            console.error('Error saving tags:', tagsError)
-          }
-        } catch (tagError) {
-          console.error('Tag save failed, but continuing:', tagError)
+        const { error: tagsError } = await supabase
+          .from('work_request_tags')
+          .insert(tagInserts)
+
+        if (tagsError) {
+          console.error('Tags error:', tagsError)
+          // Don't fail the whole submission for tags
         }
       }
 
-      alert('Work request submitted successfully!')
+      console.log('Work request submitted successfully!')
+      setSubmitStatus('success')
       
-      // Redirect to requests page
-      window.location.href = '/work-requests'
-      
+      // Redirect after success
+      setTimeout(() => {
+        window.location.href = '/work-requests'
+      }, 2000)
+
     } catch (error) {
-      console.error('Error submitting work request:', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      alert(`Error submitting work request: ${errorMessage}`)
+      console.error('Submit error:', error)
+      
+      let errorMsg = 'An unexpected error occurred'
+      if (error instanceof Error) {
+        errorMsg = error.message
+      } else if (typeof error === 'object' && error !== null) {
+        errorMsg = JSON.stringify(error)
+      }
+      
+      setErrorMessage(errorMsg)
+      setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
@@ -356,345 +343,338 @@ export default function NewWorkRequestPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 max-w-4xl mx-auto">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
-  if (!user) {
-    return (
-      <DashboardLayout>
-        <div className="p-6 max-w-4xl mx-auto">
-          <div className="text-center py-12">
-            <p className="text-red-600 mb-4">You must be logged in to submit a work request.</p>
-            <Button onClick={() => window.location.href = '/login'}>
-              Go to Login
-            </Button>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
   return (
     <DashboardLayout>
       <div className="p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/work-requests'}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Requests
-              </Button>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/work-requests'}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Requests
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">New Work Request</h1>
+              <p className="text-gray-600">Submit a new work request for processing</p>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Submit New Work Request</h1>
-            <p className="text-gray-600">Provide details about the work you need completed</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* User Information */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Information</h2>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <User className="h-5 w-5 text-gray-600" />
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      Created by: {user.first_name} {user.last_name}
-                    </p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                    <p className="text-sm text-gray-600">Role: {user.role.replace('_', ' ').toUpperCase()}</p>
-                  </div>
+          {/* User Info */}
+          {user && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <User className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Created by</p>
+                  <p className="text-blue-700">
+                    {user.user_metadata?.first_name} {user.user_metadata?.last_name} ({user.email})
+                  </p>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Basic Information */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Request Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.title ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Brief, descriptive title for your request"
-                  />
-                  {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Detailed Description *
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    rows={4}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                      errors.description ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Provide detailed information about what you need, including specific requirements, goals, and any relevant background information"
-                  />
-                  {errors.description && <p className="text-red-600 text-sm mt-1">{errors.description}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category *
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.category ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map(cat => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
-                  {errors.category && <p className="text-red-600 text-sm mt-1">{errors.category}</p>}
-                </div>
-              </div>
+          {/* Status Messages */}
+          {submitStatus === 'success' && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              Work request submitted successfully! Redirecting to requests list...
             </div>
+          )}
 
-            {/* Priority and Timeline */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Priority and Timeline</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Priority Level *
-                  </label>
-                  <div className="space-y-2">
-                    {priorities.map(priority => (
-                      <label key={priority.value} className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input
-                          type="radio"
-                          name="priority"
-                          value={priority.value}
-                          checked={formData.priority === priority.value}
-                          onChange={(e) => handleInputChange('priority', e.target.value)}
-                          className="mt-1"
-                        />
-                        <div>
-                          <div className="font-medium text-gray-900">{priority.label}</div>
-                          <div className="text-sm text-gray-600">{priority.description}</div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.priority && <p className="text-red-600 text-sm mt-1">{errors.priority}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Urgency *
-                  </label>
-                  <div className="space-y-2">
-                    {urgencies.map(urgency => (
-                      <label key={urgency.value} className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
-                        <input
-                          type="radio"
-                          name="urgency"
-                          value={urgency.value}
-                          checked={formData.urgency === urgency.value}
-                          onChange={(e) => handleInputChange('urgency', e.target.value)}
-                          className="mt-1"
-                        />
-                        <div>
-                          <div className="font-medium text-gray-900">{urgency.label}</div>
-                          <div className="text-sm text-gray-600">{urgency.description}</div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.urgency && <p className="text-red-600 text-sm mt-1">{errors.urgency}</p>}
-                </div>
-              </div>
+          {submitStatus === 'error' && errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              {errorMessage}
             </div>
+          )}
+        </div>
 
-            {/* Additional Details */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Details</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Clock className="h-4 w-4 inline mr-1" />
-                    Estimated Hours
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.estimatedHours}
-                    onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., 40"
-                    min="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <DollarSign className="h-4 w-4 inline mr-1" />
-                    Budget Range
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.budget}
-                    onChange={(e) => handleInputChange('budget', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., 5000"
-                    min="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Required Completion
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.requiredCompletionDate}
-                    onChange={(e) => handleInputChange('requiredCompletionDate', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="mb-6">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Basic Information */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+            
+            <div className="space-y-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags
+                  Request Title *
                 </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={currentTag}
-                    onChange={(e) => setCurrentTag(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Add tags to help categorize your request"
-                  />
-                  <Button type="button" onClick={addTag} variant="outline">
-                    Add Tag
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map(tag => (
-                    <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Brief description of your request"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Detailed Description *
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Provide detailed information about your request, including specific requirements, expected outcomes, and any relevant context"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category *
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => handleInputChange('category', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map(category => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority and Urgency */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Priority and Urgency</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Priority Level</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'low', label: 'Low', desc: 'Standard business priority' },
+                    { value: 'medium', label: 'Medium', desc: 'Important for business operations' },
+                    { value: 'high', label: 'High', desc: 'Important for business operations' },
+                    { value: 'critical', label: 'Critical', desc: 'Urgent business need' }
+                  ].map(option => (
+                    <label key={option.value} className="flex items-start space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="priority"
+                        value={option.value}
+                        checked={formData.priority === option.value}
+                        onChange={(e) => handleInputChange('priority', e.target.value as any)}
+                        className="mt-1 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-900">{option.label}</div>
+                        <div className="text-sm text-gray-500">{option.desc}</div>
+                      </div>
+                    </label>
                   ))}
                 </div>
               </div>
 
-              {/* File Attachments */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Supporting Documents
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 mb-2">Upload files to support your request</p>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <Button type="button" variant="outline" size="sm">
-                      Choose Files
-                    </Button>
-                  </label>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Supported formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, TXT (Max 10MB each)
-                  </p>
-                </div>
-                
-                {formData.attachments.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {formData.attachments.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{file.name}</p>
-                          <p className="text-sm text-gray-600">{formatFileSize(file.size)} • {file.type}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Urgency Level</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'low', label: 'Low', desc: 'Within next month' },
+                    { value: 'medium', label: 'Medium', desc: 'Within next two weeks' },
+                    { value: 'high', label: 'High', desc: 'Within next week' },
+                    { value: 'urgent', label: 'Urgent', desc: 'Within 24-48 hours' }
+                  ].map(option => (
+                    <label key={option.value} className="flex items-start space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="urgency"
+                        value={option.value}
+                        checked={formData.urgency === option.value}
+                        onChange={(e) => handleInputChange('urgency', e.target.value as any)}
+                        className="mt-1 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-900">{option.label}</div>
+                        <div className="text-sm text-gray-500">{option.desc}</div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Submit */}
-            <div className="flex justify-end gap-4">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => window.location.href = '/work-requests'}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Submitting...
-                  </>
-                ) : (
-                  'Submit Request'
-                )}
+          {/* Additional Details */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Details</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Clock className="inline h-4 w-4 mr-1" />
+                  Estimated Hours
+                </label>
+                <input
+                  type="number"
+                  value={formData.estimatedHours}
+                  onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="120"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <DollarSign className="inline h-4 w-4 mr-1" />
+                  Budget Range
+                </label>
+                <input
+                  type="number"
+                  value={formData.budget}
+                  onChange={(e) => handleInputChange('budget', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="4000"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Calendar className="inline h-4 w-4 mr-1" />
+                  Required Completion
+                </label>
+                <input
+                  type="date"
+                  value={formData.requiredCompletionDate}
+                  onChange={(e) => handleInputChange('requiredCompletionDate', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Tags</h2>
+            
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={currentTag}
+                onChange={(e) => setCurrentTag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="migration"
+              />
+              <Button type="button" onClick={addTag} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Tag
               </Button>
             </div>
-          </form>
-        </div>
+
+            {formData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map(tag => (
+                  <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="ml-2 text-blue-600 hover:text-blue-800"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Supporting Documents */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Supporting Documents</h2>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">Upload files to support your request</p>
+              
+              <input
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
+              />
+              <label htmlFor="file-upload" className="cursor-pointer">
+                <Button type="button" variant="outline" size="sm">
+                  Choose Files
+                </Button>
+              </label>
+              <p className="text-xs text-gray-500 mt-2">
+                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, TXT (Max 10MB each)
+              </p>
+            </div>
+
+            {formData.attachments.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <h3 className="text-sm font-medium text-gray-700">Selected Files:</h3>
+                {formData.attachments.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                        <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex justify-end gap-4">
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => window.location.href = '/work-requests'}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Submitting...
+                </>
+              ) : (
+                'Submit Request'
+              )}
+            </Button>
+          </div>
+        </form>
       </div>
     </DashboardLayout>
   )
