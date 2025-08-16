@@ -638,8 +638,8 @@ export default function NewWorkRequestPage() {
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <Button type="button" variant="outline" size="sm" asChild>
-                      <span>Choose Files</span>
+                    <Button type="button" variant="outline" size="sm">
+                      Choose Files
                     </Button>
                   </label>
                   <p className="text-xs text-gray-500 mt-2">
