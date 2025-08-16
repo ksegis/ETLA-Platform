@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { createClient } from '@/lib/supabase'
 
 interface FormData {
   title: string
@@ -44,6 +45,7 @@ const categories = [
 
 export default function NewWorkRequestPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const supabase = createClient()
   
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -153,48 +155,138 @@ export default function NewWorkRequestPage() {
 
     setIsSubmitting(true)
     setSubmitStatus('idle')
-    setMessage('Submitting your request...')
+    setMessage('Submitting your request to the database...')
 
     try {
-      // Create request object
-      const requestData = {
-        id: Date.now().toString(),
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError) {
+        console.error('User error:', userError)
+        throw new Error('Authentication required')
+      }
+
+      if (!user) {
+        throw new Error('No authenticated user found')
+      }
+
+      console.log('Current user:', user.id, user.email)
+
+      // Create the work request object matching the database schema
+      const workRequestData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         category: formData.category,
         priority: formData.priority,
         urgency: formData.urgency,
-        estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
-        budget: formData.budget ? parseInt(formData.budget) : null,
-        requiredCompletionDate: formData.requiredCompletionDate || null,
-        tags: formData.tags,
-        attachments: formData.attachments.map(f => ({ name: f.name, size: f.size })),
         status: 'submitted',
-        createdAt: new Date().toISOString(),
-        createdBy: 'demo@company.com'
+        customer_id: user.id,
+        estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
+        budget: formData.budget ? parseFloat(formData.budget) : null,
+        required_completion_date: formData.requiredCompletionDate || null,
+        tenant_id: '00000000-0000-0000-0000-000000000001' // Default tenant for now
       }
 
-      console.log('Saving request:', requestData)
+      console.log('Inserting work request:', workRequestData)
 
-      // Save to localStorage for now
-      const existingRequests = JSON.parse(localStorage.getItem('work_requests') || '[]')
-      existingRequests.push(requestData)
-      localStorage.setItem('work_requests', JSON.stringify(existingRequests))
+      // Insert into work_requests table
+      const { data: insertedRequest, error: insertError } = await supabase
+        .from('work_requests')
+        .insert([workRequestData])
+        .select()
+        .single()
 
-      console.log('Request saved successfully!')
+      if (insertError) {
+        console.error('Database insert error:', insertError)
+        throw new Error(`Database error: ${insertError.message}`)
+      }
+
+      if (!insertedRequest) {
+        throw new Error('No data returned from insert')
+      }
+
+      console.log('Work request inserted successfully:', insertedRequest)
+
+      // Save tags if any (you might need to create a work_request_tags table)
+      if (formData.tags.length > 0) {
+        console.log('Saving tags:', formData.tags)
+        // For now, we'll store tags in the internal_notes field
+        const { error: updateError } = await supabase
+          .from('work_requests')
+          .update({ 
+            internal_notes: `Tags: ${formData.tags.join(', ')}` 
+          })
+          .eq('id', insertedRequest.id)
+
+        if (updateError) {
+          console.warn('Tag save error:', updateError)
+        }
+      }
+
+      // Handle file uploads if any
+      if (formData.attachments.length > 0) {
+        console.log('Uploading files:', formData.attachments.length)
+        
+        for (const file of formData.attachments) {
+          try {
+            const fileName = `${insertedRequest.id}/${Date.now()}-${file.name}`
+            
+            const { error: uploadError } = await supabase.storage
+              .from('work-request-attachments')
+              .upload(fileName, file)
+
+            if (uploadError) {
+              console.warn('File upload error:', uploadError)
+            } else {
+              console.log('File uploaded:', fileName)
+            }
+          } catch (fileError) {
+            console.warn('Individual file error:', fileError)
+          }
+        }
+      }
 
       setSubmitStatus('success')
-      setMessage(`Work request "${formData.title}" submitted successfully! ID: ${requestData.id}`)
+      setMessage(`Work request "${formData.title}" submitted successfully! Request ID: ${insertedRequest.id}`)
 
-      // Redirect after 2 seconds
+      // Redirect after 3 seconds
       setTimeout(() => {
         window.location.href = '/work-requests'
-      }, 2000)
+      }, 3000)
 
     } catch (error) {
       console.error('Submit error:', error)
       setSubmitStatus('error')
-      setMessage('Failed to submit request. Please try again.')
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      setMessage(`Failed to submit request: ${errorMessage}`)
+      
+      // Also save to localStorage as backup
+      try {
+        const backupData = {
+          id: Date.now().toString(),
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          category: formData.category,
+          priority: formData.priority,
+          urgency: formData.urgency,
+          estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
+          budget: formData.budget ? parseFloat(formData.budget) : null,
+          requiredCompletionDate: formData.requiredCompletionDate || null,
+          tags: formData.tags,
+          status: 'submitted',
+          createdAt: new Date().toISOString(),
+          createdBy: 'backup-save'
+        }
+        
+        const existingRequests = JSON.parse(localStorage.getItem('work_requests') || '[]')
+        existingRequests.push(backupData)
+        localStorage.setItem('work_requests', JSON.stringify(existingRequests))
+        
+        setMessage(errorMessage + ' (Saved locally as backup)')
+      } catch (backupError) {
+        console.error('Backup save failed:', backupError)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -235,7 +327,7 @@ export default function NewWorkRequestPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-blue-900">Created by</p>
-                <p className="text-blue-700">Demo User (demo@company.com)</p>
+                <p className="text-blue-700">Current User (authenticated via Supabase)</p>
               </div>
             </div>
           </div>
@@ -247,6 +339,7 @@ export default function NewWorkRequestPage() {
               <div>
                 <p className="font-medium">Success!</p>
                 <p className="text-sm">{message}</p>
+                <p className="text-xs mt-1">Redirecting to requests list...</p>
               </div>
             </div>
           )}
@@ -264,7 +357,10 @@ export default function NewWorkRequestPage() {
           {isSubmitting && (
             <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6 flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <p>{message}</p>
+              <div>
+                <p className="font-medium">Submitting...</p>
+                <p className="text-sm">{message}</p>
+              </div>
             </div>
           )}
         </div>
@@ -547,7 +643,7 @@ export default function NewWorkRequestPage() {
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Submitting...
+                  Submitting to Database...
                 </>
               ) : (
                 'Submit Request'
