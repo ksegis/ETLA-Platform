@@ -14,10 +14,12 @@ import {
   CheckCircle,
   XCircle,
   Pause,
-  PlayCircle
+  PlayCircle,
+  RefreshCw
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface WorkRequest {
   id: string
@@ -27,90 +29,18 @@ interface WorkRequest {
   priority: 'low' | 'medium' | 'high' | 'critical'
   urgency: 'low' | 'medium' | 'high' | 'urgent'
   status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'in_progress' | 'completed' | 'rejected' | 'cancelled'
-  estimatedHours?: number
+  estimated_hours?: number
   budget?: number
-  requiredCompletionDate?: string
-  submittedAt: string
-  updatedAt: string
-  assignedTo?: string
+  required_completion_date?: string
+  tags: string[]
+  created_at: string
+  updated_at: string
+  created_by: string
+  customer_name: string
+  customer_email: string
+  company_name?: string
+  assigned_to?: string
 }
-
-// Mock data for demonstration
-const mockRequests: WorkRequest[] = [
-  {
-    id: '1',
-    title: 'Payroll System Integration',
-    description: 'Integration of existing payroll system with new HRIS platform including data migration, API setup, and testing.',
-    category: 'system_integration',
-    priority: 'high',
-    urgency: 'medium',
-    status: 'in_progress',
-    estimatedHours: 40,
-    budget: 8000,
-    requiredCompletionDate: '2024-08-30',
-    submittedAt: '2024-08-10T09:00:00Z',
-    updatedAt: '2024-08-15T14:30:00Z',
-    assignedTo: 'Sarah Johnson'
-  },
-  {
-    id: '2',
-    title: 'Benefits Audit & Compliance Review',
-    description: 'Comprehensive audit of current benefits structure and compliance with new regulations.',
-    category: 'compliance_audit',
-    priority: 'medium',
-    urgency: 'low',
-    status: 'approved',
-    estimatedHours: 30,
-    budget: 6000,
-    requiredCompletionDate: '2024-09-15',
-    submittedAt: '2024-08-08T14:20:00Z',
-    updatedAt: '2024-08-12T10:15:00Z',
-    assignedTo: 'Mike Chen'
-  },
-  {
-    id: '3',
-    title: 'Custom Reporting Dashboard',
-    description: 'Development of custom analytics dashboard for HR metrics and KPI tracking.',
-    category: 'custom_development',
-    priority: 'medium',
-    urgency: 'medium',
-    status: 'completed',
-    estimatedHours: 50,
-    budget: 10000,
-    requiredCompletionDate: '2024-08-05',
-    submittedAt: '2024-07-10T11:30:00Z',
-    updatedAt: '2024-08-05T17:00:00Z',
-    assignedTo: 'Lisa Wang'
-  },
-  {
-    id: '4',
-    title: 'Employee Onboarding Automation',
-    description: 'Automate the employee onboarding process with digital forms and workflow management.',
-    category: 'process_automation',
-    priority: 'low',
-    urgency: 'low',
-    status: 'under_review',
-    estimatedHours: 25,
-    budget: 4500,
-    requiredCompletionDate: '2024-09-30',
-    submittedAt: '2024-08-14T16:45:00Z',
-    updatedAt: '2024-08-14T16:45:00Z'
-  },
-  {
-    id: '5',
-    title: 'Data Migration from Legacy System',
-    description: 'Migrate employee data from legacy HR system to new cloud-based platform.',
-    category: 'data_migration',
-    priority: 'critical',
-    urgency: 'high',
-    status: 'submitted',
-    estimatedHours: 60,
-    budget: 12000,
-    requiredCompletionDate: '2024-08-25',
-    submittedAt: '2024-08-16T09:15:00Z',
-    updatedAt: '2024-08-16T09:15:00Z'
-  }
-]
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
@@ -155,11 +85,90 @@ const categoryLabels: Record<string, string> = {
 }
 
 export default function WorkRequestsPage() {
-  const [requests, setRequests] = useState<WorkRequest[]>(mockRequests)
+  const [requests, setRequests] = useState<WorkRequest[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedPriority, setSelectedPriority] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    loadUserAndRequests()
+  }, [])
+
+  const loadUserAndRequests = async () => {
+    try {
+      // Get current user
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError) {
+        console.error('Auth error:', authError)
+        setIsLoading(false)
+        return
+      }
+
+      setUser(authUser)
+
+      if (authUser) {
+        // Load work requests for this user
+        const { data: workRequests, error: requestsError } = await supabase
+          .from('work_requests')
+          .select(`
+            *,
+            work_request_attachments (
+              id,
+              filename,
+              file_size
+            )
+          `)
+          .eq('created_by', authUser.id)
+          .order('created_at', { ascending: false })
+
+        if (requestsError) {
+          console.error('Error loading work requests:', requestsError)
+        } else {
+          setRequests(workRequests || [])
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const refreshRequests = async () => {
+    if (!user) return
+    
+    setIsLoading(true)
+    try {
+      const { data: workRequests, error } = await supabase
+        .from('work_requests')
+        .select(`
+          *,
+          work_request_attachments (
+            id,
+            filename,
+            file_size
+          )
+        `)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error refreshing work requests:', error)
+      } else {
+        setRequests(workRequests || [])
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -202,6 +211,35 @@ export default function WorkRequestsPage() {
     return ['draft', 'submitted', 'under_review'].includes(status)
   }
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 lg:p-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading your work requests...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 lg:p-8">
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <p className="text-red-600 mb-4">You must be logged in to view work requests.</p>
+            <Button onClick={() => window.location.href = '/login'}>
+              Go to Login
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   const stats = getRequestStats()
 
   return (
@@ -214,13 +252,23 @@ export default function WorkRequestsPage() {
               <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
               <p className="text-gray-600">Submit and track your work requests</p>
             </div>
-            <Button 
-              onClick={() => window.location.href = '/work-requests/new'}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Request
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={refreshRequests}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button 
+                onClick={() => window.location.href = '/work-requests/new'}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Request
+              </Button>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -333,13 +381,19 @@ export default function WorkRequestsPage() {
           {filteredRequests.length === 0 ? (
             <div className="text-center py-12">
               <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">No work requests found matching your criteria.</p>
-              <Button 
-                onClick={() => window.location.href = '/work-requests/new'}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Create Your First Request
-              </Button>
+              {requests.length === 0 ? (
+                <>
+                  <p className="text-gray-500 mb-4">You haven't submitted any work requests yet.</p>
+                  <Button 
+                    onClick={() => window.location.href = '/work-requests/new'}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Create Your First Request
+                  </Button>
+                </>
+              ) : (
+                <p className="text-gray-500 mb-4">No work requests found matching your criteria.</p>
+              )}
             </div>
           ) : (
             filteredRequests.map(request => {
@@ -361,10 +415,10 @@ export default function WorkRequestsPage() {
                       <p className="text-gray-600 mb-3 line-clamp-2">{request.description}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>Category: {categoryLabels[request.category] || request.category}</span>
-                        {request.estimatedHours && (
+                        {request.estimated_hours && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {request.estimatedHours}h
+                            {request.estimated_hours}h
                           </span>
                         )}
                         {request.budget && (
@@ -373,21 +427,30 @@ export default function WorkRequestsPage() {
                             ${request.budget.toLocaleString()}
                           </span>
                         )}
-                        {request.requiredCompletionDate && (
+                        {request.required_completion_date && (
                           <span className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            Due: {formatDate(request.requiredCompletionDate)}
+                            Due: {formatDate(request.required_completion_date)}
                           </span>
                         )}
                       </div>
+                      {request.tags && request.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {request.tags.map(tag => (
+                            <span key={tag} className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-500">
-                      <p>Submitted: {formatDateTime(request.submittedAt)}</p>
-                      {request.assignedTo && (
-                        <p>Assigned to: {request.assignedTo}</p>
+                      <p>Submitted: {formatDateTime(request.created_at)}</p>
+                      {request.assigned_to && (
+                        <p>Assigned to: {request.assigned_to}</p>
                       )}
                     </div>
                     
