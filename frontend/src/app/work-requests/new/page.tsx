@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { createClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 interface FormData {
   title: string
@@ -45,7 +45,6 @@ const categories = [
 
 export default function NewWorkRequestPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
   
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -179,7 +178,7 @@ export default function NewWorkRequestPage() {
         category: formData.category,
         priority: formData.priority,
         urgency: formData.urgency,
-        status: 'submitted',
+        status: 'submitted' as const,
         customer_id: user.id,
         estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
@@ -207,10 +206,9 @@ export default function NewWorkRequestPage() {
 
       console.log('Work request inserted successfully:', insertedRequest)
 
-      // Save tags if any (you might need to create a work_request_tags table)
+      // Save tags if any (store in internal_notes field for now)
       if (formData.tags.length > 0) {
         console.log('Saving tags:', formData.tags)
-        // For now, we'll store tags in the internal_notes field
         const { error: updateError } = await supabase
           .from('work_requests')
           .update({ 
