@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, EyeOff, LogIn, Mail, Lock } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Mail, Lock, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { supabase } from '@/lib/supabase'
 
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -18,21 +19,28 @@ export default function LoginPage() {
     setError('')
 
     try {
+      console.log('Attempting login with:', email)
+      
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: email.trim(),
+        password: password,
       })
 
       if (error) {
+        console.error('Login error:', error)
         setError(error.message)
         return
       }
 
+      console.log('Login successful:', data)
+
       if (data.user) {
+        alert('Login successful!')
         // Redirect to dashboard or work requests
         window.location.href = '/work-requests'
       }
     } catch (err) {
+      console.error('Login exception:', err)
       const errorMessage = err instanceof Error ? err.message : 'An error occurred'
       setError(errorMessage)
     } finally {
@@ -40,9 +48,16 @@ export default function LoginPage() {
     }
   }
 
-  const handleSignUp = async () => {
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
     if (!email || !password) {
       setError('Please enter email and password')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters')
       return
     }
 
@@ -50,9 +65,11 @@ export default function LoginPage() {
     setError('')
 
     try {
+      console.log('Attempting signup with:', email)
+      
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: email.trim(),
+        password: password,
         options: {
           data: {
             first_name: 'Demo',
@@ -63,28 +80,53 @@ export default function LoginPage() {
       })
 
       if (error) {
+        console.error('Signup error:', error)
         setError(error.message)
         return
       }
 
-      if (data.user) {
-        alert('Account created successfully! You can now log in.')
-        // Try to sign in immediately
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+      console.log('Signup response:', data)
 
-        if (!signInError) {
+      if (data.user) {
+        if (data.user.email_confirmed_at) {
+          // User is immediately confirmed
+          alert('Account created and logged in successfully!')
           window.location.href = '/work-requests'
+        } else {
+          // Email confirmation required
+          alert('Account created! Please check your email for confirmation, or try logging in directly.')
+          setIsSignUp(false)
+          
+          // Try to sign in immediately (some Supabase configs allow this)
+          setTimeout(async () => {
+            try {
+              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password,
+              })
+              
+              if (!signInError && signInData.user) {
+                window.location.href = '/work-requests'
+              }
+            } catch (e) {
+              console.log('Auto sign-in failed, user needs to confirm email')
+            }
+          }, 1000)
         }
       }
     } catch (err) {
+      console.error('Signup exception:', err)
       const errorMessage = err instanceof Error ? err.message : 'An error occurred'
       setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const fillDemoCredentials = () => {
+    setEmail('demo@example.com')
+    setPassword('password123')
+    setError('')
   }
 
   return (
@@ -99,7 +141,7 @@ export default function LoginPage() {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Sign in to your account
+          {isSignUp ? 'Create your account' : 'Sign in to your account'}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Access your work requests and project management
@@ -108,7 +150,7 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-6" onSubmit={isSignUp ? handleSignUp : handleLogin}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
                 {error}
@@ -137,14 +179,14 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Password {isSignUp && <span className="text-xs text-gray-500">(min 6 characters)</span>}
               </label>
               <div className="mt-1 relative">
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -175,12 +217,21 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Signing in...
+                    {isSignUp ? 'Creating account...' : 'Signing in...'}
                   </>
                 ) : (
                   <>
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Sign in
+                    {isSignUp ? (
+                      <>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Create Account
+                      </>
+                    ) : (
+                      <>
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </>
+                    )}
                   </>
                 )}
               </Button>
@@ -188,11 +239,14 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleSignUp}
+                onClick={() => {
+                  setIsSignUp(!isSignUp)
+                  setError('')
+                }}
                 disabled={isLoading}
                 className="w-full"
               >
-                Create new account
+                {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
               </Button>
             </div>
           </form>
@@ -203,16 +257,36 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo Credentials</span>
+                <span className="px-2 bg-white text-gray-500">Demo Access</span>
               </div>
             </div>
 
+            <div className="mt-4 space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={fillDemoCredentials}
+                className="w-full"
+              >
+                Fill Demo Credentials
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.location.href = '/work-requests'}
+                className="w-full"
+              >
+                Continue as Guest (Demo Mode)
+              </Button>
+            </div>
+
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">For testing purposes, you can:</p>
+              <p className="text-sm text-gray-600 mb-2">Testing options:</p>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Enter any email and password to create a demo account</li>
-                <li>• Use: <code className="bg-gray-200 px-1 rounded">demo@example.com</code></li>
-                <li>• Password: <code className="bg-gray-200 px-1 rounded">password123</code></li>
+                <li>• <strong>Create account:</strong> Use any email/password</li>
+                <li>• <strong>Demo credentials:</strong> demo@example.com / password123</li>
+                <li>• <strong>Guest mode:</strong> No login required</li>
               </ul>
             </div>
           </div>
