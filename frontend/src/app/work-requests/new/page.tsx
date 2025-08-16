@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { 
   ArrowLeft, 
   Upload, 
@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
 
 interface FormData {
   title: string
@@ -61,44 +60,8 @@ export default function NewWorkRequestPage() {
 
   const [currentTag, setCurrentTag] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [user, setUser] = useState<any>(null)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-
-  useEffect(() => {
-    loadUser()
-  }, [])
-
-  const loadUser = async () => {
-    try {
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (authUser) {
-        setUser(authUser)
-      } else {
-        // Demo user for testing
-        setUser({
-          id: 'demo-user-' + Date.now(),
-          email: 'demo@company.com',
-          user_metadata: {
-            first_name: 'Demo',
-            last_name: 'User'
-          }
-        })
-      }
-    } catch (error) {
-      console.error('Error loading user:', error)
-      // Fallback to demo user
-      setUser({
-        id: 'demo-user-' + Date.now(),
-        email: 'demo@company.com',
-        user_metadata: {
-          first_name: 'Demo',
-          last_name: 'User'
-        }
-      })
-    }
-  }
+  const [message, setMessage] = useState('')
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -108,44 +71,24 @@ export default function NewWorkRequestPage() {
   }
 
   const triggerFileUpload = () => {
-    console.log('Triggering file upload...')
+    console.log('File upload clicked')
     if (fileInputRef.current) {
       fileInputRef.current.click()
     }
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('File upload triggered', event.target.files)
     const files = Array.from(event.target.files || [])
+    console.log('Files selected:', files.length)
     
-    if (files.length === 0) {
-      return
-    }
+    if (files.length === 0) return
 
-    // Validate files
+    // Simple validation
     const validFiles = files.filter(file => {
-      const maxSize = 10 * 1024 * 1024 // 10MB
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'image/png',
-        'image/jpeg',
-        'text/plain'
-      ]
-      
-      if (file.size > maxSize) {
-        alert(`File ${file.name} is too large. Maximum size is 10MB.`)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is too large (max 10MB)`)
         return false
       }
-      
-      if (!allowedTypes.includes(file.type)) {
-        alert(`File ${file.name} has an unsupported format.`)
-        return false
-      }
-      
       return true
     })
 
@@ -154,7 +97,6 @@ export default function NewWorkRequestPage() {
       attachments: [...prev.attachments, ...validFiles]
     }))
 
-    // Clear the input
     if (event.target) {
       event.target.value = ''
     }
@@ -184,148 +126,75 @@ export default function NewWorkRequestPage() {
     }))
   }
 
-  const validateForm = (): string | null => {
-    if (!formData.title.trim()) return 'Title is required'
-    if (!formData.description.trim()) return 'Description is required'
-    if (!formData.category) return 'Category is required'
-    if (formData.estimatedHours && isNaN(Number(formData.estimatedHours))) {
-      return 'Estimated hours must be a valid number'
-    }
-    if (formData.budget && isNaN(Number(formData.budget))) {
-      return 'Budget must be a valid number'
-    }
-    return null
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    const validationError = validateForm()
-    if (validationError) {
-      setErrorMessage(validationError)
+    console.log('Submit button clicked!')
+    console.log('Form data:', formData)
+
+    // Basic validation
+    if (!formData.title.trim()) {
+      setMessage('Title is required')
       setSubmitStatus('error')
       return
     }
 
-    if (!user) {
-      setErrorMessage('User not found. Please refresh the page.')
+    if (!formData.description.trim()) {
+      setMessage('Description is required')
+      setSubmitStatus('error')
+      return
+    }
+
+    if (!formData.category) {
+      setMessage('Category is required')
       setSubmitStatus('error')
       return
     }
 
     setIsSubmitting(true)
     setSubmitStatus('idle')
-    setErrorMessage('')
-    setSuccessMessage('')
+    setMessage('Submitting your request...')
 
     try {
-      console.log('Starting form submission...')
-      
-      // Create the work request data
-      const workRequestData = {
+      // Create request object
+      const requestData = {
+        id: Date.now().toString(),
         title: formData.title.trim(),
         description: formData.description.trim(),
         category: formData.category,
         priority: formData.priority,
         urgency: formData.urgency,
-        status: 'submitted',
-        customer_id: user.id,
-        estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
+        estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
         budget: formData.budget ? parseInt(formData.budget) : null,
-        required_completion_date: formData.requiredCompletionDate || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        requiredCompletionDate: formData.requiredCompletionDate || null,
+        tags: formData.tags,
+        attachments: formData.attachments.map(f => ({ name: f.name, size: f.size })),
+        status: 'submitted',
+        createdAt: new Date().toISOString(),
+        createdBy: 'demo@company.com'
       }
 
-      console.log('Submitting work request data:', workRequestData)
+      console.log('Saving request:', requestData)
 
-      // Insert into database
-      const { data: workRequest, error: insertError } = await supabase
-        .from('work_requests')
-        .insert([workRequestData])
-        .select()
-        .single()
+      // Save to localStorage for now
+      const existingRequests = JSON.parse(localStorage.getItem('work_requests') || '[]')
+      existingRequests.push(requestData)
+      localStorage.setItem('work_requests', JSON.stringify(existingRequests))
 
-      if (insertError) {
-        console.error('Database insert error:', insertError)
-        throw new Error(`Database error: ${insertError.message}`)
-      }
+      console.log('Request saved successfully!')
 
-      console.log('Work request created successfully:', workRequest)
-
-      // Handle tags if any
-      if (formData.tags.length > 0 && workRequest) {
-        console.log('Inserting tags...')
-        const tagData = formData.tags.map(tag => ({
-          work_request_id: workRequest.id,
-          tag_name: tag
-        }))
-
-        const { error: tagError } = await supabase
-          .from('work_request_tags')
-          .insert(tagData)
-
-        if (tagError) {
-          console.warn('Tag insertion failed:', tagError)
-          // Don't fail the whole submission for tag errors
-        }
-      }
-
-      // Handle file attachments if any
-      if (formData.attachments.length > 0 && workRequest) {
-        console.log('Processing file attachments...')
-        for (const file of formData.attachments) {
-          try {
-            const fileName = `${workRequest.id}/${Date.now()}-${file.name}`
-            
-            const { error: uploadError } = await supabase.storage
-              .from('work-request-attachments')
-              .upload(fileName, file)
-
-            if (uploadError) {
-              console.warn('File upload failed:', uploadError)
-              continue // Skip this file but don't fail the submission
-            }
-
-            // Save file metadata
-            const { error: metadataError } = await supabase
-              .from('work_request_attachments')
-              .insert([{
-                work_request_id: workRequest.id,
-                filename: file.name,
-                file_path: fileName,
-                file_size: file.size,
-                mime_type: file.type
-              }])
-
-            if (metadataError) {
-              console.warn('File metadata save failed:', metadataError)
-            }
-          } catch (fileError) {
-            console.warn('File processing error:', fileError)
-          }
-        }
-      }
-
-      // Success!
       setSubmitStatus('success')
-      setSuccessMessage(`Work request "${formData.title}" has been submitted successfully! Request ID: ${workRequest.id}`)
-      
-      // Redirect after 3 seconds
+      setMessage(`Work request "${formData.title}" submitted successfully! ID: ${requestData.id}`)
+
+      // Redirect after 2 seconds
       setTimeout(() => {
         window.location.href = '/work-requests'
-      }, 3000)
+      }, 2000)
 
     } catch (error) {
-      console.error('Submission error:', error)
-      let errorMsg = 'Failed to submit work request. Please try again.'
-      
-      if (error instanceof Error) {
-        errorMsg = error.message
-      }
-      
-      setErrorMessage(errorMsg)
+      console.error('Submit error:', error)
       setSubmitStatus('error')
+      setMessage('Failed to submit request. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -359,48 +228,43 @@ export default function NewWorkRequestPage() {
           </div>
 
           {/* User Info */}
-          {user && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <User className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-blue-900">Created by</p>
-                  <p className="text-blue-700">
-                    {user.user_metadata?.first_name} {user.user_metadata?.last_name} ({user.email})
-                  </p>
-                </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-900">Created by</p>
+                <p className="text-blue-700">Demo User (demo@company.com)</p>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Status Messages */}
-          {submitStatus === 'success' && successMessage && (
+          {submitStatus === 'success' && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              <CheckCircle className="h-5 w-5 mr-2" />
               <div>
                 <p className="font-medium">Success!</p>
-                <p className="text-sm">{successMessage}</p>
-                <p className="text-sm mt-1">Redirecting to requests list in 3 seconds...</p>
+                <p className="text-sm">{message}</p>
               </div>
             </div>
           )}
 
-          {submitStatus === 'error' && errorMessage && (
+          {submitStatus === 'error' && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 mr-2" />
               <div>
                 <p className="font-medium">Error</p>
-                <p className="text-sm">{errorMessage}</p>
+                <p className="text-sm">{message}</p>
               </div>
             </div>
           )}
 
           {isSubmitting && (
             <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2 flex-shrink-0"></div>
-              <p>Submitting your work request to the database...</p>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              <p>{message}</p>
             </div>
           )}
         </div>
@@ -609,7 +473,7 @@ export default function NewWorkRequestPage() {
             )}
           </div>
 
-          {/* Supporting Documents - SINGLE UPLOAD BUTTON */}
+          {/* Supporting Documents */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Supporting Documents</h2>
             
@@ -617,7 +481,6 @@ export default function NewWorkRequestPage() {
               <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">Upload files to support your request</p>
               
-              {/* SINGLE FILE INPUT - Hidden */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -627,11 +490,10 @@ export default function NewWorkRequestPage() {
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt"
               />
               
-              {/* SINGLE UPLOAD BUTTON */}
               <button
                 type="button"
                 onClick={triggerFileUpload}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Choose Files
