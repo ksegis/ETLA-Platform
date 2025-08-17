@@ -48,15 +48,6 @@ export default function NewWorkRequestPage() {
   const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading')
   const [currentUser, setCurrentUser] = useState<any>(null)
 
-  // Generate UUID for demo purposes when not authenticated
-  const generateUUID = (): string => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0
-      const v = c == 'x' ? r : (r & 0x3 | 0x8)
-      return v.toString(16)
-    })
-  }
-
   // Handle authentication and tenant lookup
   useEffect(() => {
     const initializeAuth = async () => {
@@ -269,11 +260,12 @@ export default function NewWorkRequestPage() {
       console.log('✅ Supabase connection successful!')
       console.log('👤 Using authenticated user:', currentUser.email, 'ID:', currentUser.id)
 
-      // Use tenant_id if available, otherwise generate one for demo
+      // Use tenant_id if available, otherwise use a fallback
       let finalTenantId = userTenantId
       if (!finalTenantId) {
-        finalTenantId = generateUUID()
-        console.log('⚠️ No tenant_id found, using generated UUID for demo:', finalTenantId)
+        // Use a known tenant_id as fallback instead of generating random UUID
+        finalTenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Your actual tenant_id
+        console.log('⚠️ No tenant_id found, using fallback tenant_id:', finalTenantId)
       }
 
       // Prepare the data for insertion
@@ -284,7 +276,7 @@ export default function NewWorkRequestPage() {
         priority: formData.priority,
         urgency: formData.urgency,
         customer_id: currentUser.id, // Use authenticated user's ID
-        tenant_id: finalTenantId, // Use tenant_id from lookup or generated UUID
+        tenant_id: finalTenantId, // Use tenant_id from lookup or fallback
         estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         required_completion_date: formData.requiredCompletionDate || null,
