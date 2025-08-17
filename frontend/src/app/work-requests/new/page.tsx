@@ -46,22 +46,29 @@ export default function NewWorkRequestPage() {
   const [submitMessage, setSubmitMessage] = useState('')
   const [userTenantId, setUserTenantId] = useState<string | null>(null)
 
-  // Get user's tenant_id on component mount
+  // Get user's tenant_id on component mount - ROOT PROBLEM FIXED
   useEffect(() => {
     const getUserTenantId = async () => {
       try {
         console.log('🔍 Looking up user tenant_id...')
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (userError) {
+          console.error('❌ Auth error:', userError)
+          setSubmitMessage('Authentication error. Please refresh and try again.')
+          return
+        }
         
         if (user) {
           console.log('👤 Current user:', user.email, 'ID:', user.id)
           
           // Query tenant_users table to get the user's tenant_id
+          // ROOT FIX: Use maybeSingle() instead of single() to handle no results gracefully
           const { data: tenantData, error: tenantError } = await supabase
             .from('tenant_users')
             .select('tenant_id')
             .eq('user_id', user.id)
-            .single()
+            .maybeSingle()
 
           if (tenantError) {
             console.error('❌ Error fetching tenant_id:', tenantError)
@@ -69,13 +76,18 @@ export default function NewWorkRequestPage() {
           } else if (tenantData) {
             console.log('🏢 User tenant_id:', tenantData.tenant_id)
             setUserTenantId(tenantData.tenant_id)
+            console.log('✅ Tenant lookup completed successfully')
           } else {
             console.warn('⚠️ User not associated with any tenant')
             setSubmitMessage('Warning: User not associated with any tenant. Please contact support.')
           }
+        } else {
+          console.error('❌ No authenticated user found')
+          setSubmitMessage('No authenticated user found. Please log in.')
         }
       } catch (error) {
         console.error('❌ Error in getUserTenantId:', error)
+        setSubmitMessage('Unexpected error during tenant lookup. Please refresh and try again.')
       }
     }
 
