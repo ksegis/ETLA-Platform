@@ -14,31 +14,6 @@ interface FileUpload {
   file: File
 }
 
-const categories = [
-  { value: 'payroll_setup', label: 'Payroll Setup' },
-  { value: 'data_migration', label: 'Data Migration' },
-  { value: 'system_integration', label: 'System Integration' },
-  { value: 'reporting_setup', label: 'Reporting Setup' },
-  { value: 'benefits_configuration', label: 'Benefits Configuration' },
-  { value: 'compliance_audit', label: 'Compliance Audit' },
-  { value: 'training_support', label: 'Training Support' },
-  { value: 'custom_development', label: 'Custom Development' },
-  { value: 'other', label: 'Other' }
-]
-
-// Safe request ID generator - no problematic string operations
-function createRequestId(): string {
-  const now = new Date()
-  const year = now.getFullYear().toString().slice(-2)
-  const month = (now.getMonth() + 1).toString().padStart(2, '0')
-  const day = now.getDate().toString().padStart(2, '0')
-  const hour = now.getHours().toString().padStart(2, '0')
-  const minute = now.getMinutes().toString().padStart(2, '0')
-  const random = Math.floor(Math.random() * 999).toString().padStart(3, '0')
-  
-  return `WR-${year}${month}${day}-${hour}${minute}-${random}`
-}
-
 export default function NewWorkRequestPage() {
   const [formData, setFormData] = useState({
     title: '',
@@ -66,6 +41,27 @@ export default function NewWorkRequestPage() {
     databaseId: string
   } | null>(null)
 
+  // Safe categories array - no complex operations
+  const categoryOptions = [
+    'Payroll Setup',
+    'Data Migration', 
+    'System Integration',
+    'Reporting Setup',
+    'Benefits Configuration',
+    'Compliance Audit',
+    'Training Support',
+    'Custom Development',
+    'Other'
+  ]
+
+  // Ultra-safe request ID generator
+  const createRequestId = () => {
+    const now = new Date()
+    const timestamp = now.getTime().toString()
+    const random = Math.floor(Math.random() * 1000).toString()
+    return 'WR-' + timestamp.slice(-8) + '-' + random.padStart(3, '0')
+  }
+
   // Handle authentication and tenant lookup
   useEffect(() => {
     const initializeAuth = async () => {
@@ -73,20 +69,17 @@ export default function NewWorkRequestPage() {
         console.log('🔍 Checking authentication status...')
         setAuthStatus('loading')
         
-        // Get current session and user
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
           console.error('❌ Session error:', sessionError)
           setAuthStatus('unauthenticated')
-          setSubmitMessage('Session error. Please try logging in again.')
           return
         }
 
         if (!session) {
           console.warn('⚠️ No active session found')
           setAuthStatus('unauthenticated')
-          setSubmitMessage('No active session. Please log in to submit work requests.')
           return
         }
 
@@ -95,7 +88,6 @@ export default function NewWorkRequestPage() {
         if (userError || !user) {
           console.error('❌ User error:', userError)
           setAuthStatus('unauthenticated')
-          setSubmitMessage('Authentication error. Please log in again.')
           return
         }
 
@@ -113,27 +105,22 @@ export default function NewWorkRequestPage() {
 
         if (tenantError) {
           console.error('❌ Error fetching tenant_id:', tenantError)
-          setSubmitMessage('Warning: Could not determine tenant association. Please contact support.')
         } else if (tenantData && tenantData.tenant_id) {
           console.log('🏢 User tenant_id:', tenantData.tenant_id)
           setUserTenantId(tenantData.tenant_id)
           console.log('✅ Tenant lookup completed successfully')
-          setSubmitMessage('')
         } else {
           console.warn('⚠️ User not associated with any tenant')
-          setSubmitMessage('Warning: User not associated with any tenant. Please contact support.')
         }
 
       } catch (error) {
         console.error('❌ Error in authentication/tenant lookup:', error)
         setAuthStatus('unauthenticated')
-        setSubmitMessage('Unexpected error during authentication. Please refresh and try again.')
       }
     }
 
     initializeAuth()
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔄 Auth state changed:', event, session?.user?.email)
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -142,7 +129,6 @@ export default function NewWorkRequestPage() {
         setAuthStatus('unauthenticated')
         setCurrentUser(null)
         setUserTenantId(null)
-        setSubmitMessage('Please log in to submit work requests.')
       }
     })
 
@@ -252,7 +238,6 @@ export default function NewWorkRequestPage() {
 
     try {
       console.log('🚀 REAL DATABASE SUBMISSION STARTED!')
-      console.log('📝 Form data:', formData)
 
       // Test connection
       const { error: connectionError } = await supabase.from('work_requests').select('count').limit(1)
@@ -314,8 +299,6 @@ export default function NewWorkRequestPage() {
       }
 
       console.log('💾 Inserting into work_requests table:', requestData)
-      console.log('🔑 Using customer_id (UUID):', currentUser.id)
-      console.log('🏢 Using tenant_id (UUID):', finalTenantId)
 
       // Insert into Supabase
       const { data: insertData, error: insertError } = await supabase
@@ -330,12 +313,6 @@ export default function NewWorkRequestPage() {
 
       console.log('✅ DATABASE INSERT SUCCESSFUL!')
       console.log('📋 Inserted data:', insertData)
-
-      // Handle file uploads if any
-      if (formData.attachments.length > 0) {
-        console.log('📎 Processing file uploads...')
-        console.log('📁 Files to upload:', formData.attachments.map(f => f.name))
-      }
 
       // Set success data for enhanced confirmation
       setSuccessData({
@@ -640,9 +617,9 @@ export default function NewWorkRequestPage() {
                   required
                 >
                   <option value="">Select a category</option>
-                  {categories.map(category => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
+                  {categoryOptions.map((category, index) => (
+                    <option key={index} value={category.toLowerCase().replace(/\s+/g, '_')}>
+                      {category}
                     </option>
                   ))}
                 </select>
@@ -658,54 +635,124 @@ export default function NewWorkRequestPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">Priority Level</label>
                 <div className="space-y-2">
-                  {[
-                    { value: 'low', label: 'Low', description: 'Standard business priority' },
-                    { value: 'medium', label: 'Medium', description: 'Important for business operations' },
-                    { value: 'high', label: 'High', description: 'Important for business operations' },
-                    { value: 'critical', label: 'Critical', description: 'Urgent business need' }
-                  ].map(priority => (
-                    <label key={priority.value} className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="priority"
-                        value={priority.value}
-                        checked={formData.priority === priority.value}
-                        onChange={(e) => handlePriorityChange(e.target.value)}
-                        className="mt-1"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900">{priority.label}</div>
-                        <div className="text-sm text-gray-600">{priority.description}</div>
-                      </div>
-                    </label>
-                  ))}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="priority"
+                      value="low"
+                      checked={formData.priority === 'low'}
+                      onChange={(e) => handlePriorityChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">Low</div>
+                      <div className="text-sm text-gray-600">Standard business priority</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="priority"
+                      value="medium"
+                      checked={formData.priority === 'medium'}
+                      onChange={(e) => handlePriorityChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">Medium</div>
+                      <div className="text-sm text-gray-600">Important for business operations</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="priority"
+                      value="high"
+                      checked={formData.priority === 'high'}
+                      onChange={(e) => handlePriorityChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">High</div>
+                      <div className="text-sm text-gray-600">Important for business operations</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="priority"
+                      value="critical"
+                      checked={formData.priority === 'critical'}
+                      onChange={(e) => handlePriorityChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">Critical</div>
+                      <div className="text-sm text-gray-600">Urgent business need</div>
+                    </div>
+                  </label>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">Urgency Level</label>
                 <div className="space-y-2">
-                  {[
-                    { value: 'low', label: 'Low', description: 'Within next month' },
-                    { value: 'medium', label: 'Medium', description: 'Within next two weeks' },
-                    { value: 'high', label: 'High', description: 'Within next week' },
-                    { value: 'urgent', label: 'Urgent', description: 'Within 24-48 hours' }
-                  ].map(urgency => (
-                    <label key={urgency.value} className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="urgency"
-                        value={urgency.value}
-                        checked={formData.urgency === urgency.value}
-                        onChange={(e) => handleUrgencyChange(e.target.value)}
-                        className="mt-1"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900">{urgency.label}</div>
-                        <div className="text-sm text-gray-600">{urgency.description}</div>
-                      </div>
-                    </label>
-                  ))}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="urgency"
+                      value="low"
+                      checked={formData.urgency === 'low'}
+                      onChange={(e) => handleUrgencyChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">Low</div>
+                      <div className="text-sm text-gray-600">Within next month</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="urgency"
+                      value="medium"
+                      checked={formData.urgency === 'medium'}
+                      onChange={(e) => handleUrgencyChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">Medium</div>
+                      <div className="text-sm text-gray-600">Within next two weeks</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="urgency"
+                      value="high"
+                      checked={formData.urgency === 'high'}
+                      onChange={(e) => handleUrgencyChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">High</div>
+                      <div className="text-sm text-gray-600">Within next week</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="urgency"
+                      value="urgent"
+                      checked={formData.urgency === 'urgent'}
+                      onChange={(e) => handleUrgencyChange(e.target.value)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">Urgent</div>
+                      <div className="text-sm text-gray-600">Within 24-48 hours</div>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
@@ -783,9 +830,9 @@ export default function NewWorkRequestPage() {
 
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {formData.tags.map(tag => (
+                {formData.tags.map((tag, index) => (
                   <span
-                    key={tag}
+                    key={index}
                     className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                   >
                     {tag}
