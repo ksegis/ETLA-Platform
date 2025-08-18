@@ -1,12 +1,67 @@
-﻿# Dependencies
+﻿# Enhanced Reporting Solution - .gitignore Additions
+
+# Excel export files and temporary reports
+*.xlsx
+*.xls
+*.csv
+/exports/
+/reports/
+/temp-reports/
+
+# Report generation temporary files
+/tmp/reports/
+/public/downloads/
+/public/exports/
+
+# Excel template cache
+/src/assets/templates/cache/
+/templates/cache/
+
+# Report audit logs (if stored locally)
+/logs/exports/
+/logs/reports/
+
+# Environment-specific report configurations
+.env.reports
+.env.export
+
+# Node modules (if not already included)
 node_modules/
 
-# Next.js
+# Build outputs (if not already included)
 .next/
 out/
+dist/
 
-# Environment variables
-.env.local
+# IDE and editor files (if not already included)
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Vercel
-.vercel
+# OS generated files (if not already included)
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+src/app/reporting/page.tsx.backup
+
+# Database dumps or exports (if any)
+*.sql.backup
+*.dump
+
+# Report preview cache
+/cache/previews/
+/public/cache/
+
+# User-uploaded files (if reports allow file uploads)
+/uploads/reports/
+/public/uploads/
+
+# Sensitive data files (extra protection)
+**/sensitive-data/
+**/ssn-data/
+**/employee-data-exports/
+
