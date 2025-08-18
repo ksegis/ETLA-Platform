@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 
-// Complete icon system - all icons inline to avoid import issues
+// Complete icon_system - all icons inline to avoid import issues
 const Icons = {
   TrendingUp: ({ className = "h-4 w-4" }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
