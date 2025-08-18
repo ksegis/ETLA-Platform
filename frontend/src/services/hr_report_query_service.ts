@@ -1,16 +1,16 @@
 import { supabase } from '@/lib/supabase'
 
 /**
- * HR Report Query Service (Fixed for TypeScript)
+ * HR Report Query Service (Final Fix for TypeScript/ES5)
  * 
  * Provides centralized database query functionality for all HR report types
  * with comprehensive customer isolation, parameter binding, error handling,
  * and audit logging capabilities.
  * 
  * @author Manus AI
- * @version 1.0.1
+ * @version 1.0.2
  * @created 2025-08-18
- * @fixed TypeScript compilation issues
+ * @fixed ES5 compatibility and Set iteration issues
  */
 
 export interface QueryParameters {
@@ -574,6 +574,24 @@ export class HRReportQueryService {
   }
 
   /**
+   * Helper function to get unique values from array (ES5 compatible)
+   */
+  private static getUniqueValues(values: any[]): string[] {
+    const unique: string[] = []
+    const seen: { [key: string]: boolean } = {}
+    
+    for (let i = 0; i < values.length; i++) {
+      const value = values[i]
+      if (value && typeof value === 'string' && !seen[value]) {
+        seen[value] = true
+        unique.push(value)
+      }
+    }
+    
+    return unique.sort()
+  }
+
+  /**
    * Get available filter options for a specific customer
    */
   static async getFilterOptions(customerId: string): Promise<FilterOptions> {
@@ -587,7 +605,7 @@ export class HRReportQueryService {
           .not('home_department', 'is', null)
           .then(({ data }) => {
             const depts = data?.map(d => d.home_department).filter(Boolean) || []
-            return [...new Set(depts)]
+            return this.getUniqueValues(depts)
           }),
 
         // Get unique positions
@@ -598,7 +616,7 @@ export class HRReportQueryService {
           .not('position', 'is', null)
           .then(({ data }) => {
             const positions = data?.map(d => d.position).filter(Boolean) || []
-            return [...new Set(positions)]
+            return this.getUniqueValues(positions)
           }),
 
         // Get unique statuses
@@ -608,7 +626,7 @@ export class HRReportQueryService {
           .eq('customer_id', customerId)
           .then(({ data }) => {
             const statuses = data?.map(d => d.status).filter(Boolean) || []
-            return [...new Set(statuses)]
+            return this.getUniqueValues(statuses)
           }),
 
         // Get unique pay types
@@ -618,7 +636,7 @@ export class HRReportQueryService {
           .eq('customer_id', customerId)
           .then(({ data }) => {
             const payTypes = data?.map(d => d.pay_type).filter(Boolean) || []
-            return [...new Set(payTypes)]
+            return this.getUniqueValues(payTypes)
           }),
 
         // Get unique states
@@ -629,7 +647,7 @@ export class HRReportQueryService {
           .not('works_in_state', 'is', null)
           .then(({ data }) => {
             const states = data?.map(d => d.works_in_state).filter(Boolean) || []
-            return [...new Set(states)]
+            return this.getUniqueValues(states)
           }),
 
         // Get employee list
@@ -651,18 +669,18 @@ export class HRReportQueryService {
           .eq('customer_id', customerId)
           .then(({ data }) => {
             const fieldNames = data?.map(d => d.field_name).filter(Boolean) || []
-            return [...new Set(fieldNames)]
+            return this.getUniqueValues(fieldNames)
           })
       ])
 
       return {
-        departments: departments.sort(),
-        positions: positions.sort(),
-        statuses: statuses.sort(),
-        payTypes: payTypes.sort(),
-        states: states.sort(),
-        employees: employees,
-        customFields: customFields.sort()
+        departments,
+        positions,
+        statuses,
+        payTypes,
+        states,
+        employees,
+        customFields
       }
     } catch (error) {
       console.error('Error fetching filter options:', error)
