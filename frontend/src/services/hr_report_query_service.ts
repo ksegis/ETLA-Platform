@@ -1,15 +1,16 @@
 import { supabase } from '@/lib/supabase'
 
 /**
- * HR Report Query Service
+ * HR Report Query Service (Fixed for TypeScript)
  * 
  * Provides centralized database query functionality for all HR report types
  * with comprehensive customer isolation, parameter binding, error handling,
  * and audit logging capabilities.
  * 
  * @author Manus AI
- * @version 1.0.0
+ * @version 1.0.1
  * @created 2025-08-18
+ * @fixed TypeScript compilation issues
  */
 
 export interface QueryParameters {
@@ -136,117 +137,25 @@ export class HRReportQueryService {
         }
       }
 
-      // Build the query with customer isolation
-      let query = supabase
-        .from('employee_demographics')
-        .select(`
-          effective_date,
-          employee_code,
-          ${params.include_sensitive ? 'ssn' : `
-            CASE 
-              WHEN ssn IS NOT NULL THEN 'XXX-XX-' || RIGHT(ssn, 4)
-              ELSE NULL 
-            END as ssn
-          `},
-          first_name,
-          middle_name,
-          last_name,
-          address_1,
-          address_2,
-          city,
-          state,
-          zip_code,
-          work_phone,
-          personal_phone,
-          work_email,
-          personal_email,
-          gender,
-          marital_status,
-          birth_date,
-          ethnic_background,
-          employee_status,
-          hire_date,
-          termination_date,
-          rehire_date,
-          "position",
-          eeoc_class,
-          home_department,
-          labor_allocation,
-          pay_type,
-          pay_frequency,
-          pay_period_salary,
-          hourly_rate,
-          workers_compensation_code,
-          employment_status,
-          employment_type,
-          work_location,
-          created_at,
-          updated_at
-        `)
-        .eq('customer_id', params.customer_id)
-
-      // Apply date filters
-      if (params.date_from) {
-        query = query.gte('effective_date', params.date_from)
-      }
-      if (params.date_to) {
-        query = query.lte('effective_date', params.date_to)
-      }
-
-      // Apply status filters
-      if (params.active_only) {
-        query = query.eq('employee_status', 'Active')
-      }
-      if (!params.include_terminated) {
-        query = query.neq('employee_status', 'Terminated')
-      }
-
-      // Apply department filters
-      if (params.departments && params.departments.length > 0) {
-        query = query.in('home_department', params.departments)
-      }
-
-      // Apply position filters
-      if (params.positions && params.positions.length > 0) {
-        query = query.in('"position"', params.positions)
-      }
-
-      // Apply employee code filters
-      if (params.employee_codes && params.employee_codes.length > 0) {
-        query = query.in('employee_code', params.employee_codes)
-      }
-
-      // Apply pagination
-      if (params.limit) {
-        query = query.limit(params.limit)
-      }
-      if (params.offset) {
-        query = query.range(params.offset, params.offset + (params.limit || 1000) - 1)
-      }
-
-      // Execute query with ordering to get most recent records per employee
-      const { data, error, count } = await query
-        .order('employee_code')
-        .order('effective_date', { ascending: false })
-
-      // If not including historical data, get only the most recent record per employee
-      let processedData = data || []
-      if (!params.include_historical && processedData.length > 0) {
-        const latestRecords = new Map()
-        processedData.forEach(record => {
-          const key = record.employee_code
-          if (!latestRecords.has(key) || 
-              new Date(record.effective_date) > new Date(latestRecords.get(key).effective_date)) {
-            latestRecords.set(key, record)
-          }
-        })
-        processedData = Array.from(latestRecords.values())
-      }
+      // Use the stored procedure for better performance and type safety
+      const { data, error } = await supabase.rpc('get_current_demographics', {
+        p_customer_id: params.customer_id,
+        p_date_from: params.date_from || null,
+        p_date_to: params.date_to || null,
+        p_include_sensitive: params.include_sensitive || false,
+        p_active_only: params.active_only || false,
+        p_include_terminated: params.include_terminated !== false,
+        p_departments: params.departments || null,
+        p_positions: params.positions || null,
+        p_employee_codes: params.employee_codes || null,
+        p_limit: params.limit || null,
+        p_offset: params.offset || null
+      })
 
       const result: QueryResult = {
-        data: processedData,
+        data: data || [],
         error: error?.message || null,
-        count: processedData.length,
+        count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
           report_type: reportType,
@@ -305,55 +214,20 @@ export class HRReportQueryService {
         }
       }
 
-      let query = supabase
-        .from('employee_custom_fields')
-        .select(`
-          effective_date,
-          employee_code,
-          employee_name,
-          field_name,
-          field_value,
-          field_type,
-          created_at,
-          updated_at
-        `)
-        .eq('customer_id', params.customer_id)
-
-      // Apply date filters
-      if (params.date_from) {
-        query = query.gte('effective_date', params.date_from)
-      }
-      if (params.date_to) {
-        query = query.lte('effective_date', params.date_to)
-      }
-
-      // Apply field name filters
-      if (params.field_names && params.field_names.length > 0) {
-        query = query.in('field_name', params.field_names)
-      }
-
-      // Apply employee code filters
-      if (params.employee_codes && params.employee_codes.length > 0) {
-        query = query.in('employee_code', params.employee_codes)
-      }
-
-      // Apply pagination
-      if (params.limit) {
-        query = query.limit(params.limit)
-      }
-      if (params.offset) {
-        query = query.range(params.offset, params.offset + (params.limit || 1000) - 1)
-      }
-
-      const { data, error, count } = await query
-        .order('employee_code')
-        .order('field_name')
-        .order('effective_date', { ascending: false })
+      const { data, error } = await supabase.rpc('get_custom_fields_validated', {
+        p_customer_id: params.customer_id,
+        p_date_from: params.date_from || null,
+        p_date_to: params.date_to || null,
+        p_field_names: params.field_names || null,
+        p_employee_codes: params.employee_codes || null,
+        p_limit: params.limit || null,
+        p_offset: params.offset || null
+      })
 
       const result: QueryResult = {
         data: data || [],
         error: error?.message || null,
-        count: count || 0,
+        count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
           report_type: reportType,
@@ -410,55 +284,20 @@ export class HRReportQueryService {
         }
       }
 
-      let query = supabase
-        .from('employee_status_history')
-        .select(`
-          effective_date,
-          employee_code,
-          employee_name,
-          status,
-          termination_type,
-          termination_reason,
-          notes,
-          created_at,
-          updated_at
-        `)
-        .eq('customer_id', params.customer_id)
-
-      // Apply date filters
-      if (params.date_from) {
-        query = query.gte('effective_date', params.date_from)
-      }
-      if (params.date_to) {
-        query = query.lte('effective_date', params.date_to)
-      }
-
-      // Apply status filters
-      if (params.status_filter && params.status_filter.length > 0) {
-        query = query.in('status', params.status_filter)
-      }
-
-      // Apply employee code filters
-      if (params.employee_codes && params.employee_codes.length > 0) {
-        query = query.in('employee_code', params.employee_codes)
-      }
-
-      // Apply pagination
-      if (params.limit) {
-        query = query.limit(params.limit)
-      }
-      if (params.offset) {
-        query = query.range(params.offset, params.offset + (params.limit || 1000) - 1)
-      }
-
-      const { data, error, count } = await query
-        .order('employee_code')
-        .order('effective_date', { ascending: false })
+      const { data, error } = await supabase.rpc('get_status_history_with_duration', {
+        p_customer_id: params.customer_id,
+        p_date_from: params.date_from || null,
+        p_date_to: params.date_to || null,
+        p_status_filter: params.status_filter || null,
+        p_employee_codes: params.employee_codes || null,
+        p_limit: params.limit || null,
+        p_offset: params.offset || null
+      })
 
       const result: QueryResult = {
         data: data || [],
         error: error?.message || null,
-        count: count || 0,
+        count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
           report_type: reportType,
@@ -515,84 +354,20 @@ export class HRReportQueryService {
         }
       }
 
-      let query = supabase
-        .from('employee_pay_history')
-        .select(`
-          effective_date,
-          employee_code,
-          employee_name,
-          change_reason,
-          pay_type,
-          pay_frequency,
-          new_hourly_rate,
-          new_salary_rate,
-          new_annual_amount,
-          amount_change,
-          percentage_change,
-          previous_rate,
-          created_at,
-          updated_at
-        `)
-        .eq('customer_id', params.customer_id)
-
-      // Apply date filters
-      if (params.date_from) {
-        query = query.gte('effective_date', params.date_from)
-      }
-      if (params.date_to) {
-        query = query.lte('effective_date', params.date_to)
-      }
-
-      // Apply pay type filters
-      if (params.pay_types && params.pay_types.length > 0) {
-        query = query.in('pay_type', params.pay_types)
-      }
-
-      // Apply employee code filters
-      if (params.employee_codes && params.employee_codes.length > 0) {
-        query = query.in('employee_code', params.employee_codes)
-      }
-
-      // Apply pagination
-      if (params.limit) {
-        query = query.limit(params.limit)
-      }
-      if (params.offset) {
-        query = query.range(params.offset, params.offset + (params.limit || 1000) - 1)
-      }
-
-      const { data, error, count } = await query
-        .order('employee_code')
-        .order('effective_date', { ascending: false })
-
-      // Post-process data to add calculated fields
-      const processedData = (data || []).map(record => {
-        // Calculate annual equivalent for hourly rates
-        let calculatedAnnualAmount = record.new_annual_amount
-        if (record.pay_type === 'Hourly' && record.new_hourly_rate) {
-          const hoursPerYear = this.getAnnualHours(record.pay_frequency)
-          calculatedAnnualAmount = record.new_hourly_rate * hoursPerYear
-        } else if (record.pay_type === 'Salary' && record.new_salary_rate) {
-          calculatedAnnualAmount = record.new_salary_rate
-        }
-
-        // Calculate percentage change if not provided
-        let calculatedPercentageChange = record.percentage_change
-        if (!calculatedPercentageChange && record.amount_change && record.previous_rate && record.previous_rate > 0) {
-          calculatedPercentageChange = (record.amount_change / record.previous_rate) * 100
-        }
-
-        return {
-          ...record,
-          calculated_annual_amount: calculatedAnnualAmount,
-          calculated_percentage_change: calculatedPercentageChange
-        }
+      const { data, error } = await supabase.rpc('get_pay_history_with_calculations', {
+        p_customer_id: params.customer_id,
+        p_date_from: params.date_from || null,
+        p_date_to: params.date_to || null,
+        p_pay_types: params.pay_types || null,
+        p_employee_codes: params.employee_codes || null,
+        p_limit: params.limit || null,
+        p_offset: params.offset || null
       })
 
       const result: QueryResult = {
-        data: processedData,
+        data: data || [],
         error: error?.message || null,
-        count: count || 0,
+        count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
           report_type: reportType,
@@ -649,7 +424,6 @@ export class HRReportQueryService {
         }
       }
 
-      // Use a more complex query to join with supervisor information
       const { data, error } = await supabase.rpc('get_position_history_with_supervisors', {
         p_customer_id: params.customer_id,
         p_date_from: params.date_from || null,
@@ -661,77 +435,9 @@ export class HRReportQueryService {
         p_offset: params.offset || null
       })
 
-      if (error) {
-        // Fallback to basic query if stored procedure doesn't exist
-        let query = supabase
-          .from('employee_position_history')
-          .select(`
-            effective_date,
-            employee_code,
-            employee_name,
-            department,
-            labor_allocation,
-            work_location,
-            "position",
-            position_level,
-            position_family,
-            eeoc_class,
-            workers_compensation_code,
-            dol_status,
-            exempt_status,
-            supervisor_employee_code,
-            created_at,
-            updated_at
-          `)
-          .eq('customer_id', params.customer_id)
-
-        // Apply filters
-        if (params.date_from) {
-          query = query.gte('effective_date', params.date_from)
-        }
-        if (params.date_to) {
-          query = query.lte('effective_date', params.date_to)
-        }
-        if (params.departments && params.departments.length > 0) {
-          query = query.in('department', params.departments)
-        }
-        if (params.positions && params.positions.length > 0) {
-          query = query.in('"position"', params.positions)
-        }
-        if (params.employee_codes && params.employee_codes.length > 0) {
-          query = query.in('employee_code', params.employee_codes)
-        }
-        if (params.limit) {
-          query = query.limit(params.limit)
-        }
-        if (params.offset) {
-          query = query.range(params.offset, params.offset + (params.limit || 1000) - 1)
-        }
-
-        const fallbackResult = await query
-          .order('employee_code')
-          .order('effective_date', { ascending: false })
-
-        const result: QueryResult = {
-          data: fallbackResult.data || [],
-          error: fallbackResult.error?.message || null,
-          count: (fallbackResult.data || []).length,
-          execution_time: Date.now() - startTime,
-          query_metadata: {
-            report_type: reportType,
-            customer_id: params.customer_id,
-            parameters_used: params,
-            timestamp: new Date().toISOString()
-          }
-        }
-
-        await this.logQueryExecution(reportType, params.customer_id, params, result)
-        return result
-      }
-
       const result: QueryResult = {
         data: data || [],
-        error: null,
+        error: error?.message || null,
         count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
@@ -789,81 +495,20 @@ export class HRReportQueryService {
         }
       }
 
-      let query = supabase
-        .from('employee_tax_information')
-        .select(`
-          effective_date,
-          employee_code,
-          employee_name,
-          work_location,
-          lives_in_state,
-          works_in_state,
-          sui_agency,
-          employee_local_tax_agency_1,
-          employee_local_tax_agency_2,
-          employee_local_tax_agency_3,
-          federal_filing_status,
-          federal_allowances,
-          federal_additional_withholding,
-          state_1_code,
-          state_1_filing_status,
-          state_1_allowances,
-          state_1_additional_withholding,
-          state_2_code,
-          state_2_filing_status,
-          state_2_allowances,
-          state_2_additional_withholding,
-          local_1_code,
-          local_1_filing_status,
-          local_1_allowances,
-          local_1_additional_withholding,
-          local_2_code,
-          local_2_filing_status,
-          local_2_allowances,
-          local_2_additional_withholding,
-          local_3_code,
-          local_3_filing_status,
-          local_3_allowances,
-          local_3_additional_withholding,
-          created_at,
-          updated_at
-        `)
-        .eq('customer_id', params.customer_id)
-
-      // Apply date filters
-      if (params.date_from) {
-        query = query.gte('effective_date', params.date_from)
-      }
-      if (params.date_to) {
-        query = query.lte('effective_date', params.date_to)
-      }
-
-      // Apply state filters
-      if (params.states && params.states.length > 0) {
-        query = query.in('works_in_state', params.states)
-      }
-
-      // Apply employee code filters
-      if (params.employee_codes && params.employee_codes.length > 0) {
-        query = query.in('employee_code', params.employee_codes)
-      }
-
-      // Apply pagination
-      if (params.limit) {
-        query = query.limit(params.limit)
-      }
-      if (params.offset) {
-        query = query.range(params.offset, params.offset + (params.limit || 1000) - 1)
-      }
-
-      const { data, error, count } = await query
-        .order('employee_code')
-        .order('effective_date', { ascending: false })
+      const { data, error } = await supabase.rpc('get_tax_information_validated', {
+        p_customer_id: params.customer_id,
+        p_date_from: params.date_from || null,
+        p_date_to: params.date_to || null,
+        p_states: params.states || null,
+        p_employee_codes: params.employee_codes || null,
+        p_limit: params.limit || null,
+        p_offset: params.offset || null
+      })
 
       const result: QueryResult = {
         data: data || [],
         error: error?.message || null,
-        count: count || 0,
+        count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
           report_type: reportType,
@@ -940,29 +585,41 @@ export class HRReportQueryService {
           .select('home_department')
           .eq('customer_id', customerId)
           .not('home_department', 'is', null)
-          .then(({ data }) => [...new Set(data?.map(d => d.home_department).filter(Boolean) || [])]),
+          .then(({ data }) => {
+            const depts = data?.map(d => d.home_department).filter(Boolean) || []
+            return [...new Set(depts)]
+          }),
 
         // Get unique positions
         supabase
           .from('employee_demographics')
-          .select('"position"')
+          .select('position')
           .eq('customer_id', customerId)
-          .not('"position"', 'is', null)
-          .then(({ data }) => [...new Set(data?.map(d => d.position).filter(Boolean) || [])]),
+          .not('position', 'is', null)
+          .then(({ data }) => {
+            const positions = data?.map(d => d.position).filter(Boolean) || []
+            return [...new Set(positions)]
+          }),
 
         // Get unique statuses
         supabase
           .from('employee_status_history')
           .select('status')
           .eq('customer_id', customerId)
-          .then(({ data }) => [...new Set(data?.map(d => d.status).filter(Boolean) || [])]),
+          .then(({ data }) => {
+            const statuses = data?.map(d => d.status).filter(Boolean) || []
+            return [...new Set(statuses)]
+          }),
 
         // Get unique pay types
         supabase
           .from('employee_pay_history')
           .select('pay_type')
           .eq('customer_id', customerId)
-          .then(({ data }) => [...new Set(data?.map(d => d.pay_type).filter(Boolean) || [])]),
+          .then(({ data }) => {
+            const payTypes = data?.map(d => d.pay_type).filter(Boolean) || []
+            return [...new Set(payTypes)]
+          }),
 
         // Get unique states
         supabase
@@ -970,7 +627,10 @@ export class HRReportQueryService {
           .select('works_in_state')
           .eq('customer_id', customerId)
           .not('works_in_state', 'is', null)
-          .then(({ data }) => [...new Set(data?.map(d => d.works_in_state).filter(Boolean) || [])]),
+          .then(({ data }) => {
+            const states = data?.map(d => d.works_in_state).filter(Boolean) || []
+            return [...new Set(states)]
+          }),
 
         // Get employee list
         supabase
@@ -989,7 +649,10 @@ export class HRReportQueryService {
           .from('employee_custom_fields')
           .select('field_name')
           .eq('customer_id', customerId)
-          .then(({ data }) => [...new Set(data?.map(d => d.field_name).filter(Boolean) || [])])
+          .then(({ data }) => {
+            const fieldNames = data?.map(d => d.field_name).filter(Boolean) || []
+            return [...new Set(fieldNames)]
+          })
       ])
 
       return {
@@ -1012,19 +675,6 @@ export class HRReportQueryService {
         employees: [],
         customFields: []
       }
-    }
-  }
-
-  /**
-   * Get annual hours based on pay frequency
-   */
-  private static getAnnualHours(payFrequency: string): number {
-    switch (payFrequency?.toLowerCase()) {
-      case 'weekly': return 2080 // 40 hours * 52 weeks
-      case 'biweekly': return 2080
-      case 'semimonthly': return 2080
-      case 'monthly': return 2080
-      default: return 2080
     }
   }
 
