@@ -23,6 +23,12 @@ interface WorkRequest {
   internal_notes?: string
   created_at: string
   updated_at: string
+  profiles?: {
+    full_name?: string
+    phone?: string
+    department?: string
+    job_title?: string
+  }
   customers?: {
     email: string
     first_name?: string
@@ -96,26 +102,53 @@ export default function WorkRequestsPage() {
       setCurrentUser(user)
       console.log('👤 Loading requests for user:', user.email, 'ID:', user.id)
 
-      // Query work_requests with customer information
+      // First, try to query work_requests with profiles (since foreign key points to profiles)
+      console.log('🔍 Attempting to query work_requests with profiles relationship...')
       const { data: workRequestsData, error: requestsError } = await supabase
         .from('work_requests')
         .select(`
           *,
-          customers!work_requests_customer_id_fkey (
-            email, first_name, last_name, company_name
+          profiles!work_requests_customer_id_fkey (
+            full_name, phone, department, job_title
           )
         `)
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false })
 
       if (requestsError) {
-        console.error('❌ Error loading work requests:', requestsError)
-        setError(`Database error: ${requestsError.message}`)
-        loadFromLocalStorage()
+        console.error('❌ Error loading work requests with profiles:', requestsError)
+        
+        // If profiles relationship fails, try without relationships
+        console.log('🔍 Falling back to simple work_requests query...')
+        const { data: simpleData, error: simpleError } = await supabase
+          .from('work_requests')
+          .select('*')
+          .eq('customer_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (simpleError) {
+          console.error('❌ Error loading simple work requests:', simpleError)
+          setError(`Database error: ${simpleError.message}`)
+          loadFromLocalStorage()
+          return
+        }
+
+        console.log('✅ Successfully loaded work requests (simple query):', simpleData?.length || 0)
+        const requests = simpleData || []
+        setWorkRequests(requests)
+        setFilteredRequests(requests)
+        setDataSource('database')
+        setLastLoaded(new Date().toLocaleTimeString())
+
+        // Try to get customer info separately
+        if (requests.length > 0) {
+          await loadCustomerInfo(requests)
+        }
+
         return
       }
 
-      console.log('✅ Successfully loaded work requests from database:', workRequestsData?.length || 0)
+      console.log('✅ Successfully loaded work requests with profiles:', workRequestsData?.length || 0)
       console.log('📋 Work requests data:', workRequestsData)
 
       const requests = workRequestsData || []
@@ -136,6 +169,39 @@ export default function WorkRequestsPage() {
       loadFromLocalStorage()
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Load customer info separately if needed
+  const loadCustomerInfo = async (requests: WorkRequest[]) => {
+    try {
+      console.log('🔍 Loading customer info separately...')
+      
+      // Get unique customer IDs
+      const customerIds = [...new Set(requests.map(r => r.customer_id))]
+      
+      // Try to get from customers table
+      const { data: customersData, error: customersError } = await supabase
+        .from('customers')
+        .select('id, email, first_name, last_name, company_name')
+        .in('id', customerIds)
+
+      if (!customersError && customersData) {
+        console.log('✅ Successfully loaded customer info:', customersData.length)
+        
+        // Merge customer info with requests
+        const updatedRequests = requests.map(request => ({
+          ...request,
+          customers: customersData.find(c => c.id === request.customer_id)
+        }))
+        
+        setWorkRequests(updatedRequests)
+        setFilteredRequests(updatedRequests)
+      } else {
+        console.warn('⚠️ Could not load customer info:', customersError?.message)
+      }
+    } catch (error) {
+      console.error('❌ Error loading customer info:', error)
     }
   }
 
@@ -220,7 +286,8 @@ export default function WorkRequestsPage() {
         request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.request_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (request.customers?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (request.customers?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (request.profiles?.full_name || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -250,6 +317,12 @@ export default function WorkRequestsPage() {
   }
 
   const getCustomerName = (request: WorkRequest) => {
+    // Try profiles first
+    if (request.profiles?.full_name) {
+      return request.profiles.full_name
+    }
+    
+    // Then try customers
     if (request.customers) {
       const { first_name, last_name, email, company_name } = request.customers
       if (first_name && last_name) {
@@ -260,6 +333,12 @@ export default function WorkRequestsPage() {
       }
       return email
     }
+    
+    // Fallback to current user
+    if (currentUser?.email) {
+      return currentUser.email
+    }
+    
     return 'Unknown User'
   }
 
@@ -334,6 +413,7 @@ export default function WorkRequestsPage() {
               <div>
                 <p className="text-sm font-medium text-red-900">Database Error</p>
                 <p className="text-xs text-red-700">{error}</p>
+                <p className="text-xs text-gray-600 mt-1">Falling back to localStorage data if available</p>
               </div>
             </div>
           </div>
