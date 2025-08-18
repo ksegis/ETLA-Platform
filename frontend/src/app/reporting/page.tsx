@@ -1,16 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { 
   Calendar, 
   Download, 
@@ -34,11 +24,10 @@ import {
 import { supabase } from '@/lib/supabase'
 
 /**
- * Enhanced Reporting & Analytics Dashboard (Fixed Version)
+ * Enhanced Reporting & Analytics Dashboard (No shadcn/ui dependencies)
  * 
  * Improved navigation, responsive design, and better user experience
- * for HR reporting and analytics with comprehensive filtering capabilities.
- * Fixed image processing errors and simplified component structure.
+ * for HR reporting and analytics using standard HTML elements and Tailwind CSS.
  */
 
 interface ReportType {
@@ -187,7 +176,7 @@ const REPORT_TYPES: ReportType[] = [
   }
 ]
 
-// Icon component mapper to avoid dynamic imports
+// Icon component mapper
 const IconComponent = ({ name, className }: { name: string; className?: string }) => {
   const iconProps = { className: className || "h-4 w-4" }
   
@@ -440,10 +429,13 @@ export default function EnhancedReportingPage() {
         <div className="text-center">
           <X className="h-8 w-8 mx-auto mb-4 text-red-500" />
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
+          <button 
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry
-          </Button>
+          </button>
         </div>
       </div>
     )
@@ -461,31 +453,29 @@ export default function EnhancedReportingPage() {
             </p>
           </div>
           <div className="mt-4 sm:mt-0 flex space-x-3">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => window.location.reload()}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+            </button>
+            <button
               onClick={() => setShowFilters(!showFilters)}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
               {getActiveFilterCount() > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                   {getActiveFilterCount()}
-                </Badge>
+                </span>
               )}
-            </Button>
-            <Button size="sm">
+            </button>
+            <button className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               <Download className="h-4 w-4 mr-2" />
               Export
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -496,31 +486,39 @@ export default function EnhancedReportingPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">Report Filters</h3>
             <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={clearFilters}>
+              <button 
+                onClick={clearFilters}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
                 <X className="h-4 w-4 mr-2" />
                 Clear All
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowFilters(false)}>
+              </button>
+              <button 
+                onClick={() => setShowFilters(false)}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
                 <ChevronDown className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Date Range */}
             <div className="space-y-2">
-              <Label>Date Range</Label>
+              <label className="block text-sm font-medium text-gray-700">Date Range</label>
               <div className="flex space-x-2">
-                <Input
+                <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="From"
                 />
-                <Input
+                <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="To"
                 />
               </div>
@@ -528,61 +526,61 @@ export default function EnhancedReportingPage() {
 
             {/* Department Filter */}
             <div className="space-y-2">
-              <Label>Departments</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select departments" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="engineering">Engineering</SelectItem>
-                  <SelectItem value="sales">Sales</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                  <SelectItem value="hr">Human Resources</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="block text-sm font-medium text-gray-700">Departments</label>
+              <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="">Select departments</option>
+                <option value="engineering">Engineering</option>
+                <option value="sales">Sales</option>
+                <option value="marketing">Marketing</option>
+                <option value="hr">Human Resources</option>
+                <option value="finance">Finance</option>
+              </select>
             </div>
 
             {/* Position Filter */}
             <div className="space-y-2">
-              <Label>Positions</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select positions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="developer">Developer</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="analyst">Analyst</SelectItem>
-                  <SelectItem value="coordinator">Coordinator</SelectItem>
-                  <SelectItem value="director">Director</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="block text-sm font-medium text-gray-700">Positions</label>
+              <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="">Select positions</option>
+                <option value="developer">Developer</option>
+                <option value="manager">Manager</option>
+                <option value="analyst">Analyst</option>
+                <option value="coordinator">Coordinator</option>
+                <option value="director">Director</option>
+              </select>
             </div>
 
             {/* Status Filter */}
             <div className="space-y-2">
-              <Label>Employee Status</Label>
+              <label className="block text-sm font-medium text-gray-700">Employee Status</label>
               <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
+                <div className="flex items-center">
+                  <input
                     id="activeOnly"
+                    type="checkbox"
                     checked={selectedFilters.activeOnly}
-                    onCheckedChange={(checked) => 
-                      setSelectedFilters(prev => ({ ...prev, activeOnly: checked as boolean }))
+                    onChange={(e) => 
+                      setSelectedFilters(prev => ({ ...prev, activeOnly: e.target.checked }))
                     }
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <Label htmlFor="activeOnly" className="text-sm">Active employees only</Label>
+                  <label htmlFor="activeOnly" className="ml-2 block text-sm text-gray-900">
+                    Active employees only
+                  </label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
+                <div className="flex items-center">
+                  <input
                     id="includeTerminated"
+                    type="checkbox"
                     checked={selectedFilters.includeTerminated}
-                    onCheckedChange={(checked) => 
-                      setSelectedFilters(prev => ({ ...prev, includeTerminated: checked as boolean }))
+                    onChange={(e) => 
+                      setSelectedFilters(prev => ({ ...prev, includeTerminated: e.target.checked }))
                     }
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <Label htmlFor="includeTerminated" className="text-sm">Include terminated</Label>
+                  <label htmlFor="includeTerminated" className="ml-2 block text-sm text-gray-900">
+                    Include terminated
+                  </label>
                 </div>
               </div>
             </div>
@@ -592,286 +590,341 @@ export default function EnhancedReportingPage() {
 
       {/* Main Content */}
       <div className="flex-1 px-4 py-6 sm:px-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            {['dashboard', 'reports', 'preview', 'settings'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm capitalize ${
+                  activeTab === tab
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{dashboardStats.totalEmployees.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">Active workforce</p>
-                </CardContent>
-              </Card>
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Users className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Total Employees</dt>
+                        <dd className="text-lg font-medium text-gray-900">{dashboardStats.totalEmployees.toLocaleString()}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <span className="text-gray-500">Active workforce</span>
+                  </div>
+                </div>
+              </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Payroll Volume</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${(dashboardStats.payrollVolume / 1000000).toFixed(1)}M</div>
-                  <p className="text-xs text-muted-foreground">Annual payroll</p>
-                </CardContent>
-              </Card>
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <DollarSign className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Payroll Volume</dt>
+                        <dd className="text-lg font-medium text-gray-900">${(dashboardStats.payrollVolume / 1000000).toFixed(1)}M</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <span className="text-gray-500">Annual payroll</span>
+                  </div>
+                </div>
+              </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Status Changes</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{dashboardStats.statusChanges}</div>
-                  <p className="text-xs text-muted-foreground">This month</p>
-                </CardContent>
-              </Card>
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <TrendingUp className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Status Changes</dt>
+                        <dd className="text-lg font-medium text-gray-900">{dashboardStats.statusChanges}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <span className="text-gray-500">This month</span>
+                  </div>
+                </div>
+              </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pay Adjustments</CardTitle>
-                  <LineChart className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{dashboardStats.payAdjustments}</div>
-                  <p className="text-xs text-muted-foreground">Recent changes</p>
-                </CardContent>
-              </Card>
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <LineChart className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Pay Adjustments</dt>
+                        <dd className="text-lg font-medium text-gray-900">{dashboardStats.payAdjustments}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <span className="text-gray-500">Recent changes</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Generate commonly used reports</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Quick Actions</h3>
+                <p className="mt-1 text-sm text-gray-500">Generate commonly used reports</p>
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {REPORT_TYPES.filter(report => report.category === 'hr_historical').slice(0, 3).map((report) => (
-                    <Button
+                    <button
                       key={report.id}
-                      variant="outline"
-                      className="h-auto p-4 justify-start"
                       onClick={() => {
                         setSelectedReport(report)
                         setActiveTab('reports')
                       }}
+                      className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-md ${report.color}`}>
-                          <IconComponent name={report.icon} className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium">{report.title}</div>
-                          <div className="text-sm text-muted-foreground">{report.fields} fields</div>
-                        </div>
+                      <div className={`flex-shrink-0 p-2 rounded-md ${report.color}`}>
+                        <IconComponent name={report.icon} className="h-4 w-4 text-white" />
                       </div>
-                    </Button>
+                      <div className="flex-1 min-w-0">
+                        <span className="absolute inset-0" aria-hidden="true" />
+                        <p className="text-sm font-medium text-gray-900">{report.title}</p>
+                        <p className="text-sm text-gray-500">{report.fields} fields</p>
+                      </div>
+                    </button>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Reports Tab */}
-          <TabsContent value="reports" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Report Categories */}
-              <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Report Categories</CardTitle>
-                    <CardDescription>Select a report type to generate</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <ScrollArea className="h-[600px]">
-                      <div className="space-y-1 p-4">
-                        {/* Operational Reports */}
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-gray-900 px-2">Operational Reports</h4>
-                          {REPORT_TYPES.filter(report => report.category === 'operational').map((report) => (
-                            <Button
-                              key={report.id}
-                              variant={selectedReport?.id === report.id ? "default" : "ghost"}
-                              className="w-full justify-start h-auto p-3"
-                              onClick={() => setSelectedReport(report)}
-                            >
-                              <div className="flex items-center space-x-3 w-full">
-                                <div className={`p-1.5 rounded-sm ${report.color}`}>
-                                  <IconComponent name={report.icon} className="h-3 w-3 text-white" />
-                                </div>
-                                <div className="flex-1 text-left">
-                                  <div className="text-sm font-medium">{report.title}</div>
-                                  <div className="text-xs text-muted-foreground">{report.estimatedRecords} records</div>
-                                </div>
-                              </div>
-                            </Button>
-                          ))}
-                        </div>
-
-                        <Separator className="my-4" />
-
-                        {/* HR Historical Reports */}
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-gray-900 px-2">HR Historical Data Reports</h4>
-                          {REPORT_TYPES.filter(report => report.category === 'hr_historical').map((report) => (
-                            <Button
-                              key={report.id}
-                              variant={selectedReport?.id === report.id ? "default" : "ghost"}
-                              className="w-full justify-start h-auto p-3"
-                              onClick={() => setSelectedReport(report)}
-                            >
-                              <div className="flex items-center space-x-3 w-full">
-                                <div className={`p-1.5 rounded-sm ${report.color}`}>
-                                  <IconComponent name={report.icon} className="h-3 w-3 text-white" />
-                                </div>
-                                <div className="flex-1 text-left">
-                                  <div className="text-sm font-medium">{report.title}</div>
-                                  <div className="text-xs text-muted-foreground">{report.fields} fields • {report.estimatedRecords} records</div>
-                                </div>
-                              </div>
-                            </Button>
-                          ))}
-                        </div>
-
-                        <Separator className="my-4" />
-
-                        {/* Executive Reports */}
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-gray-900 px-2">Executive Reports</h4>
-                          {REPORT_TYPES.filter(report => report.category === 'executive').map((report) => (
-                            <Button
-                              key={report.id}
-                              variant={selectedReport?.id === report.id ? "default" : "ghost"}
-                              className="w-full justify-start h-auto p-3"
-                              onClick={() => setSelectedReport(report)}
-                            >
-                              <div className="flex items-center space-x-3 w-full">
-                                <div className={`p-1.5 rounded-sm ${report.color}`}>
-                                  <IconComponent name={report.icon} className="h-3 w-3 text-white" />
-                                </div>
-                                <div className="flex-1 text-left">
-                                  <div className="text-sm font-medium">{report.title}</div>
-                                  <div className="text-xs text-muted-foreground">{report.fields} fields</div>
-                                </div>
-                              </div>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Report Details and Actions */}
-              <div className="lg:col-span-2">
-                {selectedReport ? (
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-md ${selectedReport.color}`}>
-                          <IconComponent name={selectedReport.icon} className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle>{selectedReport.title}</CardTitle>
-                          <CardDescription>{selectedReport.description}</CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      {/* Report Info */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <div className="text-2xl font-bold text-gray-900">{selectedReport.fields}</div>
-                          <div className="text-sm text-gray-500">Data Fields</div>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <div className="text-2xl font-bold text-gray-900">{selectedReport.estimatedRecords.toLocaleString()}</div>
-                          <div className="text-sm text-gray-500">Est. Records</div>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <div className="text-2xl font-bold text-gray-900">{selectedReport.category === 'hr_historical' ? 'Excel' : 'PDF'}</div>
-                          <div className="text-sm text-gray-500">Export Format</div>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded-lg">
-                          <div className="text-2xl font-bold text-gray-900">~2s</div>
-                          <div className="text-sm text-gray-500">Generation Time</div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                        <Button
-                          onClick={() => handleGenerateReport(selectedReport, true)}
-                          disabled={isGenerating}
-                          className="flex-1"
-                          variant="outline"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          {isGenerating ? 'Generating...' : 'Preview Data'}
-                        </Button>
-                        <Button
-                          onClick={() => handleGenerateReport(selectedReport, false)}
-                          disabled={isGenerating}
-                          className="flex-1"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          {isGenerating ? 'Generating...' : 'Generate Report'}
-                        </Button>
-                      </div>
-
-                      {/* Additional Info for HR Reports */}
-                      {selectedReport.category === 'hr_historical' && (
-                        <div className="p-4 bg-blue-50 rounded-lg">
-                          <h4 className="font-medium text-blue-900 mb-2">HR Historical Data Report</h4>
-                          <p className="text-sm text-blue-700">
-                            This report uses your historical HR database with complete customer isolation. 
-                            Data includes {selectedReport.fields} fields matching your Excel template structure 
-                            with automatic calculations and data validation.
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="flex items-center justify-center h-96">
-                      <div className="text-center">
-                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Report</h3>
-                        <p className="text-gray-500">Choose a report type from the left panel to get started</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
             </div>
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Preview Tab */}
-          <TabsContent value="preview" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Preview</CardTitle>
-                <CardDescription>
-                  {previewData.length > 0 
-                    ? `Showing ${previewData.length} sample records` 
-                    : 'No preview data available'
-                  }
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Report Categories */}
+            <div className="lg:col-span-1">
+              <div className="bg-white shadow rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Report Categories</h3>
+                  <p className="mt-1 text-sm text-gray-500">Select a report type to generate</p>
+                </div>
+                <div className="border-t border-gray-200">
+                  <div className="max-h-96 overflow-y-auto">
+                    <div className="space-y-1 p-4">
+                      {/* Operational Reports */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-gray-900 px-2">Operational Reports</h4>
+                        {REPORT_TYPES.filter(report => report.category === 'operational').map((report) => (
+                          <button
+                            key={report.id}
+                            onClick={() => setSelectedReport(report)}
+                            className={`w-full text-left p-3 rounded-md ${
+                              selectedReport?.id === report.id 
+                                ? 'bg-blue-50 border-blue-200 border' 
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-1.5 rounded-sm ${report.color}`}>
+                                <IconComponent name={report.icon} className="h-3 w-3 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">{report.title}</div>
+                                <div className="text-xs text-gray-500">{report.estimatedRecords} records</div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="border-t border-gray-200 my-4"></div>
+
+                      {/* HR Historical Reports */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-gray-900 px-2">HR Historical Data Reports</h4>
+                        {REPORT_TYPES.filter(report => report.category === 'hr_historical').map((report) => (
+                          <button
+                            key={report.id}
+                            onClick={() => setSelectedReport(report)}
+                            className={`w-full text-left p-3 rounded-md ${
+                              selectedReport?.id === report.id 
+                                ? 'bg-blue-50 border-blue-200 border' 
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-1.5 rounded-sm ${report.color}`}>
+                                <IconComponent name={report.icon} className="h-3 w-3 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">{report.title}</div>
+                                <div className="text-xs text-gray-500">{report.fields} fields • {report.estimatedRecords} records</div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="border-t border-gray-200 my-4"></div>
+
+                      {/* Executive Reports */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-gray-900 px-2">Executive Reports</h4>
+                        {REPORT_TYPES.filter(report => report.category === 'executive').map((report) => (
+                          <button
+                            key={report.id}
+                            onClick={() => setSelectedReport(report)}
+                            className={`w-full text-left p-3 rounded-md ${
+                              selectedReport?.id === report.id 
+                                ? 'bg-blue-50 border-blue-200 border' 
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-1.5 rounded-sm ${report.color}`}>
+                                <IconComponent name={report.icon} className="h-3 w-3 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">{report.title}</div>
+                                <div className="text-xs text-gray-500">{report.fields} fields</div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Report Details and Actions */}
+            <div className="lg:col-span-2">
+              {selectedReport ? (
+                <div className="bg-white shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className={`p-2 rounded-md ${selectedReport.color}`}>
+                        <IconComponent name={selectedReport.icon} className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg leading-6 font-medium text-gray-900">{selectedReport.title}</h3>
+                        <p className="mt-1 text-sm text-gray-500">{selectedReport.description}</p>
+                      </div>
+                    </div>
+
+                    {/* Report Info */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-gray-900">{selectedReport.fields}</div>
+                        <div className="text-sm text-gray-500">Data Fields</div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-gray-900">{selectedReport.estimatedRecords.toLocaleString()}</div>
+                        <div className="text-sm text-gray-500">Est. Records</div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-gray-900">{selectedReport.category === 'hr_historical' ? 'Excel' : 'PDF'}</div>
+                        <div className="text-sm text-gray-500">Export Format</div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-gray-900">~2s</div>
+                        <div className="text-sm text-gray-500">Generation Time</div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
+                      <button
+                        onClick={() => handleGenerateReport(selectedReport, true)}
+                        disabled={isGenerating}
+                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        {isGenerating ? 'Generating...' : 'Preview Data'}
+                      </button>
+                      <button
+                        onClick={() => handleGenerateReport(selectedReport, false)}
+                        disabled={isGenerating}
+                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        {isGenerating ? 'Generating...' : 'Generate Report'}
+                      </button>
+                    </div>
+
+                    {/* Additional Info for HR Reports */}
+                    {selectedReport.category === 'hr_historical' && (
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-medium text-blue-900 mb-2">HR Historical Data Report</h4>
+                        <p className="text-sm text-blue-700">
+                          This report uses your historical HR database with complete customer isolation. 
+                          Data includes {selectedReport.fields} fields matching your Excel template structure 
+                          with automatic calculations and data validation.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6 flex items-center justify-center h-96">
+                    <div className="text-center">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Report</h3>
+                      <p className="text-gray-500">Choose a report type from the left panel to get started</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Preview Tab */}
+        {activeTab === 'preview' && (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Data Preview</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {previewData.length > 0 
+                  ? `Showing ${previewData.length} sample records` 
+                  : 'No preview data available'
+                }
+              </p>
+              <div className="mt-6">
                 {previewData.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
@@ -904,67 +957,63 @@ export default function EnhancedReportingPage() {
                     <p className="text-gray-500">Generate a report preview to see data here</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Report Configuration</CardTitle>
-                <CardDescription>Configure default settings for report generation</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Include Sensitive Data</Label>
-                      <p className="text-sm text-muted-foreground">Show full SSN and confidential information</p>
-                    </div>
-                    <Checkbox
-                      checked={selectedFilters.includeSensitive}
-                      onCheckedChange={(checked) => 
-                        setSelectedFilters(prev => ({ ...prev, includeSensitive: checked as boolean }))
-                      }
-                    />
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Report Configuration</h3>
+              <p className="mt-1 text-sm text-gray-500">Configure default settings for report generation</p>
+              <div className="mt-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-base font-medium text-gray-900">Include Sensitive Data</label>
+                    <p className="text-sm text-gray-500">Show full SSN and confidential information</p>
                   </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <Label>Export Format</Label>
-                    <Select defaultValue="excel">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="excel">Excel (matching template)</SelectItem>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="pdf">PDF</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Date Range</Label>
-                    <Select defaultValue="all">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All historical data</SelectItem>
-                        <SelectItem value="ytd">Year to date</SelectItem>
-                        <SelectItem value="last12">Last 12 months</SelectItem>
-                        <SelectItem value="custom">Custom range</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedFilters.includeSensitive}
+                    onChange={(e) => 
+                      setSelectedFilters(prev => ({ ...prev, includeSensitive: e.target.checked }))
+                    }
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                
+                <div className="border-t border-gray-200"></div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Export Format</label>
+                  <select 
+                    defaultValue="excel"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    <option value="excel">Excel (matching template)</option>
+                    <option value="csv">CSV</option>
+                    <option value="pdf">PDF</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Date Range</label>
+                  <select 
+                    defaultValue="all"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    <option value="all">All historical data</option>
+                    <option value="ytd">Year to date</option>
+                    <option value="last12">Last 12 months</option>
+                    <option value="custom">Custom range</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
