@@ -260,11 +260,11 @@ export default function NewWorkRequestPage() {
       console.log('✅ Supabase connection successful!')
       console.log('👤 Using authenticated user:', currentUser.email, 'ID:', currentUser.id)
 
-      // Use tenant_id if available, otherwise use a fallback
+      // Use tenant_id if available, otherwise use the known fallback
       let finalTenantId = userTenantId
       if (!finalTenantId) {
-        // Use a known tenant_id as fallback instead of generating random UUID
-        finalTenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Your actual tenant_id
+        // Use your actual tenant_id as fallback
+        finalTenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
         console.log('⚠️ No tenant_id found, using fallback tenant_id:', finalTenantId)
       }
 
@@ -287,28 +287,6 @@ export default function NewWorkRequestPage() {
       console.log('💾 Inserting into work_requests table:', requestData)
       console.log('🔑 Using customer_id (UUID):', currentUser.id)
       console.log('🏢 Using tenant_id (UUID):', finalTenantId)
-
-      // DEBUG: Check if customer exists before inserting
-      console.log('🔍 DEBUG: Checking if customer exists in customers table...')
-      console.log('🔑 DEBUG: Looking for customer_id:', currentUser.id)
-
-      const { data: customerCheck, error: customerCheckError } = await supabase
-        .from('customers')
-        .select('id, email')
-        .eq('id', currentUser.id)
-        .maybeSingle()
-
-      if (customerCheckError) {
-        console.error('❌ DEBUG: Error checking customer:', customerCheckError)
-        throw new Error(`Error checking customer: ${customerCheckError.message}`)
-      } else if (customerCheck) {
-        console.log('✅ DEBUG: Customer exists:', customerCheck)
-      } else {
-        console.error('❌ DEBUG: Customer NOT found in customers table for ID:', currentUser.id)
-        throw new Error(`Customer not found in customers table for ID: ${currentUser.id}`)
-      }
-
-      console.log('📋 DEBUG: About to insert with customer_id:', currentUser.id)
 
       // Insert into Supabase
       const { data: insertData, error: insertError } = await supabase
