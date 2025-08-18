@@ -177,8 +177,8 @@ export default function WorkRequestsPage() {
     try {
       console.log('🔍 Loading customer info separately...')
       
-      // Get unique customer IDs
-      const customerIds = [...new Set(requests.map(r => r.customer_id))]
+      // Get unique customer IDs - FIXED: Use Array.from instead of spread operator
+      const customerIds = Array.from(new Set(requests.map(r => r.customer_id)))
       
       // Try to get from customers table
       const { data: customersData, error: customersError } = await supabase
@@ -468,27 +468,26 @@ export default function WorkRequestsPage() {
           </div>
         </div>
 
-        {/* Filters and Search */}
+        {/* Search and Filters */}
         <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search requests..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
-
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <select
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="submitted">Submitted</option>
@@ -497,11 +496,10 @@ export default function WorkRequestsPage() {
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-
               <select
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Priority</option>
                 <option value="low">Low</option>
@@ -513,33 +511,42 @@ export default function WorkRequestsPage() {
           </div>
         </div>
 
-        {/* Work Requests Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {isLoading ? (
-            <div className="p-8 text-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Loading work requests...</p>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8">
+            <div className="flex items-center justify-center">
+              <RefreshCw className="h-6 w-6 animate-spin text-blue-600 mr-3" />
+              <span className="text-gray-600">Loading work requests...</span>
             </div>
-          ) : filteredRequests.length === 0 ? (
-            <div className="p-8 text-center">
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filteredRequests.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8">
+            <div className="text-center">
               <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No work requests found</h3>
               <p className="text-gray-600 mb-4">
-                {workRequests.length === 0
-                  ? "You haven't submitted any work requests yet."
-                  : "No requests match your current filters."}
+                {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
+                  ? 'Try adjusting your search or filters'
+                  : 'Get started by creating your first work request'}
               </p>
               <Button
                 onClick={() => window.location.href = '/work-requests/new'}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Request
+                Create Work Request
               </Button>
             </div>
-          ) : (
+          </div>
+        )}
+
+        {/* Requests Table */}
+        {!isLoading && filteredRequests.length > 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -568,62 +575,68 @@ export default function WorkRequestsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredRequests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {request.title}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {request.description}
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            ID: {request.request_id}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {getCustomerName(request)}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {request.title}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {request.description.length > 50
+                                ? `${request.description.substring(0, 50)}...`
+                                : request.description}
+                            </div>
+                            <div className="text-xs text-blue-600 font-mono">
+                              {request.request_id}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {getCustomerName(request)}
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-900">
                           {categoryLabels[request.category] || request.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${priorityColors[request.priority]}`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority]}`}>
                           {request.priority}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${urgencyColors[request.urgency]}`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${urgencyColors[request.urgency]}`}>
                           {request.urgency}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[request.status]}`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[request.status]}`}>
                           {request.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(request.created_at)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewRequest(request.id)}
-                            className="p-2"
+                            className="flex items-center gap-1"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3 w-3" />
+                            View
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditRequest(request.id)}
-                            className="p-2"
+                            className="flex items-center gap-1"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3 w-3" />
+                            Edit
                           </Button>
                         </div>
                       </td>
@@ -632,8 +645,8 @@ export default function WorkRequestsPage() {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )
