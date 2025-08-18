@@ -26,12 +26,17 @@ const categories = [
   { value: 'other', label: 'Other' }
 ]
 
-// Generate user-friendly request ID
-function generateRequestId(): string {
-  const prefix = 'WR'
-  const timestamp = Date.now().toString().slice(-6) // Last 6 digits of timestamp
-  const random = Math.random().toString(36).substr(2, 3).toUpperCase() // 3 random chars
-  return `${prefix}-${timestamp}-${random}`
+// Safe request ID generator - no problematic string operations
+function createRequestId(): string {
+  const now = new Date()
+  const year = now.getFullYear().toString().slice(-2)
+  const month = (now.getMonth() + 1).toString().padStart(2, '0')
+  const day = now.getDate().toString().padStart(2, '0')
+  const hour = now.getHours().toString().padStart(2, '0')
+  const minute = now.getMinutes().toString().padStart(2, '0')
+  const random = Math.floor(Math.random() * 999).toString().padStart(3, '0')
+  
+  return `WR-${year}${month}${day}-${hour}${minute}-${random}`
 }
 
 export default function NewWorkRequestPage() {
@@ -68,7 +73,7 @@ export default function NewWorkRequestPage() {
         console.log('🔍 Checking authentication status...')
         setAuthStatus('loading')
         
-        // First, check if we have a session
+        // Get current session and user
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
@@ -85,22 +90,12 @@ export default function NewWorkRequestPage() {
           return
         }
 
-        console.log('✅ Active session found')
-        
-        // Now get the user from the session
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
-        if (userError) {
+        if (userError || !user) {
           console.error('❌ User error:', userError)
           setAuthStatus('unauthenticated')
           setSubmitMessage('Authentication error. Please log in again.')
-          return
-        }
-
-        if (!user) {
-          console.warn('⚠️ No user found in session')
-          setAuthStatus('unauthenticated')
-          setSubmitMessage('No user found. Please log in to submit work requests.')
           return
         }
 
@@ -108,7 +103,7 @@ export default function NewWorkRequestPage() {
         setCurrentUser(user)
         setAuthStatus('authenticated')
 
-        // Now look up tenant_id for authenticated user
+        // Look up tenant_id
         console.log('🔍 Looking up user tenant_id...')
         const { data: tenantData, error: tenantError } = await supabase
           .from('tenant_users')
@@ -119,11 +114,11 @@ export default function NewWorkRequestPage() {
         if (tenantError) {
           console.error('❌ Error fetching tenant_id:', tenantError)
           setSubmitMessage('Warning: Could not determine tenant association. Please contact support.')
-        } else if (tenantData) {
+        } else if (tenantData && tenantData.tenant_id) {
           console.log('🏢 User tenant_id:', tenantData.tenant_id)
           setUserTenantId(tenantData.tenant_id)
           console.log('✅ Tenant lookup completed successfully')
-          setSubmitMessage('') // Clear any previous error messages
+          setSubmitMessage('')
         } else {
           console.warn('⚠️ User not associated with any tenant')
           setSubmitMessage('Warning: User not associated with any tenant. Please contact support.')
@@ -226,7 +221,6 @@ export default function NewWorkRequestPage() {
 
   const handleLogin = async () => {
     try {
-      // Redirect to login page or trigger login modal
       window.location.href = '/login'
     } catch (error) {
       console.error('❌ Login redirect failed:', error)
@@ -235,7 +229,6 @@ export default function NewWorkRequestPage() {
 
   const copyRequestId = (id: string) => {
     navigator.clipboard.writeText(id)
-    // Could add a toast notification here
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -247,15 +240,9 @@ export default function NewWorkRequestPage() {
       return
     }
 
-    if (authStatus !== 'authenticated') {
+    if (authStatus !== 'authenticated' || !currentUser) {
       setSubmitStatus('error')
       setSubmitMessage('Please log in to submit work requests.')
-      return
-    }
-
-    if (!currentUser) {
-      setSubmitStatus('error')
-      setSubmitMessage('User authentication required. Please log in.')
       return
     }
 
@@ -267,8 +254,6 @@ export default function NewWorkRequestPage() {
       console.log('🚀 REAL DATABASE SUBMISSION STARTED!')
       console.log('📝 Form data:', formData)
 
-      console.log('🔗 Attempting Supabase connection...')
-      
       // Test connection
       const { error: connectionError } = await supabase.from('work_requests').select('count').limit(1)
       if (connectionError) {
@@ -278,17 +263,38 @@ export default function NewWorkRequestPage() {
       console.log('✅ Supabase connection successful!')
       console.log('👤 Using authenticated user:', currentUser.email, 'ID:', currentUser.id)
 
-      // Use tenant_id if available, otherwise use the known fallback
+      // Use tenant_id if available, otherwise use fallback
       let finalTenantId = userTenantId
       if (!finalTenantId) {
-        // Use your actual tenant_id as fallback
         finalTenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
         console.log('⚠️ No tenant_id found, using fallback tenant_id:', finalTenantId)
       }
 
       // Generate user-friendly request ID
-      const userFriendlyId = generateRequestId()
+      const userFriendlyId = createRequestId()
       console.log('🎯 Generated user-friendly ID:', userFriendlyId)
+
+      // DEBUG: Check if customer exists before inserting
+      console.log('🔍 DEBUG: Checking if customer exists in customers table...')
+      console.log('🔑 DEBUG: Looking for customer_id:', currentUser.id)
+
+      const { data: customerCheck, error: customerCheckError } = await supabase
+        .from('customers')
+        .select('id, email')
+        .eq('id', currentUser.id)
+        .maybeSingle()
+
+      if (customerCheckError) {
+        console.error('❌ DEBUG: Error checking customer:', customerCheckError)
+        throw new Error(`Error checking customer: ${customerCheckError.message}`)
+      } else if (customerCheck) {
+        console.log('✅ DEBUG: Customer exists:', customerCheck)
+      } else {
+        console.error('❌ DEBUG: Customer NOT found in customers table for ID:', currentUser.id)
+        throw new Error(`Customer not found in customers table for ID: ${currentUser.id}`)
+      }
+
+      console.log('📋 DEBUG: About to insert with customer_id:', currentUser.id)
 
       // Prepare the data for insertion
       const requestData = {
@@ -297,14 +303,14 @@ export default function NewWorkRequestPage() {
         category: formData.category,
         priority: formData.priority,
         urgency: formData.urgency,
-        customer_id: currentUser.id, // Use authenticated user's ID
-        tenant_id: finalTenantId, // Use tenant_id from lookup or fallback
+        customer_id: currentUser.id,
+        tenant_id: finalTenantId,
         estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         required_completion_date: formData.requiredCompletionDate || null,
         internal_notes: formData.tags.length > 0 ? formData.tags.join(', ') : null,
         status: 'submitted',
-        request_id: userFriendlyId // Add user-friendly ID to database
+        request_id: userFriendlyId
       }
 
       console.log('💾 Inserting into work_requests table:', requestData)
@@ -319,7 +325,6 @@ export default function NewWorkRequestPage() {
 
       if (insertError) {
         console.error('❌ Database insert failed:', insertError)
-        console.error('❌ Insert error details:', insertError)
         throw new Error(`Failed to save request: ${insertError.message}`)
       }
 
@@ -329,8 +334,6 @@ export default function NewWorkRequestPage() {
       // Handle file uploads if any
       if (formData.attachments.length > 0) {
         console.log('📎 Processing file uploads...')
-        // File upload logic would go here
-        // For now, we'll just log that files were attached
         console.log('📁 Files to upload:', formData.attachments.map(f => f.name))
       }
 
@@ -373,17 +376,18 @@ export default function NewWorkRequestPage() {
         source: 'database-failed-backup'
       }
       
-      const existingRequests = JSON.parse(localStorage.getItem('etla_work_requests') || '[]')
-      existingRequests.push(backupData)
-      localStorage.setItem('etla_work_requests', JSON.stringify(existingRequests))
-      console.log('💾 Backup saved to localStorage')
+      try {
+        const existingRequests = JSON.parse(localStorage.getItem('etla_work_requests') || '[]')
+        existingRequests.push(backupData)
+        localStorage.setItem('etla_work_requests', JSON.stringify(existingRequests))
+        console.log('💾 Backup saved to localStorage')
+      } catch (storageError) {
+        console.error('❌ Failed to save backup to localStorage:', storageError)
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
-
-  // Determine submit button state
-  const isSubmitDisabled = isSubmitting || authStatus !== 'authenticated' || !currentUser
 
   // Success confirmation component
   if (submitStatus === 'success' && successData) {
@@ -860,19 +864,12 @@ export default function NewWorkRequestPage() {
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitDisabled}
+              disabled={isSubmitting || authStatus !== 'authenticated' || !currentUser}
               className={`${
-                isSubmitDisabled 
+                isSubmitting || authStatus !== 'authenticated' || !currentUser
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : 'bg-blue-600 hover:bg-blue-700'
               }`}
-              title={
-                authStatus === 'loading' ? 'Checking authentication...' :
-                authStatus === 'unauthenticated' ? 'Please log in first' :
-                !currentUser ? 'Authentication required' :
-                isSubmitting ? 'Submitting...' :
-                'Ready to submit'
-              }
             >
               {isSubmitting ? (
                 <>
