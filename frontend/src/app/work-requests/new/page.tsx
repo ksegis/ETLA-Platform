@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Upload, X, Plus, AlertCircle, CheckCircle, Database, LogIn } from 'lucide-react'
+import { Upload, X, Plus, AlertCircle, CheckCircle, Database, LogIn, Copy, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { supabase } from '@/lib/supabase'
@@ -26,6 +26,14 @@ const categories = [
   { value: 'other', label: 'Other' }
 ]
 
+// Generate user-friendly request ID
+function generateRequestId(): string {
+  const prefix = 'WR'
+  const timestamp = Date.now().toString().slice(-6) // Last 6 digits of timestamp
+  const random = Math.random().toString(36).substr(2, 3).toUpperCase() // 3 random chars
+  return `${prefix}-${timestamp}-${random}`
+}
+
 export default function NewWorkRequestPage() {
   const [formData, setFormData] = useState({
     title: '',
@@ -47,6 +55,11 @@ export default function NewWorkRequestPage() {
   const [userTenantId, setUserTenantId] = useState<string | null>(null)
   const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading')
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [successData, setSuccessData] = useState<{
+    requestId: string
+    userFriendlyId: string
+    databaseId: string
+  } | null>(null)
 
   // Handle authentication and tenant lookup
   useEffect(() => {
@@ -220,6 +233,11 @@ export default function NewWorkRequestPage() {
     }
   }
 
+  const copyRequestId = (id: string) => {
+    navigator.clipboard.writeText(id)
+    // Could add a toast notification here
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -268,6 +286,10 @@ export default function NewWorkRequestPage() {
         console.log('⚠️ No tenant_id found, using fallback tenant_id:', finalTenantId)
       }
 
+      // Generate user-friendly request ID
+      const userFriendlyId = generateRequestId()
+      console.log('🎯 Generated user-friendly ID:', userFriendlyId)
+
       // Prepare the data for insertion
       const requestData = {
         title: formData.title.trim(),
@@ -281,7 +303,8 @@ export default function NewWorkRequestPage() {
         budget: formData.budget ? parseFloat(formData.budget) : null,
         required_completion_date: formData.requiredCompletionDate || null,
         internal_notes: formData.tags.length > 0 ? formData.tags.join(', ') : null,
-        status: 'submitted'
+        status: 'submitted',
+        request_id: userFriendlyId // Add user-friendly ID to database
       }
 
       console.log('💾 Inserting into work_requests table:', requestData)
@@ -311,8 +334,15 @@ export default function NewWorkRequestPage() {
         console.log('📁 Files to upload:', formData.attachments.map(f => f.name))
       }
 
+      // Set success data for enhanced confirmation
+      setSuccessData({
+        requestId: userFriendlyId,
+        userFriendlyId: userFriendlyId,
+        databaseId: insertData[0]?.id || 'Unknown'
+      })
+
       setSubmitStatus('success')
-      setSubmitMessage(`Work request submitted successfully! Request ID: ${insertData[0]?.id}`)
+      setSubmitMessage('')
       
       // Reset form
       setFormData({
@@ -327,11 +357,6 @@ export default function NewWorkRequestPage() {
         tags: [],
         attachments: []
       })
-
-      // Redirect after success
-      setTimeout(() => {
-        window.location.href = '/work-requests'
-      }, 2000)
 
     } catch (error) {
       console.error('❌ SUBMISSION FAILED:', error)
@@ -359,6 +384,102 @@ export default function NewWorkRequestPage() {
 
   // Determine submit button state
   const isSubmitDisabled = isSubmitting || authStatus !== 'authenticated' || !currentUser
+
+  // Success confirmation component
+  if (submitStatus === 'success' && successData) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <div className="mb-6">
+              <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Request Submitted Successfully!</h1>
+              <p className="text-gray-600">Your work request has been created and assigned to our team.</p>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <h2 className="text-lg font-semibold text-green-900 mb-4">Request Details</h2>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-white rounded border">
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Request ID</div>
+                    <div className="text-sm text-gray-600">Use this ID to track your request</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-lg font-bold text-green-700">{successData.userFriendlyId}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyRequestId(successData.userFriendlyId)}
+                      className="p-2"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white rounded border">
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Status</div>
+                    <div className="text-sm text-gray-600">Current request status</div>
+                  </div>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    Submitted
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white rounded border">
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Submitted By</div>
+                    <div className="text-sm text-gray-600">Request creator</div>
+                  </div>
+                  <span className="text-gray-900 font-medium">{currentUser?.email}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white rounded border">
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Submitted At</div>
+                    <div className="text-sm text-gray-600">Request creation time</div>
+                  </div>
+                  <span className="text-gray-900 font-medium">{new Date().toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-blue-900 mb-2">What happens next?</h3>
+              <ul className="text-sm text-blue-800 space-y-1 text-left">
+                <li>• Your request will be reviewed by our team within 24 hours</li>
+                <li>• You'll receive email notifications about status updates</li>
+                <li>• You can track progress using your Request ID: <strong>{successData.userFriendlyId}</strong></li>
+                <li>• Our team may contact you for additional information if needed</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-4 justify-center">
+              <Button
+                onClick={() => window.location.href = '/work-requests'}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View All Requests
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSubmitStatus('idle')
+                  setSuccessData(null)
+                }}
+              >
+                Submit Another Request
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout>
