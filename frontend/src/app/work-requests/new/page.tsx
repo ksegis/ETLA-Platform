@@ -288,6 +288,28 @@ export default function NewWorkRequestPage() {
       console.log('🔑 Using customer_id (UUID):', currentUser.id)
       console.log('🏢 Using tenant_id (UUID):', finalTenantId)
 
+      // DEBUG: Check if customer exists before inserting
+      console.log('🔍 DEBUG: Checking if customer exists in customers table...')
+      console.log('🔑 DEBUG: Looking for customer_id:', currentUser.id)
+
+      const { data: customerCheck, error: customerCheckError } = await supabase
+        .from('customers')
+        .select('id, email')
+        .eq('id', currentUser.id)
+        .maybeSingle()
+
+      if (customerCheckError) {
+        console.error('❌ DEBUG: Error checking customer:', customerCheckError)
+        throw new Error(`Error checking customer: ${customerCheckError.message}`)
+      } else if (customerCheck) {
+        console.log('✅ DEBUG: Customer exists:', customerCheck)
+      } else {
+        console.error('❌ DEBUG: Customer NOT found in customers table for ID:', currentUser.id)
+        throw new Error(`Customer not found in customers table for ID: ${currentUser.id}`)
+      }
+
+      console.log('📋 DEBUG: About to insert with customer_id:', currentUser.id)
+
       // Insert into Supabase
       const { data: insertData, error: insertError } = await supabase
         .from('work_requests')
