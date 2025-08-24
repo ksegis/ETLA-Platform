@@ -1,11 +1,13 @@
 import { NextRequest } from "next/server";
-import { getSupabaseServerClient } from "@/src/lib/supabaseServer";
-import { REPORTS } from "@/app/reporting/_data";
+// from: src/app/api/reports/[id]/export/route.ts  →  src/lib/supabaseServer.ts  = 6 levels up
+import { getSupabaseServerClient } from "../../../../../../lib/supabaseServer";
+// from: src/app/api/reports/[id]/export/route.ts  →  src/app/reporting/_data.ts  = 6 levels up then /app/…
+import { REPORTS } from "../../../../../../app/reporting/_data";
 import * as XLSX from "xlsx";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const id = params.id;
-  const report = REPORTS.find(r => r.id === id);
+  const report = REPORTS.find((r) => r.id === id);
   if (!report) return new Response("Report not found", { status: 404 });
 
   const search = req.nextUrl.searchParams;
@@ -13,7 +15,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     from: search.get("from") ?? null,
     to: search.get("to") ?? null,
     filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-    // pull more rows for export; caller can override with ?limit=
     limit: Number(search.get("limit") ?? 5000),
     offset: Number(search.get("offset") ?? 0),
   };
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const { data, error } = await supabase.rpc(sp, rpcArgs);
   if (error) return new Response(error.message, { status: 400 });
 
-  const rows: any[] = Array.isArray(data) ? data : (data?.rows ?? []);
+  const rows: any[] = Array.isArray(data) ? data : (data as any)?.rows ?? [];
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Report");

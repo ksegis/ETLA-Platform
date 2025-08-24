@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServerClient, publicUrl } from "../../../lib/supabaseServer"; // <-- rel path
-import { REPORTS } from "../../../app/reporting/_data"; // <-- rel path
+// from: src/app/api/reports/[id]/route.ts  →  src/lib/supabaseServer.ts  = 5 levels up
+import { getSupabaseServerClient, publicUrl } from "../../../../../lib/supabaseServer";
+// from: src/app/api/reports/[id]/route.ts  →  src/app/reporting/_data.ts  = 5 levels up then /app/…
+import { REPORTS } from "../../../../../app/reporting/_data";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const id = params.id;
@@ -25,17 +27,17 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   const rows: any[] = Array.isArray(data) ? data : data?.rows ?? [];
-  const total = typeof data?.total === "number" ? data.total : rows.length;
+  const total = typeof (data as any)?.total === "number" ? (data as any).total : rows.length;
   const columns = rows[0] ? Object.keys(rows[0]) : [];
 
   let docs: Array<{ id: string; name: string; url?: string; size?: number }> | undefined;
   if (report.docBased) {
     docs = rows.map((r) => {
-      const id = String(r.id ?? r.doc_id ?? r.document_id ?? crypto.randomUUID());
-      const name = String(r.name ?? r.filename ?? `document-${id}.pdf`);
+      const did = String(r.id ?? r.doc_id ?? r.document_id ?? crypto.randomUUID());
+      const name = String(r.name ?? r.filename ?? `document-${did}.pdf`);
       let url: string | undefined = r.url ?? r.preview_url;
       if (!url && r.bucket && r.path) url = publicUrl(r.bucket, r.path);
-      return { id, name, url, size: Number(r.size ?? 0) };
+      return { id: did, name, url, size: Number(r.size ?? 0) };
     });
   }
 
