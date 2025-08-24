@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
-// from: src/app/api/reports/[id]/route.ts → src/app/reporting/_data.ts
-import { REPORTS } from "../../../../reporting/_data";
+// FROM: src/app/api/reports/[id]/route.ts → src/app/reporting/_data.ts
+import { REPORTS } from "../../../reporting/_data";
 
 // Inline Supabase server client
 function getSupabaseServerClient() {
@@ -27,7 +27,7 @@ function publicUrl(bucket: string, path: string) {
   return `${url}/storage/v1/object/public/${bucket}/${path}`;
 }
 
-// NOTE: params is a Promise in Next.js 15
+// Next.js 15: params is a Promise
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
