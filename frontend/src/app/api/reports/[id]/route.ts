@@ -4,13 +4,13 @@ import { createClient } from "@supabase/supabase-js";
 // FROM: src/app/api/reports/[id]/route.ts → src/app/reporting/_data.ts
 import { REPORTS } from "../../../reporting/_data";
 
-// Inline Supabase server client
-function getSupabaseServerClient() {
+// Async Supabase server client (await cookies())
+async function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anon) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token =
     cookieStore.get("sb-access-token")?.value ??
     cookieStore.get("supabase-auth-token")?.value ??
@@ -47,7 +47,7 @@ export async function GET(
       offset: Number(search.get("offset") ?? 0),
     };
 
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     const sp = report.procedure ?? `sp_${id}`;
     const { data, error } = await supabase.rpc(sp, rpcArgs);
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -59,7 +59,7 @@ export async function GET(
     let docs: Array<{ id: string; name: string; url?: string; size?: number }> | undefined;
     if (report.docBased) {
       docs = rows.map((r) => {
-        const did = String(r.id ?? r.doc_id ?? r.document_id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2));
+        const did = String(r.id ?? r.doc_id ?? r.document_id ?? (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)));
         const name = String(r.name ?? r.filename ?? `document-${did}.pdf`);
         let url: string | undefined = r.url ?? r.preview_url;
         if (!url && r.bucket && r.path) url = publicUrl(r.bucket, r.path);

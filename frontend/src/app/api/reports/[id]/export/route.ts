@@ -5,13 +5,13 @@ import * as XLSX from "xlsx";
 // FROM: src/app/api/reports/[id]/export/route.ts → src/app/reporting/_data.ts
 import { REPORTS } from "../../../../reporting/_data";
 
-// Inline Supabase server client
-function getSupabaseServerClient() {
+// Async Supabase server client (await cookies())
+async function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anon) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token =
     cookieStore.get("sb-access-token")?.value ??
     cookieStore.get("supabase-auth-token")?.value ??
@@ -43,7 +43,7 @@ export async function GET(
       offset: Number(search.get("offset") ?? 0),
     };
 
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     const sp = report.procedure ?? `sp_${id}`;
     const { data, error } = await supabase.rpc(sp, rpcArgs);
     if (error) return new Response(error.message, { status: 400 });
