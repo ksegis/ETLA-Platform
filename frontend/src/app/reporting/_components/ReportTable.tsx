@@ -17,14 +17,18 @@ export function ReportTable({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const a = !q ? items : items.filter(r =>
-      r.title.toLowerCase().includes(q) ||
-      r.description.toLowerCase().includes(q)
-    );
+    const a = !q
+      ? items
+      : items.filter(
+          (r) =>
+            r.title.toLowerCase().includes(q) ||
+            r.description.toLowerCase().includes(q)
+        );
     const s = [...a].sort((x, y) => {
-      const val = sortKey === "title"
-        ? x.title.localeCompare(y.title)
-        : (x[sortKey] as number) - (y[sortKey] as number);
+      const val =
+        sortKey === "title"
+          ? x.title.localeCompare(y.title)
+          : (x[sortKey] as number) - (y[sortKey] as number);
       return asc ? val : -val;
     });
     return s;
@@ -55,7 +59,7 @@ export function ReportTable({
           </select>
           <button
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            onClick={() => setAsc(a => !a)}
+            onClick={() => setAsc((a) => !a)}
             aria-label="Toggle sort direction"
           >
             {asc ? "Asc" : "Desc"}
@@ -63,7 +67,8 @@ export function ReportTable({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Allow horizontal scroll so nothing clips on the right */}
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full table-fixed">
           <colgroup>
             <col className="w-[40%]" />
@@ -97,8 +102,10 @@ export function ReportTable({
                 </td>
                 <td className="px-4 py-3 capitalize">{r.category}</td>
                 <td className="px-4 py-3 tabular-nums">{r.fields}</td>
-                <td className="px-4 py-3 tabular-nums">{r.estimatedRecords.toLocaleString()}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 tabular-nums">
+                  {r.estimatedRecords.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <button
                       className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"

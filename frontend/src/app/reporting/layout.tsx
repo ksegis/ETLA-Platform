@@ -50,7 +50,7 @@ export default function ReportingLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Main content */}
-        <main className="min-h-[calc(100vh-57px)] bg-gray-50 py-6 lg:pl-6">{children}</main>
+        <main className="min-h-[calc(100vh-57px)] bg-gray-50 py-6 lg:px-6">{children}</main>
       </div>
     </div>
   );
