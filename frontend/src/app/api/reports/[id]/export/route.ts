@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-// from: src/app/api/reports/[id]/export/route.ts  →  src/lib/supabaseServer.ts  = 6 levels up
-import { getSupabaseServerClient } from "../../../../../../lib/supabaseServer";
-// from: src/app/api/reports/[id]/export/route.ts  →  src/app/reporting/_data.ts  = 6 levels up then /app/…
-import { REPORTS } from "../../../../../../app/reporting/_data";
+// src/app/api/reports/[id]/export/route.ts → src/app/api/_lib/supabaseServer.ts
+import { getSupabaseServerClient } from "../../../../_lib/supabaseServer";
+// src/app/api/reports/[id]/export/route.ts → src/app/reporting/_data.ts
+import { REPORTS } from "../../../../../reporting/_data";
 import * as XLSX from "xlsx";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {

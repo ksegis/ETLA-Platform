@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-// from: src/app/api/reports/[id]/route.ts  →  src/lib/supabaseServer.ts  = 5 levels up
-import { getSupabaseServerClient, publicUrl } from "../../../../../lib/supabaseServer";
-// from: src/app/api/reports/[id]/route.ts  →  src/app/reporting/_data.ts  = 5 levels up then /app/…
-import { REPORTS } from "../../../../../app/reporting/_data";
+// src/app/api/reports/[id]/route.ts → src/app/api/_lib/supabaseServer.ts
+import { getSupabaseServerClient, publicUrl } from "../../_lib/supabaseServer";
+// src/app/api/reports/[id]/route.ts → src/app/reporting/_data.ts
+import { REPORTS } from "../../../reporting/_data";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const id = params.id;
@@ -21,12 +21,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const supabase = getSupabaseServerClient();
   const sp = report.procedure ?? `sp_${id}`;
   const { data, error } = await supabase.rpc(sp, rpcArgs);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  const rows: any[] = Array.isArray(data) ? data : data?.rows ?? [];
+  const rows: any[] = Array.isArray(data) ? data : (data as any)?.rows ?? [];
   const total = typeof (data as any)?.total === "number" ? (data as any).total : rows.length;
   const columns = rows[0] ? Object.keys(rows[0]) : [];
 
