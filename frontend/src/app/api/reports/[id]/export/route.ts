@@ -2,16 +2,14 @@ import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
-// From: src/app/api/reports/[id]/export/route.ts → src/app/reporting/_data.ts
-import { REPORTS } from "../../../../reporting/_data";
+// from: src/app/api/reports/[id]/export/route.ts → src/app/reporting/_data.ts
+import { REPORTS } from "../../../../../reporting/_data";
 
-// Inline Supabase server client (no external imports needed)
+// Inline Supabase server client
 function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
-  }
+  if (!url || !anon) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   const cookieStore = cookies();
   const token =
@@ -25,9 +23,14 @@ function getSupabaseServerClient() {
   });
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+// NOTE: params is a Promise in Next.js 15
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = params.id;
+    const { id } = await context.params;
+
     const report = REPORTS.find((r) => r.id === id);
     if (!report) return new Response("Report not found", { status: 404 });
 
@@ -54,8 +57,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const fileName = `${report.title.replace(/\s+/g, "_")}.xlsx`;
     return new Response(buf, {
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${fileName}"`,
         "Cache-Control": "no-store",
       },

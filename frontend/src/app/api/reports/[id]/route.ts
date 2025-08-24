@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
-// From: src/app/api/reports/[id]/route.ts → src/app/reporting/_data.ts
-import { REPORTS } from "../../../reporting/_data";
+// from: src/app/api/reports/[id]/route.ts → src/app/reporting/_data.ts
+import { REPORTS } from "../../../../reporting/_data";
 
-// Inline Supabase server client (no external imports needed)
+// Inline Supabase server client
 function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
-  }
+  if (!url || !anon) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   const cookieStore = cookies();
   const token =
@@ -29,9 +27,14 @@ function publicUrl(bucket: string, path: string) {
   return `${url}/storage/v1/object/public/${bucket}/${path}`;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+// NOTE: params is a Promise in Next.js 15
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = params.id;
+    const { id } = await context.params;
+
     const report = REPORTS.find((r) => r.id === id);
     if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
 
@@ -53,13 +56,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const total = typeof (data as any)?.total === "number" ? (data as any).total : rows.length;
     const columns = rows[0] ? Object.keys(rows[0]) : [];
 
-    let docs:
-      | Array<{ id: string; name: string; url?: string; size?: number }>
-      | undefined;
-
+    let docs: Array<{ id: string; name: string; url?: string; size?: number }> | undefined;
     if (report.docBased) {
       docs = rows.map((r) => {
-        const did = String(r.id ?? r.doc_id ?? r.document_id ?? crypto.randomUUID());
+        const did = String(r.id ?? r.doc_id ?? r.document_id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2));
         const name = String(r.name ?? r.filename ?? `document-${did}.pdf`);
         let url: string | undefined = r.url ?? r.preview_url;
         if (!url && r.bucket && r.path) url = publicUrl(r.bucket, r.path);
