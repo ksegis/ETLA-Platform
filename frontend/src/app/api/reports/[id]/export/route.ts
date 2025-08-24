@@ -1,41 +1,66 @@
 import { NextRequest } from "next/server";
-// src/app/api/reports/[id]/export/route.ts → src/app/api/_lib/supabaseServer.ts
-import { getSupabaseServerClient } from "../../../../_lib/supabaseServer";
-// src/app/api/reports/[id]/export/route.ts → src/app/reporting/_data.ts
-import { REPORTS } from "../../../../../reporting/_data";
+import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
+// From: src/app/api/reports/[id]/export/route.ts → src/app/reporting/_data.ts
+import { REPORTS } from "../../../../reporting/_data";
+
+// Inline Supabase server client (no external imports needed)
+function getSupabaseServerClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  }
+
+  const cookieStore = cookies();
+  const token =
+    cookieStore.get("sb-access-token")?.value ??
+    cookieStore.get("supabase-auth-token")?.value ??
+    undefined;
+
+  return createClient(url, anon, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+  });
+}
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const id = params.id;
-  const report = REPORTS.find((r) => r.id === id);
-  if (!report) return new Response("Report not found", { status: 404 });
+  try {
+    const id = params.id;
+    const report = REPORTS.find((r) => r.id === id);
+    if (!report) return new Response("Report not found", { status: 404 });
 
-  const search = req.nextUrl.searchParams;
-  const rpcArgs: Record<string, any> = {
-    from: search.get("from") ?? null,
-    to: search.get("to") ?? null,
-    filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-    limit: Number(search.get("limit") ?? 5000),
-    offset: Number(search.get("offset") ?? 0),
-  };
+    const search = req.nextUrl.searchParams;
+    const rpcArgs: Record<string, any> = {
+      from: search.get("from") ?? null,
+      to: search.get("to") ?? null,
+      filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
+      limit: Number(search.get("limit") ?? 5000),
+      offset: Number(search.get("offset") ?? 0),
+    };
 
-  const supabase = getSupabaseServerClient();
-  const sp = report.procedure ?? `sp_${id}`;
-  const { data, error } = await supabase.rpc(sp, rpcArgs);
-  if (error) return new Response(error.message, { status: 400 });
+    const supabase = getSupabaseServerClient();
+    const sp = report.procedure ?? `sp_${id}`;
+    const { data, error } = await supabase.rpc(sp, rpcArgs);
+    if (error) return new Response(error.message, { status: 400 });
 
-  const rows: any[] = Array.isArray(data) ? data : (data as any)?.rows ?? [];
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Report");
+    const rows: any[] = Array.isArray(data) ? data : (data as any)?.rows ?? [];
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Report");
 
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-  const fileName = `${report.title.replace(/\s+/g, "_")}.xlsx`;
-  return new Response(buf, {
-    headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${fileName}"`,
-      "Cache-Control": "no-store",
-    },
-  });
+    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    const fileName = `${report.title.replace(/\s+/g, "_")}.xlsx`;
+    return new Response(buf, {
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${fileName}"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (e: any) {
+    return new Response(e?.message ?? "Server error", { status: 500 });
+  }
 }
