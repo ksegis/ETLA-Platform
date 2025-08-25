@@ -22,7 +22,7 @@ export type ReportType = {
   buildRows?: (filters?: any) => Promise<any[]> | any[];
 };
 
-// ---------- Demo data builders (deterministic, decent variety) ----------
+// ---------- Demo data builders ----------
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "HR"];
 const names = ["Aeryn Sun", "John Crichton", "B. Stark", "C. Copeland", "R. Lofthouse"];
@@ -111,7 +111,8 @@ function makePositionHistoryRows(count = 120): any[] {
 }
 
 // ---------- Report catalog ----------
-const REPORTS: ReportType[] = [
+// NOTE: Exported so API routes can import REPORTS directly.
+export const REPORTS: ReportType[] = [
   {
     id: "checks-detail",
     title: "Check Detail History",
@@ -152,7 +153,6 @@ const REPORTS: ReportType[] = [
     description: "Position changes over time.",
     buildRows: () => makePositionHistoryRows(),
   },
-  // Stubs (render in tables; modal will still synthesize demo rows when previewed)
   {
     id: "salary-history",
     title: "Salary History",
@@ -179,4 +179,8 @@ export function getReportsByGroup(group: GroupKey): ReportType[] {
 
 export function getAllReports(): ReportType[] {
   return REPORTS.slice();
+}
+
+export function getReportById(id: string): ReportType | undefined {
+  return REPORTS.find((r) => r.id === id);
 }
