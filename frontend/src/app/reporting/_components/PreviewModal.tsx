@@ -26,7 +26,7 @@ type PreviewModalProps = {
 const PAGE_SIZES = [25, 50, 100, 250];
 const DEFAULT_PAGE_SIZE = 50;
 
-/* ------------------------------ Demo Data ------------------------------ */
+/* ------------------------------- Demo data ------------------------------ */
 
 function genDemoRows(reportId: string, count = 360): AnyRow[] {
   const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "HR"];
@@ -108,13 +108,13 @@ function genDemoRows(reportId: string, count = 360): AnyRow[] {
   return rows;
 }
 
-/* ---------------------------- Chart Helpers ---------------------------- */
+/* ---------------------------- Chart preparation ------------------------- */
 
 function buildChartSeries(reportId: string, rows: AnyRow[]) {
   const norm = (v: any) => (typeof v === "string" ? v.trim() : v);
-  const lower = (r: AnyRow) =>
-    Object.fromEntries(Object.entries(r).map(([k, v]) => [k.toLowerCase(), v]));
-  const R = rows.map(lower);
+  const R = rows.map((r) =>
+    Object.fromEntries(Object.entries(r).map(([k, v]) => [k.toLowerCase(), v]))
+  );
 
   if (reportId === "department_analysis") {
     const byDept: Record<string, { department: string; Regular: number; OT: number; Bonus: number }> = {};
@@ -166,7 +166,7 @@ function exportExcel(rows: AnyRow[], reportId: string) {
   XLSX.writeFile(wb, toExcelFilename(reportId));
 }
 
-/* ------------------------------- Component ------------------------------ */
+/* -------------------------------- Component ----------------------------- */
 
 export default function PreviewModal({ open, report, onClose, onRowClick }: PreviewModalProps) {
   const [loading, setLoading] = React.useState(false);
@@ -177,7 +177,6 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
   const [from, setFrom] = React.useState("");
   const [to, setTo] = React.useState("");
 
-  // contextual filters (for jobs/positions/department)
   const [department, setDepartment] = React.useState("");
   const [costCenter, setCostCenter] = React.useState("");
   const [payGroup, setPayGroup] = React.useState("");
@@ -191,21 +190,20 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
     !!report &&
     ["department_analysis", "job_history", "position_history"].includes(report.id);
 
-  // load data when opened / toggling demo
+  // Load data when opened or toggling demo.
   React.useEffect(() => {
     if (!open || !report) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
-      // simulate async fetch
-      await new Promise((r) => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, 100));
       const data = useDemo ? genDemoRows(report.id) : [];
       if (!cancelled) {
         setRows(data);
         setLoading(false);
-        // switch to chart *after* rows exist so Recharts gets size & data
-        setView(chartCapable ? "chart" : "table");
         setPage(1);
+        // Switch to Chart *after* rows exist so ResponsiveContainer has width.
+        setView(chartCapable ? "chart" : "table");
       }
     })();
     return () => {
@@ -213,6 +211,18 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
     };
   }, [open, report?.id, useDemo, chartCapable]);
 
+  // Force a resize after open/data change so Recharts recalculates.
+  React.useLayoutEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      try {
+        window.dispatchEvent(new Event("resize"));
+      } catch {}
+    }, 50);
+    return () => clearTimeout(t);
+  }, [open, view, rows.length]);
+
+  // Filtered view
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
@@ -286,17 +296,24 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
     return buildChartSeries(report.id, filtered);
   }, [report, filtered]);
 
+  const xKey =
+    report?.id === "department_analysis"
+      ? "department"
+      : chartData.length && "title" in (chartData[0] as any)
+      ? "title"
+      : "position";
+
   if (!open || !report) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 p-4 sm:p-8">
-      <div className="w-full max-w-[1200px] rounded-xl bg-white shadow-xl">
+      <div className="w-full max-w-[1200px] rounded-xl bg-white shadow-xl min-w-0">
         {/* Header */}
         <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">{report.title}</h2>
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-semibold text-gray-900">{report.title}</h2>
             {!!report.description && (
-              <p className="mt-0.5 text-xs text-gray-500">{report.description}</p>
+              <p className="mt-0.5 truncate text-xs text-gray-500">{report.description}</p>
             )}
           </div>
           <button
@@ -418,7 +435,7 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
         </div>
 
         {/* Body */}
-        <div className="px-4 pb-4 pt-3 sm:px-6">
+        <div className="px-4 pb-4 pt-3 sm:px-6 min-w-0">
           {loading ? (
             <div className="py-16 text-center text-sm text-gray-500">Loading…</div>
           ) : filtered.length === 0 ? (
@@ -426,34 +443,42 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
               No rows to display. Try enabling <b>Demo data</b> or adjusting filters.
             </div>
           ) : view === "chart" && chartCapable ? (
-            <div className="h-[380px] w-full rounded-lg border border-gray-200 bg-white p-3">
-              <ResponsiveContainer
-                key={`${report.id}-${filtered.length}-${view}`}
-                width="100%"
-                height="100%"
-              >
-                {report.id === "department_analysis" ? (
-                  <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="department" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="Regular" stackId="cost" />
-                    <Bar dataKey="OT" stackId="cost" />
-                    <Bar dataKey="Bonus" stackId="cost" />
-                  </BarChart>
-                ) : (
-                  <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={(chartData[0] as any)?.title ? "title" : "position"} />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="Changes" />
-                  </BarChart>
-                )}
-              </ResponsiveContainer>
+            <div className="h-[380px] w-full min-w-0 rounded-lg border border-gray-200 bg-white p-3">
+              {chartData.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                  No chartable data for the current filters.
+                </div>
+              ) : (
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                  debounce={100}
+                  // Changing key on data length/view nudges Recharts to recompute
+                  key={`${report.id}-${chartData.length}-${view}`}
+                >
+                  {report.id === "department_analysis" ? (
+                    <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey={xKey} />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Regular" stackId="cost" />
+                      <Bar dataKey="OT" stackId="cost" />
+                      <Bar dataKey="Bonus" stackId="cost" />
+                    </BarChart>
+                  ) : (
+                    <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey={xKey} />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="Changes" />
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              )}
             </div>
           ) : (
             <>
