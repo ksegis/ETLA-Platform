@@ -3,15 +3,10 @@
 import * as React from "react";
 import ReportTable from "./_components/ReportTable";
 import PreviewModal from "./_components/PreviewModal";
-import { getReportsByGroup, type GroupKey, type ReportType } from "./_data";
-
-const GROUPS: GroupKey[] = ["employee", "checks", "jobs", "salary", "timecards"];
+import { getAllReports, type ReportType } from "./_data";
 
 export default function AllReportsPage() {
-  const items: ReportType[] = React.useMemo(
-    () => GROUPS.flatMap((g) => getReportsByGroup(g)),
-    []
-  );
+  const items: ReportType[] = React.useMemo(() => getAllReports(), []);
 
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<ReportType | null>(null);
@@ -21,7 +16,7 @@ export default function AllReportsPage() {
       <div>
         <h1 className="text-lg font-semibold text-gray-900">All Reports</h1>
         <p className="mt-0.5 text-sm text-gray-600">
-          Click any report title to preview. Use Export to Excel for full extracts.
+          Click any report title to preview. Use Export to CSV for full extracts.
         </p>
       </div>
 

@@ -1,22 +1,8 @@
-// reporting/_data.ts
+// Central definitions for Reporting: types, labels, catalog, and demo row builders.
 
-// --- Types
-export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards" | "all";
+export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards";
 
-export type ReportType = {
-  id: string;
-  title: string;
-  description?: string;
-  category: string;         // e.g. Payroll, HR
-  group: GroupKey;
-  fields?: number;          // rough field count (for UI only)
-  estimatedRows?: number;   // rough row count (for UI only)
-  procedure?: string;       // optional stored procedure name for live data
-  docBased?: boolean;       // true => document/PDF style report (e.g. W-2)
-};
-
-// --- Labels for the left nav groups (used by ClientGroupPage)
-export const GROUP_LABELS: Record<Exclude<GroupKey, "all">, string> = {
+export const GROUP_LABELS: Record<GroupKey, string> = {
   employee: "Employee",
   checks: "Checks",
   jobs: "Jobs",
@@ -24,93 +10,173 @@ export const GROUP_LABELS: Record<Exclude<GroupKey, "all">, string> = {
   timecards: "Timecards",
 };
 
-// --- Catalog of reports (UI metadata)
-export const REPORTS: ReportType[] = [
-  // ---------------- Checks
-  {
-    id: "check_detail_history",
-    title: "Check Detail History",
-    description:
-      "Gross-to-net: earnings, deductions, taxes, memos, pay date/week/number, check number, etc.",
-    category: "Payroll",
-    group: "checks",
-    fields: 40,
-    estimatedRows: 5000,
-    procedure: "sp_check_detail_history",
-  },
-  {
-    id: "pay_period_analysis",
-    title: "Pay Period Analysis",
-    description: "Summary by pay period.",
-    category: "Payroll",
-    group: "checks",
-    fields: 8,
-    estimatedRows: 500,
-    procedure: "sp_pay_period_analysis",
-  },
-  {
-    id: "tax_information",
-    title: "Tax Information",
-    description: "Jurisdictions & withholdings.",
-    category: "Payroll",
-    group: "checks",
-    fields: 26,
-    estimatedRows: 1850,
-    procedure: "sp_tax_information",
-  },
-  {
-    id: "w2_documents",
-    title: "W-2 Documents",
-    description: "Client-supplied W-2 PDFs with metadata and download links.",
-    category: "Payroll",
-    group: "checks",
-    fields: 6,
-    estimatedRows: 2113,
-    docBased: true,
-  },
+export type ReportType = {
+  id: string;
+  title: string;
+  group: GroupKey;
+  description?: string;
+  category?: string;
+  fields?: string;
+  approxRows?: number; // optional; used by table if present
+  // Optional data loader used by PreviewModal
+  buildRows?: (filters?: any) => Promise<any[]> | any[];
+};
 
-  // ---------------- Pay / Jobs
+// ---------- Demo data builders (deterministic, decent variety) ----------
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "HR"];
+const names = ["Aeryn Sun", "John Crichton", "B. Stark", "C. Copeland", "R. Lofthouse"];
+
+function makeCheckRows(count = 160): any[] {
+  const rows: any[] = [];
+  for (let i = 0; i < count; i++) {
+    const m = i % months.length;
+    const paydate = `2025-${String(m + 1).padStart(2, "0")}-01`;
+    const gross = 2000 + (i % 6) * 120;
+    rows.push({
+      EMPLOYEENAME: names[i % names.length],
+      EMPLOYEEID: `E${String(1 + (i % 250)).padStart(3, "0")}`,
+      PAYDATE: paydate,
+      GROSS: gross,
+      TAX: Math.round(gross * 0.24),
+      NETPAY: Math.round(gross * 0.76),
+      DEPARTMENT: depts[i % depts.length],
+      CHECKNO: 100100 + i,
+    });
+  }
+  return rows;
+}
+
+function makeDepartmentAnalysisRows(count = 180): any[] {
+  const rows: any[] = [];
+  for (let i = 0; i < count; i++) {
+    const m = i % months.length;
+    const periodstart = `2025-${String(m + 1).padStart(2, "0")}-01`;
+    const periodlabel = `${months[m]} 2025`;
+    const department = depts[i % depts.length];
+    rows.push({
+      PERIODSTART: periodstart,
+      PERIODLABEL: periodlabel,
+      DEPARTMENT: department,
+      REGULARPAY: 15000 + (i % 9) * 800,
+      OTPAY: [0, 300, 315, 330, 840, 0][i % 6],
+      BONUS: [0, 0, 500, 0, 1200, 0][i % 6],
+    });
+  }
+  return rows;
+}
+
+function makeJobHistoryRows(count = 140): any[] {
+  const titles = ["Sales Associate", "Server", "Teacher", "Worship Lead", "HR Generalist"];
+  const actions = ["Promotion", "Transfer", "New Hire", "Lateral Move"];
+  const reasons = ["Merit", "Reorg", "Backfill", "Request"];
+  const rows: any[] = [];
+  for (let i = 0; i < count; i++) {
+    const m = i % months.length;
+    const periodstart = `2025-${String(m + 1).padStart(2, "0")}-01`;
+    const periodlabel = `${months[m]} 2025`;
+    rows.push({
+      EFFECTIVEDATE: periodstart,
+      PERIODLABEL: periodlabel,
+      EMPLOYEE: names[i % names.length],
+      EMPLOYEEID: `E${String(1 + (i % 250)).padStart(3, "0")}`,
+      TITLE: titles[i % titles.length],
+      DEPARTMENT: depts[i % depts.length],
+      ACTION: actions[i % actions.length],
+      REASON: reasons[i % reasons.length],
+    });
+  }
+  return rows;
+}
+
+function makePositionHistoryRows(count = 120): any[] {
+  const positions = ["Associate", "Sr Associate", "Lead", "Manager"];
+  const reasons = ["Backfill", "New Role", "Restructure"];
+  const rows: any[] = [];
+  for (let i = 0; i < count; i++) {
+    const m = i % months.length;
+    const periodstart = `2025-${String(m + 1).padStart(2, "0")}-01`;
+    const periodlabel = `${months[m]} 2025`;
+    rows.push({
+      EFFECTIVEDATE: periodstart,
+      PERIODLABEL: periodlabel,
+      EMPLOYEE: names[i % names.length],
+      EMPLOYEEID: `E${String(1 + (i % 250)).padStart(3, "0")}`,
+      POSITION: positions[i % positions.length],
+      DEPARTMENT: depts[i % depts.length],
+      REASON: reasons[i % reasons.length],
+    });
+  }
+  return rows;
+}
+
+// ---------- Report catalog ----------
+const REPORTS: ReportType[] = [
   {
-    id: "department_analysis",
-    title: "Department Analysis",
-    description:
-      "Department labor cost by period: headcount/FTE, regular/OT/bonus, employer taxes, benefits, burden, and avg comp.",
+    id: "checks-detail",
+    title: "Check Detail History",
+    group: "checks",
     category: "Payroll",
-    group: "jobs",
-    fields: 20,
-    estimatedRows: 1200,
-    procedure: "sp_department_analysis",
+    fields: "Emp, Dept, Gross, Taxes, Net, Check No, Pay date",
+    approxRows: 160,
+    description: "Gross-to-net including taxes & deductions by check.",
+    buildRows: () => makeCheckRows(),
   },
   {
-    id: "job_history",
+    id: "dept-analysis",
+    title: "Department Analysis",
+    group: "jobs",
+    category: "Compensation",
+    fields: "Period, Dept, Regular, OT, Bonus",
+    approxRows: 180,
+    description: "Pay composition by department and period.",
+    buildRows: () => makeDepartmentAnalysisRows(),
+  },
+  {
+    id: "job-history",
     title: "Job History",
-    description:
-      "Effective-dated job changes: job code/title, action & reason, department, supervisor, FLSA, grade, pay type/rate.",
-    category: "HR",
     group: "jobs",
-    fields: 22,
-    estimatedRows: 3200,
-    procedure: "sp_job_history",
+    category: "Talent",
+    fields: "Emp, Dept, Title, Action, Reason, Effective date",
+    approxRows: 140,
+    description: "Lifecycle of job changes with reasons.",
+    buildRows: () => makeJobHistoryRows(),
   },
   {
-    id: "position_history",
+    id: "position-history",
     title: "Position History",
-    description:
-      "Effective-dated position changes: position ID/title, status, FTE/standard hours, grade, cost center, supervisor.",
-    category: "HR",
     group: "jobs",
-    fields: 24,
-    estimatedRows: 2600,
-    procedure: "sp_position_history",
+    category: "Talent",
+    fields: "Emp, Dept, Position, Reason, Effective date",
+    approxRows: 120,
+    description: "Position changes over time.",
+    buildRows: () => makePositionHistoryRows(),
+  },
+  // Stubs (render in tables; modal will still synthesize demo rows when previewed)
+  {
+    id: "salary-history",
+    title: "Salary History",
+    group: "salary",
+    category: "Compensation",
+    fields: "Emp, Amount, % increase, Reason, Memo",
+    approxRows: 110,
+    description: "Salary adjustments and rationale.",
+  },
+  {
+    id: "timecard-detail",
+    title: "Time Card Detail History",
+    group: "timecards",
+    category: "Time",
+    fields: "Punches, PTO, Transfers, Period",
+    approxRows: 200,
+    description: "All punch activity by period.",
   },
 ];
 
-// --- Helpers used across pages
 export function getReportsByGroup(group: GroupKey): ReportType[] {
-  if (group === "all") return REPORTS.slice();
   return REPORTS.filter((r) => r.group === group);
 }
 
-export function getReportById(id: string): ReportType | undefined {
-  return REPORTS.find((r) => r.id === id);
+export function getAllReports(): ReportType[] {
+  return REPORTS.slice();
 }

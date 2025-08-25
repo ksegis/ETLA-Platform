@@ -10,27 +10,15 @@ type Props = { params: { group: GroupKey | string } };
 export default function ClientGroupPage({ params }: Props) {
   const gRaw = params.group;
 
-  const hasKey = (k: string): k is keyof typeof GROUP_LABELS =>
-    Object.prototype.hasOwnProperty.call(GROUP_LABELS, k);
+  const hasKey = (k: string): k is GroupKey =>
+    ["employee", "checks", "jobs", "salary", "timecards"].includes(k as GroupKey);
 
-  const safeKey: keyof typeof GROUP_LABELS = hasKey(gRaw) ? gRaw : "employee";
+  const safeKey: GroupKey = hasKey(gRaw) ? (gRaw as GroupKey) : "employee";
   const label = GROUP_LABELS[safeKey];
-  const effectiveGroup: GroupKey = (hasKey(gRaw) ? gRaw : "employee") as GroupKey;
-
-  const items: ReportType[] = getReportsByGroup(effectiveGroup);
+  const items: ReportType[] = getReportsByGroup(safeKey);
 
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<ReportType | null>(null);
-
-  const handlePreview = (r: ReportType) => {
-    setSelected(r);
-    setOpen(true);
-  };
-
-  const handleExport = (r: ReportType) => {
-    setSelected(r);
-    setOpen(true);
-  };
 
   return (
     <div className="space-y-4">
@@ -41,14 +29,14 @@ export default function ClientGroupPage({ params }: Props) {
         </div>
       </div>
 
-      <ReportTable items={items} onPreview={handlePreview} onExport={handleExport} />
+      <ReportTable
+        items={items}
+        onPreview={(r) => { setSelected(r); setOpen(true); }}
+        onExport={(r) => { setSelected(r); setOpen(true); }}
+      />
 
       {selected && (
-        <PreviewModal
-          open={open}
-          report={selected}
-          onClose={() => setOpen(false)}
-        />
+        <PreviewModal open={open} report={selected} onClose={() => setOpen(false)} />
       )}
     </div>
   );

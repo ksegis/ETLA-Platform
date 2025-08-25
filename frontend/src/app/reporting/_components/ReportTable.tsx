@@ -16,21 +16,11 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
       <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
         <thead>
           <tr>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">
-              Report
-            </th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">
-              Category
-            </th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">
-              Fields
-            </th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">
-              ~ Rows
-            </th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">
-              Actions
-            </th>
+            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Report</th>
+            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Category</th>
+            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Fields</th>
+            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">~ Rows</th>
+            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -45,14 +35,14 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
                   {r.title}
                 </button>
                 {r.description ? (
-                  <div className="mt-0.5 line-clamp-1 text-xs text-gray-500">
-                    {r.description}
-                  </div>
+                  <div className="mt-0.5 line-clamp-1 text-xs text-gray-500">{r.description}</div>
                 ) : null}
               </td>
               <td className="px-3 py-2 text-gray-700">{r.category ?? "-"}</td>
               <td className="px-3 py-2 text-gray-700">{r.fields ?? "-"}</td>
-              <td className="px-3 py-2 text-gray-700">{r.approxRows ?? "-"}</td>
+              <td className="px-3 py-2 text-gray-700">
+                {typeof r.approxRows === "number" ? r.approxRows : "—"}
+              </td>
               <td className="px-3 py-2">
                 <div className="flex items-center gap-2">
                   <button
