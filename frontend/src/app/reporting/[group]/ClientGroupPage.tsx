@@ -5,12 +5,21 @@ import ReportTable, { ReportType } from "../_components/ReportTable";
 import PreviewModal from "../_components/PreviewModal";
 import { getReportsByGroup, GROUP_LABELS, type GroupKey } from "../_data";
 
-type Props = { params: { group: GroupKey } };
+type Props = { params: { group: GroupKey | string } };
 
 export default function ClientGroupPage({ params }: Props) {
-  const group = params.group;
-  const label = GROUP_LABELS[group] ?? "Reports";
-  const items = getReportsByGroup(group);
+  // Route param may not always be a valid key; guard it
+  const gRaw = params.group;
+
+  const hasKey = (k: string): k is keyof typeof GROUP_LABELS =>
+    Object.prototype.hasOwnProperty.call(GROUP_LABELS, k);
+
+  const safeKey: keyof typeof GROUP_LABELS = hasKey(gRaw) ? gRaw : "employee";
+  const label = GROUP_LABELS[safeKey];
+
+  // When group isn’t valid (e.g., “all”), fall back to “employee”
+  const effectiveGroup: GroupKey = (hasKey(gRaw) ? gRaw : "employee") as GroupKey;
+  const items = getReportsByGroup(effectiveGroup);
 
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<ReportType | null>(null);
@@ -21,7 +30,6 @@ export default function ClientGroupPage({ params }: Props) {
   };
 
   const handleExport = (r: ReportType) => {
-    // Let the modal handle Excel export once opened; or wire server route here if needed.
     setSelected(r);
     setOpen(true);
   };
