@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getMockRows } from "@/app/reporting/_mock";
 
+export const dynamic = "force-dynamic"; // no caching
+
 function toCsv(rows: Record<string, any>[]): string {
   if (!rows.length) return "";
   const cols = Array.from(
@@ -9,24 +11,23 @@ function toCsv(rows: Record<string, any>[]): string {
       return s;
     }, new Set())
   );
+
   const esc = (v: any) => {
     if (v === null || v === undefined) return "";
     const s = String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
+  };
+
   const header = cols.join(",");
   const body = rows.map((r) => cols.map((c) => esc(r[c])).join(",")).join("\n");
   return `${header}\n${body}`;
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+export async function GET(_req: Request, ctx: any) {
+  const id = String(ctx?.params?.id ?? "");
   const rows = getMockRows(id);
   const csv = toCsv(rows);
-  const filename = `${id}.csv`;
+  const filename = `${id || "report"}.csv`;
 
   return new NextResponse(csv, {
     headers: {
