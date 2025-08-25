@@ -1,28 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
-import { getReportsByGroup, type ReportType } from "./_data";
+import React, { useMemo, useState } from "react";
+import { REPORTS, type ReportType } from "./_data";
 import { ReportTable } from "./_components/ReportTable";
 import { PreviewModal } from "./_components/PreviewModal";
 
 export default function AllReportsPage() {
   const [selected, setSelected] = useState<ReportType | null>(null);
-  const reports = getReportsByGroup("all");
+  const items = useMemo(() => REPORTS.slice(), []);
 
   function exportExcel(r: ReportType) {
+    // Raw export (no modal filters). Use the modal for filtered exports.
     const url = new URL(`/api/reports/${r.id}/export`, window.location.origin);
-    window.location.href = url.toString();
+    window.open(url.toString(), "_blank");
   }
 
   return (
-    <div className="mx-auto max-w-[1400px]">
-      <section className="mb-4">
-        <h2 className="text-base font-semibold text-gray-900">All Reports</h2>
-        <p className="text-sm text-gray-600">Search, filter, preview, and export any report.</p>
-      </section>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">All Reports</h2>
+      </div>
 
       <ReportTable
-        items={reports}
+        reports={items}
         onPreview={(r) => setSelected(r)}
         onExport={exportExcel}
       />
@@ -31,7 +31,6 @@ export default function AllReportsPage() {
         report={selected}
         open={!!selected}
         onClose={() => setSelected(null)}
-        onExport={(r) => exportExcel(r)}
       />
     </div>
   );

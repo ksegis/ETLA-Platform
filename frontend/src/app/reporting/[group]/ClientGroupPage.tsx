@@ -7,28 +7,26 @@ import { ReportTable } from "../_components/ReportTable";
 import { PreviewModal } from "../_components/PreviewModal";
 
 export default function ClientGroupPage({ group }: { group: GroupKey }) {
-  const items = getReportsByGroup(group);
   const [selected, setSelected] = useState<ReportType | null>(null);
 
-  const title = useMemo(
-    () => (group === "all" ? "All Reports" : GROUP_LABELS[group as keyof typeof GROUP_LABELS]),
-    [group]
-  );
+  const items = useMemo(() => getReportsByGroup(group), [group]);
+  const title =
+    group !== "all" ? GROUP_LABELS[group as Exclude<GroupKey, "all">] ?? "Reports" : "All Reports";
 
   function exportExcel(r: ReportType) {
+    // Raw export (no modal filters); filtered export is in the Preview modal
     const url = new URL(`/api/reports/${r.id}/export`, window.location.origin);
-    window.location.href = url.toString();
+    window.open(url.toString(), "_blank");
   }
 
   return (
-    <div className="mx-auto max-w-[1400px]">
-      <section className="mb-4">
-        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-        <p className="text-sm text-gray-600">Reports filtered by {group}.</p>
-      </section>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      </div>
 
       <ReportTable
-        items={items}
+        reports={items}
         onPreview={(r) => setSelected(r)}
         onExport={exportExcel}
       />
@@ -37,7 +35,6 @@ export default function ClientGroupPage({ group }: { group: GroupKey }) {
         report={selected}
         open={!!selected}
         onClose={() => setSelected(null)}
-        onExport={(r, _demo, _filters) => exportExcel(r)}
       />
     </div>
   );
