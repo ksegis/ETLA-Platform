@@ -1,13 +1,11 @@
-import React from "react";
-import type { GroupKey } from "../_data";
+// frontend/src/app/reporting/[group]/page.tsx
 import ClientGroupPage from "./ClientGroupPage";
 
-export default async function GroupReportsPage({
+export default function GroupPage({
   params,
 }: {
-  params: Promise<{ group: string }>;
+  params: { group: string };
 }) {
-  const { group } = await params;
-  const g = (group as GroupKey) ?? "employee";
-  return <ClientGroupPage group={g} />;
+  // Just forward the route params as-is to the client component
+  return <ClientGroupPage params={params} />;
 }
