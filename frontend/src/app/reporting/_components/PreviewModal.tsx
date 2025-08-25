@@ -1,9 +1,28 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, FileText, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+  X,
+  BarChart3,
+  Table as TableIcon,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import type { ReportType } from "../_data";
 import PaystubModal from "./PaystubModal";
+import RowDetailModal from "./RowDetailModal";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from "recharts";
 
 type PreviewData = {
   columns: string[];
@@ -20,9 +39,7 @@ type ExtraFilterSpec =
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
-// Best-practice filters per report
 const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
-  // Checks (already implemented)
   check_detail_history: [
     { type: "text", key: "employee_name", label: "Employee name" },
     { type: "number", key: "pay_number", label: "Pay number" },
@@ -32,8 +49,6 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
     { type: "number", key: "min_gross", label: "Min gross" },
     { type: "number", key: "max_gross", label: "Max gross" },
   ],
-
-  // NEW — Department Analysis
   department_analysis: [
     { type: "text", key: "department", label: "Department" },
     { type: "text", key: "cost_center", label: "Cost center" },
@@ -42,8 +57,6 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
     { type: "number", key: "min_total_cost", label: "Min total cost" },
     { type: "number", key: "max_total_cost", label: "Max total cost" },
   ],
-
-  // NEW — Job History
   job_history: [
     { type: "text", key: "employee_id", label: "Employee ID" },
     { type: "text", key: "employee_name", label: "Employee name" },
@@ -54,8 +67,6 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
     { type: "text", key: "action", label: "Action" },
     { type: "text", key: "reason_code", label: "Reason code" },
   ],
-
-  // NEW — Position History
   position_history: [
     { type: "text", key: "position_id", label: "Position ID" },
     { type: "text", key: "position_title", label: "Position title" },
@@ -67,6 +78,12 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
     { type: "number", key: "standard_hours", label: "Standard hours" },
   ],
 };
+
+function currency(n: number) {
+  return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+}
+
+/** ------------------------- DATA GRID ------------------------- */
 
 function DataPreview({
   data,
@@ -159,42 +176,167 @@ function DataPreview({
       </div>
 
       {data.warning && <div className="rounded-md bg-yellow-50 p-2 text-xs text-yellow-800">Note: {data.warning}</div>}
-      <div className="text-[11px] text-gray-500">Tip: Click a row to open details (checks show a paystub).</div>
+      <div className="text-[11px] text-gray-500">Tip: Click a row for details.</div>
     </div>
   );
 }
 
+/** ------------------------- CHARTS ------------------------- */
+
+function DepartmentAnalysisChart({ rows, groupBy }: { rows: any[]; groupBy: "Department" | "PeriodLabel" }) {
+  const data = useMemo(() => {
+    const map: Record<string, { name: string; Regular: number; OT: number; Bonus: number; Burden: number; Total: number }> =
+      {};
+    for (const r of rows) {
+      const k = String(r[groupBy]);
+      if (!map[k]) map[k] = { name: k, Regular: 0, OT: 0, Bonus: 0, Burden: 0, Total: 0 };
+      map[k].Regular += Number(r.RegularPay || 0);
+      map[k].OT += Number(r.OTPay || 0);
+      map[k].Bonus += Number(r.Bonus || 0);
+      map[k].Burden += Number(r.Burden || 0);
+      map[k].Total += Number(r.TotalLaborCost || 0);
+    }
+    return Object.values(map).sort((a, b) => b.Total - a.Total);
+  }, [rows, groupBy]);
+
+  return (
+    <div className="h-[420px] w-full">
+      <ResponsiveContainer>
+        <BarChart data={data} margin={{ left: 24, right: 24, top: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis tickFormatter={(v) => (typeof v === "number" ? (v / 1000).toFixed(0) + "k" : String(v))} />
+          <Tooltip formatter={(v: any) => (typeof v === "number" ? currency(v) : v)} />
+          <Legend />
+          <Bar dataKey="Regular" stackId="c" />
+          <Bar dataKey="OT" stackId="c" />
+          <Bar dataKey="Bonus" stackId="c" />
+          <Bar dataKey="Burden" stackId="c" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function JobHistoryChart({ rows }: { rows: any[] }) {
+  const data = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const r of rows) {
+      const k = String(r.Action || "Other");
+      map[k] = (map[k] ?? 0) + 1;
+    }
+    return Object.entries(map).map(([name, count]) => ({ name, count }));
+  }, [rows]);
+
+  return (
+    <div className="h-[380px] w-full">
+      <ResponsiveContainer>
+        <BarChart data={data} margin={{ left: 24, right: 24, top: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="count" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function PositionHistoryChart({ rows }: { rows: any[] }) {
+  const data = useMemo(() => {
+    const map: Record<string, { name: string; Active: number; Closed: number }> = {};
+    for (const r of rows) {
+      const dept = String(r.Department || "Unknown");
+      if (!map[dept]) map[dept] = { name: dept, Active: 0, Closed: 0 };
+      const status = (String(r.Status || "") || "Active").toLowerCase().includes("closed") ? "Closed" : "Active";
+      map[dept][status as "Active" | "Closed"] += 1;
+    }
+    return Object.values(map).sort((a, b) => b.Active + b.Closed - (a.Active + a.Closed));
+  }, [rows]);
+
+  return (
+    <div className="h-[380px] w-full">
+      <ResponsiveContainer>
+        <BarChart data={data} margin={{ left: 24, right: 24, top: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="Active" stackId="s" />
+          <Bar dataKey="Closed" stackId="s" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** ------------------------- DOCUMENT PREVIEW ------------------------- */
+
 function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
   const [current, setCurrent] = useState(docs[0]);
-  useEffect(() => { setCurrent(docs[0]); }, [docs]);
+  useEffect(() => {
+    setCurrent(docs[0]);
+  }, [docs]);
 
   return (
     <div className="space-y-3">
       <div className="overflow-hidden rounded-xl border border-gray-200">
-        {current?.url ? <iframe src={current.url} className="h-[60vh] w-full" /> : <div className="p-6 text-sm text-gray-600">No preview URL available.</div>}
+        {current?.url ? (
+          <iframe src={current.url} className="h-[60vh] w-full" />
+        ) : (
+          <div className="p-6 text-sm text-gray-600">No preview URL available.</div>
+        )}
       </div>
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className="w-full table-fixed">
-          <colgroup><col className="w-[70%]" /><col className="w-[30%]" /></colgroup>
+          <colgroup>
+            <col className="w-[70%]" />
+            <col className="w-[30%]" />
+          </colgroup>
           <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-            <tr><th className="px-3 py-2">File</th><th className="px-3 py-2">Actions</th></tr>
+            <tr>
+              <th className="px-3 py-2">File</th>
+              <th className="px-3 py-2">Actions</th>
+            </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
             {docs.map((d) => (
               <tr key={d.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2"><div className="font-medium text-gray-900">{d.name}</div></td>
+                <td className="px-3 py-2">
+                  <div className="font-medium text-gray-900">{d.name}</div>
+                </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  {d.url && <a className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100" href={d.url} target="_blank" rel="noreferrer">Open</a>}
+                  {d.url && (
+                    <a
+                      className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"
+                      href={d.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open
+                    </a>
+                  )}
                 </td>
               </tr>
             ))}
-            {docs.length === 0 && <tr><td className="px-3 py-6 text-center text-gray-500" colSpan={2}>No documents found.</td></tr>}
+            {docs.length === 0 && (
+              <tr>
+                <td className="px-3 py-6 text-center text-gray-500" colSpan={2}>
+                  No documents found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
+
+/** ------------------------- MAIN PREVIEW MODAL ------------------------- */
 
 export function PreviewModal({
   report,
@@ -213,7 +355,7 @@ export function PreviewModal({
   const [nameTerm, setNameTerm] = useState("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
-  const extraSpec = useMemo<ExtraFilterSpec[]>(() => (report ? (EXTRA_FILTERS[report.id] ?? []) : []), [report]);
+  const extraSpec = useMemo<ExtraFilterSpec[]>(() => (report ? EXTRA_FILTERS[report.id] ?? [] : []), [report]);
   const [extra, setExtra] = useState<Record<string, any>>({});
   const [useDemo, setUseDemo] = useState<boolean>(false);
 
@@ -221,11 +363,22 @@ export function PreviewModal({
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(50);
 
-  // Paystub (checks only)
-  const [paystubRow, setPaystubRow] = useState<any | null>(null);
+  // View mode
+  const [mode, setMode] = useState<"table" | "chart">("table");
+  const [deptGroupBy, setDeptGroupBy] = useState<"Department" | "PeriodLabel">("Department");
+
+  // Detail modals
+  const [paystubRow, setPaystubRow] = useState<any | null>(null); // checks only
+  const [detailRow, setDetailRow] = useState<any | null>(null);   // all other non-doc reports
 
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isChecks = report?.id === "check_detail_history";
+  const supportsChart =
+    report?.id === "department_analysis" ||
+    report?.id === "job_history" ||
+    report?.id === "position_history";
 
   useEffect(() => {
     if (!open || !report) return;
@@ -234,6 +387,9 @@ export function PreviewModal({
     setExtra({});
     setUseDemo(false);
     setPage(1);
+    setMode("table");
+    setPaystubRow(null);
+    setDetailRow(null);
     triggerLoad(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, report]);
@@ -281,7 +437,7 @@ export function PreviewModal({
       if (useDemo) url.searchParams.set("demo", "1");
 
       const res = await fetch(url.toString(), { cache: "no-store", signal: ac.signal });
-      if (!res.ok && res.status !== 200) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as PreviewData & { error?: string };
       if ((json as any).error) setError((json as any).error);
       setData(json);
@@ -292,14 +448,29 @@ export function PreviewModal({
     }
   }
 
-  if (!open || !report) return null;
+  function exportExcel() {
+    if (!report) return;
+    const filters = buildFilters();
+    const url = new URL(`/api/reports/${report.id}/export`, window.location.origin);
+    if (from) url.searchParams.set("from", from);
+    if (to) url.searchParams.set("to", to);
+    if (Object.keys(filters).length) url.searchParams.set("filters", JSON.stringify(filters));
+    if (useDemo) url.searchParams.set("demo", "1");
+    window.open(url.toString(), "_blank");
+  }
 
-  const isChecks = report.id === "check_detail_history";
+  function handleRowClick(row: any) {
+    if (report?.docBased) return;
+    if (isChecks) setPaystubRow(row);
+    else setDetailRow(row);
+  }
+
+  if (!open || !report) return null;
 
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-4 sm:p-6">
-        <div className="relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
+        <div className="relative w-full max-w-6xl rounded-2xl bg-white shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-200 p-4">
             <h3 className="text-base font-semibold text-gray-900">{report.title}</h3>
@@ -308,7 +479,7 @@ export function PreviewModal({
             </button>
           </div>
 
-          {/* Filters */}
+          {/* Filters + actions */}
           <div className="border-b border-gray-200 p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
               <div>
@@ -322,11 +493,21 @@ export function PreviewModal({
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700">From</label>
-                <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
+                <input
+                  type="date"
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700">To</label>
-                <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
+                <input
+                  type="date"
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                />
               </div>
 
               {EXTRA_FILTERS[report.id]?.map((f) => (
@@ -339,9 +520,12 @@ export function PreviewModal({
                       onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
                     >
                       <option value="">Any</option>
-                      {f.options.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
+                      {"options" in f &&
+                        f.options?.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
                     </select>
                   ) : (
                     <input
@@ -357,12 +541,60 @@ export function PreviewModal({
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300" checked={useDemo} onChange={(e) => setUseDemo(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300"
+                  checked={useDemo}
+                  onChange={(e) => setUseDemo(e.target.checked)}
+                />
                 Demo data
               </label>
 
-              <div className="ml-auto flex items-center gap-2">
-                {/* Export handled by All Reports page's buttons; preview modal focuses on preview */}
+              {(report.id === "department_analysis" ||
+                report.id === "job_history" ||
+                report.id === "position_history") && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600">View</span>
+                  <div className="inline-flex rounded-lg border border-gray-300 p-0.5">
+                    <button
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm ${mode === "table" ? "bg-gray-100" : ""}`}
+                      onClick={() => setMode("table")}
+                      title="Table"
+                    >
+                      <TableIcon className="h-4 w-4" /> Table
+                    </button>
+                    <button
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm ${mode === "chart" ? "bg-gray-100" : ""}`}
+                      onClick={() => setMode("chart")}
+                      title="Chart"
+                    >
+                      <BarChart3 className="h-4 w-4" /> Chart
+                    </button>
+                  </div>
+
+                  {report.id === "department_analysis" && mode === "chart" && (
+                    <div className="ml-2 flex items-center gap-2">
+                      <span className="text-xs text-gray-600">Group by</span>
+                      <select
+                        className="rounded-md border border-gray-300 p-1.5 text-sm"
+                        value={deptGroupBy}
+                        onChange={(e) => setDeptGroupBy(e.target.value as any)}
+                      >
+                        <option value="Department">Department</option>
+                        <option value="PeriodLabel">Period</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="ml-auto">
+                <button
+                  onClick={exportExcel}
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
+                >
+                  Export to Excel
+                </button>
               </div>
             </div>
           </div>
@@ -371,25 +603,40 @@ export function PreviewModal({
           <div className="p-4">
             {loading && <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Loading…</div>}
             {!loading && error && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">Error: {error}</div>}
-            {!loading && !error && data && (report.docBased ? (
-              data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
-            ) : (
-              <DataPreview
-                data={data}
-                onRowClick={isChecks ? (row) => setPaystubRow(row) : undefined}
-                page={page}
-                pageSize={pageSize}
-                total={data.total ?? data.rows.length}
-                setPage={setPage}
-                setPageSize={setPageSize}
-              />
-            ))}
+
+            {!loading && !error && data && (
+              report.docBased ? (
+                data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
+              ) : mode === "chart" && (report.id === "department_analysis" || report.id === "job_history" || report.id === "position_history") ? (
+                <>
+                  {report.id === "department_analysis" && (
+                    <DepartmentAnalysisChart rows={data.rows} groupBy={deptGroupBy} />
+                  )}
+                  {report.id === "job_history" && <JobHistoryChart rows={data.rows} />}
+                  {report.id === "position_history" && <PositionHistoryChart rows={data.rows} />}
+                </>
+              ) : (
+                <DataPreview
+                  data={data}
+                  onRowClick={handleRowClick}
+                  page={page}
+                  pageSize={pageSize}
+                  total={data.total ?? data.rows.length}
+                  setPage={setPage}
+                  setPageSize={setPageSize}
+                />
+              )
+            )}
           </div>
         </div>
       </div>
 
-      {isChecks && paystubRow && data && (
+      {/* Drill-down modals */}
+      {isChecks && data && paystubRow && (
         <PaystubModal open={!!paystubRow} row={paystubRow} allRows={data.rows} onClose={() => setPaystubRow(null)} />
+      )}
+      {!isChecks && report && detailRow && (
+        <RowDetailModal open={!!detailRow} report={report} row={detailRow} onClose={() => setDetailRow(null)} />
       )}
     </>
   );
