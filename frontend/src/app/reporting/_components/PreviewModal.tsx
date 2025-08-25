@@ -1,396 +1,575 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, FileText, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import type { ReportType } from "../_data";
-import PaystubModal from "./PaystubModal";
+import * as React from "react";
+import { X } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from "recharts";
+import * as XLSX from "xlsx";
 
-type PreviewData = {
-  columns: string[];
-  rows: any[];
-  total: number;
-  docs?: Array<{ id: string; name: string; url?: string; size?: number }>;
-  warning?: string;
+export type ReportType = {
+  id: string; // e.g., "department_analysis" | "job_history" | "position_history" | "check_detail_history"
+  title: string;
+  description?: string;
+  docBased?: boolean;
 };
 
-type ExtraFilterSpec =
-  | { type: "select"; key: string; label: string; options: { value: string; label: string }[] }
-  | { type: "text"; key: string; label: string }
-  | { type: "number"; key: string; label: string };
-
-const PAGE_SIZE_OPTIONS = [25, 50, 100];
-
-// Best-practice filters per report
-const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
-  // Checks (already implemented)
-  check_detail_history: [
-    { type: "text", key: "employee_name", label: "Employee name" },
-    { type: "number", key: "pay_number", label: "Pay number" },
-    { type: "text", key: "department", label: "Department" },
-    { type: "number", key: "check_number", label: "Check number" },
-    { type: "text", key: "memo", label: "Memo contains" },
-    { type: "number", key: "min_gross", label: "Min gross" },
-    { type: "number", key: "max_gross", label: "Max gross" },
-  ],
-
-  // NEW — Department Analysis
-  department_analysis: [
-    { type: "text", key: "department", label: "Department" },
-    { type: "text", key: "cost_center", label: "Cost center" },
-    { type: "text", key: "location", label: "Location" },
-    { type: "text", key: "pay_group", label: "Pay group" },
-    { type: "number", key: "min_total_cost", label: "Min total cost" },
-    { type: "number", key: "max_total_cost", label: "Max total cost" },
-  ],
-
-  // NEW — Job History
-  job_history: [
-    { type: "text", key: "employee_id", label: "Employee ID" },
-    { type: "text", key: "employee_name", label: "Employee name" },
-    { type: "text", key: "job_code", label: "Job code" },
-    { type: "text", key: "department", label: "Department" },
-    { type: "text", key: "supervisor", label: "Supervisor" },
-    { type: "text", key: "location", label: "Location" },
-    { type: "text", key: "action", label: "Action" },
-    { type: "text", key: "reason_code", label: "Reason code" },
-  ],
-
-  // NEW — Position History
-  position_history: [
-    { type: "text", key: "position_id", label: "Position ID" },
-    { type: "text", key: "position_title", label: "Position title" },
-    { type: "text", key: "department", label: "Department" },
-    { type: "text", key: "supervisor", label: "Supervisor" },
-    { type: "text", key: "status", label: "Status" },
-    { type: "number", key: "fte_min", label: "Min FTE" },
-    { type: "number", key: "fte_max", label: "Max FTE" },
-    { type: "number", key: "standard_hours", label: "Standard hours" },
-  ],
-};
-
-function DataPreview({
-  data,
-  onRowClick,
-  page,
-  pageSize,
-  total,
-  setPage,
-  setPageSize,
-}: {
-  data: PreviewData;
-  onRowClick?: (row: any) => void;
-  page: number;
-  pageSize: number;
-  total: number;
-  setPage: (p: number) => void;
-  setPageSize: (n: number) => void;
-}) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const start = total ? (page - 1) * pageSize + 1 : 0;
-  const end = Math.min(page * pageSize, total);
-
-  return (
-    <div className="space-y-2">
-      <div className="overflow-x-auto rounded-2xl border border-gray-200">
-        <table className="w-full table-auto text-sm">
-          <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-            <tr>{data.columns.map((c) => <th key={c} className="px-3 py-2">{c}</th>)}</tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {data.rows.map((r, i) => (
-              <tr
-                key={i}
-                className={`${onRowClick ? "cursor-pointer hover:bg-gray-50" : ""}`}
-                onClick={() => onRowClick?.(r)}
-              >
-                {data.columns.map((c) => (
-                  <td key={c} className="px-3 py-2 whitespace-pre-wrap">
-                    {String(r[c] ?? r?.[data.columns.indexOf(c)] ?? "")}
-                  </td>
-                ))}
-              </tr>
-            ))}
-            {!data.rows.length && (
-              <tr>
-                <td colSpan={data.columns.length} className="px-3 py-8 text-center text-gray-500">
-                  No rows to display.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-        <div className="text-gray-600">
-          {total ? (
-            <>
-              Showing <span className="font-medium">{start}</span>–<span className="font-medium">{end}</span> of{" "}
-              <span className="font-medium">{total.toLocaleString()}</span>
-            </>
-          ) : (
-            <>No results</>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-600">Rows / page</label>
-          <select
-            className="rounded-md border border-gray-300 p-1.5 text-sm"
-            value={pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-          >
-            {PAGE_SIZE_OPTIONS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-
-          <div className="ml-2 flex items-center gap-1">
-            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(1)} disabled={page <= 1}><ChevronsLeft className="h-4 w-4" /></button>
-            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}><ChevronLeft className="h-4 w-4" /></button>
-            <span className="px-2 text-gray-700">Page <span className="font-medium">{page}</span> / {totalPages}</span>
-            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}><ChevronRight className="h-4 w-4" /></button>
-            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(totalPages)} disabled={page >= totalPages}><ChevronsRight className="h-4 w-4" /></button>
-          </div>
-        </div>
-      </div>
-
-      {data.warning && <div className="rounded-md bg-yellow-50 p-2 text-xs text-yellow-800">Note: {data.warning}</div>}
-      <div className="text-[11px] text-gray-500">Tip: Click a row to open details (checks show a paystub).</div>
-    </div>
-  );
-}
-
-function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
-  const [current, setCurrent] = useState(docs[0]);
-  useEffect(() => { setCurrent(docs[0]); }, [docs]);
-
-  return (
-    <div className="space-y-3">
-      <div className="overflow-hidden rounded-xl border border-gray-200">
-        {current?.url ? <iframe src={current.url} className="h-[60vh] w-full" /> : <div className="p-6 text-sm text-gray-600">No preview URL available.</div>}
-      </div>
-      <div className="overflow-x-auto rounded-2xl border border-gray-200">
-        <table className="w-full table-fixed">
-          <colgroup><col className="w-[70%]" /><col className="w-[30%]" /></colgroup>
-          <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-            <tr><th className="px-3 py-2">File</th><th className="px-3 py-2">Actions</th></tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-sm">
-            {docs.map((d) => (
-              <tr key={d.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2"><div className="font-medium text-gray-900">{d.name}</div></td>
-                <td className="px-3 py-2 whitespace-nowrap">
-                  {d.url && <a className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100" href={d.url} target="_blank" rel="noreferrer">Open</a>}
-                </td>
-              </tr>
-            ))}
-            {docs.length === 0 && <tr><td className="px-3 py-6 text-center text-gray-500" colSpan={2}>No documents found.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-export function PreviewModal({
-  report,
-  open,
-  onClose,
-}: {
-  report: ReportType | null;
+type Props = {
   open: boolean;
+  report: ReportType | null;
   onClose: () => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<PreviewData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  /** Optional: when a row in the table is clicked */
+  onRowClick?: (row: any) => void;
+};
 
-  // Filters
-  const [nameTerm, setNameTerm] = useState("");
-  const [from, setFrom] = useState<string>("");
-  const [to, setTo] = useState<string>("");
-  const extraSpec = useMemo<ExtraFilterSpec[]>(() => (report ? (EXTRA_FILTERS[report.id] ?? []) : []), [report]);
-  const [extra, setExtra] = useState<Record<string, any>>({});
-  const [useDemo, setUseDemo] = useState<boolean>(false);
+type AnyRow = Record<string, any>;
 
-  // Pagination (server-backed)
-  const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(50);
+const PAGE_SIZE_DEFAULT = 50;
 
-  // Paystub (checks only)
-  const [paystubRow, setPaystubRow] = useState<any | null>(null);
+/* -------------------------------- Helpers ------------------------------- */
 
-  const abortRef = useRef<AbortController | null>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-  useEffect(() => {
-    if (!open || !report) return;
-    setData(null);
-    setError(null);
-    setExtra({});
-    setUseDemo(false);
-    setPage(1);
-    triggerLoad(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, report]);
+function toExcelFilename(reportId: string) {
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  return `${reportId}-${stamp}.xlsx`;
+}
 
-  useEffect(() => {
-    if (!open || !report) return;
-    triggerLoad(400);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nameTerm, from, to, useDemo, JSON.stringify(extra), page, pageSize]);
+function downloadExcel(rows: AnyRow[], filename: string) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Report");
+  XLSX.writeFile(wb, filename);
+}
 
-  useEffect(() => {
-    setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nameTerm, from, to, useDemo, JSON.stringify(extra), pageSize]);
+/** Demo generators kept lightweight but diverse enough to test charts/filters */
+function genDemoRows(reportId: string, count = 500): AnyRow[] {
+  const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "HR"];
+  const locs = ["HQ", "Remote", "DC-East", "DC-West"];
+  const paygroups = ["Biweekly", "Weekly", "Monthly"];
 
-  function buildFilters() {
-    const f: Record<string, any> = { name: nameTerm || undefined, ...extra };
-    Object.keys(f).forEach((k) => (f[k] === "" || f[k] == null) && delete f[k]);
-    return f;
-  }
+  const titles = [
+    "Sales Associate",
+    "Server - HUB",
+    "Teacher",
+    "Worship Leader",
+    "HR Generalist",
+    "Operations Lead",
+  ];
 
-  function triggerLoad(delayMs: number) {
-    if (!report) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => void runLoad(), delayMs);
-  }
+  const names = ["Aeryn Sun", "John Crichton", "D. Peacekeeper", "B. Stark", "C. Copeland", "R. Lofthouse"];
 
-  async function runLoad() {
-    if (!report) return;
-    if (abortRef.current) abortRef.current.abort();
-    const ac = new AbortController();
-    abortRef.current = ac;
+  const rows: AnyRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const d = new Date(2025, Math.floor(Math.random() * 6), 1);
+    const dept = depts[i % depts.length];
+    const title = titles[i % titles.length];
+    const name = names[i % names.length];
+    const loc = locs[i % locs.length];
+    const pg = paygroups[i % paygroups.length];
+    const costCenter = 4000 + (i % 10) * 10;
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const filters = buildFilters();
-      const url = new URL(`/api/reports/${report.id}`, window.location.origin);
-      url.searchParams.set("limit", String(pageSize));
-      url.searchParams.set("offset", String((page - 1) * pageSize));
-      if (from) url.searchParams.set("from", from);
-      if (to) url.searchParams.set("to", to);
-      if (Object.keys(filters).length) url.searchParams.set("filters", JSON.stringify(filters));
-      if (useDemo) url.searchParams.set("demo", "1");
-
-      const res = await fetch(url.toString(), { cache: "no-store", signal: ac.signal });
-      if (!res.ok && res.status !== 200) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as PreviewData & { error?: string };
-      if ((json as any).error) setError((json as any).error);
-      setData(json);
-    } catch (e: any) {
-      if (e?.name !== "AbortError") setError(e?.message ?? "Failed to load preview.");
-    } finally {
-      if (!ac.signal.aborted) setLoading(false);
+    if (reportId === "department_analysis") {
+      const headcount = 6 + (i % 12);
+      const fte = headcount - Math.random(); // pseudo FTE
+      const regular = 14000 + (i % 12) * 1200;
+      const ot = [0, 300, 315, 330, 840, 880][i % 6];
+      const bonus = [0, 0, 0, 500, 1200, 2500][i % 6];
+      rows.push({
+        periodstart: d.toISOString().slice(0, 10),
+        periodlabel: d.toLocaleString("en-US", { month: "short", year: "numeric" }),
+        department: dept,
+        costcenter: costCenter,
+        location: loc,
+        paygroup: pg,
+        headcount,
+        fte: Number(fte.toFixed(1)),
+        regularpay: regular,
+        otpay: ot,
+        bonus,
+      });
+    } else if (reportId === "job_history") {
+      const actions = ["New Position", "Promotion", "Lateral Move", "Transfer", "Demotion"];
+      const reasons = ["Reorg", "Backfill", "Merit", "Request", "Business need"];
+      rows.push({
+        effectivedate: d.toISOString().slice(0, 10),
+        employee: name,
+        employeeid: `E${String(1 + (i % 120)).padStart(3, "0")}`,
+        title,
+        department: dept,
+        action: actions[i % actions.length],
+        reason: reasons[i % reasons.length],
+        supervisor: ["Clay Hecocks", "Curtis Copeland", "Robert Lofthouse"][i % 3],
+        location: loc,
+      });
+    } else if (reportId === "position_history") {
+      const positions = ["Associate", "Sr Associate", "Lead", "Manager", "Director"];
+      const reasons = ["Backfill", "New role", "Temporary", "Restructure"];
+      rows.push({
+        effectivedate: d.toISOString().slice(0, 10),
+        employee: name,
+        employeeid: `E${String(1 + (i % 120)).padStart(3, "0")}`,
+        position: positions[i % positions.length],
+        department: dept,
+        paygroup: pg,
+        reason: reasons[i % reasons.length],
+        costcenter: costCenter,
+        location: loc,
+      });
+    } else {
+      // Fallback: echo a simple row
+      rows.push({ date: d.toISOString().slice(0, 10), employee: name, department: dept, location: loc });
     }
   }
+  return rows;
+}
+
+/** create a chart series based on the current report’s rows */
+function buildChartSeries(reportId: string, rows: AnyRow[]) {
+  const norm = (v: any) => (typeof v === "string" ? v.trim() : v);
+  const lowerKeys = (r: AnyRow) =>
+    Object.fromEntries(Object.entries(r).map(([k, v]) => [k.toLowerCase(), v]));
+  const R = rows.map(lowerKeys);
+
+  if (reportId === "department_analysis") {
+    const byDept: Record<string, { department: string; Regular: number; OT: number; Bonus: number }> = {};
+    for (const r of R) {
+      const dept = String(norm(r.department ?? "Unknown"));
+      const regular = Number(r.regularpay ?? r.regular ?? 0);
+      const ot = Number(r.otpay ?? r.overtime ?? 0);
+      const bonus = Number(r.bonus ?? 0);
+      if (!byDept[dept]) byDept[dept] = { department: dept, Regular: 0, OT: 0, Bonus: 0 };
+      byDept[dept].Regular += regular;
+      byDept[dept].OT += ot;
+      byDept[dept].Bonus += bonus;
+    }
+    return Object.values(byDept);
+  }
+
+  if (reportId === "job_history") {
+    const byTitle: Record<string, { title: string; Changes: number }> = {};
+    for (const r of R) {
+      const title = String(norm(r.title ?? "Unknown"));
+      byTitle[title] ??= { title, Changes: 0 };
+      byTitle[title].Changes += 1;
+    }
+    return Object.values(byTitle);
+  }
+
+  if (reportId === "position_history") {
+    const byPos: Record<string, { position: string; Changes: number }> = {};
+    for (const r of R) {
+      const pos = String(norm(r.position ?? r.department ?? "Unknown"));
+      byPos[pos] ??= { position: pos, Changes: 0 };
+      byPos[pos].Changes += 1;
+    }
+    return Object.values(byPos);
+  }
+
+  return [];
+}
+
+/* ------------------------------- Component ------------------------------- */
+
+export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
+  const [loading, setLoading] = React.useState(false);
+  const [useDemo, setUseDemo] = React.useState(true);
+  const [rows, setRows] = React.useState<AnyRow[]>([]);
+  const [query, setQuery] = React.useState("");
+  const [dateFrom, setDateFrom] = React.useState<string>("");
+  const [dateTo, setDateTo] = React.useState<string>("");
+  // report-specific optional filters
+  const [department, setDepartment] = React.useState("");
+  const [costCenter, setCostCenter] = React.useState("");
+  const [payGroup, setPayGroup] = React.useState("");
+  const [location, setLocation] = React.useState("");
+
+  // table state
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(PAGE_SIZE_DEFAULT);
+
+  // Chart/Table toggle
+  const [viewMode, setViewMode] = React.useState<"table" | "chart">("table");
+
+  const chartCapable =
+    !!report &&
+    ["department_analysis", "job_history", "position_history"].includes(report.id);
+
+  // reset when opening/closing
+  React.useEffect(() => {
+    if (!open) return;
+    setPage(1);
+    setLoading(true);
+
+    (async () => {
+      await sleep(100); // tiny delay to feel responsive
+      const data = useDemo && report ? genDemoRows(report.id) : [];
+      setRows(data);
+      setLoading(false);
+      if (chartCapable) setViewMode("chart"); // default to Chart for these
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, report?.id, useDemo]);
+
+  // filter logic
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return rows.filter((r) => {
+      const inQuery =
+        !q ||
+        Object.values(r).some((v) =>
+          String(v ?? "").toLowerCase().includes(q)
+        );
+
+      const inDept = !department || String(r.department ?? "").toLowerCase().includes(department.toLowerCase());
+      const inLoc = !location || String(r.location ?? "").toLowerCase().includes(location.toLowerCase());
+      const inCC = !costCenter || String(r.costcenter ?? "").includes(costCenter);
+      const inPG = !payGroup || String(r.paygroup ?? "").toLowerCase().includes(payGroup.toLowerCase());
+
+      const dateKey =
+        r.periodstart ?? r.effectivedate ?? r.paydate ?? r.date ?? null;
+      const inFrom = !dateFrom || (dateKey && String(dateKey) >= dateFrom);
+      const inTo = !dateTo || (dateKey && String(dateKey) <= dateTo);
+
+      return inQuery && inDept && inLoc && inCC && inPG && inFrom && inTo;
+    });
+  }, [rows, query, department, location, costCenter, payGroup, dateFrom, dateTo]);
+
+  // Pagination slice
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageRows = React.useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
+
+  const columns = React.useMemo(() => {
+    if (!report) return [];
+    switch (report.id) {
+      case "department_analysis":
+        return [
+          "periodstart",
+          "periodlabel",
+          "department",
+          "costcenter",
+          "location",
+          "paygroup",
+          "headcount",
+          "fte",
+          "regularpay",
+          "otpay",
+          "bonus",
+        ];
+      case "job_history":
+        return [
+          "effectivedate",
+          "employee",
+          "employeeid",
+          "title",
+          "department",
+          "action",
+          "reason",
+          "supervisor",
+          "location",
+        ];
+      case "position_history":
+        return [
+          "effectivedate",
+          "employee",
+          "employeeid",
+          "position",
+          "department",
+          "paygroup",
+          "reason",
+          "costcenter",
+          "location",
+        ];
+      default:
+        return Object.keys(pageRows[0] ?? {});
+    }
+  }, [report, pageRows]);
+
+  const chartData = React.useMemo(() => {
+    if (!report) return [];
+    return buildChartSeries(report.id, filtered);
+  }, [report, filtered]);
 
   if (!open || !report) return null;
 
-  const isChecks = report.id === "check_detail_history";
-
   return (
-    <>
-      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-4 sm:p-6">
-        <div className="relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 p-4">
-            <h3 className="text-base font-semibold text-gray-900">{report.title}</h3>
-            <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100" onClick={onClose} aria-label="Close">
-              <X className="h-5 w-5" />
+    <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 p-4 sm:p-8">
+      <div className="w-full max-w-[1200px] rounded-xl bg-white shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">
+              {report.title}
+            </h2>
+            {report.description ? (
+              <p className="mt-0.5 text-xs text-gray-500">{report.description}</p>
+            ) : null}
+          </div>
+          <button
+            onClick={onClose}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 gap-3 border-b px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 sm:px-6">
+          <input
+            className="rounded-md border px-3 py-2 text-sm"
+            placeholder="Name / search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+          />
+          <input
+            type="date"
+            className="rounded-md border px-3 py-2 text-sm"
+            value={dateFrom}
+            onChange={(e) => {
+              setDateFrom(e.target.value);
+              setPage(1);
+            }}
+          />
+          <input
+            type="date"
+            className="rounded-md border px-3 py-2 text-sm"
+            value={dateTo}
+            onChange={(e) => {
+              setDateTo(e.target.value);
+              setPage(1);
+            }}
+          />
+
+          {/* contextual filters shown for chart-capable reports */}
+          {chartCapable && (
+            <>
+              <input
+                className="rounded-md border px-3 py-2 text-sm"
+                placeholder="Department"
+                value={department}
+                onChange={(e) => {
+                  setDepartment(e.target.value);
+                  setPage(1);
+                }}
+              />
+              <input
+                className="rounded-md border px-3 py-2 text-sm"
+                placeholder="Cost center"
+                value={costCenter}
+                onChange={(e) => {
+                  setCostCenter(e.target.value);
+                  setPage(1);
+                }}
+              />
+              <input
+                className="rounded-md border px-3 py-2 text-sm"
+                placeholder="Pay group"
+                value={payGroup}
+                onChange={(e) => {
+                  setPayGroup(e.target.value);
+                  setPage(1);
+                }}
+              />
+              <input
+                className="rounded-md border px-3 py-2 text-sm"
+                placeholder="Location"
+                value={location}
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </>
+          )}
+
+          <div className="col-span-full flex flex-wrap items-center gap-3 pt-1">
+            <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={useDemo}
+                onChange={(e) => setUseDemo(e.target.checked)}
+              />
+              Demo data
+            </label>
+
+            {/* View toggle */}
+            {chartCapable && (
+              <div className="ml-auto inline-flex overflow-hidden rounded-md border">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("table")}
+                  className={`px-3 py-1 text-xs ${
+                    viewMode === "table"
+                      ? "bg-gray-900 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Table
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("chart")}
+                  className={`px-3 py-1 text-xs ${
+                    viewMode === "chart"
+                      ? "bg-gray-900 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Chart
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={() => downloadExcel(filtered, toExcelFilename(report.id))}
+              className="ml-auto rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-black"
+            >
+              Export to Excel
             </button>
           </div>
+        </div>
 
-          {/* Filters */}
-          <div className="border-b border-gray-200 p-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700">Name / search</label>
-                <input
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                  placeholder="Employee name, department, etc."
-                  value={nameTerm}
-                  onChange={(e) => setNameTerm(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700">From</label>
-                <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700">To</label>
-                <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
-              </div>
-
-              {EXTRA_FILTERS[report.id]?.map((f) => (
-                <div key={f.key}>
-                  <label className="block text-xs font-medium text-gray-700">{f.label}</label>
-                  {f.type === "select" ? (
-                    <select
-                      className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                      value={String((extra as any)[f.key] ?? "")}
-                      onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
-                    >
-                      <option value="">Any</option>
-                      {f.options.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
+        {/* Body */}
+        <div className="px-4 pb-4 pt-3 sm:px-6">
+          {loading ? (
+            <div className="py-16 text-center text-sm text-gray-500">
+              Loading…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-md border border-dashed p-8 text-center text-sm text-gray-500">
+              No rows to display. Try enabling <b>Demo data</b> or adjusting filters.
+            </div>
+          ) : viewMode === "chart" && chartCapable ? (
+            <div className="h-[380px] w-full rounded-lg border border-gray-200 bg-white p-3">
+              <ResponsiveContainer width="100%" height="100%">
+                {report.id === "department_analysis" ? (
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="department" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="Regular" stackId="cost" />
+                    <Bar dataKey="OT" stackId="cost" />
+                    <Bar dataKey="Bonus" stackId="cost" />
+                  </BarChart>
+                ) : (
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey={"title" in chartData[0] ? "title" : "position"} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="Changes" />
+                  </BarChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <>
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
+                  <thead>
+                    <tr>
+                      {columns.map((c) => (
+                        <th
+                          key={c}
+                          className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700"
+                        >
+                          {c.toUpperCase()}
+                        </th>
                       ))}
-                    </select>
-                  ) : (
-                    <input
-                      className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                      type={f.type === "number" ? "number" : "text"}
-                      value={String((extra as any)[f.key] ?? "")}
-                      onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300" checked={useDemo} onChange={(e) => setUseDemo(e.target.checked)} />
-                Demo data
-              </label>
-
-              <div className="ml-auto flex items-center gap-2">
-                {/* Export handled by All Reports page's buttons; preview modal focuses on preview */}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageRows.map((r, idx) => (
+                      <tr
+                        key={idx}
+                        className="cursor-pointer odd:bg-white even:bg-gray-50 hover:bg-gray-100"
+                        onClick={() => onRowClick?.(r)}
+                      >
+                        {columns.map((c) => (
+                          <td key={c} className="px-3 py-2 text-gray-800">
+                            {String(r[c] ?? "")}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          </div>
 
-          {/* Body */}
-          <div className="p-4">
-            {loading && <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Loading…</div>}
-            {!loading && error && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">Error: {error}</div>}
-            {!loading && !error && data && (report.docBased ? (
-              data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
-            ) : (
-              <DataPreview
-                data={data}
-                onRowClick={isChecks ? (row) => setPaystubRow(row) : undefined}
-                page={page}
-                pageSize={pageSize}
-                total={data.total ?? data.rows.length}
-                setPage={setPage}
-                setPageSize={setPageSize}
-              />
-            ))}
-          </div>
+              {/* Pagination */}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-xs text-gray-600">
+                  Showing <b>{(page - 1) * pageSize + 1}</b>–
+                  <b>{Math.min(page * pageSize, filtered.length)}</b> of{" "}
+                  <b>{filtered.length}</b> rows
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-600">Rows per page</label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="rounded-md border px-2 py-1 text-xs"
+                  >
+                    {[25, 50, 100, 250].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="ml-2 inline-flex overflow-hidden rounded-md border">
+                    <button
+                      className="px-2 py-1 text-xs disabled:opacity-40"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                    >
+                      Prev
+                    </button>
+                    <div className="border-l px-3 py-1 text-xs">
+                      Page {page} / {totalPages}
+                    </div>
+                    <button
+                      className="border-l px-2 py-1 text-xs disabled:opacity-40"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page >= totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      {isChecks && paystubRow && data && (
-        <PaystubModal open={!!paystubRow} row={paystubRow} allRows={data.rows} onClose={() => setPaystubRow(null)} />
-      )}
-    </>
+    </div>
   );
 }
+
+export default PreviewModal;
