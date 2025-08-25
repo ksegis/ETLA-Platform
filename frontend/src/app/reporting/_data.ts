@@ -17,9 +17,9 @@ export type ReportType = {
   description?: string;
   category?: string;
   fields?: string;
-  approxRows?: number; // optional; used by table if present
-  // Optional data loader used by PreviewModal
-  buildRows?: (filters?: any) => Promise<any[]> | any[];
+  approxRows?: number;          // optional; used in the table
+  procedure?: string;           // 🔹 optional; used by API routes (e.g., Supabase RPC name)
+  buildRows?: (filters?: any) => Promise<any[]> | any[]; // optional; used by PreviewModal
 };
 
 // ---------- Demo data builders ----------
@@ -111,7 +111,6 @@ function makePositionHistoryRows(count = 120): any[] {
 }
 
 // ---------- Report catalog ----------
-// NOTE: Exported so API routes can import REPORTS directly.
 export const REPORTS: ReportType[] = [
   {
     id: "checks-detail",
@@ -121,6 +120,7 @@ export const REPORTS: ReportType[] = [
     fields: "Emp, Dept, Gross, Taxes, Net, Check No, Pay date",
     approxRows: 160,
     description: "Gross-to-net including taxes & deductions by check.",
+    // procedure: "sp_checks_detail", // optional—API falls back to sp_${id}
     buildRows: () => makeCheckRows(),
   },
   {
@@ -131,6 +131,7 @@ export const REPORTS: ReportType[] = [
     fields: "Period, Dept, Regular, OT, Bonus",
     approxRows: 180,
     description: "Pay composition by department and period.",
+    // procedure: "sp_dept_analysis",
     buildRows: () => makeDepartmentAnalysisRows(),
   },
   {
@@ -141,6 +142,7 @@ export const REPORTS: ReportType[] = [
     fields: "Emp, Dept, Title, Action, Reason, Effective date",
     approxRows: 140,
     description: "Lifecycle of job changes with reasons.",
+    // procedure: "sp_job_history",
     buildRows: () => makeJobHistoryRows(),
   },
   {
@@ -151,6 +153,7 @@ export const REPORTS: ReportType[] = [
     fields: "Emp, Dept, Position, Reason, Effective date",
     approxRows: 120,
     description: "Position changes over time.",
+    // procedure: "sp_position_history",
     buildRows: () => makePositionHistoryRows(),
   },
   {
@@ -161,6 +164,7 @@ export const REPORTS: ReportType[] = [
     fields: "Emp, Amount, % increase, Reason, Memo",
     approxRows: 110,
     description: "Salary adjustments and rationale.",
+    // procedure: "sp_salary_history",
   },
   {
     id: "timecard-detail",
@@ -170,6 +174,7 @@ export const REPORTS: ReportType[] = [
     fields: "Punches, PTO, Transfers, Period",
     approxRows: 200,
     description: "All punch activity by period.",
+    // procedure: "sp_timecard_detail",
   },
 ];
 
