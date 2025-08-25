@@ -3,9 +3,9 @@ import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 import { REPORTS } from "../../../../reporting/_data";
-import { getMockReport } from "../../_mock";
+import { getMockReport, applyDemoFilters } from "../../_mock";
 
-// Async Supabase client
+// Async Supabase server client
 async function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -27,8 +27,11 @@ function shouldUseDemo(search: URLSearchParams) {
   return search.get("demo") === "1" || process.env.NEXT_PUBLIC_REPORTS_DEMO === "1";
 }
 
-// Next 15: params is Promise
-export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+// Next 15: params is a Promise
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
   const { id } = await ctx.params;
   const report = REPORTS.find((r) => r.id === id);
   if (!report) return new Response("Report not found", { status: 404 });
@@ -36,9 +39,17 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const search = req.nextUrl.searchParams;
 
   let rows: any[] = [];
+
   if (shouldUseDemo(search)) {
     const mock = getMockReport(id);
-    rows = Array.isArray(mock?.rows) ? mock!.rows : [];
+    const filtered = applyDemoFilters(mock?.rows ?? [], {
+      from: search.get("from"),
+      to: search.get("to"),
+      filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
+      limit: Number(search.get("limit") ?? 5000),
+      offset: Number(search.get("offset") ?? 0),
+    });
+    rows = filtered.rows;
   } else {
     try {
       const rpcArgs: Record<string, any> = {
@@ -55,7 +66,14 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       else rows = Array.isArray(data) ? data : (data as any)?.rows ?? [];
     } catch {
       const mock = getMockReport(id);
-      rows = Array.isArray(mock?.rows) ? mock!.rows : [];
+      const filtered = applyDemoFilters(mock?.rows ?? [], {
+        from: search.get("from"),
+        to: search.get("to"),
+        filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
+        limit: Number(search.get("limit") ?? 5000),
+        offset: Number(search.get("offset") ?? 0),
+      });
+      rows = filtered.rows;
     }
   }
 

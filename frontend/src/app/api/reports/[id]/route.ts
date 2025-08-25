@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { REPORTS } from "../../../reporting/_data";
-import { getMockReport } from "../_mock";
+import { getMockReport, applyDemoFilters } from "../_mock";
 
-// Async Supabase server client
+// Async Supabase server client (Next 15: cookies() is async)
 async function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -31,26 +31,36 @@ function shouldUseDemo(search: URLSearchParams) {
   return search.get("demo") === "1" || process.env.NEXT_PUBLIC_REPORTS_DEMO === "1";
 }
 
-// Next 15: params is Promise
-export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+// Next.js 15: params is a Promise
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
   const { id } = await ctx.params;
   const report = REPORTS.find((r) => r.id === id);
   if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
 
   const search = req.nextUrl.searchParams;
 
-  // DEMO: serve mock immediately if requested
+  // ---- DEMO MODE (server-side filtering on mock data) ----
   if (shouldUseDemo(search)) {
     const mock = getMockReport(id);
+    const filtered = applyDemoFilters(mock?.rows ?? [], {
+      from: search.get("from"),
+      to: search.get("to"),
+      filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
+      limit: Number(search.get("limit") ?? 50),
+      offset: Number(search.get("offset") ?? 0),
+    });
     return NextResponse.json({
-      columns: mock?.columns ?? [],
-      rows: mock?.rows ?? [],
-      total: mock?.rows?.length ?? 0,
-      docs: mock?.docs
+      columns: filtered.columns,
+      rows: filtered.rows,
+      total: filtered.total,
+      docs: mock?.docs,
     });
   }
 
-  // Otherwise call the stored procedure
+  // ---- LIVE DATA VIA RPC ----
   const rpcArgs: Record<string, any> = {
     from: search.get("from") ?? null,
     to: search.get("to") ?? null,
@@ -64,10 +74,17 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     const sp = report.procedure ?? `sp_${id}`;
     const { data, error } = await supabase.rpc(sp, rpcArgs);
     if (error) {
-      // If DB fails, fall back to mock so the UI still works
+      // Fall back to mock so the UI remains usable
       const mock = getMockReport(id);
+      const filtered = applyDemoFilters(mock?.rows ?? [], {
+        from: search.get("from"),
+        to: search.get("to"),
+        filters: rpcArgs.filters,
+        limit: rpcArgs.limit,
+        offset: rpcArgs.offset,
+      });
       return NextResponse.json(
-        { columns: mock?.columns ?? [], rows: mock?.rows ?? [], total: mock?.rows?.length ?? 0, docs: mock?.docs, warning: error.message },
+        { columns: filtered.columns, rows: filtered.rows, total: filtered.total, docs: mock?.docs, warning: error.message },
         { status: 200 }
       );
     }
@@ -87,22 +104,36 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       });
     }
 
-    // If real result is empty, return mock so preview is useful
+    // If live result is empty, serve filtered mock data for a useful preview
     if (!rows.length) {
       const mock = getMockReport(id);
+      const filtered = applyDemoFilters(mock?.rows ?? [], {
+        from: search.get("from"),
+        to: search.get("to"),
+        filters: rpcArgs.filters,
+        limit: rpcArgs.limit,
+        offset: rpcArgs.offset,
+      });
       return NextResponse.json({
-        columns: mock?.columns ?? columns,
-        rows: mock?.rows ?? rows,
-        total: mock?.rows?.length ?? total,
-        docs: docs ?? mock?.docs
+        columns: filtered.columns.length ? filtered.columns : columns,
+        rows: filtered.rows.length ? filtered.rows : rows,
+        total: filtered.total || total,
+        docs: docs ?? mock?.docs,
       });
     }
 
     return NextResponse.json({ columns, rows, total, docs });
   } catch (e: any) {
     const mock = getMockReport(id);
+    const filtered = applyDemoFilters(mock?.rows ?? [], {
+      from: search.get("from"),
+      to: search.get("to"),
+      filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
+      limit: Number(search.get("limit") ?? 50),
+      offset: Number(search.get("offset") ?? 0),
+    });
     return NextResponse.json(
-      { columns: mock?.columns ?? [], rows: mock?.rows ?? [], total: mock?.rows?.length ?? 0, docs: mock?.docs, warning: e?.message ?? "Server error" },
+      { columns: filtered.columns, rows: filtered.rows, total: filtered.total, docs: mock?.docs, warning: e?.message ?? "Server error" },
       { status: 200 }
     );
   }

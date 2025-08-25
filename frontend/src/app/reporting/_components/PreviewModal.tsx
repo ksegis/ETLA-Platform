@@ -18,9 +18,15 @@ type ExtraFilterSpec =
   | { type: "number"; key: string; label: string };
 
 const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
+  // Rich demo filters for Checks (maps to server applyDemoFilters)
   check_detail_history: [
     { type: "text", key: "employee_name", label: "Employee name" },
     { type: "number", key: "pay_number", label: "Pay number" },
+    { type: "text", key: "department", label: "Department" },
+    { type: "number", key: "check_number", label: "Check number" },
+    { type: "text", key: "memo", label: "Memo contains" },
+    { type: "number", key: "min_gross", label: "Min gross" },
+    { type: "number", key: "max_gross", label: "Max gross" },
   ],
   time_card_detail_history: [
     { type: "text", key: "employee_name", label: "Employee name" },
@@ -88,7 +94,7 @@ function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className="w-full table-fixed">
           <colgroup><col className="w-[70%]" /><col className="w-[30%]" /></colgroup>
-        <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+          <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
             <tr><th className="px-3 py-2">File</th><th className="px-3 py-2">Actions</th></tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
