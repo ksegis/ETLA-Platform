@@ -1,57 +1,47 @@
 "use client";
 
 import * as React from "react";
-import { ReportTable } from "../_components/ReportTable"; // ✅ named import
-import PreviewModal from "../_components/PreviewModal";    // ✅ default import
-import { getReportsByGroup, GROUP_LABELS } from "../_data";
+import ReportTable, { ReportType } from "../_components/ReportTable";
+import PreviewModal from "../_components/PreviewModal";
+import { getReportsByGroup, GROUP_LABELS, type GroupKey } from "../_data";
 
-type Props = {
-  params: { group: string };
-};
+type Props = { params: { group: GroupKey } };
 
 export default function ClientGroupPage({ params }: Props) {
-  const group = params.group as string;
-
-  // GROUP_LABELS is_ a typed Record<...>; index with a safe key
-  const label =
-    GROUP_LABELS[group as keyof typeof GROUP_LABELS] ?? "Reports";
-
-  // If getReportsByGroup is typed to a union, cast the param to that key type
-  const items = getReportsByGroup(group as keyof typeof GROUP_LABELS);
+  const group = params.group;
+  const label = GROUP_LABELS[group] ?? "Reports";
+  const items = getReportsByGroup(group);
 
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<any | null>(null);
+  const [selected, setSelected] = React.useState<ReportType | null>(null);
 
-  const handlePreview = (r: any) => {
+  const handlePreview = (r: ReportType) => {
     setSelected(r);
     setOpen(true);
   };
 
-  const handleExport = (r: any) => {
-    try {
-      window.open(`/api/reports/${r.id}/export`, "_blank");
-    } catch {
-      /* noop */
-    }
+  const handleExport = (r: ReportType) => {
+    // Let the modal handle Excel export once opened; or wire server route here if needed.
+    setSelected(r);
+    setOpen(true);
   };
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-lg font-semibold text-gray-900">{label}</h1>
-        <p className="text-sm text-gray-600">
-          Click a report title to preview, or export directly.
-        </p>
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">{label}</h2>
+          <p className="mt-0.5 text-sm text-gray-600">Click a report title to preview.</p>
+        </div>
       </div>
 
       <ReportTable items={items} onPreview={handlePreview} onExport={handleExport} />
 
-      {open && (
+      {selected && (
         <PreviewModal
           open={open}
           report={selected}
           onClose={() => setOpen(false)}
-          onRowClick={() => { /* keep for drill-downs */ }}
         />
       )}
     </div>

@@ -1,51 +1,33 @@
-"use client";
-
 import * as React from "react";
-import { ReportTable } from "./_components/ReportTable"; // ✅ named import
-import PreviewModal from "./_components/PreviewModal";    // ✅ default import
-import { getReportsByGroup, GROUP_LABELS } from "./_data";
+import ReportTable, { ReportType } from "./_components/ReportTable";
+import PreviewModal from "./_components/PreviewModal";
+import { getReportsByGroup } from "./_data";
 
 export default function AllReportsPage() {
-  const groups = Object.keys(GROUP_LABELS) as Array<keyof typeof GROUP_LABELS>;
-
-  const allItems = React.useMemo(
-    () => groups.flatMap((g) => getReportsByGroup(g)),
-    [groups]
-  );
+  const items: ReportType[] = [
+    ...getReportsByGroup("employee"),
+    ...getReportsByGroup("checks"),
+    ...getReportsByGroup("jobs"),
+    ...getReportsByGroup("salary"),
+    ...getReportsByGroup("timecards"),
+  ];
 
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<any | null>(null);
-
-  const handlePreview = (r: any) => {
-    setSelected(r);
-    setOpen(true);
-  };
-
-  const handleExport = (r: any) => {
-    try {
-      window.open(`/api/reports/${r.id}/export`, "_blank");
-    } catch {
-      /* noop */
-    }
-  };
+  const [selected, setSelected] = React.useState<ReportType | null>(null);
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-lg font-semibold text-gray-900">All Reports</h1>
-        <p className="text-sm text-gray-600">
-          Click a report title to preview, toggle to charts inside the modal, or export directly.
-        </p>
-      </div>
-
-      <ReportTable items={allItems} onPreview={handlePreview} onExport={handleExport} />
-
-      {open && (
+      <h1 className="text-lg font-semibold text-gray-900">All Reports</h1>
+      <ReportTable
+        items={items}
+        onPreview={(r) => { setSelected(r); setOpen(true); }}
+        onExport={(r) => { setSelected(r); setOpen(true); }}
+      />
+      {selected && (
         <PreviewModal
           open={open}
           report={selected}
           onClose={() => setOpen(false)}
-          onRowClick={() => { /* optional detail drill-down */ }}
         />
       )}
     </div>
