@@ -1,17 +1,32 @@
+// reporting/_data.ts
+
+// --- Types
+export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards" | "all";
+
 export type ReportType = {
   id: string;
   title: string;
   description?: string;
   category: string;         // e.g. Payroll, HR
-  group: "employee" | "checks" | "jobs" | "salary" | "timecards" | "all";
-  fields?: number;          // rough field count
-  estimatedRows?: number;   // rough row count
+  group: GroupKey;
+  fields?: number;          // rough field count (for UI only)
+  estimatedRows?: number;   // rough row count (for UI only)
   procedure?: string;       // optional stored procedure name for live data
-  docBased?: boolean;       // true = shows document preview (e.g., W-2 PDFs)
+  docBased?: boolean;       // true => document/PDF style report (e.g. W-2)
 };
 
+// --- Labels for the left nav groups (used by ClientGroupPage)
+export const GROUP_LABELS: Record<Exclude<GroupKey, "all">, string> = {
+  employee: "Employee",
+  checks: "Checks",
+  jobs: "Jobs",
+  salary: "Salary",
+  timecards: "Timecards",
+};
+
+// --- Catalog of reports (UI metadata)
 export const REPORTS: ReportType[] = [
-  // ---- CHECKS (examples already in your app) ----
+  // ---------------- Checks
   {
     id: "check_detail_history",
     title: "Check Detail History",
@@ -46,7 +61,7 @@ export const REPORTS: ReportType[] = [
   {
     id: "w2_documents",
     title: "W-2 Documents",
-    description: "Client-supplied W-2 PDF images with metadata and download links.",
+    description: "Client-supplied W-2 PDFs with metadata and download links.",
     category: "Payroll",
     group: "checks",
     fields: 6,
@@ -54,7 +69,7 @@ export const REPORTS: ReportType[] = [
     docBased: true,
   },
 
-  // ---- NEW: PAY REPORTS UNDER JOBS ----
+  // ---------------- Pay / Jobs
   {
     id: "department_analysis",
     title: "Department Analysis",
@@ -89,3 +104,13 @@ export const REPORTS: ReportType[] = [
     procedure: "sp_position_history",
   },
 ];
+
+// --- Helpers used across pages
+export function getReportsByGroup(group: GroupKey): ReportType[] {
+  if (group === "all") return REPORTS.slice();
+  return REPORTS.filter((r) => r.group === group);
+}
+
+export function getReportById(id: string): ReportType | undefined {
+  return REPORTS.find((r) => r.id === id);
+}
