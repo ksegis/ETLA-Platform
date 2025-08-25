@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, FileText } from "lucide-react";
 import type { ReportType } from "../_data";
 
@@ -18,7 +18,6 @@ type ExtraFilterSpec =
   | { type: "number"; key: string; label: string };
 
 const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
-  // Tailor per report id (examples)
   check_detail_history: [
     { type: "text", key: "employee_name", label: "Employee name" },
     { type: "number", key: "pay_number", label: "Pay number" },
@@ -29,10 +28,17 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
   ],
   salary_history: [{ type: "text", key: "reason_code", label: "Reason code" }],
   job_history: [{ type: "text", key: "reason_code", label: "Reason code" }],
-  status_history: [{ type: "select", key: "status", label: "Status", options: [
-    { value: "active", label: "Active" }, { value: "terminated", label: "Terminated" },
-  ]}],
-  // Add more as needed…
+  status_history: [
+    {
+      type: "select",
+      key: "status",
+      label: "Status",
+      options: [
+        { value: "active", label: "Active" },
+        { value: "terminated", label: "Terminated" },
+      ],
+    },
+  ],
 };
 
 function DataPreview({ data }: { data: PreviewData }) {
@@ -51,7 +57,9 @@ function DataPreview({ data }: { data: PreviewData }) {
             {data.rows.slice(0, 50).map((r, i) => (
               <tr key={i} className="hover:bg-gray-50">
                 {data.columns.map((c) => (
-                  <td key={c} className="px-3 py-2 whitespace-pre-wrap">{String(r[c] ?? r?.[data.columns.indexOf(c)] ?? "")}</td>
+                  <td key={c} className="px-3 py-2 whitespace-pre-wrap">
+                    {String(r[c] ?? r?.[data.columns.indexOf(c)] ?? "")}
+                  </td>
                 ))}
               </tr>
             ))}
@@ -80,7 +88,7 @@ function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className="w-full table-fixed">
           <colgroup><col className="w-[70%]" /><col className="w-[30%]" /></colgroup>
-          <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+        <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
             <tr><th className="px-3 py-2">File</th><th className="px-3 py-2">Actions</th></tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
@@ -124,62 +132,90 @@ export function PreviewModal({
   const [data, setData] = useState<PreviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters (generic + extra per-report)
+  // Filters
   const [nameTerm, setNameTerm] = useState("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const extraSpec = useMemo<ExtraFilterSpec[]>(() => (report ? (EXTRA_FILTERS[report.id] ?? []) : []), [report]);
   const [extra, setExtra] = useState<Record<string, any>>({});
+  const [useDemo, setUseDemo] = useState<boolean>(false);
 
+  // for aborting stale fetches
+  const abortRef = useRef<AbortController | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // initial load on open/report change
   useEffect(() => {
     if (!open || !report) return;
     setData(null);
     setError(null);
     setExtra({});
-    // initial load
-    void load(false);
+    setUseDemo(false);
+    triggerLoad(0); // immediate first load
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, report]);
 
-  async function load(demo: boolean) {
+  // auto-run when filters change (debounced)
+  useEffect(() => {
+    if (!open || !report) return;
+    triggerLoad(400);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nameTerm, from, to, useDemo, JSON.stringify(extra)]);
+
+  function buildFilters() {
+    const f: Record<string, any> = { name: nameTerm || undefined, ...extra };
+    Object.keys(f).forEach((k) => (f[k] === "" || f[k] == null) && delete f[k]);
+    return f;
+  }
+
+  function triggerLoad(delayMs: number) {
     if (!report) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void runLoad();
+    }, delayMs);
+  }
+
+  async function runLoad() {
+    if (!report) return;
+
+    // cancel prior request if any
+    if (abortRef.current) abortRef.current.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+
     setLoading(true);
     setError(null);
+
     try {
-      const filters: Record<string, any> = {
-        name: nameTerm || undefined,
-        ...extra,
-      };
+      const filters = buildFilters();
       const url = new URL(`/api/reports/${report.id}`, window.location.origin);
       url.searchParams.set("limit", "50");
       if (from) url.searchParams.set("from", from);
       if (to) url.searchParams.set("to", to);
-      if (Object.values(filters).some(Boolean)) {
-        url.searchParams.set("filters", JSON.stringify(filters));
-      }
-      if (demo) url.searchParams.set("demo", "1");
+      if (Object.keys(filters).length) url.searchParams.set("filters", JSON.stringify(filters));
+      if (useDemo) url.searchParams.set("demo", "1");
 
-      const res = await fetch(url.toString(), { cache: "no-store" });
+      const res = await fetch(url.toString(), { cache: "no-store", signal: ac.signal });
+      if (!res.ok && res.status !== 200) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as PreviewData & { error?: string };
       if ((json as any).error) setError((json as any).error);
       setData(json);
     } catch (e: any) {
-      setError(e?.message ?? "Failed to load preview.");
+      if (e?.name !== "AbortError") setError(e?.message ?? "Failed to load preview.");
     } finally {
-      setLoading(false);
+      if (!ac.signal.aborted) setLoading(false);
     }
   }
 
-  function exportExcel(demo = false) {
+  function exportExcel() {
     if (!report) return;
-    const filters: Record<string, any> = { name: nameTerm || undefined, ...extra };
+    const filters = buildFilters();
     const url = new URL(`/api/reports/${report.id}/export`, window.location.origin);
     if (from) url.searchParams.set("from", from);
     if (to) url.searchParams.set("to", to);
-    if (Object.values(filters).some(Boolean)) {
-      url.searchParams.set("filters", JSON.stringify(filters));
-    }
-    if (demo) url.searchParams.set("demo", "1");
+    if (Object.keys(filters).length) url.searchParams.set("filters", JSON.stringify(filters));
+    if (useDemo) url.searchParams.set("demo", "1");
     window.location.href = url.toString();
   }
 
@@ -201,19 +237,30 @@ export function PreviewModal({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
             <div>
               <label className="block text-xs font-medium text-gray-700">Name / search</label>
-              <input className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                     placeholder="Employee name, memo, etc."
-                     value={nameTerm} onChange={(e) => setNameTerm(e.target.value)} />
+              <input
+                className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                placeholder="Employee name, memo, etc."
+                value={nameTerm}
+                onChange={(e) => setNameTerm(e.target.value)}
+              />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700">From</label>
-              <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                     value={from} onChange={(e) => setFrom(e.target.value)} />
+              <input
+                type="date"
+                className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+              />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700">To</label>
-              <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                     value={to} onChange={(e) => setTo(e.target.value)} />
+              <input
+                type="date"
+                className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+              />
             </div>
 
             {extraSpec.map((f) => (
@@ -227,7 +274,9 @@ export function PreviewModal({
                   >
                     <option value="">Any</option>
                     {f.options.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
                     ))}
                   </select>
                 ) : (
@@ -242,27 +291,25 @@ export function PreviewModal({
             ))}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => load(false)}
-              className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-black"
-              disabled={loading}
-            >
-              {loading ? "Running…" : "Run"}
-            </button>
-            <button
-              onClick={() => load(true)}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
-              disabled={loading}
-            >
-              Use demo data
-            </button>
-            <button
-              onClick={() => exportExcel(false)}
-              className="ml-auto rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
-            >
-              Export to Excel
-            </button>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300"
+                checked={useDemo}
+                onChange={(e) => setUseDemo(e.target.checked)}
+              />
+              Demo data
+            </label>
+
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={exportExcel}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
+              >
+                Export to Excel
+              </button>
+            </div>
           </div>
         </div>
 
@@ -270,11 +317,11 @@ export function PreviewModal({
         <div className="p-4">
           {loading && <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Loading…</div>}
           {!loading && error && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">Error: {error}</div>}
-          {!loading && !error && data && (
-            report.docBased
-              ? (data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>)
-              : <DataPreview data={data} />
-          )}
+          {!loading && !error && data && (report.docBased ? (
+            data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
+          ) : (
+            <DataPreview data={data} />
+          ))}
         </div>
       </div>
     </div>
