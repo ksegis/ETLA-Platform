@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, FileText } from "lucide-react";
 import type { ReportType } from "../_data";
+import PaystubModal from "./PaystubModal";
 
 type PreviewData = {
   columns: string[];
@@ -47,10 +48,19 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
   ],
 };
 
-function DataPreview({ data }: { data: PreviewData }) {
+function DataPreview({
+  data,
+  onRowClick,
+}: {
+  data: PreviewData;
+  onRowClick?: (row: any) => void;
+}) {
   if (!data.rows?.length) {
     return <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No rows to display.</div>;
   }
+
+  const clickable = Boolean(onRowClick);
+
   return (
     <div className="space-y-2">
       <div className="text-xs text-gray-500">Showing up to {Math.min(50, data.rows.length)} rows.</div>
@@ -61,7 +71,12 @@ function DataPreview({ data }: { data: PreviewData }) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {data.rows.slice(0, 50).map((r, i) => (
-              <tr key={i} className="hover:bg-gray-50">
+              <tr
+                key={i}
+                className={`${clickable ? "cursor-pointer hover:bg-gray-50" : ""}`}
+                onClick={() => onRowClick?.(r)}
+                title={clickable ? "Click to view paystub" : undefined}
+              >
                 {data.columns.map((c) => (
                   <td key={c} className="px-3 py-2 whitespace-pre-wrap">
                     {String(r[c] ?? r?.[data.columns.indexOf(c)] ?? "")}
@@ -74,6 +89,7 @@ function DataPreview({ data }: { data: PreviewData }) {
       </div>
       {data.warning && <div className="rounded-md bg-yellow-50 p-2 text-xs text-yellow-800">Note: {data.warning}</div>}
       <div className="text-xs text-gray-500">Total rows (reported): {data.total.toLocaleString()}</div>
+      <div className="text-[11px] text-gray-500">Tip: Click a row to open a paystub.</div>
     </div>
   );
 }
@@ -145,6 +161,9 @@ export function PreviewModal({
   const extraSpec = useMemo<ExtraFilterSpec[]>(() => (report ? (EXTRA_FILTERS[report.id] ?? []) : []), [report]);
   const [extra, setExtra] = useState<Record<string, any>>({});
   const [useDemo, setUseDemo] = useState<boolean>(false);
+
+  // Paystub modal
+  const [paystubRow, setPaystubRow] = useState<any | null>(null);
 
   // for aborting stale fetches
   const abortRef = useRef<AbortController | null>(null);
@@ -228,108 +247,120 @@ export function PreviewModal({
   if (!open || !report) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-4 sm:p-6">
-      <div className="relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <h3 className="text-base font-semibold text-gray-900">{report.title}</h3>
-          <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100" onClick={onClose} aria-label="Close">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <>
+      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-4 sm:p-6">
+        <div className="relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 p-4">
+            <h3 className="text-base font-semibold text-gray-900">{report.title}</h3>
+            <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100" onClick={onClose} aria-label="Close">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-        {/* Filters */}
-        <div className="border-b border-gray-200 p-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-700">Name / search</label>
-              <input
-                className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                placeholder="Employee name, memo, etc."
-                value={nameTerm}
-                onChange={(e) => setNameTerm(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700">From</label>
-              <input
-                type="date"
-                className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700">To</label>
-              <input
-                type="date"
-                className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-              />
-            </div>
-
-            {extraSpec.map((f) => (
-              <div key={f.key}>
-                <label className="block text-xs font-medium text-gray-700">{f.label}</label>
-                {f.type === "select" ? (
-                  <select
-                    className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                    value={extra[f.key] ?? ""}
-                    onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
-                  >
-                    <option value="">Any</option>
-                    {f.options.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                    type={f.type === "number" ? "number" : "text"}
-                    value={extra[f.key] ?? ""}
-                    onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
-                  />
-                )}
+          {/* Filters */}
+          <div className="border-b border-gray-200 p-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Name / search</label>
+                <input
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                  placeholder="Employee name, memo, etc."
+                  value={nameTerm}
+                  onChange={(e) => setNameTerm(e.target.value)}
+                />
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">From</label>
+                <input
+                  type="date"
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">To</label>
+                <input
+                  type="date"
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                />
+              </div>
+
+              {extraSpec.map((f) => (
+                <div key={f.key}>
+                  <label className="block text-xs font-medium text-gray-700">{f.label}</label>
+                  {f.type === "select" ? (
+                    <select
+                      className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                      value={extra[f.key] ?? ""}
+                      onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
+                    >
+                      <option value="">Any</option>
+                      {f.options.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
+                      type={f.type === "number" ? "number" : "text"}
+                      value={extra[f.key] ?? ""}
+                      onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300"
+                  checked={useDemo}
+                  onChange={(e) => setUseDemo(e.target.checked)}
+                />
+                Demo data
+              </label>
+
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={exportExcel}
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
+                >
+                  Export to Excel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-4">
+            {loading && <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Loading…</div>}
+            {!loading && error && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">Error: {error}</div>}
+            {!loading && !error && data && (report.docBased ? (
+              data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
+            ) : (
+              <DataPreview data={data} onRowClick={(row) => setPaystubRow(row)} />
             ))}
           </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300"
-                checked={useDemo}
-                onChange={(e) => setUseDemo(e.target.checked)}
-              />
-              Demo data
-            </label>
-
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={exportExcel}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
-              >
-                Export to Excel
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="p-4">
-          {loading && <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Loading…</div>}
-          {!loading && error && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">Error: {error}</div>}
-          {!loading && !error && data && (report.docBased ? (
-            data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
-          ) : (
-            <DataPreview data={data} />
-          ))}
         </div>
       </div>
-    </div>
+
+      {/* Paystub modal */}
+      {paystubRow && data && (
+        <PaystubModal
+          open={!!paystubRow}
+          row={paystubRow}
+          allRows={data.rows}
+          onClose={() => setPaystubRow(null)}
+        />
+      )}
+    </>
   );
 }
