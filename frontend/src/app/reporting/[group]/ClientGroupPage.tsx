@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import ReportTable from "../_components/ReportTable";      // default import ✅
-import PreviewModal from "../_components/PreviewModal";    // default import ✅
+import { ReportTable } from "../_components/ReportTable";  // ✅ named import
+import PreviewModal from "../_components/PreviewModal";     // ✅ default import
 import { getReportsByGroup, GROUP_LABELS } from "../_data";
 
 type Props = {
@@ -23,7 +23,6 @@ export default function ClientGroupPage({ params }: Props) {
   };
 
   const handleExport = (r: any) => {
-    // If you have an API route for export, keep this; otherwise this is harmless.
     try {
       window.open(`/api/reports/${r.id}/export`, "_blank");
     } catch {
@@ -35,7 +34,9 @@ export default function ClientGroupPage({ params }: Props) {
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-semibold text-gray-900">{label}</h1>
-        <p className="text-sm text-gray-600">Click a report title to preview, or export directly.</p>
+        <p className="text-sm text-gray-600">
+          Click a report title to preview, or export directly.
+        </p>
       </div>
 
       <ReportTable items={items} onPreview={handlePreview} onExport={handleExport} />
@@ -45,7 +46,7 @@ export default function ClientGroupPage({ params }: Props) {
           open={open}
           report={selected}
           onClose={() => setOpen(false)}
-          onRowClick={() => { /* keep for drill-downs (e.g., paystub) */ }}
+          onRowClick={() => { /* keep for drill-downs */ }}
         />
       )}
     </div>
