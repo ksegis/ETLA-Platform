@@ -17,9 +17,10 @@ export type ReportType = {
   description?: string;
   category?: string;
   fields?: string;
-  approxRows?: number;          // optional; used in the table
-  procedure?: string;           // 🔹 optional; used by API routes (e.g., Supabase RPC name)
-  buildRows?: (filters?: any) => Promise<any[]> | any[]; // optional; used by PreviewModal
+  approxRows?: number;
+  procedure?: string;
+  docBased?: boolean;         // 👈 add this line
+  buildRows?: (filters?: any) => Promise<any[]> | any[];
 };
 
 // ---------- Demo data builders ----------
