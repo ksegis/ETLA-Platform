@@ -1,34 +1,37 @@
 "use client";
 
 import * as React from "react";
+import { REPORTS, type ReportType } from "./_data";
 import ReportTable from "./_components/ReportTable";
 import PreviewModal from "./_components/PreviewModal";
-import { getAllReports, type ReportType } from "./_data";
 
-export default function AllReportsPage() {
-  const items: ReportType[] = React.useMemo(() => getAllReports(), []);
-
+export default function ReportingHome() {
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<ReportType | null>(null);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-lg font-semibold text-gray-900">All Reports</h1>
-        <p className="mt-0.5 text-sm text-gray-600">
-          Click any report title to preview. Use Export to CSV for full extracts.
-        </p>
-      </div>
+    <div className="p-4">
+      <h1 className="text-xl font-semibold">All Reports</h1>
+      <p className="mt-1 text-sm text-gray-600">
+        Click a report title to preview. Export uses whatever rows are on screen.
+      </p>
 
       <ReportTable
-        items={items}
-        onPreview={(r) => { setSelected(r); setOpen(true); }}
-        onExport={(r) => { setSelected(r); setOpen(true); }}
+        items={REPORTS}
+        onPreview={(r) => {
+          setSelected(r);
+          setOpen(true);
+        }}
       />
 
-      {selected && (
-        <PreviewModal open={open} report={selected} onClose={() => setOpen(false)} />
-      )}
+      <PreviewModal
+        open={open}
+        report={selected}
+        onClose={() => {
+          setOpen(false);
+          setSelected(null);
+        }}
+      />
     </div>
   );
 }

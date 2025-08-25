@@ -1,94 +1,153 @@
-import { NextRequest } from "next/server";
-import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
-import * as XLSX from "xlsx";
-import { REPORTS } from "../../../../reporting/_data";
-import { getMockReport, applyDemoFilters } from "../../_mock";
+import { getReportById } from "../../../../reporting/_data";
 
-// Async Supabase server client
-async function getSupabaseServerClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+// reuse the same tiny helpers as the other route (duplicated for simplicity)
+const seedRand = (seed: string) => {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return () => {
+    h += 0x6d2b79f5;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
 
-  const cookieStore = await cookies();
-  const token =
-    cookieStore.get("sb-access-token")?.value ??
-    cookieStore.get("supabase-auth-token")?.value ??
-    undefined;
-
-  return createClient(url, anon, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
-  });
-}
-
-function shouldUseDemo(search: URLSearchParams) {
-  return search.get("demo") === "1" || process.env.NEXT_PUBLIC_REPORTS_DEMO === "1";
-}
-
-// Next 15: params is a Promise
-export async function GET(
-  req: NextRequest,
-  ctx: { params: Promise<{ id: string }> }
-) {
-  const { id } = await ctx.params;
-  const report = REPORTS.find((r) => r.id === id);
-  if (!report) return new Response("Report not found", { status: 404 });
-
-  const search = req.nextUrl.searchParams;
-
-  let rows: any[] = [];
-
-  if (shouldUseDemo(search)) {
-    const mock = getMockReport(id);
-    const filtered = applyDemoFilters(mock?.rows ?? [], {
-      from: search.get("from"),
-      to: search.get("to"),
-      filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-      limit: Number(search.get("limit") ?? 5000),
-      offset: Number(search.get("offset") ?? 0),
+function monthsBack(n = 6) {
+  const out: { start: string; label: string }[] = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = 0; i < n; i++) {
+    const dd = new Date(d);
+    dd.setMonth(d.getMonth() - i);
+    out.unshift({
+      start: dd.toISOString().slice(0, 10),
+      label: dd.toLocaleString("en-US", { month: "short", year: "numeric" }),
     });
-    rows = filtered.rows;
-  } else {
-    try {
-      const rpcArgs: Record<string, any> = {
-        from: search.get("from") ?? null,
-        to: search.get("to") ?? null,
-        filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-        limit: Number(search.get("limit") ?? 5000),
-        offset: Number(search.get("offset") ?? 0),
-      };
-      const supabase = await getSupabaseServerClient();
-      const sp = report.procedure ?? `sp_${id}`;
-      const { data, error } = await supabase.rpc(sp, rpcArgs);
-      if (error) rows = [];
-      else rows = Array.isArray(data) ? data : (data as any)?.rows ?? [];
-    } catch {
-      const mock = getMockReport(id);
-      const filtered = applyDemoFilters(mock?.rows ?? [], {
-        from: search.get("from"),
-        to: search.get("to"),
-        filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-        limit: Number(search.get("limit") ?? 5000),
-        offset: Number(search.get("offset") ?? 0),
+  }
+  return out;
+}
+
+function mockDeptAnalysis(seed = "dept") {
+  const rnd = seedRand(seed);
+  const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "RD"];
+  const periods = monthsBack(6);
+  const rows: any[] = [];
+  for (const p of periods) {
+    for (const d of depts) {
+      const headcount = Math.floor(rnd() * 15) + 6;
+      const fte = +(headcount - rnd() * 2).toFixed(1);
+      const regular = +(headcount * (900 + rnd() * 500)).toFixed(2);
+      const ot = +((headcount * (rnd() * 80)) as number).toFixed(2);
+      const bonus = +((headcount * (rnd() * 60)) as number).toFixed(2);
+      const taxes = +((regular + ot) * 0.18).toFixed(2);
+      const benefits = +((regular + ot) * 0.12).toFixed(2);
+      const burden = +(taxes + benefits).toFixed(2);
+      const avgComp = +((regular + ot + bonus + burden) / headcount).toFixed(2);
+      rows.push({
+        periodStart: p.start,
+        periodLabel: p.label,
+        department: d,
+        headcount,
+        fte,
+        regularPay: regular,
+        otPay: ot,
+        bonus,
+        taxes,
+        benefits,
+        burden,
+        avgComp,
       });
-      rows = filtered.rows;
     }
   }
+  return rows;
+}
 
-  // Build workbook
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Report");
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+function mockJobHistory(seed = "job") {
+  const rnd = seedRand(seed);
+  const people = ["Aeryn Sun", "John Crichton", "D. Peacekeeper", "Zhan", "Rygel", "Chiana"];
+  const changes = ["Promotion", "Transfer", "Lateral Move", "Demotion", "Pay Change", "Manager Change"];
+  const rows: any[] = [];
+  for (let i = 0; i < 180; i++) {
+    const dt = new Date();
+    dt.setDate(dt.getDate() - Math.floor(rnd() * 365));
+    rows.push({
+      employee: people[Math.floor(rnd() * people.length)],
+      effectiveDate: dt.toISOString().slice(0, 10),
+      changeType: changes[Math.floor(rnd() * changes.length)],
+      fromDept: ["SALES", "OPS", "SRV/HUB", "TEACH"][Math.floor(rnd() * 4)],
+      toDept: ["SALES", "OPS", "SRV/HUB", "TEACH"][Math.floor(rnd() * 4)],
+      location: ["HQ", "DC-East", "Remote"][Math.floor(rnd() * 3)],
+    });
+  }
+  rows.sort((a, b) => (a.effectiveDate < b.effectiveDate ? 1 : -1));
+  return rows;
+}
 
-  const fileName = `${report.title.replace(/\s+/g, "_")}.xlsx`;
-  return new Response(buf, {
+function mockPositionHistory(seed = "pos") {
+  const rnd = seedRand(seed);
+  const locations = ["HQ", "DC-East", "Remote"];
+  const costCenters = [4000, 4100, 4200, 4300];
+  const periods = monthsBack(6);
+  const rows: any[] = [];
+  for (const p of periods) {
+    for (const cc of costCenters) {
+      rows.push({
+        periodStart: p.start,
+        periodLabel: p.label,
+        location: locations[Math.floor(rnd() * locations.length)],
+        costCenter: cc,
+        positions: Math.floor(rnd() * 25) + 5,
+        incumbents: Math.floor(rnd() * 22) + 4,
+        vacancies: Math.floor(rnd() * 6),
+        fte: +(rnd() * 20 + 5).toFixed(1),
+      });
+    }
+  }
+  return rows;
+}
+
+function buildRows(reportId: string) {
+  switch (reportId) {
+    case "dept-analysis":
+      return mockDeptAnalysis(reportId);
+    case "job-history":
+      return mockJobHistory(reportId);
+    case "position-history":
+      return mockPositionHistory(reportId);
+    default:
+      return [];
+  }
+}
+
+function toCSV(rows: any[]): string {
+  if (!rows.length) return "";
+  const cols = Object.keys(rows[0]);
+  const esc = (v: any) =>
+    v == null
+      ? ""
+      : String(v).includes(",") || String(v).includes('"')
+      ? `"${String(v).replace(/"/g, '""')}"`
+      : String(v);
+  return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\r\n");
+}
+
+export async function GET(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const report = getReportById(params.id);
+  if (!report) {
+    return new Response("Report not found", { status: 404 });
+  }
+  const rows = buildRows(report.id);
+  const csv = toCSV(rows);
+  return new Response(csv, {
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${fileName}"`,
-      "Cache-Control": "no-store",
+      "content-type": "text/csv;charset=utf-8",
+      "content-disposition": `attachment; filename="${report.slug}.csv"`,
     },
   });
 }
