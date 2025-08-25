@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
-// FROM: src/app/api/reports/[id]/route.ts → src/app/reporting/_data.ts
 import { REPORTS } from "../../../reporting/_data";
+import { getMockReport } from "../_mock";
 
-// Async Supabase server client (await cookies())
+// Async Supabase server client
 async function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -27,30 +27,50 @@ function publicUrl(bucket: string, path: string) {
   return `${url}/storage/v1/object/public/${bucket}/${path}`;
 }
 
-// Next.js 15: params is a Promise
-export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+function shouldUseDemo(search: URLSearchParams) {
+  return search.get("demo") === "1" || process.env.NEXT_PUBLIC_REPORTS_DEMO === "1";
+}
+
+// Next 15: params is Promise
+export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
+  const report = REPORTS.find((r) => r.id === id);
+  if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+
+  const search = req.nextUrl.searchParams;
+
+  // DEMO: serve mock immediately if requested
+  if (shouldUseDemo(search)) {
+    const mock = getMockReport(id);
+    return NextResponse.json({
+      columns: mock?.columns ?? [],
+      rows: mock?.rows ?? [],
+      total: mock?.rows?.length ?? 0,
+      docs: mock?.docs
+    });
+  }
+
+  // Otherwise call the stored procedure
+  const rpcArgs: Record<string, any> = {
+    from: search.get("from") ?? null,
+    to: search.get("to") ?? null,
+    filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
+    limit: Number(search.get("limit") ?? 50),
+    offset: Number(search.get("offset") ?? 0),
+  };
+
   try {
-    const { id } = await context.params;
-
-    const report = REPORTS.find((r) => r.id === id);
-    if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
-
-    const search = req.nextUrl.searchParams;
-    const rpcArgs: Record<string, any> = {
-      from: search.get("from") ?? null,
-      to: search.get("to") ?? null,
-      filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-      limit: Number(search.get("limit") ?? 50),
-      offset: Number(search.get("offset") ?? 0),
-    };
-
     const supabase = await getSupabaseServerClient();
     const sp = report.procedure ?? `sp_${id}`;
     const { data, error } = await supabase.rpc(sp, rpcArgs);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error) {
+      // If DB fails, fall back to mock so the UI still works
+      const mock = getMockReport(id);
+      return NextResponse.json(
+        { columns: mock?.columns ?? [], rows: mock?.rows ?? [], total: mock?.rows?.length ?? 0, docs: mock?.docs, warning: error.message },
+        { status: 200 }
+      );
+    }
 
     const rows: any[] = Array.isArray(data) ? data : (data as any)?.rows ?? [];
     const total = typeof (data as any)?.total === "number" ? (data as any).total : rows.length;
@@ -67,8 +87,23 @@ export async function GET(
       });
     }
 
+    // If real result is empty, return mock so preview is useful
+    if (!rows.length) {
+      const mock = getMockReport(id);
+      return NextResponse.json({
+        columns: mock?.columns ?? columns,
+        rows: mock?.rows ?? rows,
+        total: mock?.rows?.length ?? total,
+        docs: docs ?? mock?.docs
+      });
+    }
+
     return NextResponse.json({ columns, rows, total, docs });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Server error" }, { status: 500 });
+    const mock = getMockReport(id);
+    return NextResponse.json(
+      { columns: mock?.columns ?? [], rows: mock?.rows ?? [], total: mock?.rows?.length ?? 0, docs: mock?.docs, warning: e?.message ?? "Server error" },
+      { status: 200 }
+    );
   }
 }

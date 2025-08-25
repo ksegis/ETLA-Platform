@@ -11,6 +11,7 @@ type PreviewData = {
   rows: any[];
   total: number;
   docs?: Array<{ id: string; name: string; url?: string; size?: number }>;
+  warning?: string;
 };
 
 function DataPreview({ data }: { data: PreviewData }) {
@@ -19,7 +20,9 @@ function DataPreview({ data }: { data: PreviewData }) {
   }
   return (
     <div className="space-y-2">
-      <div className="text-xs text-gray-500">Showing up to {Math.min(50, data.rows.length)} rows.</div>
+      <div className="text-xs text-gray-500">
+        Showing up to {Math.min(50, data.rows.length)} rows.
+      </div>
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className="w-full table-auto text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
@@ -29,13 +32,14 @@ function DataPreview({ data }: { data: PreviewData }) {
             {data.rows.slice(0, 50).map((r, i) => (
               <tr key={i} className="hover:bg-gray-50">
                 {data.columns.map((c) => (
-                  <td key={c} className="px-3 py-2 whitespace-pre-wrap">{String(r[c] ?? "")}</td>
+                  <td key={c} className="px-3 py-2 whitespace-pre-wrap">{String(r[c] ?? r?.[data.columns.indexOf(c)] ?? "")}</td>
                 ))}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {data.warning && <div className="rounded-md bg-yellow-50 p-2 text-xs text-yellow-800">Note: {data.warning}</div>}
       <div className="text-xs text-gray-500">Total rows (reported): {data.total.toLocaleString()}</div>
     </div>
   );
@@ -43,7 +47,6 @@ function DataPreview({ data }: { data: PreviewData }) {
 
 function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
   const [current, setCurrent] = useState(docs[0]);
-
   useEffect(() => { setCurrent(docs[0]); }, [docs]);
 
   return (
@@ -52,7 +55,7 @@ function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
         {current?.url ? (
           <iframe src={current.url} className="h-[60vh] w-full" />
         ) : (
-          <div className="p-6 text-sm text-gray-600">No preview URL available for this document.</div>
+          <div className="p-6 text-sm text-gray-600">No preview URL available.</div>
         )}
       </div>
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
@@ -74,18 +77,12 @@ function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
                   </div>
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <button className="mr-2 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"
-                          onClick={() => setCurrent(d)}>Preview</button>
-                  {d.url && (
-                    <a className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"
-                       href={d.url} target="_blank" rel="noreferrer">Open</a>
-                  )}
+                  <button className="mr-2 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100" onClick={() => setCurrent(d)}>Preview</button>
+                  {d.url && <a className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100" href={d.url} target="_blank" rel="noreferrer">Open</a>}
                 </td>
               </tr>
             ))}
-            {docs.length === 0 && (
-              <tr><td className="px-3 py-6 text-center text-gray-500" colSpan={2}>No documents found.</td></tr>
-            )}
+            {docs.length === 0 && <tr><td className="px-3 py-6 text-center text-gray-500" colSpan={2}>No documents found.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -98,30 +95,36 @@ export default function ClientGroupPage({ group }: { group: GroupKey }) {
   const [selected, setSelected] = useState<ReportType | null>(null);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const title = useMemo(
     () => (group === "all" ? "All Reports" : GROUP_LABELS[group as keyof typeof GROUP_LABELS]),
     [group]
   );
 
-  async function loadPreview(r: ReportType) {
+  async function loadPreview(r: ReportType, demo = false) {
     setLoading(true);
+    setError(null);
     setPreview(null);
     try {
-      const res = await fetch(`/api/reports/${r.id}?limit=50`, { cache: "no-store" });
-      const json = (await res.json()) as PreviewData;
+      const url = `/api/reports/${r.id}?limit=50${demo ? "&demo=1" : ""}`;
+      const res = await fetch(url, { cache: "no-store" });
+      const json = (await res.json()) as PreviewData & { error?: string };
+      if ((json as any).error) setError((json as any).error);
       setPreview(json);
-    } catch (e) {
-      setPreview({ columns: [], rows: [], total: 0 });
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to load preview.");
     } finally {
       setLoading(false);
     }
   }
 
-  function exportExcel(r: ReportType) {
-    // trigger download
-    window.location.href = `/api/reports/${r.id}/export`;
+  function exportExcel(r: ReportType, demo = false) {
+    const url = `/api/reports/${r.id}/export${demo ? "?demo=1" : ""}`;
+    window.location.href = url;
   }
+
+  const showDemoCta = preview && !preview.rows?.length && !preview.docs?.length;
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -140,9 +143,7 @@ export default function ClientGroupPage({ group }: { group: GroupKey }) {
 
       {/* Slide-in panel */}
       <div
-        className={`fixed inset-y-0 right-0 z-40 w-full max-w-2xl transform border-l border-gray-200 bg-white shadow-2xl transition-transform duration-300 ease-out ${
-          selected ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed inset-y-0 right-0 z-40 w-full max-w-2xl transform border-l border-gray-200 bg-white shadow-2xl transition-transform duration-300 ease-out ${selected ? "translate-x-0" : "translate-x-full"}`}
         aria-hidden={!selected}
         role="dialog"
       >
@@ -159,21 +160,30 @@ export default function ClientGroupPage({ group }: { group: GroupKey }) {
         </div>
 
         <div className="space-y-4 p-4">
-          {!selected ? null : loading ? (
-            <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Loading preview…</div>
-          ) : selected.docBased ? (
-            preview?.docs ? <DocumentPreview docs={preview.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
-          ) : preview ? (
-            <DataPreview data={preview} />
-          ) : (
-            <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No data.</div>
+          {loading && <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Loading preview…</div>}
+          {error && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">Error: {error}</div>}
+
+          {!loading && selected && preview && (
+            selected.docBased
+              ? (preview.docs ? <DocumentPreview docs={preview.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>)
+              : <DataPreview data={preview} />
+          )}
+
+          {showDemoCta && selected && (
+            <button
+              type="button"
+              className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
+              onClick={() => loadPreview(selected, true)}
+            >
+              Use demo data
+            </button>
           )}
 
           {selected && (
             <button
               type="button"
               className="w-full rounded-xl bg-gray-900 px-4 py-2 font-medium text-white hover:bg-black"
-              onClick={() => exportExcel(selected)}
+              onClick={() => exportExcel(selected, false)}
             >
               Export to Excel
             </button>
