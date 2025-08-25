@@ -2,15 +2,7 @@
 
 import * as React from "react";
 import { Eye, Download } from "lucide-react";
-
-export type ReportType = {
-  id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  approxRows?: number;
-  fields?: number;
-};
+import type { ReportType } from "../_data";
 
 type Props = {
   items: ReportType[];

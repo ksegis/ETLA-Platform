@@ -1,32 +1,20 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import ReportTable, { ReportType } from './_components/ReportTable';
-import PreviewModal from './_components/PreviewModal';
-import { getReportsByGroup, type GroupKey } from './_data';
+import * as React from "react";
+import ReportTable from "./_components/ReportTable";
+import PreviewModal from "./_components/PreviewModal";
+import { getReportsByGroup, type GroupKey, type ReportType } from "./_data";
 
-const GROUPS: GroupKey[] = ['employee', 'checks', 'jobs', 'salary', 'timecards'];
+const GROUPS: GroupKey[] = ["employee", "checks", "jobs", "salary", "timecards"];
 
 export default function AllReportsPage() {
-  // merge every group into a single list
-  const items = React.useMemo(
+  const items: ReportType[] = React.useMemo(
     () => GROUPS.flatMap((g) => getReportsByGroup(g)),
     []
   );
 
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<ReportType | null>(null);
-
-  const handlePreview = (r: ReportType) => {
-    setSelected(r);
-    setOpen(true);
-  };
-
-  const handleExport = (r: ReportType) => {
-    // keep the same “open modal first” behavior for now
-    setSelected(r);
-    setOpen(true);
-  };
 
   return (
     <div className="space-y-4">
@@ -37,7 +25,11 @@ export default function AllReportsPage() {
         </p>
       </div>
 
-      <ReportTable items={items} onPreview={handlePreview} onExport={handleExport} />
+      <ReportTable
+        items={items}
+        onPreview={(r) => { setSelected(r); setOpen(true); }}
+        onExport={(r) => { setSelected(r); setOpen(true); }}
+      />
 
       {selected && (
         <PreviewModal open={open} report={selected} onClose={() => setOpen(false)} />
