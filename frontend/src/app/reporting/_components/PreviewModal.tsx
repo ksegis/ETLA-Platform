@@ -5,34 +5,121 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
   Legend,
-  LineChart,
-  Line,
+  CartesianGrid,
 } from 'recharts';
 import { Download } from 'lucide-react';
 import type { ReportType } from '../_data';
 
-// -------- utilities --------
+/** Helpers */
 const n = (v: unknown) => (typeof v === 'number' ? v : Number(v ?? 0)) || 0;
+const fileSafe = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
 
-// Build chart points from the same rows the table would show
+/** Try to fetch the same rows the table would use */
+async function resolveRows(report: ReportType): Promise<any[]> {
+  const r: any = report;
+  try {
+    if (typeof r.buildRows === 'function') return await r.buildRows({});
+    if (typeof r.fetchRows === 'function') return await r.fetchRows({});
+    if (Array.isArray(r.rows)) return r.rows;
+    if (Array.isArray(r.data)) return r.data;
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
+
+/** Generate sensible demo rows when no data is available */
+function synthRows(report: ReportType, count = 160): any[] {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  const depts = ['SALES', 'SRV/HUB', 'TEACH', 'WORSHIP', 'OPS', 'HR'];
+  const names = ['Aeryn Sun', 'John Crichton', 'B. Stark', 'C. Copeland', 'R. Lofthouse'];
+  const isDept = /department/i.test(report.title);
+  const isJob = /job history/i.test(report.title);
+  const isPos = /position history/i.test(report.title);
+  const isCheck = /check|payroll|pay stub|tax/i.test(report.title);
+
+  const rows: any[] = [];
+  for (let i = 0; i < count; i++) {
+    const m = i % months.length;
+    const periodstart = `2025-${String(m + 1).padStart(2, '0')}-01`;
+    const periodlabel = `${months[m]} 2025`;
+    const department = depts[i % depts.length];
+
+    if (isDept) {
+      rows.push({
+        periodstart,
+        periodlabel,
+        department,
+        regularpay: 15000 + (i % 9) * 800,
+        otpay: [0, 300, 315, 330, 840, 0][i % 6],
+        bonus: [0, 0, 500, 0, 1200, 0][i % 6],
+      });
+    } else if (isJob) {
+      rows.push({
+        effectivedate: periodstart,
+        periodlabel,
+        employee: names[i % names.length],
+        employeeid: `E${String(1 + (i % 250)).padStart(3, '0')}`,
+        title: ['Sales Associate', 'Server', 'Teacher', 'Worship Lead', 'HR Gen'][i % 5],
+        department,
+        action: ['Promotion', 'Transfer', 'New Hire', 'Lateral Move'][i % 4],
+        reason: ['Merit', 'Reorg', 'Backfill', 'Request'][i % 4],
+      });
+    } else if (isPos) {
+      rows.push({
+        effectivedate: periodstart,
+        periodlabel,
+        employee: names[i % names.length],
+        employeeid: `E${String(1 + (i % 250)).padStart(3, '0')}`,
+        position: ['Associate', 'Sr Associate', 'Lead', 'Manager'][i % 4],
+        department,
+        reason: ['Backfill', 'New role', 'Restructure'][i % 3],
+      });
+    } else if (isCheck) {
+      const gross = 2000 + (i % 6) * 120;
+      rows.push({
+        EMPLOYEENAME: names[i % names.length],
+        EMPLOYEEID: `E${String(1 + (i % 250)).padStart(3, '0')}`,
+        PAYDATE: periodstart,
+        GROSS: gross,
+        TAX: Math.round(gross * 0.24),
+        NETPAY: Math.round(gross * 0.76),
+      });
+    } else {
+      // generic row
+      rows.push({
+        periodlabel,
+        department,
+        value: 100 + (i % 15) * 7,
+      });
+    }
+  }
+  return rows;
+}
+
+/** Build chart points from rows */
 function toChartData(report: ReportType, rows: any[]) {
   if (!rows?.length) return [];
 
-  // Department Analysis — totals by department
   if (/department/i.test(report.title)) {
     const map = new Map<
       string,
       { name: string; regular: number; overtime: number; bonus: number }
     >();
-
     rows.forEach((r) => {
       const dep = String(r.DEPARTMENT ?? r.department ?? 'Unknown');
       const reg = n(r.REGULARPAY ?? r.regularpay);
-      const ot = n(r.OTPAY ?? r.overtime);
+      const ot = n(r.OTPAY ?? r.overtime ?? r.otpay);
       const bn = n(r.BONUS ?? r.bonus);
       const curr = map.get(dep) ?? { name: dep, regular: 0, overtime: 0, bonus: 0 };
       curr.regular += reg;
@@ -40,62 +127,40 @@ function toChartData(report: ReportType, rows: any[]) {
       curr.bonus += bn;
       map.set(dep, curr);
     });
-
     return Array.from(map.values());
   }
 
-  // Job/Position history — count changes by period (month label or start date)
   if (/job history|position history/i.test(report.title)) {
     const map = new Map<string, { name: string; changes: number }>();
     rows.forEach((r) => {
-      const period =
+      const p =
         String(r.PERIODLABEL ?? r.periodlabel ?? r.PERIODSTART ?? r.periodstart ?? '')
           .slice(0, 7) || 'Unknown';
-      const curr = map.get(period) ?? { name: period, changes: 0 };
+      const curr = map.get(p) ?? { name: p, changes: 0 };
       curr.changes += 1;
-      map.set(period, curr);
+      map.set(p, curr);
     });
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  // Check / payroll type — show gross vs net by employee
-  if (/check|payroll|tax/i.test(report.title)) {
-    return rows.slice(0, 20).map((r: any) => ({
+  if (/check|payroll|pay stub|tax/i.test(report.title)) {
+    return rows.slice(0, 25).map((r: any) => ({
       name: String(r.EMPLOYEENAME ?? r.name ?? r.EMPLOYEEID ?? '—'),
       gross: n(r.GROSS ?? r.gross),
       net: n(r.NETPAY ?? r.net ?? r.netpay),
     }));
   }
 
-  // Fallback: first numeric column
+  // fallback: first numeric column
   const keys = Object.keys(rows[0] ?? {});
-  const firstNumKey = keys.find((k) => typeof rows[0]?.[k] === 'number');
-  return rows.slice(0, 20).map((r, i) => ({
-    name: String(r.DEPARTMENT ?? r.EMPLOYEENAME ?? `Row ${i + 1}`),
-    value: n(firstNumKey ? r[firstNumKey] : 0),
+  const numKey = keys.find((k) => typeof rows[0]?.[k] === 'number');
+  return rows.slice(0, 25).map((r, i) => ({
+    name: String(r.DEPARTMENT ?? r.EMPLOYEENAME ?? r.department ?? `Row ${i + 1}`),
+    value: n(numKey ? r[numKey] : 0),
   }));
 }
 
-// Try to get the same rows used by the table without depending on internal helpers
-async function resolveRows(report: ReportType): Promise<any[]> {
-  const r: any = report;
-
-  // Common shapes we’ve seen in the app so far:
-  // - report.buildRows(filters)
-  // - report.fetchRows(filters)
-  // - report.rows / report.data (arrays)
-  try {
-    if (typeof r.buildRows === 'function') return await r.buildRows({});
-    if (typeof r.fetchRows === 'function') return await r.fetchRows({});
-    if (Array.isArray(r.rows)) return r.rows as any[];
-    if (Array.isArray(r.data)) return r.data as any[];
-  } catch {
-    // ignore, fall through to empty
-  }
-  return [];
-}
-
-// -------- component --------
+/** Component */
 type Props = {
   open: boolean;
   report: ReportType;
@@ -103,7 +168,6 @@ type Props = {
 };
 
 export default function PreviewModal({ open, report, onClose }: Props) {
-  const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [rows, setRows] = React.useState<any[]>([]);
 
   // lock body scroll while open
@@ -116,13 +180,14 @@ export default function PreviewModal({ open, report, onClose }: Props) {
     };
   }, [open]);
 
-  // fetch rows when opened / report changes
+  // Load rows (or synthesize) when opened or report changes
   React.useEffect(() => {
     if (!open) return;
     let alive = true;
     (async () => {
-      const data = await resolveRows(report);
-      if (alive) setRows(data ?? []);
+      let data = await resolveRows(report);
+      if (!data || data.length === 0) data = synthRows(report);
+      if (alive) setRows(data);
     })();
     return () => {
       alive = false;
@@ -138,22 +203,13 @@ export default function PreviewModal({ open, report, onClose }: Props) {
       className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6"
       aria-modal="true"
       role="dialog"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onClose();
-      }}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
       {/* backdrop */}
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
 
       {/* panel */}
-      <div
-        ref={panelRef}
-        className="relative z-10 w-full max-w-6xl rounded-xl bg-white shadow-xl"
-      >
+      <div className="relative z-10 w-full max-w-6xl rounded-xl bg-white shadow-xl">
         {/* header */}
         <div className="flex items-center justify-between border-b px-4 py-3">
           <div>
@@ -165,19 +221,18 @@ export default function PreviewModal({ open, report, onClose }: Props) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                // quick CSV export of the visible rows
                 const headers = Object.keys(rows[0] ?? {});
                 const csv = [
                   headers.join(','),
-                  ...rows.map((r: any) =>
-                    headers.map((h) => JSON.stringify(r[h] ?? '')).join(',')
-                  ),
+                  ...rows.map((r: any) => headers.map((h) => JSON.stringify(r[h] ?? '')).join(',')),
                 ].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${report.slug ?? report.title}.csv`;
+                // ✅ use a safe filename from id or title (no slug field required)
+                const name = fileSafe(report.id || report.title || 'report');
+                a.download = `${name}.csv`;
                 a.click();
                 URL.revokeObjectURL(url);
               }}
@@ -197,13 +252,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
 
         {/* content */}
         <div className="px-4 pb-4 pt-3">
-          <div className="mb-2 flex items-center gap-2 text-sm">
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">
-              Chart
-            </span>
-            <span className="text-gray-400">/</span>
-            <span className="text-gray-500">Table</span>
-          </div>
+          <div className="mb-2 text-xs text-gray-600">Showing <b>{rows.length}</b> rows</div>
 
           <div className="h-[420px] w-full">
             {chartData.length === 0 ? (
@@ -211,8 +260,9 @@ export default function PreviewModal({ open, report, onClose }: Props) {
                 No data to chart yet.
               </div>
             ) : /job history|position history/i.test(report.title) ? (
-              <ResponsiveContainer>
-                <LineChart data={chartData}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
@@ -220,9 +270,10 @@ export default function PreviewModal({ open, report, onClose }: Props) {
                   <Line type="monotone" dataKey="changes" stroke="#6366f1" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
-            ) : /check|payroll|tax/i.test(report.title) ? (
-              <ResponsiveContainer>
-                <BarChart data={chartData}>
+            ) : /check|payroll|pay stub|tax/i.test(report.title) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
@@ -232,13 +283,14 @@ export default function PreviewModal({ open, report, onClose }: Props) {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <ResponsiveContainer>
-                <BarChart data={chartData}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  {/* will render only the keys that exist in the data */}
+                  {/* stacked if dept analysis data is present; otherwise fallback to single value */}
                   <Bar dataKey="regular" stackId="a" fill="#0ea5e9" />
                   <Bar dataKey="overtime" stackId="a" fill="#f59e0b" />
                   <Bar dataKey="bonus" stackId="a" fill="#22c55e" />
