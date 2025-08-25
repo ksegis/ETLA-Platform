@@ -14,47 +14,24 @@ import {
 } from "recharts";
 import * as XLSX from "xlsx";
 
-export type ReportType = {
-  id: string; // e.g., "department_analysis" | "job_history" | "position_history" | "check_detail_history"
-  title: string;
-  description?: string;
-  docBased?: boolean;
-};
-
-type Props = {
-  open: boolean;
-  report: ReportType | null;
-  onClose: () => void;
-  /** Optional: when a row in the table is clicked */
-  onRowClick?: (row: any) => void;
-};
-
 type AnyRow = Record<string, any>;
 
-const PAGE_SIZE_DEFAULT = 50;
+type PreviewModalProps = {
+  open: boolean;
+  report: { id: string; title: string; description?: string } | null;
+  onClose: () => void;
+  onRowClick?: (row: AnyRow) => void;
+};
 
-/* -------------------------------- Helpers ------------------------------- */
+const PAGE_SIZES = [25, 50, 100, 250];
+const DEFAULT_PAGE_SIZE = 50;
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/* ------------------------------ Demo Data ------------------------------ */
 
-function toExcelFilename(reportId: string) {
-  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  return `${reportId}-${stamp}.xlsx`;
-}
-
-function downloadExcel(rows: AnyRow[], filename: string) {
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Report");
-  XLSX.writeFile(wb, filename);
-}
-
-/** Demo generators kept lightweight but diverse enough to test charts/filters */
-function genDemoRows(reportId: string, count = 500): AnyRow[] {
+function genDemoRows(reportId: string, count = 360): AnyRow[] {
   const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "HR"];
   const locs = ["HQ", "Remote", "DC-East", "DC-West"];
   const paygroups = ["Biweekly", "Weekly", "Monthly"];
-
   const titles = [
     "Sales Associate",
     "Server - HUB",
@@ -63,46 +40,47 @@ function genDemoRows(reportId: string, count = 500): AnyRow[] {
     "HR Generalist",
     "Operations Lead",
   ];
-
   const names = ["Aeryn Sun", "John Crichton", "D. Peacekeeper", "B. Stark", "C. Copeland", "R. Lofthouse"];
 
   const rows: AnyRow[] = [];
   for (let i = 0; i < count; i++) {
-    const d = new Date(2025, Math.floor(Math.random() * 6), 1);
+    const d = new Date(2025, i % 6, 1);
+    const periodstart = d.toISOString().slice(0, 10);
+    const periodlabel = d.toLocaleString("en-US", { month: "short", year: "numeric" });
+
     const dept = depts[i % depts.length];
-    const title = titles[i % titles.length];
-    const name = names[i % names.length];
     const loc = locs[i % locs.length];
     const pg = paygroups[i % paygroups.length];
-    const costCenter = 4000 + (i % 10) * 10;
+    const cc = 4000 + (i % 8) * 10;
 
     if (reportId === "department_analysis") {
-      const headcount = 6 + (i % 12);
-      const fte = headcount - Math.random(); // pseudo FTE
-      const regular = 14000 + (i % 12) * 1200;
-      const ot = [0, 300, 315, 330, 840, 880][i % 6];
+      const headcount = 8 + (i % 10);
+      const fte = Number((headcount - 0.5 - (i % 2 ? 0.5 : 0)).toFixed(1));
+      const regularpay = 16000 + (i % 10) * 900;
+      const otpay = [0, 300, 315, 330, 840, 880][i % 6];
       const bonus = [0, 0, 0, 500, 1200, 2500][i % 6];
+
       rows.push({
-        periodstart: d.toISOString().slice(0, 10),
-        periodlabel: d.toLocaleString("en-US", { month: "short", year: "numeric" }),
+        periodstart,
+        periodlabel,
         department: dept,
-        costcenter: costCenter,
+        costcenter: cc,
         location: loc,
         paygroup: pg,
         headcount,
-        fte: Number(fte.toFixed(1)),
-        regularpay: regular,
-        otpay: ot,
+        fte,
+        regularpay,
+        otpay,
         bonus,
       });
     } else if (reportId === "job_history") {
       const actions = ["New Position", "Promotion", "Lateral Move", "Transfer", "Demotion"];
       const reasons = ["Reorg", "Backfill", "Merit", "Request", "Business need"];
       rows.push({
-        effectivedate: d.toISOString().slice(0, 10),
-        employee: name,
-        employeeid: `E${String(1 + (i % 120)).padStart(3, "0")}`,
-        title,
+        effectivedate: periodstart,
+        employee: names[i % names.length],
+        employeeid: `E${String(1 + (i % 220)).padStart(3, "0")}`,
+        title: titles[i % titles.length],
         department: dept,
         action: actions[i % actions.length],
         reason: reasons[i % reasons.length],
@@ -113,30 +91,30 @@ function genDemoRows(reportId: string, count = 500): AnyRow[] {
       const positions = ["Associate", "Sr Associate", "Lead", "Manager", "Director"];
       const reasons = ["Backfill", "New role", "Temporary", "Restructure"];
       rows.push({
-        effectivedate: d.toISOString().slice(0, 10),
-        employee: name,
-        employeeid: `E${String(1 + (i % 120)).padStart(3, "0")}`,
+        effectivedate: periodstart,
+        employee: names[i % names.length],
+        employeeid: `E${String(1 + (i % 220)).padStart(3, "0")}`,
         position: positions[i % positions.length],
         department: dept,
         paygroup: pg,
         reason: reasons[i % reasons.length],
-        costcenter: costCenter,
+        costcenter: cc,
         location: loc,
       });
     } else {
-      // Fallback: echo a simple row
-      rows.push({ date: d.toISOString().slice(0, 10), employee: name, department: dept, location: loc });
+      rows.push({ date: periodstart, employee: names[i % names.length], department: dept, location: loc });
     }
   }
   return rows;
 }
 
-/** create a chart series based on the current report’s rows */
+/* ---------------------------- Chart Helpers ---------------------------- */
+
 function buildChartSeries(reportId: string, rows: AnyRow[]) {
   const norm = (v: any) => (typeof v === "string" ? v.trim() : v);
-  const lowerKeys = (r: AnyRow) =>
+  const lower = (r: AnyRow) =>
     Object.fromEntries(Object.entries(r).map(([k, v]) => [k.toLowerCase(), v]));
-  const R = rows.map(lowerKeys);
+  const R = rows.map(lower);
 
   if (reportId === "department_analysis") {
     const byDept: Record<string, { department: string; Regular: number; OT: number; Bonus: number }> = {};
@@ -176,80 +154,88 @@ function buildChartSeries(reportId: string, rows: AnyRow[]) {
   return [];
 }
 
-/* ------------------------------- Component ------------------------------- */
+function toExcelFilename(reportId: string) {
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  return `${reportId}-${stamp}.xlsx`;
+}
 
-export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
+function exportExcel(rows: AnyRow[], reportId: string) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Report");
+  XLSX.writeFile(wb, toExcelFilename(reportId));
+}
+
+/* ------------------------------- Component ------------------------------ */
+
+export default function PreviewModal({ open, report, onClose, onRowClick }: PreviewModalProps) {
   const [loading, setLoading] = React.useState(false);
   const [useDemo, setUseDemo] = React.useState(true);
+
   const [rows, setRows] = React.useState<AnyRow[]>([]);
   const [query, setQuery] = React.useState("");
-  const [dateFrom, setDateFrom] = React.useState<string>("");
-  const [dateTo, setDateTo] = React.useState<string>("");
-  // report-specific optional filters
+  const [from, setFrom] = React.useState("");
+  const [to, setTo] = React.useState("");
+
+  // contextual filters (for jobs/positions/department)
   const [department, setDepartment] = React.useState("");
   const [costCenter, setCostCenter] = React.useState("");
   const [payGroup, setPayGroup] = React.useState("");
   const [location, setLocation] = React.useState("");
 
-  // table state
   const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(PAGE_SIZE_DEFAULT);
+  const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
 
-  // Chart/Table toggle
-  const [viewMode, setViewMode] = React.useState<"table" | "chart">("table");
-
+  const [view, setView] = React.useState<"table" | "chart">("table");
   const chartCapable =
     !!report &&
     ["department_analysis", "job_history", "position_history"].includes(report.id);
 
-  // reset when opening/closing
+  // load data when opened / toggling demo
   React.useEffect(() => {
-    if (!open) return;
-    setPage(1);
-    setLoading(true);
-
+    if (!open || !report) return;
+    let cancelled = false;
     (async () => {
-      await sleep(100); // tiny delay to feel responsive
-      const data = useDemo && report ? genDemoRows(report.id) : [];
-      setRows(data);
-      setLoading(false);
-      if (chartCapable) setViewMode("chart"); // default to Chart for these
+      setLoading(true);
+      // simulate async fetch
+      await new Promise((r) => setTimeout(r, 120));
+      const data = useDemo ? genDemoRows(report.id) : [];
+      if (!cancelled) {
+        setRows(data);
+        setLoading(false);
+        // switch to chart *after* rows exist so Recharts gets size & data
+        setView(chartCapable ? "chart" : "table");
+        setPage(1);
+      }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, report?.id, useDemo]);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, report?.id, useDemo, chartCapable]);
 
-  // filter logic
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
-      const inQuery =
-        !q ||
-        Object.values(r).some((v) =>
-          String(v ?? "").toLowerCase().includes(q)
-        );
-
+      const dateKey = r.periodstart ?? r.effectivedate ?? r.paydate ?? r.date ?? null;
+      const inQ = !q || Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(q));
+      const inFrom = !from || (dateKey && String(dateKey) >= from);
+      const inTo = !to || (dateKey && String(dateKey) <= to);
       const inDept = !department || String(r.department ?? "").toLowerCase().includes(department.toLowerCase());
       const inLoc = !location || String(r.location ?? "").toLowerCase().includes(location.toLowerCase());
       const inCC = !costCenter || String(r.costcenter ?? "").includes(costCenter);
       const inPG = !payGroup || String(r.paygroup ?? "").toLowerCase().includes(payGroup.toLowerCase());
-
-      const dateKey =
-        r.periodstart ?? r.effectivedate ?? r.paydate ?? r.date ?? null;
-      const inFrom = !dateFrom || (dateKey && String(dateKey) >= dateFrom);
-      const inTo = !dateTo || (dateKey && String(dateKey) <= dateTo);
-
-      return inQuery && inDept && inLoc && inCC && inPG && inFrom && inTo;
+      return inQ && inFrom && inTo && inDept && inLoc && inCC && inPG;
     });
-  }, [rows, query, department, location, costCenter, payGroup, dateFrom, dateTo]);
+  }, [rows, query, from, to, department, location, costCenter, payGroup]);
 
-  // Pagination slice
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageRows = React.useMemo(() => {
     const start = (page - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
-  const columns = React.useMemo(() => {
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+  const columns: string[] = React.useMemo(() => {
     if (!report) return [];
     switch (report.id) {
       case "department_analysis":
@@ -308,12 +294,10 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">
-              {report.title}
-            </h2>
-            {report.description ? (
+            <h2 className="text-base font-semibold text-gray-900">{report.title}</h2>
+            {!!report.description && (
               <p className="mt-0.5 text-xs text-gray-500">{report.description}</p>
-            ) : null}
+            )}
           </div>
           <button
             onClick={onClose}
@@ -338,23 +322,22 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
           <input
             type="date"
             className="rounded-md border px-3 py-2 text-sm"
-            value={dateFrom}
+            value={from}
             onChange={(e) => {
-              setDateFrom(e.target.value);
+              setFrom(e.target.value);
               setPage(1);
             }}
           />
           <input
             type="date"
             className="rounded-md border px-3 py-2 text-sm"
-            value={dateTo}
+            value={to}
             onChange={(e) => {
-              setDateTo(e.target.value);
+              setTo(e.target.value);
               setPage(1);
             }}
           />
 
-          {/* contextual filters shown for chart-capable reports */}
           {chartCapable && (
             <>
               <input
@@ -398,35 +381,26 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
 
           <div className="col-span-full flex flex-wrap items-center gap-3 pt-1">
             <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={useDemo}
-                onChange={(e) => setUseDemo(e.target.checked)}
-              />
+              <input type="checkbox" checked={useDemo} onChange={(e) => setUseDemo(e.target.checked)} />
               Demo data
             </label>
 
-            {/* View toggle */}
             {chartCapable && (
               <div className="ml-auto inline-flex overflow-hidden rounded-md border">
                 <button
                   type="button"
-                  onClick={() => setViewMode("table")}
+                  onClick={() => setView("table")}
                   className={`px-3 py-1 text-xs ${
-                    viewMode === "table"
-                      ? "bg-gray-900 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
+                    view === "table" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   Table
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode("chart")}
+                  onClick={() => setView("chart")}
                   className={`px-3 py-1 text-xs ${
-                    viewMode === "chart"
-                      ? "bg-gray-900 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
+                    view === "chart" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   Chart
@@ -435,7 +409,7 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
             )}
 
             <button
-              onClick={() => downloadExcel(filtered, toExcelFilename(report.id))}
+              onClick={() => exportExcel(filtered, report.id)}
               className="ml-auto rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-black"
             >
               Export to Excel
@@ -446,21 +420,20 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
         {/* Body */}
         <div className="px-4 pb-4 pt-3 sm:px-6">
           {loading ? (
-            <div className="py-16 text-center text-sm text-gray-500">
-              Loading…
-            </div>
+            <div className="py-16 text-center text-sm text-gray-500">Loading…</div>
           ) : filtered.length === 0 ? (
             <div className="rounded-md border border-dashed p-8 text-center text-sm text-gray-500">
               No rows to display. Try enabling <b>Demo data</b> or adjusting filters.
             </div>
-          ) : viewMode === "chart" && chartCapable ? (
+          ) : view === "chart" && chartCapable ? (
             <div className="h-[380px] w-full rounded-lg border border-gray-200 bg-white p-3">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer
+                key={`${report.id}-${filtered.length}-${view}`}
+                width="100%"
+                height="100%"
+              >
                 {report.id === "department_analysis" ? (
-                  <BarChart
-                    data={chartData}
-                    margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
-                  >
+                  <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="department" />
                     <YAxis />
@@ -471,12 +444,9 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
                     <Bar dataKey="Bonus" stackId="cost" />
                   </BarChart>
                 ) : (
-                  <BarChart
-                    data={chartData}
-                    margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
-                  >
+                  <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={"title" in chartData[0] ? "title" : "position"} />
+                    <XAxis dataKey={(chartData[0] as any)?.title ? "title" : "position"} />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Legend />
@@ -487,16 +457,12 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
             </div>
           ) : (
             <>
-              {/* Table */}
               <div className="overflow-x-auto">
                 <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
                   <thead>
                     <tr>
                       {columns.map((c) => (
-                        <th
-                          key={c}
-                          className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700"
-                        >
+                        <th key={c} className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">
                           {c.toUpperCase()}
                         </th>
                       ))}
@@ -520,12 +486,10 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
                 </table>
               </div>
 
-              {/* Pagination */}
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-gray-600">
                   Showing <b>{(page - 1) * pageSize + 1}</b>–
-                  <b>{Math.min(page * pageSize, filtered.length)}</b> of{" "}
-                  <b>{filtered.length}</b> rows
+                  <b>{Math.min(page * pageSize, filtered.length)}</b> of <b>{filtered.length}</b> rows
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-xs text-gray-600">Rows per page</label>
@@ -537,7 +501,7 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
                     }}
                     className="rounded-md border px-2 py-1 text-xs"
                   >
-                    {[25, 50, 100, 250].map((n) => (
+                    {PAGE_SIZES.map((n) => (
                       <option key={n} value={n}>
                         {n}
                       </option>
@@ -571,5 +535,3 @@ export function PreviewModal({ open, report, onClose, onRowClick }: Props) {
     </div>
   );
 }
-
-export default PreviewModal;
