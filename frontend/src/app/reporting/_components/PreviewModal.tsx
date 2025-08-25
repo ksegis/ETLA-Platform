@@ -3,7 +3,6 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import {
-  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
@@ -11,6 +10,7 @@ import {
   Tooltip,
   Legend,
   CartesianGrid,
+  ResponsiveContainer,
 } from "recharts";
 import * as XLSX from "xlsx";
 
@@ -27,7 +27,6 @@ const PAGE_SIZES = [25, 50, 100, 250];
 const DEFAULT_PAGE_SIZE = 50;
 
 /* ------------------------------- Demo data ------------------------------ */
-
 function genDemoRows(reportId: string, count = 360): AnyRow[] {
   const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "HR"];
   const locs = ["HQ", "Remote", "DC-East", "DC-West"];
@@ -44,7 +43,7 @@ function genDemoRows(reportId: string, count = 360): AnyRow[] {
 
   const rows: AnyRow[] = [];
   for (let i = 0; i < count; i++) {
-    const d = new Date(2025, i % 6, 1);
+    const d = new Date(2025, i % 6, 1); // months Jan–Jun 2025
     const periodstart = d.toISOString().slice(0, 10);
     const periodlabel = d.toLocaleString("en-US", { month: "short", year: "numeric" });
 
@@ -109,7 +108,6 @@ function genDemoRows(reportId: string, count = 360): AnyRow[] {
 }
 
 /* ---------------------------- Chart preparation ------------------------- */
-
 function buildChartSeries(reportId: string, rows: AnyRow[]) {
   const norm = (v: any) => (typeof v === "string" ? v.trim() : v);
   const R = rows.map((r) =>
@@ -154,20 +152,15 @@ function buildChartSeries(reportId: string, rows: AnyRow[]) {
   return [];
 }
 
-function toExcelFilename(reportId: string) {
-  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  return `${reportId}-${stamp}.xlsx`;
-}
-
 function exportExcel(rows: AnyRow[], reportId: string) {
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Report");
-  XLSX.writeFile(wb, toExcelFilename(reportId));
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  XLSX.writeFile(wb, `${reportId}-${stamp}.xlsx`);
 }
 
 /* -------------------------------- Component ----------------------------- */
-
 export default function PreviewModal({ open, report, onClose, onRowClick }: PreviewModalProps) {
   const [loading, setLoading] = React.useState(false);
   const [useDemo, setUseDemo] = React.useState(true);
@@ -190,19 +183,36 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
     !!report &&
     ["department_analysis", "job_history", "position_history"].includes(report.id);
 
-  // Load data when opened or toggling demo.
+  // --- ensure charts get explicit dimensions via ResizeObserver ---
+  const chartBoxRef = React.useRef<HTMLDivElement | null>(null);
+  const [{ w, h }, setBox] = React.useState({ w: 0, h: 0 });
+
+  React.useEffect(() => {
+    if (!open) return;
+    const el = chartBoxRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        const cr = e.contentRect;
+        setBox({ w: Math.max(1, Math.floor(cr.width)), h: Math.max(1, Math.floor(cr.height)) });
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open, view]);
+
+  // Load data
   React.useEffect(() => {
     if (!open || !report) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
-      await new Promise((r) => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 50));
       const data = useDemo ? genDemoRows(report.id) : [];
       if (!cancelled) {
         setRows(data);
         setLoading(false);
         setPage(1);
-        // Switch to Chart *after* rows exist so ResponsiveContainer has width.
         setView(chartCapable ? "chart" : "table");
       }
     })();
@@ -211,22 +221,11 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
     };
   }, [open, report?.id, useDemo, chartCapable]);
 
-  // Force a resize after open/data change so Recharts recalculates.
-  React.useLayoutEffect(() => {
-    if (!open) return;
-    const t = setTimeout(() => {
-      try {
-        window.dispatchEvent(new Event("resize"));
-      } catch {}
-    }, 50);
-    return () => clearTimeout(t);
-  }, [open, view, rows.length]);
-
-  // Filtered view
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
-      const dateKey = r.periodstart ?? r.effectivedate ?? r.paydate ?? r.date ?? null;
+      const dateKey =
+        r.periodstart ?? r.effectivedate ?? r.paydate ?? r.date ?? null;
       const inQ = !q || Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(q));
       const inFrom = !from || (dateKey && String(dateKey) >= from);
       const inTo = !to || (dateKey && String(dateKey) <= to);
@@ -331,68 +330,17 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
             className="rounded-md border px-3 py-2 text-sm"
             placeholder="Name / search"
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
           />
-          <input
-            type="date"
-            className="rounded-md border px-3 py-2 text-sm"
-            value={from}
-            onChange={(e) => {
-              setFrom(e.target.value);
-              setPage(1);
-            }}
-          />
-          <input
-            type="date"
-            className="rounded-md border px-3 py-2 text-sm"
-            value={to}
-            onChange={(e) => {
-              setTo(e.target.value);
-              setPage(1);
-            }}
-          />
+          <input type="date" className="rounded-md border px-3 py-2 text-sm" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} />
+          <input type="date" className="rounded-md border px-3 py-2 text-sm" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} />
 
           {chartCapable && (
             <>
-              <input
-                className="rounded-md border px-3 py-2 text-sm"
-                placeholder="Department"
-                value={department}
-                onChange={(e) => {
-                  setDepartment(e.target.value);
-                  setPage(1);
-                }}
-              />
-              <input
-                className="rounded-md border px-3 py-2 text-sm"
-                placeholder="Cost center"
-                value={costCenter}
-                onChange={(e) => {
-                  setCostCenter(e.target.value);
-                  setPage(1);
-                }}
-              />
-              <input
-                className="rounded-md border px-3 py-2 text-sm"
-                placeholder="Pay group"
-                value={payGroup}
-                onChange={(e) => {
-                  setPayGroup(e.target.value);
-                  setPage(1);
-                }}
-              />
-              <input
-                className="rounded-md border px-3 py-2 text-sm"
-                placeholder="Location"
-                value={location}
-                onChange={(e) => {
-                  setLocation(e.target.value);
-                  setPage(1);
-                }}
-              />
+              <input className="rounded-md border px-3 py-2 text-sm" placeholder="Department" value={department} onChange={(e) => { setDepartment(e.target.value); setPage(1); }} />
+              <input className="rounded-md border px-3 py-2 text-sm" placeholder="Cost center" value={costCenter} onChange={(e) => { setCostCenter(e.target.value); setPage(1); }} />
+              <input className="rounded-md border px-3 py-2 text-sm" placeholder="Pay group" value={payGroup} onChange={(e) => { setPayGroup(e.target.value); setPage(1); }} />
+              <input className="rounded-md border px-3 py-2 text-sm" placeholder="Location" value={location} onChange={(e) => { setLocation(e.target.value); setPage(1); }} />
             </>
           )}
 
@@ -407,18 +355,14 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
                 <button
                   type="button"
                   onClick={() => setView("table")}
-                  className={`px-3 py-1 text-xs ${
-                    view === "table" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`px-3 py-1 text-xs ${view === "table" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
                 >
                   Table
                 </button>
                 <button
                   type="button"
                   onClick={() => setView("chart")}
-                  className={`px-3 py-1 text-xs ${
-                    view === "chart" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`px-3 py-1 text-xs ${view === "chart" ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
                 >
                   Chart
                 </button>
@@ -443,29 +387,34 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
               No rows to display. Try enabling <b>Demo data</b> or adjusting filters.
             </div>
           ) : view === "chart" && chartCapable ? (
-            <div className="h-[380px] w-full min-w-0 rounded-lg border border-gray-200 bg-white p-3">
-              {chartData.length === 0 ? (
+            <div
+              ref={chartBoxRef}
+              className="h-[380px] w-full min-w-0 rounded-lg border border-gray-200 bg-white p-3"
+            >
+              {w === 0 || h === 0 ? (
+                <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                  Measuring container…
+                </div>
+              ) : chartData.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
                   No chartable data for the current filters.
                 </div>
               ) : (
                 <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                  debounce={100}
-                  // Changing key on data length/view nudges Recharts to recompute
-                  key={`${report.id}-${chartData.length}-${view}`}
+                  width={w}
+                  height={h}
+                  key={`${report.id}-${chartData.length}-${w}x${h}-${view}`}
                 >
                   {report.id === "department_analysis" ? (
                     <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey={xKey} />
+                      <XAxis dataKey="department" />
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="Regular" stackId="cost" />
-                      <Bar dataKey="OT" stackId="cost" />
-                      <Bar dataKey="Bonus" stackId="cost" />
+                      <Bar dataKey="Regular" />
+                      <Bar dataKey="OT" />
+                      <Bar dataKey="Bonus" />
                     </BarChart>
                   ) : (
                     <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
@@ -520,36 +469,17 @@ export default function PreviewModal({ open, report, onClose, onRowClick }: Prev
                   <label className="text-xs text-gray-600">Rows per page</label>
                   <select
                     value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value));
-                      setPage(1);
-                    }}
+                    onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
                     className="rounded-md border px-2 py-1 text-xs"
                   >
                     {PAGE_SIZES.map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
+                      <option key={n} value={n}>{n}</option>
                     ))}
                   </select>
                   <div className="ml-2 inline-flex overflow-hidden rounded-md border">
-                    <button
-                      className="px-2 py-1 text-xs disabled:opacity-40"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page <= 1}
-                    >
-                      Prev
-                    </button>
-                    <div className="border-l px-3 py-1 text-xs">
-                      Page {page} / {totalPages}
-                    </div>
-                    <button
-                      className="border-l px-2 py-1 text-xs disabled:opacity-40"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page >= totalPages}
-                    >
-                      Next
-                    </button>
+                    <button className="px-2 py-1 text-xs disabled:opacity-40" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Prev</button>
+                    <div className="border-l px-3 py-1 text-xs">Page {page} / {totalPages}</div>
+                    <button className="border-l px-2 py-1 text-xs disabled:opacity-40" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</button>
                   </div>
                 </div>
               </div>
