@@ -7,6 +7,7 @@ import type { ReportType } from "../_data";
 type Props = {
   reports: ReportType[];
   onPreview: (report: ReportType) => void;
+  // optional override (default uses /api/reports/[id]/export and passes through query)
   onExport?: (report: ReportType) => void;
 };
 
@@ -54,6 +55,7 @@ export function ReportTable({ reports, onPreview, onExport }: Props) {
   function doExport(r: ReportType) {
     if (onExport) return onExport(r);
     const url = new URL(`/api/reports/${r.id}/export`, window.location.origin);
+    // NOTE: filters are added by the preview modal; this table export is “raw”
     window.open(url.toString(), "_blank");
   }
 
@@ -94,15 +96,7 @@ export function ReportTable({ reports, onPreview, onExport }: Props) {
             {filtered.map((r) => (
               <tr key={r.id} className="hover:bg-gray-50">
                 <td className="px-3 py-3">
-                  <button
-                    type="button"
-                    className="font-medium text-blue-600 hover:underline"
-                    onClick={() => onPreview(r)}
-                    aria-label={`Preview ${r.title}`}
-                    title="Open preview"
-                  >
-                    {r.title}
-                  </button>
+                  <div className="font-medium text-gray-900">{r.title}</div>
                   {r.description && <div className="text-[11px] text-gray-500">{r.description}</div>}
                 </td>
                 <td className="px-3 py-3">{r.category}</td>
@@ -113,12 +107,14 @@ export function ReportTable({ reports, onPreview, onExport }: Props) {
                     <button
                       className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"
                       onClick={() => onPreview(r)}
+                      aria-label={`Preview ${r.title}`}
                     >
                       <Eye className="h-4 w-4" /> Preview
                     </button>
                     <button
                       className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"
                       onClick={() => doExport(r)}
+                      aria-label={`Export ${r.title}`}
                     >
                       <FileDown className="h-4 w-4" /> Export
                     </button>
