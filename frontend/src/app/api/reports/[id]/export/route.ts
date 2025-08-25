@@ -1,6 +1,6 @@
 import { getReportById } from "../../../../reporting/_data";
 
-// reuse the same tiny helpers as the other route (duplicated for simplicity)
+// (same helpers as the JSON route)
 const seedRand = (seed: string) => {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < seed.length; i++) {
@@ -134,14 +134,12 @@ function toCSV(rows: any[]): string {
   return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\r\n");
 }
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
-  const report = getReportById(params.id);
-  if (!report) {
-    return new Response("Report not found", { status: 404 });
-  }
+// NOTE: leave the 2nd arg untyped to avoid Next 15 signature errors
+export async function GET(_req: Request, context: any) {
+  const { id } = context?.params ?? {};
+  const report = getReportById(id);
+  if (!report) return new Response("Report not found", { status: 404 });
+
   const rows = buildRows(report.id);
   const csv = toCSV(rows);
   return new Response(csv, {

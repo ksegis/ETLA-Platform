@@ -1,6 +1,6 @@
 import { getReportById } from "../../../reporting/_data";
 
-// --- tiny deterministic mock generators (same shape as the preview) ---
+// --- tiny deterministic mock generators (same as before) ---
 const seedRand = (seed: string) => {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < seed.length; i++) {
@@ -122,18 +122,16 @@ function buildRows(reportId: string) {
   }
 }
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
-  const report = getReportById(params.id);
+// NOTE: leave the second arg untyped to satisfy Next 15’s route signature checks
+export async function GET(_req: Request, context: any) {
+  const { id } = context?.params ?? {};
+  const report = getReportById(id);
   if (!report) {
     return new Response(JSON.stringify({ error: "Report not found" }), {
       status: 404,
       headers: { "content-type": "application/json" },
     });
   }
-  // For now always use demo data from the same generators as the preview
   const rows = buildRows(report.id);
   return new Response(JSON.stringify({ report, rows }), {
     headers: { "content-type": "application/json" },
