@@ -20,7 +20,9 @@ type ExtraFilterSpec =
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
+// Best-practice filters per report
 const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
+  // Checks (already implemented)
   check_detail_history: [
     { type: "text", key: "employee_name", label: "Employee name" },
     { type: "number", key: "pay_number", label: "Pay number" },
@@ -30,22 +32,39 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
     { type: "number", key: "min_gross", label: "Min gross" },
     { type: "number", key: "max_gross", label: "Max gross" },
   ],
-  time_card_detail_history: [
-    { type: "text", key: "employee_name", label: "Employee name" },
+
+  // NEW — Department Analysis
+  department_analysis: [
     { type: "text", key: "department", label: "Department" },
+    { type: "text", key: "cost_center", label: "Cost center" },
+    { type: "text", key: "location", label: "Location" },
+    { type: "text", key: "pay_group", label: "Pay group" },
+    { type: "number", key: "min_total_cost", label: "Min total cost" },
+    { type: "number", key: "max_total_cost", label: "Max total cost" },
   ],
-  salary_history: [{ type: "text", key: "reason_code", label: "Reason code" }],
-  job_history: [{ type: "text", key: "reason_code", label: "Reason code" }],
-  status_history: [
-    {
-      type: "select",
-      key: "status",
-      label: "Status",
-      options: [
-        { value: "active", label: "Active" },
-        { value: "terminated", label: "Terminated" },
-      ],
-    },
+
+  // NEW — Job History
+  job_history: [
+    { type: "text", key: "employee_id", label: "Employee ID" },
+    { type: "text", key: "employee_name", label: "Employee name" },
+    { type: "text", key: "job_code", label: "Job code" },
+    { type: "text", key: "department", label: "Department" },
+    { type: "text", key: "supervisor", label: "Supervisor" },
+    { type: "text", key: "location", label: "Location" },
+    { type: "text", key: "action", label: "Action" },
+    { type: "text", key: "reason_code", label: "Reason code" },
+  ],
+
+  // NEW — Position History
+  position_history: [
+    { type: "text", key: "position_id", label: "Position ID" },
+    { type: "text", key: "position_title", label: "Position title" },
+    { type: "text", key: "department", label: "Department" },
+    { type: "text", key: "supervisor", label: "Supervisor" },
+    { type: "text", key: "status", label: "Status" },
+    { type: "number", key: "fte_min", label: "Min FTE" },
+    { type: "number", key: "fte_max", label: "Max FTE" },
+    { type: "number", key: "standard_hours", label: "Standard hours" },
   ],
 };
 
@@ -66,14 +85,12 @@ function DataPreview({
   setPage: (p: number) => void;
   setPageSize: (n: number) => void;
 }) {
-  const clickable = Boolean(onRowClick);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const start = total ? (page - 1) * pageSize + 1 : 0;
   const end = Math.min(page * pageSize, total);
 
   return (
     <div className="space-y-2">
-      {/* Table */}
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className="w-full table-auto text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
@@ -83,9 +100,8 @@ function DataPreview({
             {data.rows.map((r, i) => (
               <tr
                 key={i}
-                className={`${clickable ? "cursor-pointer hover:bg-gray-50" : ""}`}
+                className={`${onRowClick ? "cursor-pointer hover:bg-gray-50" : ""}`}
                 onClick={() => onRowClick?.(r)}
-                title={clickable ? "Click to view paystub" : undefined}
               >
                 {data.columns.map((c) => (
                   <td key={c} className="px-3 py-2 whitespace-pre-wrap">
@@ -133,47 +149,17 @@ function DataPreview({
           </select>
 
           <div className="ml-2 flex items-center gap-1">
-            <button
-              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
-              onClick={() => setPage(1)}
-              disabled={page <= 1}
-              aria-label="First page"
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </button>
-            <button
-              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page <= 1}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="px-2 text-gray-700">
-              Page <span className="font-medium">{page}</span> / {Math.max(1, Math.ceil(total / pageSize))}
-            </span>
-            <button
-              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
-              onClick={() => setPage(page + 1)}
-              disabled={page >= Math.ceil(total / pageSize)}
-              aria-label="Next page"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <button
-              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
-              onClick={() => setPage(Math.max(1, Math.ceil(total / pageSize)))}
-              disabled={page >= Math.ceil(total / pageSize)}
-              aria-label="Last page"
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </button>
+            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(1)} disabled={page <= 1}><ChevronsLeft className="h-4 w-4" /></button>
+            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}><ChevronLeft className="h-4 w-4" /></button>
+            <span className="px-2 text-gray-700">Page <span className="font-medium">{page}</span> / {totalPages}</span>
+            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}><ChevronRight className="h-4 w-4" /></button>
+            <button className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50" onClick={() => setPage(totalPages)} disabled={page >= totalPages}><ChevronsRight className="h-4 w-4" /></button>
           </div>
         </div>
       </div>
 
       {data.warning && <div className="rounded-md bg-yellow-50 p-2 text-xs text-yellow-800">Note: {data.warning}</div>}
-      <div className="text-[11px] text-gray-500">Tip: Click a row to open a paystub.</div>
+      <div className="text-[11px] text-gray-500">Tip: Click a row to open details (checks show a paystub).</div>
     </div>
   );
 }
@@ -185,11 +171,7 @@ function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
   return (
     <div className="space-y-3">
       <div className="overflow-hidden rounded-xl border border-gray-200">
-        {current?.url ? (
-          <iframe src={current.url} className="h-[60vh] w-full" />
-        ) : (
-          <div className="p-6 text-sm text-gray-600">No preview URL available.</div>
-        )}
+        {current?.url ? <iframe src={current.url} className="h-[60vh] w-full" /> : <div className="p-6 text-sm text-gray-600">No preview URL available.</div>}
       </div>
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className="w-full table-fixed">
@@ -200,17 +182,8 @@ function DocumentPreview({ docs }: { docs: NonNullable<PreviewData["docs"]> }) {
           <tbody className="divide-y divide-gray-100 text-sm">
             {docs.map((d) => (
               <tr key={d.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <div className="font-medium text-gray-900">{d.name}</div>
-                      {d.size ? <div className="text-xs text-gray-500">{(d.size / 1024).toFixed(0)} KB</div> : null}
-                    </div>
-                  </div>
-                </td>
+                <td className="px-3 py-2"><div className="font-medium text-gray-900">{d.name}</div></td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <button className="mr-2 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100" onClick={() => setCurrent(d)}>Preview</button>
                   {d.url && <a className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100" href={d.url} target="_blank" rel="noreferrer">Open</a>}
                 </td>
               </tr>
@@ -227,12 +200,10 @@ export function PreviewModal({
   report,
   open,
   onClose,
-  onExport,
 }: {
   report: ReportType | null;
   open: boolean;
   onClose: () => void;
-  onExport: (r: ReportType, demo?: boolean, filters?: Record<string, any>) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<PreviewData | null>(null);
@@ -242,7 +213,6 @@ export function PreviewModal({
   const [nameTerm, setNameTerm] = useState("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
-
   const extraSpec = useMemo<ExtraFilterSpec[]>(() => (report ? (EXTRA_FILTERS[report.id] ?? []) : []), [report]);
   const [extra, setExtra] = useState<Record<string, any>>({});
   const [useDemo, setUseDemo] = useState<boolean>(false);
@@ -251,14 +221,12 @@ export function PreviewModal({
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(50);
 
-  // Paystub modal
+  // Paystub (checks only)
   const [paystubRow, setPaystubRow] = useState<any | null>(null);
 
-  // abort + debounce
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // reset page & load when opening or changing report
   useEffect(() => {
     if (!open || !report) return;
     setData(null);
@@ -270,14 +238,12 @@ export function PreviewModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, report]);
 
-  // auto-run when filters/page/pageSize change (debounced)
   useEffect(() => {
     if (!open || !report) return;
     triggerLoad(400);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nameTerm, from, to, useDemo, JSON.stringify(extra), page, pageSize]);
 
-  // when filters change, reset to page 1
   useEffect(() => {
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -297,7 +263,6 @@ export function PreviewModal({
 
   async function runLoad() {
     if (!report) return;
-
     if (abortRef.current) abortRef.current.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -327,19 +292,9 @@ export function PreviewModal({
     }
   }
 
-  function exportExcel() {
-    if (!report) return;
-    const filters = buildFilters();
-    const url = new URL(`/api/reports/${report.id}/export`, window.location.origin);
-    if (from) url.searchParams.set("from", from);
-    if (to) url.searchParams.set("to", to);
-    if (Object.keys(filters).length) url.searchParams.set("filters", JSON.stringify(filters));
-    if (useDemo) url.searchParams.set("demo", "1");
-    // for exports we typically export all rows matching the filter (not just current page)
-    window.location.href = url.toString();
-  }
-
   if (!open || !report) return null;
+
+  const isChecks = report.id === "check_detail_history";
 
   return (
     <>
@@ -360,28 +315,18 @@ export function PreviewModal({
                 <label className="block text-xs font-medium text-gray-700">Name / search</label>
                 <input
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                  placeholder="Employee name, memo, etc."
+                  placeholder="Employee name, department, etc."
                   value={nameTerm}
                   onChange={(e) => setNameTerm(e.target.value)}
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700">From</label>
-                <input
-                  type="date"
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                />
+                <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700">To</label>
-                <input
-                  type="date"
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                />
+                <input type="date" className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
               </div>
 
               {EXTRA_FILTERS[report.id]?.map((f) => (
@@ -390,21 +335,19 @@ export function PreviewModal({
                   {f.type === "select" ? (
                     <select
                       className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
-                      value={extra[f.key] ?? ""}
+                      value={String((extra as any)[f.key] ?? "")}
                       onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
                     >
                       <option value="">Any</option>
                       {f.options.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
+                        <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>
                   ) : (
                     <input
                       className="mt-1 w-full rounded-md border border-gray-300 p-2 text-sm"
                       type={f.type === "number" ? "number" : "text"}
-                      value={extra[f.key] ?? ""}
+                      value={String((extra as any)[f.key] ?? "")}
                       onChange={(e) => setExtra((prev) => ({ ...prev, [f.key]: e.target.value || undefined }))}
                     />
                   )}
@@ -414,22 +357,12 @@ export function PreviewModal({
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300"
-                  checked={useDemo}
-                  onChange={(e) => setUseDemo(e.target.checked)}
-                />
+                <input type="checkbox" className="h-4 w-4 rounded border-gray-300" checked={useDemo} onChange={(e) => setUseDemo(e.target.checked)} />
                 Demo data
               </label>
 
               <div className="ml-auto flex items-center gap-2">
-                <button
-                  onClick={exportExcel}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
-                >
-                  Export to Excel
-                </button>
+                {/* Export handled by All Reports page's buttons; preview modal focuses on preview */}
               </div>
             </div>
           </div>
@@ -443,7 +376,7 @@ export function PreviewModal({
             ) : (
               <DataPreview
                 data={data}
-                onRowClick={(row) => setPaystubRow(row)}
+                onRowClick={isChecks ? (row) => setPaystubRow(row) : undefined}
                 page={page}
                 pageSize={pageSize}
                 total={data.total ?? data.rows.length}
@@ -455,14 +388,8 @@ export function PreviewModal({
         </div>
       </div>
 
-      {/* Paystub modal */}
-      {paystubRow && data && (
-        <PaystubModal
-          open={!!paystubRow}
-          row={paystubRow}
-          allRows={data.rows}
-          onClose={() => setPaystubRow(null)}
-        />
+      {isChecks && paystubRow && data && (
+        <PaystubModal open={!!paystubRow} row={paystubRow} allRows={data.rows} onClose={() => setPaystubRow(null)} />
       )}
     </>
   );
