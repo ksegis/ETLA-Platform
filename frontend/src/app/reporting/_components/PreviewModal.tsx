@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, FileText } from "lucide-react";
+import { X, FileText, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import type { ReportType } from "../_data";
 import PaystubModal from "./PaystubModal";
 
@@ -18,8 +18,9 @@ type ExtraFilterSpec =
   | { type: "text"; key: string; label: string }
   | { type: "number"; key: string; label: string };
 
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
+
 const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
-  // Rich demo filters for Checks (maps to server applyDemoFilters)
   check_detail_history: [
     { type: "text", key: "employee_name", label: "Employee name" },
     { type: "number", key: "pay_number", label: "Pay number" },
@@ -51,26 +52,35 @@ const EXTRA_FILTERS: Record<string, ExtraFilterSpec[]> = {
 function DataPreview({
   data,
   onRowClick,
+  page,
+  pageSize,
+  total,
+  setPage,
+  setPageSize,
 }: {
   data: PreviewData;
   onRowClick?: (row: any) => void;
+  page: number;
+  pageSize: number;
+  total: number;
+  setPage: (p: number) => void;
+  setPageSize: (n: number) => void;
 }) {
-  if (!data.rows?.length) {
-    return <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No rows to display.</div>;
-  }
-
   const clickable = Boolean(onRowClick);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const start = total ? (page - 1) * pageSize + 1 : 0;
+  const end = Math.min(page * pageSize, total);
 
   return (
     <div className="space-y-2">
-      <div className="text-xs text-gray-500">Showing up to {Math.min(50, data.rows.length)} rows.</div>
+      {/* Table */}
       <div className="overflow-x-auto rounded-2xl border border-gray-200">
         <table className="w-full table-auto text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
             <tr>{data.columns.map((c) => <th key={c} className="px-3 py-2">{c}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data.rows.slice(0, 50).map((r, i) => (
+            {data.rows.map((r, i) => (
               <tr
                 key={i}
                 className={`${clickable ? "cursor-pointer hover:bg-gray-50" : ""}`}
@@ -84,11 +94,85 @@ function DataPreview({
                 ))}
               </tr>
             ))}
+            {!data.rows.length && (
+              <tr>
+                <td colSpan={data.columns.length} className="px-3 py-8 text-center text-gray-500">
+                  No rows to display.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination footer */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+        <div className="text-gray-600">
+          {total ? (
+            <>
+              Showing <span className="font-medium">{start}</span>–<span className="font-medium">{end}</span> of{" "}
+              <span className="font-medium">{total.toLocaleString()}</span>
+            </>
+          ) : (
+            <>No results</>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-600">Rows / page</label>
+          <select
+            className="rounded-md border border-gray-300 p-1.5 text-sm"
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+
+          <div className="ml-2 flex items-center gap-1">
+            <button
+              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setPage(1)}
+              disabled={page <= 1}
+              aria-label="First page"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+            <button
+              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="px-2 text-gray-700">
+              Page <span className="font-medium">{page}</span> / {Math.max(1, Math.ceil(total / pageSize))}
+            </span>
+            <button
+              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setPage(page + 1)}
+              disabled={page >= Math.ceil(total / pageSize)}
+              aria-label="Next page"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              className="rounded-md border border-gray-300 p-1.5 hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setPage(Math.max(1, Math.ceil(total / pageSize)))}
+              disabled={page >= Math.ceil(total / pageSize)}
+              aria-label="Last page"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
       {data.warning && <div className="rounded-md bg-yellow-50 p-2 text-xs text-yellow-800">Note: {data.warning}</div>}
-      <div className="text-xs text-gray-500">Total rows (reported): {data.total.toLocaleString()}</div>
       <div className="text-[11px] text-gray-500">Tip: Click a row to open a paystub.</div>
     </div>
   );
@@ -158,34 +242,46 @@ export function PreviewModal({
   const [nameTerm, setNameTerm] = useState("");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
+
   const extraSpec = useMemo<ExtraFilterSpec[]>(() => (report ? (EXTRA_FILTERS[report.id] ?? []) : []), [report]);
   const [extra, setExtra] = useState<Record<string, any>>({});
   const [useDemo, setUseDemo] = useState<boolean>(false);
 
+  // Pagination (server-backed)
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(50);
+
   // Paystub modal
   const [paystubRow, setPaystubRow] = useState<any | null>(null);
 
-  // for aborting stale fetches
+  // abort + debounce
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // initial load on open/report change
+  // reset page & load when opening or changing report
   useEffect(() => {
     if (!open || !report) return;
     setData(null);
     setError(null);
     setExtra({});
     setUseDemo(false);
-    triggerLoad(0); // immediate first load
+    setPage(1);
+    triggerLoad(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, report]);
 
-  // auto-run when filters change (debounced)
+  // auto-run when filters/page/pageSize change (debounced)
   useEffect(() => {
     if (!open || !report) return;
     triggerLoad(400);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nameTerm, from, to, useDemo, JSON.stringify(extra)]);
+  }, [nameTerm, from, to, useDemo, JSON.stringify(extra), page, pageSize]);
+
+  // when filters change, reset to page 1
+  useEffect(() => {
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nameTerm, from, to, useDemo, JSON.stringify(extra), pageSize]);
 
   function buildFilters() {
     const f: Record<string, any> = { name: nameTerm || undefined, ...extra };
@@ -196,15 +292,12 @@ export function PreviewModal({
   function triggerLoad(delayMs: number) {
     if (!report) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      void runLoad();
-    }, delayMs);
+    debounceRef.current = setTimeout(() => void runLoad(), delayMs);
   }
 
   async function runLoad() {
     if (!report) return;
 
-    // cancel prior request if any
     if (abortRef.current) abortRef.current.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -215,7 +308,8 @@ export function PreviewModal({
     try {
       const filters = buildFilters();
       const url = new URL(`/api/reports/${report.id}`, window.location.origin);
-      url.searchParams.set("limit", "50");
+      url.searchParams.set("limit", String(pageSize));
+      url.searchParams.set("offset", String((page - 1) * pageSize));
       if (from) url.searchParams.set("from", from);
       if (to) url.searchParams.set("to", to);
       if (Object.keys(filters).length) url.searchParams.set("filters", JSON.stringify(filters));
@@ -241,6 +335,7 @@ export function PreviewModal({
     if (to) url.searchParams.set("to", to);
     if (Object.keys(filters).length) url.searchParams.set("filters", JSON.stringify(filters));
     if (useDemo) url.searchParams.set("demo", "1");
+    // for exports we typically export all rows matching the filter (not just current page)
     window.location.href = url.toString();
   }
 
@@ -289,7 +384,7 @@ export function PreviewModal({
                 />
               </div>
 
-              {extraSpec.map((f) => (
+              {EXTRA_FILTERS[report.id]?.map((f) => (
                 <div key={f.key}>
                   <label className="block text-xs font-medium text-gray-700">{f.label}</label>
                   {f.type === "select" ? (
@@ -346,7 +441,15 @@ export function PreviewModal({
             {!loading && !error && data && (report.docBased ? (
               data.docs ? <DocumentPreview docs={data.docs} /> : <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">No documents.</div>
             ) : (
-              <DataPreview data={data} onRowClick={(row) => setPaystubRow(row)} />
+              <DataPreview
+                data={data}
+                onRowClick={(row) => setPaystubRow(row)}
+                page={page}
+                pageSize={pageSize}
+                total={data.total ?? data.rows.length}
+                setPage={setPage}
+                setPageSize={setPageSize}
+              />
             ))}
           </div>
         </div>
