@@ -1,37 +1,53 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { REPORTS, type ReportType } from "./_data";
-import { ReportTable } from "./_components/ReportTable";
-import { PreviewModal } from "./_components/PreviewModal";
+import * as React from "react";
+import ReportTable from "./_components/ReportTable";     // default import ✅
+import PreviewModal from "./_components/PreviewModal";   // default import ✅
+import { getReportsByGroup, GROUP_LABELS } from "./_data";
 
 export default function AllReportsPage() {
-  const [selected, setSelected] = useState<ReportType | null>(null);
-  const items = useMemo(() => REPORTS.slice(), []);
+  // combine every group's reports
+  const allItems = React.useMemo(
+    () =>
+      Object.keys(GROUP_LABELS).flatMap((g) => getReportsByGroup(g)),
+    []
+  );
 
-  function exportExcel(r: ReportType) {
-    // Raw export (no modal filters). Use the modal for filtered exports.
-    const url = new URL(`/api/reports/${r.id}/export`, window.location.origin);
-    window.open(url.toString(), "_blank");
-  }
+  const [open, setOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState<any | null>(null);
+
+  const handlePreview = (r: any) => {
+    setSelected(r);
+    setOpen(true);
+  };
+
+  const handleExport = (r: any) => {
+    try {
+      window.open(`/api/reports/${r.id}/export`, "_blank");
+    } catch {
+      /* noop */
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">All Reports</h2>
+      <div>
+        <h1 className="text-lg font-semibold text-gray-900">All Reports</h1>
+        <p className="text-sm text-gray-600">
+          Click a report title to preview, toggle to charts inside the modal, or export directly.
+        </p>
       </div>
 
-      <ReportTable
-        reports={items}
-        onPreview={(r) => setSelected(r)}
-        onExport={exportExcel}
-      />
+      <ReportTable items={allItems} onPreview={handlePreview} onExport={handleExport} />
 
-      <PreviewModal
-        report={selected}
-        open={!!selected}
-        onClose={() => setSelected(null)}
-      />
+      {open && (
+        <PreviewModal
+          open={open}
+          report={selected}
+          onClose={() => setOpen(false)}
+          onRowClick={() => { /* optional detail drill-down */ }}
+        />
+      )}
     </div>
   );
 }
