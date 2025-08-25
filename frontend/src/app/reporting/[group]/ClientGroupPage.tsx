@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ReportTable } from "../_components/ReportTable";  // ✅ named import
-import PreviewModal from "../_components/PreviewModal";     // ✅ default import
+import { ReportTable } from "../_components/ReportTable"; // ✅ named import
+import PreviewModal from "../_components/PreviewModal";    // ✅ default import
 import { getReportsByGroup, GROUP_LABELS } from "../_data";
 
 type Props = {
@@ -11,8 +11,13 @@ type Props = {
 
 export default function ClientGroupPage({ params }: Props) {
   const group = params.group as string;
-  const label = GROUP_LABELS[group] ?? "Reports";
-  const items = getReportsByGroup(group);
+
+  // GROUP_LABELS is a typed Record<...>; index with a safe key
+  const label =
+    GROUP_LABELS[group as keyof typeof GROUP_LABELS] ?? "Reports";
+
+  // If getReportsByGroup is typed to a union, cast the param to that key type
+  const items = getReportsByGroup(group as keyof typeof GROUP_LABELS);
 
   const [open, setOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<any | null>(null);
