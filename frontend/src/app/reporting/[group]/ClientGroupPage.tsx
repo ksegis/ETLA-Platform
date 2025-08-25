@@ -12,7 +12,7 @@ type Props = {
 export default function ClientGroupPage({ params }: Props) {
   const group = params.group as string;
 
-  // GROUP_LABELS is a typed Record<...>; index with a safe key
+  // GROUP_LABELS is_ a typed Record<...>; index with a safe key
   const label =
     GROUP_LABELS[group as keyof typeof GROUP_LABELS] ?? "Reports";
 

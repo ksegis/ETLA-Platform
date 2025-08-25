@@ -1,16 +1,16 @@
 "use client";
 
 import * as React from "react";
-import ReportTable from "./_components/ReportTable";     // default import ✅
-import PreviewModal from "./_components/PreviewModal";   // default import ✅
+import { ReportTable } from "./_components/ReportTable"; // ✅ named import
+import PreviewModal from "./_components/PreviewModal";    // ✅ default import
 import { getReportsByGroup, GROUP_LABELS } from "./_data";
 
 export default function AllReportsPage() {
-  // combine every group's reports
+  const groups = Object.keys(GROUP_LABELS) as Array<keyof typeof GROUP_LABELS>;
+
   const allItems = React.useMemo(
-    () =>
-      Object.keys(GROUP_LABELS).flatMap((g) => getReportsByGroup(g)),
-    []
+    () => groups.flatMap((g) => getReportsByGroup(g)),
+    [groups]
   );
 
   const [open, setOpen] = React.useState(false);
