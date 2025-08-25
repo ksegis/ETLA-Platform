@@ -1,72 +1,71 @@
 "use client";
 
 import * as React from "react";
-import { Eye, Download } from "lucide-react";
-import type { ReportType } from "../_data";
+import { GROUP_LABELS, ReportType } from "../_data";
 
 type Props = {
   items: ReportType[];
   onPreview: (r: ReportType) => void;
-  onExport: (r: ReportType) => void;
+  onExport?: (r: ReportType) => void;
 };
 
 export default function ReportTable({ items, onPreview, onExport }: Props) {
   return (
-    <div className="overflow-x-auto rounded-lg border bg-white">
-      <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
+    <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <table className="min-w-full text-sm">
         <thead>
-          <tr>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Report</th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Category</th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Fields</th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">~ Rows</th>
-            <th className="sticky top-0 z-10 border-b bg-white px-3 py-2 font-medium text-gray-700">Actions</th>
+          <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+            <th className="px-3 py-2 font-medium">Report</th>
+            <th className="px-3 py-2 font-medium">Category</th>
+            <th className="px-3 py-2 font-medium">Fields</th>
+            <th className="px-3 py-2 font-medium">~ Rows</th>
+            <th className="px-3 py-2 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
           {items.map((r) => (
-            <tr key={r.id} className="odd:bg-white even:bg-gray-50">
+            <tr key={r.id} className="border-t border-gray-100 hover:bg-gray-50">
               <td className="px-3 py-2">
                 <button
+                  type="button"
                   onClick={() => onPreview(r)}
-                  className="max-w-[560px] truncate text-indigo-600 hover:underline"
-                  title="Preview"
+                  className="text-indigo-600 hover:underline"
                 >
                   {r.title}
                 </button>
-                {r.description ? (
-                  <div className="mt-0.5 line-clamp-1 text-xs text-gray-500">{r.description}</div>
-                ) : null}
+                <div className="text-xs text-gray-500">{r.description}</div>
               </td>
-              <td className="px-3 py-2 text-gray-700">{r.category ?? "-"}</td>
-              <td className="px-3 py-2 text-gray-700">{r.fields ?? "-"}</td>
               <td className="px-3 py-2 text-gray-700">
-                {typeof r.approxRows === "number" ? r.approxRows : "—"}
+                {GROUP_LABELS[r.group]}
               </td>
+              <td className="px-3 py-2 text-gray-700">{r.fields ?? "-"}</td>
+              <td className="px-3 py-2 text-gray-700">{r.approxRows ?? "-"}</td>
               <td className="px-3 py-2">
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => onPreview(r)}
-                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-gray-50"
-                    title="Preview"
+                    className="rounded-md border px-2 py-1 text-xs text-gray-700 hover:bg-gray-100"
                   >
-                    <Eye className="h-3.5 w-3.5" /> Preview
+                    Preview
                   </button>
-                  <button
-                    onClick={() => onExport(r)}
-                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-gray-50"
-                    title="Export"
-                  >
-                    <Download className="h-3.5 w-3.5" /> Export
-                  </button>
+                  {onExport && (
+                    <button
+                      type="button"
+                      onClick={() => onExport(r)}
+                      className="rounded-md border px-2 py-1 text-xs text-gray-700 hover:bg-gray-100"
+                    >
+                      Export
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>
           ))}
           {items.length === 0 && (
             <tr>
-              <td className="px-3 py-8 text-center text-sm text-gray-500" colSpan={5}>
-                No reports found.
+              <td colSpan={5} className="px-3 py-8 text-center text-gray-500">
+                No reports
               </td>
             </tr>
           )}

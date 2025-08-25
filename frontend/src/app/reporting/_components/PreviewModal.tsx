@@ -1,306 +1,383 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
+import { ReportType } from "../_data";
 import {
-  ResponsiveContainer,
   BarChart,
   Bar,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
+  ResponsiveContainer,
   Legend,
+  LineChart,
+  Line,
   CartesianGrid,
-} from 'recharts';
-import { Download } from 'lucide-react';
-import type { ReportType } from '../_data';
+} from "recharts";
 
-/** Helpers */
-const n = (v: unknown) => (typeof v === 'number' ? v : Number(v ?? 0)) || 0;
-const fileSafe = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
+type Props = {
+  open: boolean;
+  report: ReportType | null;
+  onClose: () => void;
+};
 
-/** Try to fetch the same rows the table would use */
-async function resolveRows(report: ReportType): Promise<any[]> {
-  const r: any = report;
-  try {
-    if (typeof r.buildRows === 'function') return await r.buildRows({});
-    if (typeof r.fetchRows === 'function') return await r.fetchRows({});
-    if (Array.isArray(r.rows)) return r.rows;
-    if (Array.isArray(r.data)) return r.data;
-  } catch {
-    /* ignore */
+// ------- Mock data generators (deterministic) -------
+const seedRand = (seed: string) => {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
-  return [];
+  return () => {
+    h += 0x6d2b79f5;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+function monthsBack(n = 6) {
+  const out: { start: string; label: string }[] = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = 0; i < n; i++) {
+    const dd = new Date(d);
+    dd.setMonth(d.getMonth() - i);
+    out.unshift({
+      start: dd.toISOString().slice(0, 10),
+      label: dd.toLocaleString("en-US", { month: "short", year: "numeric" }),
+    });
+  }
+  return out;
 }
 
-/** Generate sensible demo rows when no data is available */
-function synthRows(report: ReportType, count = 160): any[] {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-  const depts = ['SALES', 'SRV/HUB', 'TEACH', 'WORSHIP', 'OPS', 'HR'];
-  const names = ['Aeryn Sun', 'John Crichton', 'B. Stark', 'C. Copeland', 'R. Lofthouse'];
-  const isDept = /department/i.test(report.title);
-  const isJob = /job history/i.test(report.title);
-  const isPos = /position history/i.test(report.title);
-  const isCheck = /check|payroll|pay stub|tax/i.test(report.title);
-
+function mockDeptAnalysis(seed = "dept") {
+  const rnd = seedRand(seed);
+  const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "RD"];
+  const periods = monthsBack(6);
   const rows: any[] = [];
-  for (let i = 0; i < count; i++) {
-    const m = i % months.length;
-    const periodstart = `2025-${String(m + 1).padStart(2, '0')}-01`;
-    const periodlabel = `${months[m]} 2025`;
-    const department = depts[i % depts.length];
-
-    if (isDept) {
+  for (const p of periods) {
+    for (const d of depts) {
+      const headcount = Math.floor(rnd() * 15) + 6;
+      const fte = +(headcount - rnd() * 2).toFixed(1);
+      const regular = +(headcount * (900 + rnd() * 500)).toFixed(2);
+      const ot = +((headcount * (rnd() * 80)) as number).toFixed(2);
+      const bonus = +((headcount * (rnd() * 60)) as number).toFixed(2);
+      const taxes = +((regular + ot) * 0.18).toFixed(2);
+      const benefits = +((regular + ot) * 0.12).toFixed(2);
+      const burden = +(taxes + benefits).toFixed(2);
+      const avgComp = +((regular + ot + bonus + burden) / headcount).toFixed(2);
       rows.push({
-        periodstart,
-        periodlabel,
-        department,
-        regularpay: 15000 + (i % 9) * 800,
-        otpay: [0, 300, 315, 330, 840, 0][i % 6],
-        bonus: [0, 0, 500, 0, 1200, 0][i % 6],
-      });
-    } else if (isJob) {
-      rows.push({
-        effectivedate: periodstart,
-        periodlabel,
-        employee: names[i % names.length],
-        employeeid: `E${String(1 + (i % 250)).padStart(3, '0')}`,
-        title: ['Sales Associate', 'Server', 'Teacher', 'Worship Lead', 'HR Gen'][i % 5],
-        department,
-        action: ['Promotion', 'Transfer', 'New Hire', 'Lateral Move'][i % 4],
-        reason: ['Merit', 'Reorg', 'Backfill', 'Request'][i % 4],
-      });
-    } else if (isPos) {
-      rows.push({
-        effectivedate: periodstart,
-        periodlabel,
-        employee: names[i % names.length],
-        employeeid: `E${String(1 + (i % 250)).padStart(3, '0')}`,
-        position: ['Associate', 'Sr Associate', 'Lead', 'Manager'][i % 4],
-        department,
-        reason: ['Backfill', 'New role', 'Restructure'][i % 3],
-      });
-    } else if (isCheck) {
-      const gross = 2000 + (i % 6) * 120;
-      rows.push({
-        EMPLOYEENAME: names[i % names.length],
-        EMPLOYEEID: `E${String(1 + (i % 250)).padStart(3, '0')}`,
-        PAYDATE: periodstart,
-        GROSS: gross,
-        TAX: Math.round(gross * 0.24),
-        NETPAY: Math.round(gross * 0.76),
-      });
-    } else {
-      // generic row
-      rows.push({
-        periodlabel,
-        department,
-        value: 100 + (i % 15) * 7,
+        periodStart: p.start,
+        periodLabel: p.label,
+        department: d,
+        headcount,
+        fte,
+        regularPay: regular,
+        otPay: ot,
+        bonus,
+        taxes,
+        benefits,
+        burden,
+        avgComp,
       });
     }
   }
   return rows;
 }
 
-/** Build chart points from rows */
-function toChartData(report: ReportType, rows: any[]) {
-  if (!rows?.length) return [];
-
-  if (/department/i.test(report.title)) {
-    const map = new Map<
-      string,
-      { name: string; regular: number; overtime: number; bonus: number }
-    >();
-    rows.forEach((r) => {
-      const dep = String(r.DEPARTMENT ?? r.department ?? 'Unknown');
-      const reg = n(r.REGULARPAY ?? r.regularpay);
-      const ot = n(r.OTPAY ?? r.overtime ?? r.otpay);
-      const bn = n(r.BONUS ?? r.bonus);
-      const curr = map.get(dep) ?? { name: dep, regular: 0, overtime: 0, bonus: 0 };
-      curr.regular += reg;
-      curr.overtime += ot;
-      curr.bonus += bn;
-      map.set(dep, curr);
+function mockJobHistory(seed = "job") {
+  const rnd = seedRand(seed);
+  const people = ["Aeryn Sun", "John Crichton", "D. Peacekeeper", "Zhan", "Rygel", "Chiana"];
+  const changes = ["Promotion", "Transfer", "Lateral Move", "Demotion", "Pay Change", "Manager Change"];
+  const rows: any[] = [];
+  for (let i = 0; i < 180; i++) {
+    const dt = new Date();
+    dt.setDate(dt.getDate() - Math.floor(rnd() * 365));
+    rows.push({
+      employee: people[Math.floor(rnd() * people.length)],
+      effectiveDate: dt.toISOString().slice(0, 10),
+      changeType: changes[Math.floor(rnd() * changes.length)],
+      fromDept: ["SALES", "OPS", "SRV/HUB", "TEACH"][Math.floor(rnd() * 4)],
+      toDept: ["SALES", "OPS", "SRV/HUB", "TEACH"][Math.floor(rnd() * 4)],
+      location: ["HQ", "DC-East", "Remote"][Math.floor(rnd() * 3)],
     });
-    return Array.from(map.values());
   }
-
-  if (/job history|position history/i.test(report.title)) {
-    const map = new Map<string, { name: string; changes: number }>();
-    rows.forEach((r) => {
-      const p =
-        String(r.PERIODLABEL ?? r.periodlabel ?? r.PERIODSTART ?? r.periodstart ?? '')
-          .slice(0, 7) || 'Unknown';
-      const curr = map.get(p) ?? { name: p, changes: 0 };
-      curr.changes += 1;
-      map.set(p, curr);
-    });
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  if (/check|payroll|pay stub|tax/i.test(report.title)) {
-    return rows.slice(0, 25).map((r: any) => ({
-      name: String(r.EMPLOYEENAME ?? r.name ?? r.EMPLOYEEID ?? '—'),
-      gross: n(r.GROSS ?? r.gross),
-      net: n(r.NETPAY ?? r.net ?? r.netpay),
-    }));
-  }
-
-  // fallback: first numeric column
-  const keys = Object.keys(rows[0] ?? {});
-  const numKey = keys.find((k) => typeof rows[0]?.[k] === 'number');
-  return rows.slice(0, 25).map((r, i) => ({
-    name: String(r.DEPARTMENT ?? r.EMPLOYEENAME ?? r.department ?? `Row ${i + 1}`),
-    value: n(numKey ? r[numKey] : 0),
-  }));
+  // newest first
+  rows.sort((a, b) => (a.effectiveDate < b.effectiveDate ? 1 : -1));
+  return rows;
 }
 
-/** Component */
-type Props = {
-  open: boolean;
-  report: ReportType;
-  onClose: () => void;
-};
+function mockPositionHistory(seed = "pos") {
+  const rnd = seedRand(seed);
+  const locations = ["HQ", "DC-East", "Remote"];
+  const costCenters = [4000, 4100, 4200, 4300];
+  const periods = monthsBack(6);
+  const rows: any[] = [];
+  for (const p of periods) {
+    for (const cc of costCenters) {
+      rows.push({
+        periodStart: p.start,
+        periodLabel: p.label,
+        location: locations[Math.floor(rnd() * locations.length)],
+        costCenter: cc,
+        positions: Math.floor(rnd() * 25) + 5,
+        incumbents: Math.floor(rnd() * 22) + 4,
+        vacancies: Math.floor(rnd() * 6),
+        fte: +(rnd() * 20 + 5).toFixed(1),
+      });
+    }
+  }
+  return rows;
+}
 
+function buildRows(reportId: string, seed = "demo") {
+  switch (reportId) {
+    case "dept-analysis":
+      return mockDeptAnalysis(seed);
+    case "job-history":
+      return mockJobHistory(seed);
+    case "position-history":
+      return mockPositionHistory(seed);
+    default:
+      return [];
+  }
+}
+
+// ------- CSV helper -------
+function toCSV(rows: any[]): string {
+  if (!rows.length) return "";
+  const cols = Object.keys(rows[0]);
+  const esc = (v: any) =>
+    v == null
+      ? ""
+      : String(v).includes(",") || String(v).includes('"')
+      ? `"${String(v).replace(/"/g, '""')}"`
+      : String(v);
+  return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\r\n");
+}
+
+// ------- Component -------
 export default function PreviewModal({ open, report, onClose }: Props) {
+  const [demo, setDemo] = React.useState(true);
+  const [view, setView] = React.useState<"table" | "chart">("table");
+  const [search, setSearch] = React.useState("");
   const [rows, setRows] = React.useState<any[]>([]);
 
-  // lock body scroll while open
+  // regenerate rows on open / report / demo toggle
   React.useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
+    if (!open || !report) return;
+    // For now always use mock when demo is on or when no backend is wired
+    const data = buildRows(report.id, report.id);
+    setRows(data);
+  }, [open, report, demo]);
 
-  // Load rows (or synthesize) when opened or report changes
-  React.useEffect(() => {
-    if (!open) return;
-    let alive = true;
-    (async () => {
-      let data = await resolveRows(report);
-      if (!data || data.length === 0) data = synthRows(report);
-      if (alive) setRows(data);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [open, report]);
+  const filtered = React.useMemo(() => {
+    if (!search) return rows;
+    const s = search.toLowerCase();
+    return rows.filter((r) =>
+      Object.values(r).some((v) => String(v).toLowerCase().includes(s))
+    );
+  }, [rows, search]);
 
-  const chartData = React.useMemo(() => toChartData(report, rows), [report, rows]);
-
-  if (!open) return null;
+  if (!open || !report) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6"
-      aria-modal="true"
-      role="dialog"
-      onKeyDown={(e) => e.key === 'Escape' && onClose()}
-    >
-      {/* backdrop */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
-
-      {/* panel */}
-      <div className="relative z-10 w-full max-w-6xl rounded-xl bg-white shadow-xl">
-        {/* header */}
-        <div className="flex items-center justify-between border-b px-4 py-3">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4">
+      <div className="mt-6 w-[1100px] max-w-[95vw] rounded-xl bg-white shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 border-b px-5 py-3">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">{report.title}</h2>
-            {report.description ? (
-              <p className="mt-0.5 text-xs text-gray-600">{report.description}</p>
-            ) : null}
+            <div className="text-lg font-semibold">{report.title}</div>
+            <div className="text-xs text-gray-500">{report.description}</div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                const headers = Object.keys(rows[0] ?? {});
-                const csv = [
-                  headers.join(','),
-                  ...rows.map((r: any) => headers.map((h) => JSON.stringify(r[h] ?? '')).join(',')),
-                ].join('\n');
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const csv = toCSV(filtered);
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
+                const a = document.createElement("a");
                 a.href = url;
-                // ✅ use a safe filename from id or title (no slug field required)
-                const name = fileSafe(report.id || report.title || 'report');
-                a.download = `${name}.csv`;
+                a.download = `${report.slug}.csv`;
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              className="rounded-md bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800"
             >
-              <Download className="h-4 w-4" />
               Export to CSV
             </button>
             <button
               onClick={onClose}
-              className="rounded-md border px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded-md border px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
             >
               Close
             </button>
           </div>
         </div>
 
-        {/* content */}
-        <div className="px-4 pb-4 pt-3">
-          <div className="mb-2 text-xs text-gray-600">Showing <b>{rows.length}</b> rows</div>
+        {/* Controls */}
+        <div className="flex flex-wrap items-center gap-3 px-5 py-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="w-64 rounded-md border px-3 py-2 text-sm outline-none focus:ring"
+          />
+          <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={demo}
+              onChange={(e) => setDemo(e.target.checked)}
+            />
+            Demo data
+          </label>
 
-          <div className="h-[420px] w-full">
-            {chartData.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                No data to chart yet.
-              </div>
-            ) : /job history|position history/i.test(report.title) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="changes" stroke="#6366f1" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : /check|payroll|pay stub|tax/i.test(report.title) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="gross" fill="#0ea5e9" />
-                  <Bar dataKey="net" fill="#22c55e" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  {/* stacked if dept analysis data is present; otherwise fallback to single value */}
-                  <Bar dataKey="regular" stackId="a" fill="#0ea5e9" />
-                  <Bar dataKey="overtime" stackId="a" fill="#f59e0b" />
-                  <Bar dataKey="bonus" stackId="a" fill="#22c55e" />
-                  <Bar dataKey="value" fill="#0ea5e9" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+          <div className="ml-auto flex items-center gap-1 rounded-md bg-gray-100 p-1">
+            <button
+              onClick={() => setView("table")}
+              className={`rounded px-2 py-1 text-xs ${
+                view === "table" ? "bg-white shadow" : "text-gray-600"
+              }`}
+            >
+              Table
+            </button>
+            <button
+              onClick={() => setView("chart")}
+              className={`rounded px-2 py-1 text-xs ${
+                view === "chart" ? "bg-white shadow" : "text-gray-600"
+              }`}
+            >
+              Chart
+            </button>
           </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-5 pb-5">
+          <div className="mb-2 text-xs text-gray-500">
+            Showing <span className="font-medium">{filtered.length}</span> rows
+          </div>
+
+          {view === "table" ? (
+            <div className="max-h-[55vh] overflow-auto rounded-lg border">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 bg-gray-50">
+                  <tr>
+                    {filtered[0] ? (
+                      Object.keys(filtered[0]).map((k) => (
+                        <th key={k} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
+                          {k}
+                        </th>
+                      ))
+                    ) : (
+                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
+                        No data
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.slice(0, 500).map((r, i) => (
+                    <tr key={i} className="border-t hover:bg-gray-50">
+                      {Object.keys(filtered[0] ?? {}).map((k) => (
+                        <td key={k} className="px-3 py-2 text-gray-800">
+                          {String(r[k] ?? "")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="h-[55vh] w-full">
+              {/* Simple sensible defaults per report */}
+              {report.id === "dept-analysis" && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={groupSum(filtered, "department", ["regularPay", "otPay", "bonus"])}
+                    margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="department" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="regularPay" stackId="a" />
+                    <Bar dataKey="otPay" stackId="a" />
+                    <Bar dataKey="bonus" stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {report.id === "job-history" && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={byMonthCount(filtered, "effectiveDate")}
+                    margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Line dataKey="count" type="monotone" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+
+              {report.id === "position-history" && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={groupSum(filtered, "location", ["positions", "incumbents", "vacancies"])}
+                    margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="location" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="positions" />
+                    <Bar dataKey="incumbents" />
+                    <Bar dataKey="vacancies" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+// ------- tiny chart helpers -------
+function groupSum<T extends Record<string, any>>(
+  rows: T[],
+  key: keyof T,
+  measureKeys: (keyof T)[]
+) {
+  const m = new Map<string, any>();
+  for (const r of rows) {
+    const k = String(r[key]);
+    if (!m.has(k)) m.set(k, { [String(key)]: k });
+    const acc = m.get(k)!;
+    for (const mk of measureKeys) {
+      acc[String(mk)] = (acc[String(mk)] ?? 0) + (Number(r[mk]) || 0);
+    }
+  }
+  return Array.from(m.values());
+}
+
+function byMonthCount<T extends Record<string, any>>(rows: T[], dateKey: keyof T) {
+  const b = new Map<string, number>();
+  for (const r of rows) {
+    const d = new Date(String(r[dateKey]));
+    if (!isFinite(d.getTime())) continue;
+    const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    b.set(label, (b.get(label) ?? 0) + 1);
+  }
+  return Array.from(b.entries())
+    .sort(([a], [b2]) => (a < b2 ? -1 : 1))
+    .map(([month, count]) => ({ month, count }));
 }
