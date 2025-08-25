@@ -1,131 +1,134 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { FileDown, Eye } from "lucide-react";
+import * as React from "react";
 import type { ReportType } from "../_data";
+import { Eye, Download } from "lucide-react";
+import clsx from "clsx";
 
 type Props = {
-  reports: ReportType[];
-  onPreview: (report: ReportType) => void;
-  // optional override (default uses /api/reports/[id]/export and passes through query)
-  onExport?: (report: ReportType) => void;
+  /** rows for the table */
+  items: ReportType[];
+  /** open preview modal for this report */
+  onPreview: (r: ReportType) => void;
+  /** export this report to Excel/CSV/etc */
+  onExport: (r: ReportType) => void;
 };
 
-type SortKey = "title" | "category" | "fields" | "estimatedRows";
-type SortDir = "asc" | "desc";
+/**
+ * Simple, accessible table used by All Reports and Group pages.
+ * - Clicking the report title opens preview
+ * - Actions column has "Preview" and "Export"
+ */
+export function ReportTable({ items, onPreview, onExport }: Props) {
+  const [sortBy, setSortBy] = React.useState<"title" | "rows" | "fields">("title");
+  const [asc, setAsc] = React.useState(true);
 
-export function ReportTable({ reports, onPreview, onExport }: Props) {
-  const [q, setQ] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("title");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
-
-  const filtered = useMemo(() => {
-    const hay = q.trim().toLowerCase();
-    const base = hay
-      ? reports.filter(
-          (r) =>
-            r.title.toLowerCase().includes(hay) ||
-            (r.description ?? "").toLowerCase().includes(hay) ||
-            r.category.toLowerCase().includes(hay)
-        )
-      : reports;
-
-    const sorted = base.slice().sort((a, b) => {
-      const av = (a as any)[sortKey] ?? "";
-      const bv = (b as any)[sortKey] ?? "";
-      if (typeof av === "number" && typeof bv === "number") {
-        return sortDir === "asc" ? av - bv : bv - av;
+  const sorted = React.useMemo(() => {
+    const copy = [...items];
+    copy.sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+      if (sortBy === "title") {
+        aVal = a.title?.toLowerCase?.() ?? "";
+        bVal = b.title?.toLowerCase?.() ?? "";
+        return asc ? (aVal > bVal ? 1 : aVal < bVal ? -1 : 0) : (aVal < bVal ? 1 : aVal > bVal ? -1 : 0);
       }
-      const as = String(av).toLowerCase();
-      const bs = String(bv).toLowerCase();
-      return sortDir === "asc" ? as.localeCompare(bs) : bs.localeCompare(as);
+      if (sortBy === "fields") {
+        aVal = Number((a as any).fields ?? 0);
+        bVal = Number((b as any).fields ?? 0);
+      } else {
+        aVal = Number((a as any).rows ?? 0);
+        bVal = Number((b as any).rows ?? 0);
+      }
+      return asc ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
+    return copy;
+  }, [items, sortBy, asc]);
 
-    return sorted;
-  }, [reports, q, sortKey, sortDir]);
-
-  function toggleSort(k: SortKey) {
-    if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortKey(k);
-      setSortDir("asc");
-    }
-  }
-
-  function doExport(r: ReportType) {
-    if (onExport) return onExport(r);
-    const url = new URL(`/api/reports/${r.id}/export`, window.location.origin);
-    // NOTE: filters are added by the preview modal; this table export is “raw”
-    window.open(url.toString(), "_blank");
-  }
+  const headerBtn = (key: "title" | "fields" | "rows", label: string) => (
+    <button
+      type="button"
+      onClick={() => (setAsc(key === sortBy ? !asc : true), setSortBy(key))}
+      className={clsx(
+        "inline-flex items-center gap-1 font-medium text-gray-700 hover:text-gray-900",
+        sortBy === key && "text-gray-900"
+      )}
+      aria-label={`Sort by ${label}`}
+    >
+      {label}
+      <span className="text-xs">{sortBy === key ? (asc ? "▲" : "▼") : ""}</span>
+    </button>
+  );
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm md:w-80"
-          placeholder="Search reports..."
-        />
-        <div className="text-xs text-gray-600">
-          {filtered.length} {filtered.length === 1 ? "report" : "reports"}
-        </div>
-      </div>
-
-      <div className="overflow-x-auto rounded-2xl border border-gray-200">
-        <table className="w-full table-auto text-sm">
-          <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 py-2 cursor-pointer" onClick={() => toggleSort("title")}>
-                Report
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                {headerBtn("title", "Report")}
               </th>
-              <th className="px-3 py-2 cursor-pointer" onClick={() => toggleSort("category")}>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                 Category
               </th>
-              <th className="px-3 py-2 w-20 cursor-pointer text-right" onClick={() => toggleSort("fields")}>
-                Fields
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                {headerBtn("fields", "Fields")}
               </th>
-              <th className="px-3 py-2 w-24 cursor-pointer text-right" onClick={() => toggleSort("estimatedRows")}>
-                ~ Rows
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                {headerBtn("rows", "~ Rows")}
               </th>
-              <th className="px-3 py-2 w-40">Actions</th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filtered.map((r) => (
-              <tr key={r.id} className="hover:bg-gray-50">
-                <td className="px-3 py-3">
-                  <div className="font-medium text-gray-900">{r.title}</div>
-                  {r.description && <div className="text-[11px] text-gray-500">{r.description}</div>}
+
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {sorted.map((r) => (
+              <tr key={r.id}>
+                <td className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => onPreview(r)}
+                    className="text-left font-medium text-indigo-600 hover:text-indigo-700"
+                  >
+                    {r.title}
+                  </button>
+                  {r.description ? (
+                    <div className="mt-0.5 text-xs text-gray-500 line-clamp-1">{r.description}</div>
+                  ) : null}
                 </td>
-                <td className="px-3 py-3">{r.category}</td>
-                <td className="px-3 py-3 text-right">{r.fields ?? "—"}</td>
-                <td className="px-3 py-3 text-right">{r.estimatedRows?.toLocaleString() ?? "—"}</td>
-                <td className="px-3 py-3">
+                <td className="px-4 py-3 text-sm text-gray-700">{(r as any).category ?? ""}</td>
+                <td className="px-4 py-3 text-sm text-gray-700">{(r as any).fields ?? ""}</td>
+                <td className="px-4 py-3 text-sm text-gray-700">{(r as any).rows ?? ""}</td>
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <button
-                      className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"
+                      type="button"
                       onClick={() => onPreview(r)}
-                      aria-label={`Preview ${r.title}`}
+                      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
                     >
-                      <Eye className="h-4 w-4" /> Preview
+                      <Eye className="h-4 w-4" />
+                      Preview
                     </button>
                     <button
-                      className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100"
-                      onClick={() => doExport(r)}
-                      aria-label={`Export ${r.title}`}
+                      type="button"
+                      onClick={() => onExport(r)}
+                      className="inline-flex items-center gap-1 rounded-md bg-gray-900 px-2.5 py-1.5 text-sm text-white hover:bg-gray-800"
                     >
-                      <FileDown className="h-4 w-4" /> Export
+                      <Download className="h-4 w-4" />
+                      Export
                     </button>
                   </div>
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
+
+            {sorted.length === 0 && (
               <tr>
-                <td className="px-3 py-10 text-center text-gray-500" colSpan={5}>
-                  No reports match your search.
+                <td colSpan={5} className="px-4 py-10 text-center text-sm text-gray-500">
+                  No reports found.
                 </td>
               </tr>
             )}
