@@ -1,56 +1,58 @@
-// frontend/src/app/api/reports/[id]/export/route.ts
 import { NextResponse } from "next/server";
-import { getReportById } from "@/app/reporting/_data";
-import { getMockRows } from "@/app/reporting/_mock";
+import { getMockRows, toCSV } from "@/app/reporting/_mock";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // disable caching for mock export
 
-function resolveParams(ctx: any): Promise<Record<string, string>> {
-  const p = ctx?.params;
-  if (p && typeof p.then === "function") return p as Promise<Record<string, string>>;
-  return Promise.resolve((p ?? {}) as Record<string, string>);
-}
+// Lightweight CSV builder that can pick specific columns (optional).
+function toCSVPick(rows: any[], columns?: string[]) {
+  if (!rows || rows.length === 0) return "";
 
-function idFromUrl(url: string): string | undefined {
-  const m = url.match(/\/api\/reports\/([^/]+)/);
-  return m ? decodeURIComponent(m[1]) : undefined;
-}
+  const headers = (columns && columns.length > 0)
+    ? columns
+    : Object.keys(rows[0]);
 
-function toCSV(rows: any[], columns: { key: string; label: string }[]) {
-  const header = columns.map((c) => c.label).join(",");
-  const lines = rows.map((row) =>
-    columns
-      .map((c) => {
-        const v = row[c.key];
-        const s = v == null ? "" : String(v);
-        return `"${s.replace(/"/g, '""')}"`;
-      })
-      .join(",")
+  const esc = (v: any) => (v ?? "").toString().replaceAll('"', '""');
+  const head = headers.map(h => `"${esc(h)}"`).join(",");
+
+  const lines = rows.map(r =>
+    headers.map(h => `"${esc((r as any)[h])}"`).join(",")
   );
-  return [header, ...lines].join("\r\n");
+
+  return [head, ...lines].join("\n");
 }
 
 export async function GET(req: Request, ctx: any) {
-  const params = await resolveParams(ctx);
-  const id = params.id ?? idFromUrl(req.url);
-  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const id = ctx?.params?.id ?? "report";
 
-  const report = getReportById(id);
-  if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  const url = new URL(req.url);
+  const sp = url.searchParams;
 
-  const cols = report.columns ?? [];
-  if (cols.length === 0) {
-    return NextResponse.json({ error: "No columns for CSV" }, { status: 400 });
-  }
+  // Optional filters & options
+  const q = sp.get("q") || undefined;
+  const from = sp.get("from") || undefined;
+  const to = sp.get("to") || undefined;
+  const limit = Number(sp.get("limit") || "") || undefined;
+  const cols = (sp.get("cols") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  const rows = getMockRows(id);
-  const csv = toCSV(rows, cols);
+  const filters: Record<string, any> = {};
+  if (q) filters.q = q;
+  if (from) filters.from = from;
+  if (to) filters.to = to;
+
+  // ✅ Await the mock rows
+  const rows = await getMockRows(id, filters, limit);
+
+  // If columns specified, use them; otherwise use default toCSV
+  const csv = cols.length > 0 ? toCSVPick(rows, cols) : toCSV(rows);
 
   return new NextResponse(csv, {
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${report.slug || report.id}.csv"`,
+      "Content-Disposition": `attachment; filename="${id}.csv"`,
       "Cache-Control": "no-store",
     },
   });

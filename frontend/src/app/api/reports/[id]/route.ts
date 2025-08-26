@@ -1,34 +1,29 @@
-// frontend/src/app/api/reports/[id]/route.ts
 import { NextResponse } from "next/server";
-import { getReportById } from "@/app/reporting/_data";
 import { getMockRows } from "@/app/reporting/_mock";
 
-export const dynamic = "force-dynamic";
-
-function resolveParams(ctx: any): Promise<Record<string, string>> {
-  const p = ctx?.params;
-  if (p && typeof p.then === "function") return p as Promise<Record<string, string>>;
-  return Promise.resolve((p ?? {}) as Record<string, string>);
-}
-
-function idFromUrl(url: string): string | undefined {
-  const m = url.match(/\/api\/reports\/([^/]+)/);
-  return m ? decodeURIComponent(m[1]) : undefined;
-}
+export const dynamic = "force-dynamic"; // disable caching for mock preview
 
 export async function GET(req: Request, ctx: any) {
-  const params = await resolveParams(ctx);
-  const id = params.id ?? idFromUrl(req.url);
-  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const id = ctx?.params?.id ?? "report";
 
-  const report = getReportById(id);
-  if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  const url = new URL(req.url);
+  const sp = url.searchParams;
 
-  const { searchParams } = new URL(req.url);
-  const q = (searchParams.get("q") || "").toLowerCase();
+  const q = sp.get("q") || undefined;
+  const from = sp.get("from") || undefined;
+  const to = sp.get("to") || undefined;
+  const limit = Number(sp.get("limit") || "") || undefined;
 
-  let rows = getMockRows(id);
-  if (q) rows = rows.filter((r) => JSON.stringify(r).toLowerCase().includes(q));
+  const filters: Record<string, any> = {};
+  if (q) filters.q = q;
+  if (from) filters.from = from;
+  if (to) filters.to = to;
 
-  return NextResponse.json({ report, rows });
+  // ✅ Await the mock rows
+  const rows = await getMockRows(id, filters, limit);
+
+  return NextResponse.json(
+    { id, rows, count: rows.length },
+    { status: 200, headers: { "Cache-Control": "no-store" } }
+  );
 }
