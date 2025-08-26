@@ -168,7 +168,7 @@ export const REPORTS: ReportType[] = [
   },
 ];
 
-// --- helpers exported for other modules ---
+// --- helpers exported forother modules ---
 
 export const getAllReports = (): ReportType[] => REPORTS;
 
