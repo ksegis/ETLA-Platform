@@ -13,15 +13,29 @@ import {
 
 type Props = { params: { group: string } };
 
-const isGroupKey = (v: string): v is GroupKey =>
-  (["employee", "checks", "jobs", "salary", "timecards"] as const).includes(
-    v as GroupKey
-  );
+/** All accepted route keys, including "all" */
+const GROUP_KEYS = [
+  "employee",
+  "checks",
+  "jobs",
+  "salary",
+  "timecards",
+  "all",
+] as const;
+
+/** Narrow a string to GroupKey safely */
+function isGroupKey(v: string): v is GroupKey {
+  return (GROUP_KEYS as readonly string[]).includes(v);
+}
 
 export default function ClientGroupPage({ params }: Props) {
   const raw = params?.group ?? "employee";
   const key: GroupKey = isGroupKey(raw) ? raw : "employee";
-  const label = GROUP_LABELS[key];
+
+  // Tolerate missing label keys (e.g., if "all" is not in GROUP_LABELS yet)
+  const label =
+    (GROUP_LABELS as Record<string, string>)[key] ?? "Reports";
+
   const items: ReportType[] = getReportsByGroup(key);
 
   const [open, setOpen] = React.useState(false);
