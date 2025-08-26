@@ -1,348 +1,283 @@
+// frontend/src/app/reporting/_components/PreviewModal.tsx
 "use client";
 
 import * as React from "react";
-import { ReportType } from "../_data";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  LineChart,
-  Line,
-  CartesianGrid,
-} from "recharts";
+import type { ReportType } from "../_data";
+import { X, Download } from "lucide-react";
+
+/** Very light slugify for filenames */
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+type ApiResponse =
+  | { columns?: string[]; rows: any[] }
+  | { data?: { columns?: string[]; rows: any[] } }
+  | any;
 
 type Props = {
   open: boolean;
-  report: ReportType | null;
+  report: ReportType;
   onClose: () => void;
 };
 
-// ------- Mock data generators (deterministic) -------
-const seedRand = (seed: string) => {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return () => {
-    h += 0x6d2b79f5;
-    let t = Math.imul(h ^ (h >>> 15), 1 | h);
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-};
-
-function monthsBack(n = 6) {
-  const out: { start: string; label: string }[] = [];
-  const d = new Date();
-  d.setDate(1);
-  for (let i = 0; i < n; i++) {
-    const dd = new Date(d);
-    dd.setMonth(d.getMonth() - i);
-    out.unshift({
-      start: dd.toISOString().slice(0, 10),
-      label: dd.toLocaleString("en-US", { month: "short", year: "numeric" }),
-    });
-  }
-  return out;
-}
-
-function mockDeptAnalysis(seed = "dept") {
-  const rnd = seedRand(seed);
-  const depts = ["SALES", "SRV/HUB", "TEACH", "WORSHIP", "OPS", "RD"];
-  const periods = monthsBack(6);
-  const rows: any[] = [];
-  for (const p of periods) {
-    for (const d of depts) {
-      const headcount = Math.floor(rnd() * 15) + 6;
-      const fte = +(headcount - rnd() * 2).toFixed(1);
-      const regular = +(headcount * (900 + rnd() * 500)).toFixed(2);
-      const ot = +((headcount * (rnd() * 80)) as number).toFixed(2);
-      const bonus = +((headcount * (rnd() * 60)) as number).toFixed(2);
-      const taxes = +((regular + ot) * 0.18).toFixed(2);
-      const benefits = +((regular + ot) * 0.12).toFixed(2);
-      const burden = +(taxes + benefits).toFixed(2);
-      const avgComp = +((regular + ot + bonus + burden) / headcount).toFixed(2);
-      rows.push({
-        periodStart: p.start,
-        periodLabel: p.label,
-        department: d,
-        headcount,
-        fte,
-        regularPay: regular,
-        otPay: ot,
-        bonus,
-        taxes,
-        benefits,
-        burden,
-        avgComp,
-      });
-    }
-  }
-  return rows;
-}
-
-function mockJobHistory(seed = "job") {
-  const rnd = seedRand(seed);
-  const people = ["Aeryn Sun", "John Crichton", "D. Peacekeeper", "Zhan", "Rygel", "Chiana"];
-  const changes = ["Promotion", "Transfer", "Lateral Move", "Demotion", "Pay Change", "Manager Change"];
-  const rows: any[] = [];
-  for (let i = 0; i < 180; i++) {
-    const dt = new Date();
-    dt.setDate(dt.getDate() - Math.floor(rnd() * 365));
-    rows.push({
-      employee: people[Math.floor(rnd() * people.length)],
-      effectiveDate: dt.toISOString().slice(0, 10),
-      changeType: changes[Math.floor(rnd() * changes.length)],
-      fromDept: ["SALES", "OPS", "SRV/HUB", "TEACH"][Math.floor(rnd() * 4)],
-      toDept: ["SALES", "OPS", "SRV/HUB", "TEACH"][Math.floor(rnd() * 4)],
-      location: ["HQ", "DC-East", "Remote"][Math.floor(rnd() * 3)],
-    });
-  }
-  // newest first
-  rows.sort((a, b) => (a.effectiveDate < b.effectiveDate ? 1 : -1));
-  return rows;
-}
-
-function mockPositionHistory(seed = "pos") {
-  const rnd = seedRand(seed);
-  const locations = ["HQ", "DC-East", "Remote"];
-  const costCenters = [4000, 4100, 4200, 4300];
-  const periods = monthsBack(6);
-  const rows: any[] = [];
-  for (const p of periods) {
-    for (const cc of costCenters) {
-      rows.push({
-        periodStart: p.start,
-        periodLabel: p.label,
-        location: locations[Math.floor(rnd() * locations.length)],
-        costCenter: cc,
-        positions: Math.floor(rnd() * 25) + 5,
-        incumbents: Math.floor(rnd() * 22) + 4,
-        vacancies: Math.floor(rnd() * 6),
-        fte: +(rnd() * 20 + 5).toFixed(1),
-      });
-    }
-  }
-  return rows;
-}
-
-function buildRows(reportId: string, seed = "demo") {
-  switch (reportId) {
-    case "dept-analysis":
-      return mockDeptAnalysis(seed);
-    case "job-history":
-      return mockJobHistory(seed);
-    case "position-history":
-      return mockPositionHistory(seed);
-    default:
-      return [];
-  }
-}
-
-// ------- CSV helper -------
-function toCSV(rows: any[]): string {
-  if (!rows.length) return "";
-  const cols = Object.keys(rows[0]);
-  const esc = (v: any) =>
-    v == null
-      ? ""
-      : String(v).includes(",") || String(v).includes('"')
-      ? `"${String(v).replace(/"/g, '""')}"`
-      : String(v);
-  return [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\r\n");
-}
-
-// ------- Component -------
 export default function PreviewModal({ open, report, onClose }: Props) {
-  const [demo, setDemo] = React.useState(true);
-  const [view, setView] = React.useState<"table" | "chart">("table");
-  const [search, setSearch] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const [rows, setRows] = React.useState<any[]>([]);
+  const [columns, setColumns] = React.useState<string[]>([]);
 
-  // regenerate rows on open / report / demo toggle
+  // Filters
+  const [q, setQ] = React.useState("");
+  const [start, setStart] = React.useState<string>("");
+  const [end, setEnd] = React.useState<string>("");
+
   React.useEffect(() => {
-    if (!open || !report) return;
-    // For now always use mock when demo is on or when no backend is wired
-    const data = buildRows(report.id, report.id);
-    setRows(data);
-  }, [open, report, demo]);
+    if (!open) return;
+    let cancelled = false;
+
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/reports/${report.id}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json: ApiResponse = await res.json();
+
+        // Normalize shapes: accept {columns, rows} or {data:{columns,rows}} or array
+        const payload =
+          (json?.data && (json.data as any)) ||
+          (Array.isArray(json) ? { rows: json } : json);
+
+        const r: any[] = payload?.rows ?? [];
+        const c: string[] =
+          payload?.columns ??
+          (r.length ? Object.keys(r[0]) : []);
+
+        if (!cancelled) {
+          setRows(r);
+          setColumns(c);
+        }
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? "Failed to load data");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, report.id]);
+
+  // Generic date accessor — try common date-like fields
+  function rowDate(r: any): Date | null {
+    const candidates = [
+      "pay_date",
+      "payDate",
+      "date",
+      "check_date",
+      "checkDate",
+      "period_end",
+      "periodEnd",
+    ];
+    for (const k of candidates) {
+      if (r?.[k]) {
+        const d = new Date(r[k]);
+        if (!Number.isNaN(d.valueOf())) return d;
+      }
+    }
+    return null;
+  }
 
   const filtered = React.useMemo(() => {
-    if (!search) return rows;
-    const s = search.toLowerCase();
-    return rows.filter((r) =>
-      Object.values(r).some((v) => String(v).toLowerCase().includes(s))
-    );
-  }, [rows, search]);
+    let out = rows;
 
-  if (!open || !report) return null;
+    if (q.trim()) {
+      const needle = q.toLowerCase();
+      out = out.filter((r) =>
+        Object.values(r).some((v) =>
+          String(v ?? "").toLowerCase().includes(needle)
+        )
+      );
+    }
+
+    if (start) {
+      const s = new Date(start);
+      out = out.filter((r) => {
+        const d = rowDate(r);
+        return !d || d >= s;
+      });
+    }
+
+    if (end) {
+      // include end-of-day
+      const eod = new Date(end);
+      eod.setHours(23, 59, 59, 999);
+      out = out.filter((r) => {
+        const d = rowDate(r);
+        return !d || d <= eod;
+      });
+    }
+
+    return out;
+  }, [rows, q, start, end]);
+
+  function exportCSV() {
+    if (!columns.length) return;
+
+    const header = columns.join(",");
+    const lines = filtered.map((r) =>
+      columns
+        .map((c) => {
+          const val = r?.[c];
+          // CSV-escape
+          const s = String(val ?? "");
+          const needsQuote = /[",\n]/.test(s);
+          const quoted = `"${s.replace(/"/g, '""')}"`;
+          return needsQuote ? quoted : s;
+        })
+        .join(",")
+    );
+    const csv = [header, ...lines].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const name = slugify(report.title || `report-${report.id}`) || "report";
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4">
-      <div className="mt-6 w-[1100px] max-w-[95vw] rounded-xl bg-white shadow-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Report preview"
+    >
+      <div className="relative mt-8 w-[95vw] max-w-6xl rounded-xl bg-white shadow-xl ring-1 ring-black/5">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 border-b px-5 py-3">
+        <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
           <div>
-            <div className="text-lg font-semibold">{report.title}</div>
-            <div className="text-xs text-gray-500">{report.description}</div>
+            <h2 className="text-base font-semibold text-gray-900">
+              {report.title}
+            </h2>
+            {report.description ? (
+              <p className="mt-0.5 text-sm text-gray-600">
+                {report.description}
+              </p>
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                const csv = toCSV(filtered);
-                const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${report.slug}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-              className="rounded-md bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800"
+              onClick={exportCSV}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
-              Export to CSV
+              <Download className="h-4 w-4" />
+              Export CSV
             </button>
             <button
               onClick={onClose}
-              className="rounded-md border px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+              className="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+              aria-label="Close"
             >
-              Close
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-wrap items-center gap-3 px-5 py-3">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            className="w-64 rounded-md border px-3 py-2 text-sm outline-none focus:ring"
-          />
-          <label className="inline-flex select-none items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={demo}
-              onChange={(e) => setDemo(e.target.checked)}
-            />
-            Demo data
-          </label>
-
-          <div className="ml-auto flex items-center gap-1 rounded-md bg-gray-100 p-1">
-            <button
-              onClick={() => setView("table")}
-              className={`rounded px-2 py-1 text-xs ${
-                view === "table" ? "bg-white shadow" : "text-gray-600"
-              }`}
-            >
-              Table
-            </button>
-            <button
-              onClick={() => setView("chart")}
-              className={`rounded px-2 py-1 text-xs ${
-                view === "chart" ? "bg-white shadow" : "text-gray-600"
-              }`}
-            >
-              Chart
-            </button>
+        {/* Filters */}
+        <div className="border-b px-4 pb-3 pt-3 sm:px-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="flex items-center">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search name, memo, amount…"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="w-24 text-sm text-gray-600">Start date</label>
+              <input
+                type="date"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="w-24 text-sm text-gray-600">End date</label>
+              <input
+                type="date"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="px-5 pb-5">
-          <div className="mb-2 text-xs text-gray-500">
-            Showing <span className="font-medium">{filtered.length}</span> rows
-          </div>
-
-          {view === "table" ? (
-            <div className="max-h-[55vh] overflow-auto rounded-lg border">
-              <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-gray-50">
+        {/* Body */}
+        <div className="max-h-[70vh] overflow-auto px-4 py-3 sm:px-6">
+          {loading ? (
+            <div className="py-12 text-center text-sm text-gray-600">
+              Loading…
+            </div>
+          ) : error ? (
+            <div className="py-12 text-center text-sm text-red-600">
+              {error}
+            </div>
+          ) : !filtered.length ? (
+            <div className="py-12 text-center text-sm text-gray-500">
+              No rows match your filters.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-0">
+                <thead className="sticky top-0 z-10 bg-white">
                   <tr>
-                    {filtered[0] ? (
-                      Object.keys(filtered[0]).map((k) => (
-                        <th key={k} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
-                          {k}
-                        </th>
-                      ))
-                    ) : (
-                      <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
-                        No data
+                    {columns.map((c) => (
+                      <th
+                        key={c}
+                        className="border-b border-gray-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600"
+                      >
+                        {c}
                       </th>
-                    )}
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.slice(0, 500).map((r, i) => (
-                    <tr key={i} className="border-t hover:bg-gray-50">
-                      {Object.keys(filtered[0] ?? {}).map((k) => (
-                        <td key={k} className="px-3 py-2 text-gray-800">
-                          {String(r[k] ?? "")}
+                  {filtered.map((r, i) => (
+                    <tr
+                      key={i}
+                      className="odd:bg-gray-50/50 hover:bg-indigo-50"
+                    >
+                      {columns.map((c) => (
+                        <td
+                          key={c}
+                          className="whitespace-nowrap border-b border-gray-100 px-3 py-2 text-sm text-gray-800"
+                        >
+                          {formatCell(r[c])}
                         </td>
                       ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <div className="h-[55vh] w-full">
-              {/* Simple sensible defaults per report */}
-              {report.id === "dept-analysis" && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={groupSum(filtered, "department", ["regularPay", "otPay", "bonus"])}
-                    margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="department" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="regularPay" stackId="a" />
-                    <Bar dataKey="otPay" stackId="a" />
-                    <Bar dataKey="bonus" stackId="a" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-
-              {report.id === "job-history" && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={byMonthCount(filtered, "effectiveDate")}
-                    margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Line dataKey="count" type="monotone" />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-
-              {report.id === "position-history" && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={groupSum(filtered, "location", ["positions", "incumbents", "vacancies"])}
-                    margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="location" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="positions" />
-                    <Bar dataKey="incumbents" />
-                    <Bar dataKey="vacancies" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
             </div>
           )}
         </div>
@@ -351,33 +286,16 @@ export default function PreviewModal({ open, report, onClose }: Props) {
   );
 }
 
-// ------- tiny chart helpers -------
-function groupSum<T extends Record<string, any>>(
-  rows: T[],
-  key: keyof T,
-  measureKeys: (keyof T)[]
-) {
-  const m = new Map<string, any>();
-  for (const r of rows) {
-    const k = String(r[key]);
-    if (!m.has(k)) m.set(k, { [String(key)]: k });
-    const acc = m.get(k)!;
-    for (const mk of measureKeys) {
-      acc[String(mk)] = (acc[String(mk)] ?? 0) + (Number(r[mk]) || 0);
-    }
+function formatCell(v: any) {
+  if (v == null) return "";
+  // numbers: show 2 decimals if looks like currency
+  if (typeof v === "number") {
+    return Number.isInteger(v) ? v : v.toFixed(2);
   }
-  return Array.from(m.values());
-}
-
-function byMonthCount<T extends Record<string, any>>(rows: T[], dateKey: keyof T) {
-  const b = new Map<string, number>();
-  for (const r of rows) {
-    const d = new Date(String(r[dateKey]));
-    if (!isFinite(d.getTime())) continue;
-    const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    b.set(label, (b.get(label) ?? 0) + 1);
+  // dates: pretty print if parseable
+  const maybe = new Date(v);
+  if (typeof v === "string" && !Number.isNaN(maybe.valueOf()) && /[-/]/.test(v)) {
+    return maybe.toLocaleDateString();
   }
-  return Array.from(b.entries())
-    .sort(([a], [b2]) => (a < b2 ? -1 : 1))
-    .map(([month, count]) => ({ month, count }));
+  return String(v);
 }
