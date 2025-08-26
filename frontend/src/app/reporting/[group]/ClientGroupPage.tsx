@@ -13,7 +13,7 @@ import PreviewModal from "../_components/PreviewModal";
 
 type Props = { params: { group?: string } };
 
-// Narrow "GroupKey" to exclude "all" for labeling/UI
+// Narrow "GroupKey" to  exclude "all" for labeling/UI
 type RealGroup = Exclude<GroupKey, "all">;
 const VALID_GROUPS: RealGroup[] = ["employee", "checks", "jobs", "salary", "timecards"];
 
