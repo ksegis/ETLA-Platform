@@ -1,10 +1,9 @@
 // frontend/src/app/reporting/_mock.ts
 // Deterministic mock data generators for each report.
-// Keeps things simple (no random casting) and TS-safe.
 
 import { getReportById } from "./_data";
 
-// Basic seed data
+// Seed data
 const EMPLOYEES = [
   { id: "E001", name: "Ava Thompson", dept: "Finance", job: "Accountant" },
   { id: "E002", name: "Liam Johnson", dept: "Operations", job: "Supervisor" },
@@ -13,26 +12,16 @@ const EMPLOYEES = [
   { id: "E005", name: "Olivia Garcia", dept: "Sales", job: "AE" },
 ];
 
-const DEPARTMENTS = ["Finance", "Operations", "Engineering", "HR", "Sales"];
-const POSITIONS = ["Analyst I", "Analyst II", "Supervisor", "Manager", "Director"];
-const REASONS = ["Merit", "Promotion", "Market", "Adjustment", "Lump Sum"];
-const STATUSES = ["Active", "Leave", "Terminated", "Rehired"];
+const DEPARTMENTS = ["Finance", "Operations", "Engineering", "HR", "Sales"] as const;
+const POSITIONS = ["Analyst I", "Analyst II", "Supervisor", "Manager", "Director"] as const;
+const REASONS = ["Merit", "Promotion", "Market", "Adjustment", "Lump Sum"] as const;
+const STATUSES = ["Active", "Leave", "Terminated", "Rehired"] as const;
 
-function pad(n: number) {
-  return n.toString().padStart(2, "0");
-}
-function date(y: number, m: number, d: number) {
-  return `${y}-${pad(m)}-${pad(d)}`;
-}
-function dollars(n: number) {
-  return Number(n.toFixed(2));
-}
-function range(count: number) {
-  return Array.from({ length: count }, (_, i) => i);
-}
-function pick<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+const pad = (n: number) => n.toString().padStart(2, "0");
+const date = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
+const dollars = (n: number) => Number(n.toFixed(2));
+const range = (count: number) => Array.from({ length: count }, (_, i) => i);
+const pick = <T,>(arr: readonly T[]) => arr[Math.floor(Math.random() * arr.length)];
 
 // ---- Mock rows per report id ----
 
@@ -127,7 +116,6 @@ function mockPositionHistory() {
 }
 
 function mockDepartmentAnalysis() {
-  // summary rows by department
   return DEPARTMENTS.map((d) => {
     const headcount = 5 + Math.floor(Math.random() * 6);
     const avgRate = dollars(28 + Math.random() * 22);
@@ -193,7 +181,6 @@ function mockRecruitmentHistory() {
 }
 
 function mockPerformanceHistory() {
-  // document-backed rows; API can map to PDFs
   return EMPLOYEES.map((e, i) => ({
     employeeId: e.id,
     employeeName: e.name,
@@ -251,10 +238,12 @@ export function getMockRowsForReport(id: string): any[] {
     case "w2-images":
       return mockW2Images();
     default: {
-      // fall back to a tiny table so preview is never empty
       const r = getReportById(id);
       if (!r) return [];
       return [{ sample: "No mock defined for this report id", id }];
     }
   }
 }
+
+// --- Backward-compat export (to satisfy existing imports) ---
+export const getMockRows = getMockRowsForReport;

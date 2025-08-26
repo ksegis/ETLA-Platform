@@ -8,6 +8,7 @@ import { getMockRows } from "../_data";
 import PayStatement from "./forms/PayStatement";
 import W2Form from "./forms/W2Form";
 import TimecardForm from "./forms/TimecardForm";
+import { getMockRows } from "../_mock";
 
 type Props = {
   open: boolean;
