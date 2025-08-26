@@ -1,80 +1,179 @@
 "use client";
 
 import * as React from "react";
-import type { ReportType } from "../_data";
+import { getMockRows, inferReportKind } from "../_mock";
+
+// If you have these facsimile components, the imports below will wire them in.
+// If any don't exist yet, you can comment out the missing ones temporarily.
+import PayStatement from "./forms/PayStatement";
+import W2Form from "./forms/W2Form";
+import TimecardForm from "./forms/TimecardForm";
+
+type Report = {
+  id: string;
+  title: string;
+  group?: string;
+  slug?: string;
+};
 
 type Props = {
   open: boolean;
-  report: ReportType | null;
+  report: Report | null;
   onClose: () => void;
 };
 
+type Column = { key: string; label: string; format?: (v: any) => string };
+
+function fmtCurrency(n: any) {
+  const v = typeof n === "number" ? n : Number(n ?? 0);
+  return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+}
+function fmtDate(s: any) {
+  if (!s) return "";
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return String(s);
+  return d.toLocaleDateString();
+}
+
+function columnsForKind(kind: string): Column[] {
+  switch (kind) {
+    case "w2":
+      return [
+        { key: "year", label: "Year" },
+        { key: "employeeId", label: "Employee ID" },
+        { key: "employee", label: "Employee" },
+        { key: "ssnMasked", label: "SSN" },
+        { key: "wages", label: "Wages", format: fmtCurrency },
+        { key: "federalTax", label: "Federal Tax", format: fmtCurrency },
+        { key: "state", label: "State" },
+        { key: "stateWages", label: "State Wages", format: fmtCurrency },
+      ];
+    case "timecard":
+      return [
+        { key: "periodStart", label: "Start", format: fmtDate },
+        { key: "periodEnd", label: "End", format: fmtDate },
+        { key: "employeeId", label: "Employee ID" },
+        { key: "employee", label: "Employee" },
+        { key: "regHours", label: "Regular Hrs" },
+        { key: "otHours", label: "OT Hrs" },
+        { key: "totalHours", label: "Total Hrs" },
+      ];
+    case "dept":
+      return [
+        { key: "period", label: "Period" },
+        { key: "department", label: "Department" },
+        { key: "headcount", label: "Headcount" },
+        { key: "grossWages", label: "Gross Wages", format: fmtCurrency },
+        { key: "employerTaxes", label: "Er Taxes", format: fmtCurrency },
+        { key: "benefitsCost", label: "Benefits", format: fmtCurrency },
+        { key: "totalLaborCost", label: "Total Labor", format: fmtCurrency },
+      ];
+    case "job-history":
+      return [
+        { key: "employeeId", label: "Employee ID" },
+        { key: "employee", label: "Employee" },
+        { key: "jobTitle", label: "Job Title" },
+        { key: "department", label: "Department" },
+        { key: "effectiveStart", label: "Start", format: fmtDate },
+        { key: "effectiveEnd", label: "End", format: fmtDate },
+        { key: "status", label: "Status" },
+      ];
+    case "position-history":
+      return [
+        { key: "positionId", label: "Position ID" },
+        { key: "positionTitle", label: "Position" },
+        { key: "department", label: "Department" },
+        { key: "incumbent", label: "Incumbent" },
+        { key: "effectiveStart", label: "Start", format: fmtDate },
+        { key: "effectiveEnd", label: "End", format: fmtDate },
+        { key: "status", label: "Status" },
+      ];
+    case "pay":
+    default:
+      return [
+        { key: "checkNumber", label: "Check #" },
+        { key: "checkDate", label: "Check Date", format: fmtDate },
+        { key: "employeeId", label: "Employee ID" },
+        { key: "employee", label: "Employee" },
+        { key: "netPay", label: "Net Pay", format: fmtCurrency },
+      ];
+  }
+}
+
+function toCSV(rows: any[], cols: Column[]) {
+  const header = cols.map((c) => c.label);
+  const lines = rows.map((r) =>
+    cols
+      .map((c) => {
+        const raw = r[c.key];
+        const val = c.format ? c.format(raw) : raw ?? "";
+        const s = String(val);
+        // Simple CSV escaping
+        if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+          return `"${s.replace(/"/g, '""')}"`;
+        }
+        return s;
+      })
+      .join(",")
+  );
+  return [header.join(","), ...lines].join("\n");
+}
+
 export default function PreviewModal({ open, report, onClose }: Props) {
-  const [rows, setRows] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [mode, setMode] = React.useState<"table" | "facsimile">("table");
+  const [selectedRow, setSelectedRow] = React.useState<any | null>(null);
 
   React.useEffect(() => {
-    let abort = false;
-
-    async function load() {
-      if (!open || !report?.id) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/reports/${encodeURIComponent(report.id)}?limit=50`, {
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!abort) setRows(Array.isArray(json?.rows) ? json.rows : []);
-      } catch (e: any) {
-        if (!abort) setError(e?.message || "Failed to load preview.");
-      } finally {
-        if (!abort) setLoading(false);
-      }
+    if (!open) {
+      setMode("table");
+      setSelectedRow(null);
     }
-
-    load();
-    return () => {
-      abort = true;
-    };
-  }, [open, report?.id]);
-
-  const handleExport = React.useCallback(() => {
-    if (!report?.id) return;
-    const url = `/api/reports/${encodeURIComponent(report.id)}/export`;
-    // trigger download in a new navigation (keeps modal open)
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${report.id}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }, [report?.id]);
+  }, [open]);
 
   if (!open || !report) return null;
 
-  const title = report.title || report.id || "Report";
-  const hasData = rows && rows.length > 0;
-  const columns = hasData ? Object.keys(rows[0]) : [];
+  const kind = inferReportKind(report);
+  const cols = columnsForKind(kind);
+  const rows = getMockRows(report.id);
+
+  const showFacsimile =
+    kind === "pay" || kind === "w2" || kind === "timecard";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="mx-4 w-full max-w-5xl rounded-xl bg-white shadow-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-6xl rounded-xl bg-white shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-5 py-3">
-          <h2 className="text-lg font-semibold text-gray-900">{title} — Preview</h2>
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <div>
+            <h3 className="text-lg font-semibold">{report.title}</h3>
+            <p className="text-xs text-gray-500">
+              Preview · {rows.length.toLocaleString()} rows
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handleExport}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50"
+              onClick={() => {
+                const csv = toCSV(rows, cols);
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                // fallbacks: use report.id in filename
+                a.download = `${(report.slug || report.id || "report")}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
             >
               Export CSV
             </button>
             <button
+              className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50"
               onClick={onClose}
-              className="rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-800"
             >
               Close
             </button>
@@ -82,58 +181,69 @@ export default function PreviewModal({ open, report, onClose }: Props) {
         </div>
 
         {/* Body */}
-        <div className="max-h-[70vh] overflow-auto px-5 py-4">
-          {loading && <div className="py-8 text-sm text-gray-500">Loading…</div>}
-          {error && <div className="py-8 text-sm text-red-600">Error: {error}</div>}
-
-          {!loading && !error && (
-            <>
-              {!hasData ? (
-                <div className="py-10 text-center text-sm text-gray-500">
-                  No data found for this report preview.
-                </div>
-              ) : (
-                <div className="overflow-auto rounded-lg border">
-                  <table className="min-w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        {columns.map((c) => (
-                          <th key={c} className="whitespace-nowrap border-b px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                            {c}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((r, idx) => (
-                        <tr key={idx} className="odd:bg-white even:bg-gray-50">
-                          {columns.map((c) => (
-                            <td key={c} className="border-b px-3 py-2 text-sm text-gray-800">
-                              {formatCell(r?.[c])}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+        <div className="max-h-[70vh] overflow-auto p-4">
+          {mode === "table" && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    {cols.map((c) => (
+                      <th key={c.key} className="border-b px-3 py-2">
+                        {c.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, idx) => (
+                    <tr
+                      key={idx}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        if (showFacsimile) {
+                          setSelectedRow(r);
+                          setMode("facsimile");
+                        }
+                      }}
+                    >
+                      {cols.map((c) => {
+                        const raw = r[c.key];
+                        const val = c.format ? c.format(raw) : raw ?? "";
+                        return (
+                          <td key={c.key} className="border-b px-3 py-2">
+                            {String(val)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!showFacsimile && (
+                <p className="mt-3 text-xs text-gray-500">
+                  (Row click facsimile is not applicable for this report.)
+                </p>
               )}
-            </>
+            </div>
+          )}
+
+          {mode === "facsimile" && selectedRow && (
+            <div className="space-y-3">
+              <button
+                className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50"
+                onClick={() => setMode("table")}
+              >
+                ← Back to list
+              </button>
+
+              {/* Render the right facsimile component */}
+              {kind === "pay" && <PayStatement data={selectedRow} />}
+              {kind === "w2" && <W2Form data={selectedRow} />}
+              {kind === "timecard" && <TimecardForm data={selectedRow} />}
+            </div>
           )}
         </div>
       </div>
     </div>
   );
-}
-
-function formatCell(v: any) {
-  if (v == null) return "";
-  if (typeof v === "object") {
-    try {
-      return JSON.stringify(v);
-    } catch {
-      return String(v);
-    }
-  }
-  return String(v);
 }
