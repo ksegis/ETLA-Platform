@@ -1,250 +1,346 @@
 // frontend/src/app/reporting/_data.ts
+// -----------------------------------------------------------------------------
+// Report registry & helpers used by the Reporting UI, PreviewModal, and APIs.
+// This file is self-contained and conservative with types to avoid build drift.
+// -----------------------------------------------------------------------------
 
-// --- Types ---------------------------------------------------------------
-export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards";
+// ----------------------------- Types -----------------------------------------
+export type GroupKey = "employee" | "checks" | "timecards" | "jobs" | "salary";
 
-export type ReportType = {
-  id: string;                 // canonical id used in routes (also slug)
-  slug: string;               // kept for backward compatibility
-  title: string;
-  description?: string;
-  group: GroupKey;
-  category?: string;
-  fields?: number | string;   // free-form display of # of fields/columns
-  approxRows?: number;        // for UI hints
-  docBased?: boolean;         // if the preview is typically a "facsimile" doc
-  procedure?: string;         // optional backend/stored-procedure name
-  columns?: { key: string; label: string }[];
-};
-
-// --- Labels --------------------------------------------------------------
 export const GROUP_LABELS: Record<GroupKey, string> = {
   employee: "Employee",
-  checks: "Pay / Checks",
+  checks: "Payroll / Pay",
+  timecards: "Timecards",
   jobs: "Jobs",
-  salary: "Compensation",
-  timecards: "Time & Labor",
+  salary: "Salary",
 };
 
-// --- Reports -------------------------------------------------------------
-// Keep ids stable; these ids are used by API routes and mock factories.
-export const REPORTS: ReportType[] = [
-  // Checks / Pay
-  {
-    id: "check-detail-history",
-    slug: "check-detail-history",
-    title: "Check Detail History",
-    group: "checks",
-    category: "Pay",
-    approxRows: 120,
-    docBased: true,
-    columns: [
-      { key: "checkNumber", label: "Check #" },
-      { key: "payDate", label: "Pay Date" },
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "department", label: "Dept" },
-      { key: "earnings", label: "Earnings" },
-      { key: "taxes", label: "Taxes" },
-      { key: "deductions", label: "Deductions" },
-      { key: "netPay", label: "Net Pay" },
-    ],
-  },
-  {
-    id: "timecard-detail-history",
-    slug: "timecard-detail-history",
-    title: "Timecard Detail History",
-    group: "timecards",
-    category: "Time & Labor",
-    approxRows: 200,
-    columns: [
-      { key: "date", label: "Date" },
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "in1", label: "In" },
-      { key: "out1", label: "Out" },
-      { key: "in2", label: "In" },
-      { key: "out2", label: "Out" },
-      { key: "hours", label: "Hours" },
-      { key: "ptoHours", label: "PTO" },
-      { key: "transferDept", label: "Transfer Dept" },
-    ],
-  },
+export type ReportKind = "table" | "pay" | "w2" | "timecard" | "docs";
 
-  // Compensation / Jobs
-  {
-    id: "salary-history",
-    slug: "salary-history",
-    title: "Salary History",
-    group: "salary",
-    category: "Compensation",
-    approxRows: 60,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "effectiveDate", label: "Effective" },
-      { key: "amount", label: "Amount" },
-      { key: "percentChange", label: "% Change" },
-      { key: "changeAmount", label: "Change $" },
-      { key: "reasonCode", label: "Reason" },
-    ],
-  },
-  {
-    id: "job-history",
-    slug: "job-history",
-    title: "Job History",
-    group: "jobs",
-    category: "Jobs",
-    approxRows: 50,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "effectiveDate", label: "Effective" },
-      { key: "jobTitle", label: "Job Title" },
-      { key: "location", label: "Location" },
-      { key: "reasonCode", label: "Reason" },
-      { key: "memo", label: "Notes" },
-    ],
-  },
-  {
-    id: "position-history",
-    slug: "position-history",
-    title: "Position History",
-    group: "jobs",
-    category: "Jobs",
-    approxRows: 45,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "effectiveDate", label: "Effective" },
-      { key: "position", label: "Position" },
-      { key: "flsa", label: "FLSA" },
-      { key: "grade", label: "Grade" },
-      { key: "supervisor", label: "Supervisor" },
-    ],
-  },
+export type ColumnDef = string | { name: string; label?: string };
 
-  // Department Analysis (summary)
-  {
-    id: "department-analysis",
-    slug: "department-analysis",
-    title: "Department Analysis",
-    group: "checks",
-    category: "Analytics",
-    approxRows: 10,
-    columns: [
-      { key: "department", label: "Department" },
-      { key: "headcount", label: "Headcount" },
-      { key: "avgHourlyRate", label: "Avg Rate" },
-      { key: "overtimeHours", label: "OT Hours" },
-      { key: "laborCost", label: "Labor Cost" },
-    ],
-  },
+export interface Report {
+  id: string;                 // unique id used in routes (e.g. /api/reports/[id])
+  slug?: string;              // used for filenames; falls back to id/title elsewhere
+  title: string;              // display name
+  group: GroupKey;            // group bucket
+  category?: string;          // subcategory label (e.g. "Demographics")
+  kind: ReportKind;           // how PreviewModal renders (table/pay/w2/timecard/docs)
+  fields?: ColumnDef[];       // columns for table-like previews/exports
+  description?: string;       // short help text in UI (optional)
 
-  // Employee status / docs / benefits etc. (kept to satisfy previous pages)
+  // Optional flags/metadata kept for backward-compat with earlier code paths:
+  approxRows?: number;        // estimated row count for preview
+  docBased?: boolean;         // true if API should return documents instead of rows
+  procedure?: string;         // name of a DB RPC/stored proc if/when used
+}
+
+// ---------------------- Demographics (new, requested) ------------------------
+const DEMOGRAPHIC_REPORTS: Report[] = [
   {
-    id: "status-history",
-    slug: "status-history",
-    title: "Status History",
+    id: "emp_master_demo",
+    slug: "employee_master_demographics",
+    title: "Employee Master Demographics",
     group: "employee",
-    approxRows: 20,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "hireDate", label: "Hire" },
-      { key: "rehireDate", label: "Rehire" },
-      { key: "leaveDate", label: "Leave" },
-      { key: "returnDate", label: "Return" },
-      { key: "termDate", label: "Term" },
-      { key: "status", label: "Status" },
+    category: "Demographics",
+    kind: "table",
+    approxRows: 500,
+    fields: [
+      "Employee ID",
+      "First Name",
+      "Last Name",
+      "Middle Initial",
+      "Preferred Name",
+      "Date of Birth",
+      "Gender",
+      "Marital Status",
+      "Social Security Number (masked)",
+      "Address (Street, City, State, Zip)",
+      "Personal Email",
+      "Personal Phone",
+      "Emergency Contact (Name, Relationship, Phone)",
+      "Hire Date",
+      "Employment Status",
+      "Termination Date",
+      "Job Title",
+      "Department",
+      "Location",
     ],
+    description:
+      "General reference for HR, managers, and audits. Includes personal and job info with masked SSN.",
   },
   {
-    id: "benefit-history",
-    slug: "benefit-history",
-    title: "Benefit History",
+    id: "eeo_1",
+    slug: "eeo_1",
+    title: "EEO-1",
     group: "employee",
-    approxRows: 40,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "plan", label: "Plan" },
-      { key: "coverage", label: "Coverage" },
-      { key: "tier", label: "Tier" },
-      { key: "electionDate", label: "Election" },
-      { key: "eeCost", label: "EE Cost" },
-      { key: "erCost", label: "ER Cost" },
+    category: "Demographics",
+    kind: "table",
+    approxRows: 500,
+    fields: [
+      "Employee ID",
+      "First Name",
+      "Last Name",
+      "Gender",
+      "Race / Ethnicity",
+      "Job Category (EEO category)",
+      "Hire Date",
+      "Location / Establishment",
+      "Employment Status",
     ],
+    description: "Equal Employment Opportunity compliance snapshot.",
   },
   {
-    id: "recruitment-history",
-    slug: "recruitment-history",
-    title: "Recruitment History",
+    id: "vets_4212",
+    slug: "vets_4212",
+    title: "VETS-4212",
     group: "employee",
-    approxRows: 12,
-    columns: [
-      { key: "requisition", label: "Requisition" },
-      { key: "candidate", label: "Candidate" },
-      { key: "stage", label: "Stage" },
-      { key: "stageDate", label: "Stage Date" },
-      { key: "resume", label: "Resume" },
-      { key: "notes", label: "Notes" },
+    category: "Demographics",
+    kind: "table",
+    approxRows: 500,
+    fields: [
+      "Employee ID",
+      "First Name",
+      "Last Name",
+      "Job Title",
+      "Department",
+      "Hire Date",
+      "Veteran Status",
+      "Location",
     ],
+    description: "Federal contractor veteran reporting.",
   },
   {
-    id: "performance-history",
-    slug: "performance-history",
-    title: "Performance History",
+    id: "benefit_eligibility",
+    slug: "benefit_eligibility_carrier_feed",
+    title: "Benefit Eligibility / Carrier Feed",
     group: "employee",
-    approxRows: 12,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "reviewDate", label: "Review Date" },
-      { key: "rating", label: "Rating" },
-      { key: "notes", label: "Notes" },
-      { key: "documentName", label: "Document" },
+    category: "Demographics",
+    kind: "table",
+    approxRows: 500,
+    fields: [
+      "Employee ID",
+      "First Name",
+      "Last Name",
+      "Date of Birth",
+      "Gender",
+      "Marital Status",
+      "Address (Street, City, State, Zip)",
+      "Hire Date",
+      "Employment Status",
+      "Benefit Eligibility Date",
+      "Dependent Info (Name, DOB, Relationship, Gender)",
+      "Coverage Level",
     ],
+    description: "Demographics for benefits and ACA compliance.",
   },
   {
-    id: "paper-records-history",
-    slug: "paper-records-history",
-    title: "Paper Records History",
+    id: "payroll_tax_demo",
+    slug: "payroll_tax_demographics",
+    title: "Payroll & Tax Demographics",
     group: "employee",
-    approxRows: 12,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "docName", label: "Document" },
-      { key: "docType", label: "Type" },
-      { key: "docDate", label: "Date" },
+    category: "Demographics",
+    kind: "table",
+    approxRows: 500,
+    fields: [
+      "Employee ID",
+      "First Name",
+      "Last Name",
+      "SSN (masked)",
+      "Address (Street, City, State, Zip)",
+      "State of Residence",
+      "Work Location State",
+      "Federal Filing Status",
+      "State Filing Status",
+      "Number of Allowances / Dependents",
+      "Direct Deposit Bank Info (masked, last 4 digits only)",
     ],
+    description: "Payroll verification and tax readiness audit.",
   },
   {
-    id: "w2-images",
-    slug: "w2-images",
-    title: "W-2 Images",
-    group: "checks",
-    approxRows: 5,
-    docBased: true,
-    columns: [
-      { key: "employeeId", label: "Emp ID" },
-      { key: "employeeName", label: "Employee" },
-      { key: "taxYear", label: "Tax Year" },
-      { key: "documentName", label: "Document" },
+    id: "turnover_demo",
+    slug: "turnover_termination_demographics",
+    title: "Turnover / Termination Demographics",
+    group: "employee",
+    category: "Demographics",
+    kind: "table",
+    approxRows: 500,
+    fields: [
+      "Employee ID",
+      "First Name",
+      "Last Name",
+      "Hire Date",
+      "Termination Date",
+      "Job Title",
+      "Department",
+      "Location",
+      "Employment Status at Exit",
+      "Termination Reason / Code",
+      "Gender",
+      "Race / Ethnicity",
     ],
+    description: "Tracks exits and trends across org units with EEOC context.",
+  },
+  {
+    id: "custom_demo_analytics",
+    slug: "custom_demographic_analytics",
+    title: "Custom Demographic Analytics",
+    group: "employee",
+    category: "Demographics",
+    kind: "table",
+    approxRows: 500,
+    fields: [
+      "Employee ID",
+      "Gender",
+      "Race / Ethnicity",
+      "Age",
+      "Tenure",
+      "Department",
+      "Location",
+      "Employment Type",
+    ],
+    description: "Planning/diversity tracking (Age & Tenure are calculated).",
   },
 ];
 
-// --- Helpers -------------------------------------------------------------
-export function getAllReports(): ReportType[] {
-  return REPORTS;
+// ----------------------- Core baseline reports (minimal) ---------------------
+// These keep other parts of the UI working and provide non-demo examples.
+const BASELINE_REPORTS: Report[] = [
+  // Checks / Payroll
+  {
+    id: "pay_register",
+    slug: "pay_register",
+    title: "Pay Register",
+    group: "checks",
+    category: "Payroll",
+    kind: "table",
+    approxRows: 200,
+    fields: [
+      "Check #",
+      "Check Date",
+      "Employee ID",
+      "Employee",
+      "Gross Pay",
+      "Taxes",
+      "Deductions",
+      "Net Pay",
+    ],
+    description: "High-level register of checks by employee.",
+  },
+  {
+    id: "pay_statements",
+    slug: "pay_statements",
+    title: "Pay Statements (Facsimile)",
+    group: "checks",
+    category: "Payroll",
+    kind: "pay",          // PreviewModal can render a facsimile
+    docBased: false,
+    approxRows: 50,
+    description: "Pay stub facsimiles for selected checks or periods.",
+  },
+  {
+    id: "w2_forms",
+    slug: "w2_forms",
+    title: "W-2 Forms (Facsimile)",
+    group: "checks",
+    category: "Year-End",
+    kind: "w2",           // PreviewModal can render a W2 form facsimile
+    docBased: true,
+    approxRows: 25,
+    description: "Year-end W-2 facsimiles for employees.",
+  },
+
+  // Timecards
+  {
+    id: "timecard_detail",
+    slug: "timecard_detail",
+    title: "Timecard Detail (Facsimile)",
+    group: "timecards",
+    category: "Time & Attendance",
+    kind: "timecard",     // PreviewModal can render a timecard-like layout
+    approxRows: 200,
+    description: "Punch-level detail per employee and pay period.",
+  },
+  {
+    id: "timecard_summary",
+    slug: "timecard_summary",
+    title: "Timecard Summary",
+    group: "timecards",
+    category: "Time & Attendance",
+    kind: "table",
+    approxRows: 200,
+    fields: [
+      "Employee ID",
+      "Employee",
+      "Pay Period Start",
+      "Pay Period End",
+      "Regular Hours",
+      "Overtime Hours",
+      "PTO Hours",
+      "Total Hours",
+    ],
+    description: "Summary of hours by category for each employee.",
+  },
+
+  // Jobs
+  {
+    id: "job_roster",
+    slug: "job_roster",
+    title: "Job Roster",
+    group: "jobs",
+    category: "Workforce",
+    kind: "table",
+    approxRows: 300,
+    fields: ["Employee ID", "Employee", "Job Title", "Department", "Location", "FLSA Status"],
+    description: "Current job, department, and FLSA status.",
+  },
+
+  // Salary
+  {
+    id: "salary_changes",
+    slug: "salary_changes",
+    title: "Salary Change History",
+    group: "salary",
+    category: "Compensation",
+    kind: "table",
+    approxRows: 300,
+    fields: [
+      "Employee ID",
+      "Employee",
+      "Effective Date",
+      "Old Rate",
+      "New Rate",
+      "Pay Frequency",
+      "Reason",
+      "Approved By",
+    ],
+    description: "Tracks compensation changes over time.",
+  },
+];
+
+// ----------------------------- Exports ---------------------------------------
+export const REPORTS: Report[] = [
+  ...DEMOGRAPHIC_REPORTS,
+  ...BASELINE_REPORTS,
+];
+
+export function getAllReports(): Report[] {
+  return REPORTS.slice();
 }
 
-export function getReportsByGroup(group: GroupKey): ReportType[] {
+export function getReportsByGroup(group: GroupKey): Report[] {
   return REPORTS.filter((r) => r.group === group);
 }
 
-export function getReportById(id: string): ReportType | undefined {
-  return REPORTS.find((r) => r.id === id || r.slug === id);
+export function getReportById(id: string): Report | undefined {
+  return REPORTS.find((r) => r.id === id);
 }
+
+// Convenience: list groups in a stable order for navigation UIs
+export const GROUPS: { key: GroupKey; label: string }[] = ([
+  "employee",
+  "checks",
+  "timecards",
+  "jobs",
+  "salary",
+] as const).map((key) => ({ key, label: GROUP_LABELS[key] }));
