@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { getMockRows, toCSV } from "@/app/reporting/_mock";
+import { getMockRows } from "@/app/reporting/_mock";
 
-export const dynamic = "force-dynamic"; // disable caching for mock export
+export const dynamic = "force-dynamic"; // don't cache mock exports
 
-// Lightweight CSV builder that can pick specific columns (optional).
-function toCSVPick(rows: any[], columns?: string[]) {
+function buildCSV(rows: any[], columns?: string[]) {
   if (!rows || rows.length === 0) return "";
 
   const headers = (columns && columns.length > 0)
@@ -27,14 +26,14 @@ export async function GET(req: Request, ctx: any) {
   const url = new URL(req.url);
   const sp = url.searchParams;
 
-  // Optional filters & options
-  const q = sp.get("q") || undefined;
-  const from = sp.get("from") || undefined;
-  const to = sp.get("to") || undefined;
+  // Optional query params for simple filtering/column picking
+  const q     = sp.get("q") || undefined;
+  const from  = sp.get("from") || undefined;
+  const to    = sp.get("to") || undefined;
   const limit = Number(sp.get("limit") || "") || undefined;
-  const cols = (sp.get("cols") || "")
+  const cols  = (sp.get("cols") || "")
     .split(",")
-    .map((s) => s.trim())
+    .map(s => s.trim())
     .filter(Boolean);
 
   const filters: Record<string, any> = {};
@@ -42,11 +41,10 @@ export async function GET(req: Request, ctx: any) {
   if (from) filters.from = from;
   if (to) filters.to = to;
 
-  // ✅ Await the mock rows
+  // ✅ Await so we get an array, not a Promise
   const rows = await getMockRows(id, filters, limit);
 
-  // If columns specified, use them; otherwise use default toCSV
-  const csv = cols.length > 0 ? toCSVPick(rows, cols) : toCSV(rows);
+  const csv = buildCSV(rows, cols);
 
   return new NextResponse(csv, {
     status: 200,

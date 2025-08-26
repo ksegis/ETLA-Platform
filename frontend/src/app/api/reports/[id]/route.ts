@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getMockRows } from "@/app/reporting/_mock";
 
-export const dynamic = "force-dynamic"; // disable caching for mock preview
+export const dynamic = "force-dynamic"; // don't cache mock previews
 
 export async function GET(req: Request, ctx: any) {
   const id = ctx?.params?.id ?? "report";
@@ -9,9 +9,9 @@ export async function GET(req: Request, ctx: any) {
   const url = new URL(req.url);
   const sp = url.searchParams;
 
-  const q = sp.get("q") || undefined;
-  const from = sp.get("from") || undefined;
-  const to = sp.get("to") || undefined;
+  const q     = sp.get("q") || undefined;
+  const from  = sp.get("from") || undefined;
+  const to    = sp.get("to") || undefined;
   const limit = Number(sp.get("limit") || "") || undefined;
 
   const filters: Record<string, any> = {};
