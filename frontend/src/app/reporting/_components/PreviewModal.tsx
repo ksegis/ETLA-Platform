@@ -1,181 +1,252 @@
 // frontend/src/app/reporting/_components/PreviewModal.tsx
 "use client";
 
-import * as React from "react";
-import type { ReportType } from "../_data";
+import React from "react";
+import FacsimileModal from "./FacsimileModal";
 
-type Props = {
-  open: boolean;
-  report: ReportType | null;
-  onClose: () => void;
+type Report = {
+  id?: string;
+  slug?: string;
+  title?: string;
+  category?: string; // "Checks", "Timecards", ...
+  fields?: Array<{ name?: string; label?: string } | string>;
 };
 
-type ApiRow = Record<string, unknown>;
-type ApiResp = { report: ReportType; rows: ApiRow[] };
+export default function PreviewModal({
+  open,
+  report,
+  rows,
+  onClose,
+  onExport,
+}: {
+  open: boolean;
+  report: Report | null;
+  rows: any[];
+  onClose: () => void;
+  onExport?: () => void;
+}) {
+  const [filter, setFilter] = React.useState("");
+  const [facsimileOpen, setFacsimileOpen] = React.useState(false);
+  const [facsimileKind, setFacsimileKind] = React.useState<"paystub" | "timecard" | "w2">("paystub");
+  const [facsimileData, setFacsimileData] = React.useState<any>(null);
 
-export default function PreviewModal({ open, report, onClose }: Props) {
-  const [loading, setLoading] = React.useState(false);
-  const [rows, setRows] = React.useState<ApiRow[]>([]);
-  const [q, setQ] = React.useState("");
+  if (!open || !report) return null;
 
-  // Fetch rows when modal opens and a report is present
-  React.useEffect(() => {
-    let abort = false;
-    async function load() {
-      if (!open || !report) return;
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/reports/${encodeURIComponent(report.id)}`, {
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: ApiResp = await res.json();
-        if (!abort) setRows(Array.isArray(data?.rows) ? data.rows : []);
-      } catch {
-        if (!abort) setRows([]);
-      } finally {
-        if (!abort) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      abort = true;
+  // headers from report.fields or from first row keys
+  const headers =
+    report?.fields?.length
+      ? report.fields.map((f: any) => f?.label ?? f?.name ?? String(f))
+      : Object.keys(rows?.[0] ?? {});
+
+  const filteredRows = filter
+    ? (rows ?? []).filter((r) =>
+        Object.values(r ?? {}).some((v) =>
+          String(v ?? "").toLowerCase().includes(filter.toLowerCase())
+        )
+      )
+    : rows ?? [];
+
+  // ---------- facsimile detection & transforms ----------
+
+  function detectFacsimile(report: Report): "paystub" | "timecard" | "w2" | null {
+    const cat = (report?.category ?? "").toLowerCase();
+    const slugish = (report?.slug ?? report?.id ?? report?.title ?? "").toLowerCase();
+
+    // W-2
+    if (slugish.includes("w-2") || slugish.includes("w2")) return "w2";
+
+    // Timecards
+    if (cat === "timecards" || slugish.includes("timecard")) return "timecard";
+
+    // Checks (default to paystub unless it's explicitly W-2)
+    if (cat === "checks" || slugish.includes("check")) return "paystub";
+
+    return null;
+  }
+
+  const kindForThisReport = detectFacsimile(report);
+
+  // Normalize a paystub-ish row into a richer object the form can use.
+  function toPaystubData(row: any) {
+    const amountSum = (arr?: any[]) => (Array.isArray(arr) ? arr.reduce((s, x) => s + (Number(x?.amount) || 0), 0) : 0);
+
+    const earningsLines = row?.earningsLines ?? row?.earnings_lines ?? [];
+    const taxLines = row?.taxLines ?? row?.tax_lines ?? [];
+    const deductionLines = row?.deductionLines ?? row?.deduction_lines ?? [];
+
+    const gross = row?.gross ?? row?.earnings ?? amountSum(earningsLines);
+    const taxesTotal = row?.taxes ?? amountSum(taxLines);
+    const deductionsTotal = row?.deductions ?? amountSum(deductionLines);
+    const net = row?.net ?? row?.netPay ?? row?.net_pay ?? (Number(gross) - Number(taxesTotal) - Number(deductionsTotal));
+
+    return {
+      // header
+      employeeName: row?.employeeName ?? row?.employee ?? row?.name,
+      empId: row?.empId ?? row?.employeeId ?? row?.emp_id,
+      checkNo: row?.checkNo ?? row?.checkNumber ?? row?.check_id ?? row?.["CHECK #"],
+      payDate: row?.payDate ?? row?.pay_date ?? row?.date,
+      payPeriod: row?.payPeriod ?? row?.period,
+      dept: row?.dept ?? row?.department,
+      location: row?.location,
+      company: row?.company ?? "Your Company",
+
+      // lines
+      earningsLines,
+      taxLines,
+      deductionLines,
+
+      // totals (safe fallback math)
+      gross,
+      taxesTotal,
+      deductionsTotal,
+      net,
+
+      // ytd (optional)
+      ytd: row?.ytd ?? {
+        gross: row?.ytd_gross,
+        taxes: row?.ytd_taxes,
+        deductions: row?.ytd_deductions,
+        net: row?.ytd_net,
+      },
     };
-  }, [open, report?.id]);
-
-  // Filter (client-side)
-  const filteredRows = React.useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return rows;
-    return rows.filter((r) => JSON.stringify(r).toLowerCase().includes(needle));
-  }, [rows, q]);
-
-  // Derive columns: prefer report.columns; otherwise from first row keys
-  const columns = React.useMemo(() => {
-    if (report?.columns?.length) return report.columns;
-    const first = filteredRows[0];
-    if (first && typeof first === "object") {
-      return Object.keys(first).map((k) => ({ key: k, label: titleize(k) }));
-    }
-    return [] as { key: string; label: string }[];
-  }, [report?.columns, filteredRows]);
-
-  function titleize(s: string) {
-    return s
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (m) => m.toUpperCase());
   }
 
-  async function handleExport() {
-    if (!report) return; // guard fixes the TS error you saw
-    try {
-      const res = await fetch(
-        `/api/reports/${encodeURIComponent(report.id)}/export`,
-        { cache: "no-store" }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${(report as any).slug || report.id}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      // no-op; you can toast here if you add a toaster
-    }
+  function openFacsimile(row: any) {
+    if (!kindForThisReport) return;
+
+    let data = row;
+    let kind = kindForThisReport;
+
+    if (kind === "paystub") data = toPaystubData(row);
+    // timecard and w2: pass row as-is; forms are tolerant via props {data|row|record}
+
+    setFacsimileKind(kind);
+    setFacsimileData(data);
+    setFacsimileOpen(true);
   }
 
-  if (!open) return null;
+  function cellValue(r: any, header: string) {
+    const k = mapHeaderToKey(rows?.[0], header);
+    return k ? r?.[k] : r?.[header];
+  }
 
+  // ---------- render ----------
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[85vh] w-[min(1100px,95vw)] overflow-hidden rounded-xl bg-white shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-5 py-3">
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold text-gray-900">
-              {report?.title ?? "Report Preview"}
-            </h2>
-            {report?.description ? (
-              <p className="truncate text-sm text-gray-500">{report.description}</p>
-            ) : null}
+    <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/40 p-6">
+      <div className="relative w-[1200px] max-w-[95vw] overflow-hidden rounded-xl bg-white shadow-2xl">
+        {/* header bar */}
+        <div className="flex items-center justify-between gap-3 border-b p-4">
+          <div className="text-lg font-semibold">
+            {report?.title ?? report?.slug ?? "Report"}
           </div>
           <div className="flex items-center gap-2">
             <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Filter…"
-              className="w-56 rounded-md border px-3 py-1.5 text-sm outline-none focus:ring"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Filter..."
+              className="h-9 w-64 rounded-md border px-3 text-sm outline-none focus:ring"
             />
-            <button
-              onClick={handleExport}
-              className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-gray-50"
-              disabled={!report || loading || columns.length === 0}
-              title={!report ? "No report selected" : "Export CSV"}
-            >
-              Export CSV
-            </button>
+            {onExport && (
+              <button
+                onClick={onExport}
+                className="h-9 rounded-md border px-3 text-sm hover:bg-gray-50"
+              >
+                Export CSV
+              </button>
+            )}
             <button
               onClick={onClose}
-              className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+              className="h-9 rounded-md border px-3 text-sm hover:bg-gray-50"
             >
               Close
             </button>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="max-h-[70vh] overflow-auto">
-          {loading ? (
-            <div className="px-5 py-8 text-sm text-gray-500">Loading…</div>
-          ) : columns.length === 0 ? (
-            <div className="px-5 py-8 text-sm text-gray-500">
-              No columns found for this report.
-            </div>
-          ) : filteredRows.length === 0 ? (
-            <div className="px-5 py-8 text-sm text-gray-500">No data.</div>
-          ) : (
-            <table className="min-w-full border-t">
-              <thead className="sticky top-0 bg-white">
-                <tr>
-                  {columns.map((c) => (
-                    <th
-                      key={c.key}
-                      className="whitespace-nowrap border-b px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600"
-                    >
-                      {c.label}
-                    </th>
+        {/* data table */}
+        <div className="max-h-[70vh] overflow-auto p-2">
+          <table className="w-full text-left text-sm">
+            <thead className="sticky top-0 bg-white">
+              <tr className="border-b text-gray-600">
+                {/* optional "View" column if facsimile is available */}
+                {kindForThisReport && <th className="w-16 py-2 pr-3">View</th>}
+                {headers.map((h: string, i: number) => (
+                  <th key={i} className="py-2 pr-3">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((r: any, idx: number) => (
+                <tr
+                  key={idx}
+                  className={`border-b last:border-0 ${
+                    kindForThisReport ? "cursor-pointer hover:bg-gray-50" : ""
+                  }`}
+                  onClick={() => kindForThisReport && openFacsimile(r)}
+                >
+                  {kindForThisReport && (
+                    <td className="py-2 pr-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="rounded border px-2 py-1 text-xs hover:bg-gray-50"
+                        onClick={() => openFacsimile(r)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  )}
+                  {headers.map((h: string, i: number) => (
+                    <td key={i} className="py-2 pr-3">
+                      {String(cellValue(r, h) ?? "")}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {filteredRows.map((row, idx) => (
-                  <tr key={idx} className="odd:bg-gray-50">
-                    {columns.map((c) => (
-                      <td key={c.key} className="px-3 py-2 text-sm text-gray-800">
-                        {formatCell(row[c.key])}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+              ))}
+              {!filteredRows.length && (
+                <tr>
+                  <td className="py-6 text-center text-gray-500" colSpan={(headers.length + (kindForThisReport ? 1 : 0))}>
+                    No rows
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* facsimile viewer */}
+      {facsimileOpen && (
+        <FacsimileModal
+          open={facsimileOpen}
+          kind={facsimileKind}
+          data={facsimileData}
+          title={
+            facsimileKind === "paystub"
+              ? "Pay Statement"
+              : facsimileKind === "timecard"
+              ? "Timecard"
+              : "W-2"
+          }
+          onClose={() => setFacsimileOpen(false)}
+        />
+      )}
     </div>
   );
 }
 
-function formatCell(v: unknown) {
-  if (v == null) return "";
-  if (typeof v === "number") return Number.isFinite(v) ? v.toLocaleString() : String(v);
-  return String(v);
+// Fuzzy header->key resolver (handles labels that differ from object keys)
+function mapHeaderToKey(sample: any, header: string) {
+  if (!sample) return header;
+  const keys = Object.keys(sample);
+  const lower = header.toLowerCase();
+  return (
+    keys.find((k) => k.toLowerCase() === lower) ??
+    keys.find(
+      (k) =>
+        k.replace(/[\s_]+/g, "").toLowerCase() ===
+        lower.replace(/[\s_]+/g, "")
+    ) ??
+    header
+  );
 }
