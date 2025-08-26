@@ -1,252 +1,139 @@
-// frontend/src/app/reporting/_components/PreviewModal.tsx
 "use client";
 
-import React from "react";
-import FacsimileModal from "./FacsimileModal";
+import * as React from "react";
+import type { ReportType } from "../_data";
 
-type Report = {
-  id?: string;
-  slug?: string;
-  title?: string;
-  category?: string; // "Checks", "Timecards", ...
-  fields?: Array<{ name?: string; label?: string } | string>;
+type Props = {
+  open: boolean;
+  report: ReportType | null;
+  onClose: () => void;
 };
 
-export default function PreviewModal({
-  open,
-  report,
-  rows,
-  onClose,
-  onExport,
-}: {
-  open: boolean;
-  report: Report | null;
-  rows: any[];
-  onClose: () => void;
-  onExport?: () => void;
-}) {
-  const [filter, setFilter] = React.useState("");
-  const [facsimileOpen, setFacsimileOpen] = React.useState(false);
-  const [facsimileKind, setFacsimileKind] = React.useState<"paystub" | "timecard" | "w2">("paystub");
-  const [facsimileData, setFacsimileData] = React.useState<any>(null);
+export default function PreviewModal({ open, report, onClose }: Props) {
+  const [rows, setRows] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let abort = false;
+
+    async function load() {
+      if (!open || !report?.id) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/reports/${encodeURIComponent(report.id)}?limit=50`, {
+          cache: "no-store",
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (!abort) setRows(Array.isArray(json?.rows) ? json.rows : []);
+      } catch (e: any) {
+        if (!abort) setError(e?.message || "Failed to load preview.");
+      } finally {
+        if (!abort) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      abort = true;
+    };
+  }, [open, report?.id]);
+
+  const handleExport = React.useCallback(() => {
+    if (!report?.id) return;
+    const url = `/api/reports/${encodeURIComponent(report.id)}/export`;
+    // trigger download in a new navigation (keeps modal open)
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${report.id}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }, [report?.id]);
 
   if (!open || !report) return null;
 
-  // headers from report.fields or from first row keys
-  const headers =
-    report?.fields?.length
-      ? report.fields.map((f: any) => f?.label ?? f?.name ?? String(f))
-      : Object.keys(rows?.[0] ?? {});
+  const title = report.title || report.id || "Report";
+  const hasData = rows && rows.length > 0;
+  const columns = hasData ? Object.keys(rows[0]) : [];
 
-  const filteredRows = filter
-    ? (rows ?? []).filter((r) =>
-        Object.values(r ?? {}).some((v) =>
-          String(v ?? "").toLowerCase().includes(filter.toLowerCase())
-        )
-      )
-    : rows ?? [];
-
-  // ---------- facsimile detection & transforms ----------
-
-  function detectFacsimile(report: Report): "paystub" | "timecard" | "w2" | null {
-    const cat = (report?.category ?? "").toLowerCase();
-    const slugish = (report?.slug ?? report?.id ?? report?.title ?? "").toLowerCase();
-
-    // W-2
-    if (slugish.includes("w-2") || slugish.includes("w2")) return "w2";
-
-    // Timecards
-    if (cat === "timecards" || slugish.includes("timecard")) return "timecard";
-
-    // Checks (default to paystub unless it's explicitly W-2)
-    if (cat === "checks" || slugish.includes("check")) return "paystub";
-
-    return null;
-  }
-
-  const kindForThisReport = detectFacsimile(report);
-
-  // Normalize a paystub-ish row into a richer object the form can use.
-  function toPaystubData(row: any) {
-    const amountSum = (arr?: any[]) => (Array.isArray(arr) ? arr.reduce((s, x) => s + (Number(x?.amount) || 0), 0) : 0);
-
-    const earningsLines = row?.earningsLines ?? row?.earnings_lines ?? [];
-    const taxLines = row?.taxLines ?? row?.tax_lines ?? [];
-    const deductionLines = row?.deductionLines ?? row?.deduction_lines ?? [];
-
-    const gross = row?.gross ?? row?.earnings ?? amountSum(earningsLines);
-    const taxesTotal = row?.taxes ?? amountSum(taxLines);
-    const deductionsTotal = row?.deductions ?? amountSum(deductionLines);
-    const net = row?.net ?? row?.netPay ?? row?.net_pay ?? (Number(gross) - Number(taxesTotal) - Number(deductionsTotal));
-
-    return {
-      // header
-      employeeName: row?.employeeName ?? row?.employee ?? row?.name,
-      empId: row?.empId ?? row?.employeeId ?? row?.emp_id,
-      checkNo: row?.checkNo ?? row?.checkNumber ?? row?.check_id ?? row?.["CHECK #"],
-      payDate: row?.payDate ?? row?.pay_date ?? row?.date,
-      payPeriod: row?.payPeriod ?? row?.period,
-      dept: row?.dept ?? row?.department,
-      location: row?.location,
-      company: row?.company ?? "Your Company",
-
-      // lines
-      earningsLines,
-      taxLines,
-      deductionLines,
-
-      // totals (safe fallback math)
-      gross,
-      taxesTotal,
-      deductionsTotal,
-      net,
-
-      // ytd (optional)
-      ytd: row?.ytd ?? {
-        gross: row?.ytd_gross,
-        taxes: row?.ytd_taxes,
-        deductions: row?.ytd_deductions,
-        net: row?.ytd_net,
-      },
-    };
-  }
-
-  function openFacsimile(row: any) {
-    if (!kindForThisReport) return;
-
-    let data = row;
-    let kind = kindForThisReport;
-
-    if (kind === "paystub") data = toPaystubData(row);
-    // timecard and w2: pass row as-is; forms are tolerant via props {data|row|record}
-
-    setFacsimileKind(kind);
-    setFacsimileData(data);
-    setFacsimileOpen(true);
-  }
-
-  function cellValue(r: any, header: string) {
-    const k = mapHeaderToKey(rows?.[0], header);
-    return k ? r?.[k] : r?.[header];
-  }
-
-  // ---------- render ----------
   return (
-    <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/40 p-6">
-      <div className="relative w-[1200px] max-w-[95vw] overflow-hidden rounded-xl bg-white shadow-2xl">
-        {/* header bar */}
-        <div className="flex items-center justify-between gap-3 border-b p-4">
-          <div className="text-lg font-semibold">
-            {report?.title ?? report?.slug ?? "Report"}
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="mx-4 w-full max-w-5xl rounded-xl bg-white shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b px-5 py-3">
+          <h2 className="text-lg font-semibold text-gray-900">{title} — Preview</h2>
           <div className="flex items-center gap-2">
-            <input
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Filter..."
-              className="h-9 w-64 rounded-md border px-3 text-sm outline-none focus:ring"
-            />
-            {onExport && (
-              <button
-                onClick={onExport}
-                className="h-9 rounded-md border px-3 text-sm hover:bg-gray-50"
-              >
-                Export CSV
-              </button>
-            )}
+            <button
+              onClick={handleExport}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Export CSV
+            </button>
             <button
               onClick={onClose}
-              className="h-9 rounded-md border px-3 text-sm hover:bg-gray-50"
+              className="rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-800"
             >
               Close
             </button>
           </div>
         </div>
 
-        {/* data table */}
-        <div className="max-h-[70vh] overflow-auto p-2">
-          <table className="w-full text-left text-sm">
-            <thead className="sticky top-0 bg-white">
-              <tr className="border-b text-gray-600">
-                {/* optional "View" column if facsimile is available */}
-                {kindForThisReport && <th className="w-16 py-2 pr-3">View</th>}
-                {headers.map((h: string, i: number) => (
-                  <th key={i} className="py-2 pr-3">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.map((r: any, idx: number) => (
-                <tr
-                  key={idx}
-                  className={`border-b last:border-0 ${
-                    kindForThisReport ? "cursor-pointer hover:bg-gray-50" : ""
-                  }`}
-                  onClick={() => kindForThisReport && openFacsimile(r)}
-                >
-                  {kindForThisReport && (
-                    <td className="py-2 pr-3" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="rounded border px-2 py-1 text-xs hover:bg-gray-50"
-                        onClick={() => openFacsimile(r)}
-                      >
-                        View
-                      </button>
-                    </td>
-                  )}
-                  {headers.map((h: string, i: number) => (
-                    <td key={i} className="py-2 pr-3">
-                      {String(cellValue(r, h) ?? "")}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-              {!filteredRows.length && (
-                <tr>
-                  <td className="py-6 text-center text-gray-500" colSpan={(headers.length + (kindForThisReport ? 1 : 0))}>
-                    No rows
-                  </td>
-                </tr>
+        {/* Body */}
+        <div className="max-h-[70vh] overflow-auto px-5 py-4">
+          {loading && <div className="py-8 text-sm text-gray-500">Loading…</div>}
+          {error && <div className="py-8 text-sm text-red-600">Error: {error}</div>}
+
+          {!loading && !error && (
+            <>
+              {!hasData ? (
+                <div className="py-10 text-center text-sm text-gray-500">
+                  No data found for this report preview.
+                </div>
+              ) : (
+                <div className="overflow-auto rounded-lg border">
+                  <table className="min-w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        {columns.map((c) => (
+                          <th key={c} className="whitespace-nowrap border-b px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                            {c}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((r, idx) => (
+                        <tr key={idx} className="odd:bg-white even:bg-gray-50">
+                          {columns.map((c) => (
+                            <td key={c} className="border-b px-3 py-2 text-sm text-gray-800">
+                              {formatCell(r?.[c])}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </tbody>
-          </table>
+            </>
+          )}
         </div>
       </div>
-
-      {/* facsimile viewer */}
-      {facsimileOpen && (
-        <FacsimileModal
-          open={facsimileOpen}
-          kind={facsimileKind}
-          data={facsimileData}
-          title={
-            facsimileKind === "paystub"
-              ? "Pay Statement"
-              : facsimileKind === "timecard"
-              ? "Timecard"
-              : "W-2"
-          }
-          onClose={() => setFacsimileOpen(false)}
-        />
-      )}
     </div>
   );
 }
 
-// Fuzzy header->key resolver (handles labels that differ from object keys)
-function mapHeaderToKey(sample: any, header: string) {
-  if (!sample) return header;
-  const keys = Object.keys(sample);
-  const lower = header.toLowerCase();
-  return (
-    keys.find((k) => k.toLowerCase() === lower) ??
-    keys.find(
-      (k) =>
-        k.replace(/[\s_]+/g, "").toLowerCase() ===
-        lower.replace(/[\s_]+/g, "")
-    ) ??
-    header
-  );
+function formatCell(v: any) {
+  if (v == null) return "";
+  if (typeof v === "object") {
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return String(v);
+    }
+  }
+  return String(v);
 }
