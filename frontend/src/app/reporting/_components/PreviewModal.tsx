@@ -1,22 +1,13 @@
 // frontend/src/app/reporting/_components/PreviewModal.tsx
 "use client";
 
-import * as React from "react";
+import React from "react";
+import { X, Filter } from "lucide-react";
 import type { ReportType } from "../_data";
-import { X, Download } from "lucide-react";
-
-/** Very light slugify for filenames */
-function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-type ApiResponse =
-  | { columns?: string[]; rows: any[] }
-  | { data?: { columns?: string[]; rows: any[] } }
-  | any;
+import { getMockRows } from "../_data";
+import PayStatement from "./forms/PayStatement";
+import W2Form from "./forms/W2Form";
+import TimecardForm from "./forms/TimecardForm";
 
 type Props = {
   open: boolean;
@@ -25,277 +16,159 @@ type Props = {
 };
 
 export default function PreviewModal({ open, report, onClose }: Props) {
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [filters, setFilters] = React.useState<Record<string, any>>({});
   const [rows, setRows] = React.useState<any[]>([]);
-  const [columns, setColumns] = React.useState<string[]>([]);
+  const [selected, setSelected] = React.useState<any | null>(null);
 
-  // Filters
-  const [q, setQ] = React.useState("");
-  const [start, setStart] = React.useState<string>("");
-  const [end, setEnd] = React.useState<string>("");
-
+  // load rows whenever report or filters change
   React.useEffect(() => {
     if (!open) return;
-    let cancelled = false;
-
-    async function fetchData() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/reports/${report.id}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json: ApiResponse = await res.json();
-
-        // Normalize shapes: accept {columns, rows} or {data:{columns,rows}} or array
-        const payload =
-          (json?.data && (json.data as any)) ||
-          (Array.isArray(json) ? { rows: json } : json);
-
-        const r: any[] = payload?.rows ?? [];
-        const c: string[] =
-          payload?.columns ??
-          (r.length ? Object.keys(r[0]) : []);
-
-        if (!cancelled) {
-          setRows(r);
-          setColumns(c);
-        }
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message ?? "Failed to load data");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchData();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, report.id]);
-
-  // Generic date accessor — try common date-like fields
-  function rowDate(r: any): Date | null {
-    const candidates = [
-      "pay_date",
-      "payDate",
-      "date",
-      "check_date",
-      "checkDate",
-      "period_end",
-      "periodEnd",
-    ];
-    for (const k of candidates) {
-      if (r?.[k]) {
-        const d = new Date(r[k]);
-        if (!Number.isNaN(d.valueOf())) return d;
-      }
-    }
-    return null;
-  }
-
-  const filtered = React.useMemo(() => {
-    let out = rows;
-
-    if (q.trim()) {
-      const needle = q.toLowerCase();
-      out = out.filter((r) =>
-        Object.values(r).some((v) =>
-          String(v ?? "").toLowerCase().includes(needle)
-        )
-      );
-    }
-
-    if (start) {
-      const s = new Date(start);
-      out = out.filter((r) => {
-        const d = rowDate(r);
-        return !d || d >= s;
-      });
-    }
-
-    if (end) {
-      // include end-of-day
-      const eod = new Date(end);
-      eod.setHours(23, 59, 59, 999);
-      out = out.filter((r) => {
-        const d = rowDate(r);
-        return !d || d <= eod;
-      });
-    }
-
-    return out;
-  }, [rows, q, start, end]);
-
-  function exportCSV() {
-    if (!columns.length) return;
-
-    const header = columns.join(",");
-    const lines = filtered.map((r) =>
-      columns
-        .map((c) => {
-          const val = r?.[c];
-          // CSV-escape
-          const s = String(val ?? "");
-          const needsQuote = /[",\n]/.test(s);
-          const quoted = `"${s.replace(/"/g, '""')}"`;
-          return needsQuote ? quoted : s;
-        })
-        .join(",")
-    );
-    const csv = [header, ...lines].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-
-    const name = slugify(report.title || `report-${report.id}`) || "report";
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${name}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+    const r = getMockRows(report.slug, filters);
+    setRows(r);
+    // auto-select first row for fast preview
+    setSelected(r?.[0] ?? null);
+  }, [open, report, filters]);
 
   if (!open) return null;
 
+  const isFacsimile = report.kind === "paystub" || report.kind === "w2" || report.kind === "timecard";
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Report preview"
-    >
-      <div className="relative mt-8 w-[95vw] max-w-6xl rounded-xl bg-white shadow-xl ring-1 ring-black/5">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/50 p-4 sm:p-6">
+      <div className="relative grid w-full max-w-[1400px] grid-cols-12 gap-4 rounded-xl bg-white p-4 shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
+        <div className="col-span-12 flex items-center justify-between border-b pb-2">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">
-              {report.title}
-            </h2>
-            {report.description ? (
-              <p className="mt-0.5 text-sm text-gray-600">
-                {report.description}
-              </p>
-            ) : null}
+            <div className="text-sm font-semibold uppercase tracking-wide text-gray-600">Preview</div>
+            <div className="text-lg font-semibold text-gray-900">{report.title}</div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={exportCSV}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </button>
-            <button
-              onClick={onClose}
-              className="rounded-md p-2 text-gray-500 hover:bg-gray-100"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <button
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Filters */}
-        <div className="border-b px-4 pb-3 pt-3 sm:px-6">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="flex items-center">
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search name, memo, amount…"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+        <div className="col-span-12">
+          <div className="mb-2 flex flex-wrap items-end gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+              <Filter className="h-4 w-4" /> Filters
             </div>
-            <div className="flex items-center gap-2">
-              <label className="w-24 text-sm text-gray-600">Start date</label>
+
+            {/* Common text search */}
+            <label className="ml-2 text-xs text-gray-600">
+              Search
               <input
-                type="date"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
+                placeholder="Employee name…"
+                value={filters.q ?? ""}
+                onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
               />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="w-24 text-sm text-gray-600">End date</label>
-              <input
-                type="date"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            </label>
+
+            {/* Date ranges for pay/timecard */}
+            {(report.kind === "paystub" || report.kind === "timecard") && (
+              <>
+                <label className="text-xs text-gray-600">
+                  From
+                  <input
+                    type="date"
+                    className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
+                    value={filters.from ?? ""}
+                    onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
+                  />
+                </label>
+                <label className="text-xs text-gray-600">
+                  To
+                  <input
+                    type="date"
+                    className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
+                    value={filters.to ?? ""}
+                    onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
+                  />
+                </label>
+              </>
+            )}
+
+            {/* Year for W2 */}
+            {report.kind === "w2" && (
+              <label className="text-xs text-gray-600">
+                Year
+                <select
+                  className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
+                  value={filters.year ?? ""}
+                  onChange={(e) => setFilters((f) => ({ ...f, year: e.target.value ? Number(e.target.value) : undefined }))}
+                >
+                  <option value="">All</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                </select>
+              </label>
+            )}
           </div>
         </div>
 
-        {/* Body */}
-        <div className="max-h-[70vh] overflow-auto px-4 py-3 sm:px-6">
-          {loading ? (
-            <div className="py-12 text-center text-sm text-gray-600">
-              Loading…
-            </div>
-          ) : error ? (
-            <div className="py-12 text-center text-sm text-red-600">
-              {error}
-            </div>
-          ) : !filtered.length ? (
-            <div className="py-12 text-center text-sm text-gray-500">
-              No rows match your filters.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-separate border-spacing-0">
-                <thead className="sticky top-0 z-10 bg-white">
+        {/* List + Facsimile */}
+        <div className="col-span-12 grid grid-cols-12 gap-4">
+          <div className="col-span-4">
+            <div className="overflow-hidden rounded-lg border">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 text-left text-gray-600">
                   <tr>
-                    {columns.map((c) => (
-                      <th
-                        key={c}
-                        className="border-b border-gray-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600"
-                      >
-                        {c}
-                      </th>
-                    ))}
+                    <th className="px-3 py-2">Employee</th>
+                    <th className="px-3 py-2 text-right">{report.kind === "w2" ? "Year" : "Date"}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((r, i) => (
-                    <tr
-                      key={i}
-                      className="odd:bg-gray-50/50 hover:bg-indigo-50"
-                    >
-                      {columns.map((c) => (
-                        <td
-                          key={c}
-                          className="whitespace-nowrap border-b border-gray-100 px-3 py-2 text-sm text-gray-800"
-                        >
-                          {formatCell(r[c])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {rows.map((r, i) => {
+                    const key = report.kind === "w2" ? `${r.employeeId}-${r.year}` : `${r.employeeId}-${r.payDate ?? r.periodEnd}`;
+                    const right = report.kind === "w2" ? r.year : (r.payDate ?? r.periodEnd);
+                    const active = selected && key === (report.kind === "w2"
+                      ? `${selected.employeeId}-${selected.year}`
+                      : `${selected.employeeId}-${selected.payDate ?? selected.periodEnd}`);
+                    return (
+                      <tr
+                        key={key + i}
+                        className={`cursor-pointer ${active ? "bg-indigo-50" : i % 2 ? "bg-white" : "bg-gray-50/40"}`}
+                        onClick={() => setSelected(r)}
+                      >
+                        <td className="px-3 py-2">{r.employeeName}</td>
+                        <td className="px-3 py-2 text-right">{right}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-          )}
+            <div className="mt-2 text-xs text-gray-500">{rows.length} result(s)</div>
+          </div>
+
+          <div className="col-span-8">
+            {!isFacsimile && (
+              <div className="rounded-lg border border-dashed p-6 text-sm text-gray-600">
+                This report renders as a data table, not a form facsimile.
+              </div>
+            )}
+
+            {isFacsimile && !selected && (
+              <div className="rounded-lg border border-dashed p-6 text-sm text-gray-600">
+                Select a row to preview the form.
+              </div>
+            )}
+
+            {isFacsimile && selected && (
+              <>
+                {report.kind === "paystub" && <PayStatement row={selected} />}
+                {report.kind === "w2" && <W2Form row={selected} />}
+                {report.kind === "timecard" && <TimecardForm row={selected} />}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
-}
-
-function formatCell(v: any) {
-  if (v == null) return "";
-  // numbers: show 2 decimals if looks like currency
-  if (typeof v === "number") {
-    return Number.isInteger(v) ? v : v.toFixed(2);
-  }
-  // dates: pretty print if parseable
-  const maybe = new Date(v);
-  if (typeof v === "string" && !Number.isNaN(maybe.valueOf()) && /[-/]/.test(v)) {
-    return maybe.toLocaleDateString();
-  }
-  return String(v);
 }
