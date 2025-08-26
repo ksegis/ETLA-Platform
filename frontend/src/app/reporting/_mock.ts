@@ -168,7 +168,7 @@ function genW2Docs(limit = 2100): Dict[] {
       year: years[i % years.length],
       empId,
       employee,
-      filename: `W2_${employee.replaceAll(" ", "_")}_${years[i % years.length]}.pdf`,
+      filename: `W2_${employee.split(" ").join("_")}_${years[i % years.length]}.pdf`,
       sizeKB: rndInt(120, 320),
       url: "#",
     };
