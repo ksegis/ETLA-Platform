@@ -1,72 +1,79 @@
-// frontend/src/app/reporting/_components/forms/TimecardForm.tsx
 "use client";
+import * as React from "react";
 
-import React from "react";
+function num(v: any, fallback = 0): number {
+  if (v === null || v === undefined) return fallback;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  const s = String(v).replace(/[^0-9.-]/g, "");
+  const n = Number.parseFloat(s);
+  return Number.isFinite(n) ? n : fallback;
+}
 
-export default function TimecardForm({ row }: { row: any }) {
-  if (!row) return null;
+function pick<T = any>(row: any, keys: string[], fallback?: T): T {
+  for (const k of keys) {
+    const v = row?.[k];
+    if (v !== undefined && v !== null) return v as T;
+  }
+  return fallback as T;
+}
+
+type Props = { row: any };
+
+export default function TimecardForm({ row }: Props) {
+  const employee = pick<string>(row, ["employee", "employeeName", "name"], "");
+  const period = pick<string>(row, ["period", "periodLabel", "dateRange"], "");
+  const entries: Array<any> = (Array.isArray(row?.entries) && row.entries) || (Array.isArray(row?.lines) && row.lines) || [];
+
+  const totalHrs = entries.reduce((acc, e) => acc + num(pick(e, ["hours", "hrs"], 0)), 0);
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] rounded-xl border border-gray-300 bg-white p-6 shadow-sm">
-      <div className="mb-3 flex items-baseline justify-between">
+    <div className="mx-auto w-full max-w-[900px] rounded-md border bg-white p-5 shadow-sm">
+      <div className="mb-3 text-lg font-semibold">Timecard (Facsimile)</div>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <div className="text-lg font-semibold text-gray-900">Approved Timecard</div>
-          <div className="text-sm text-gray-700">
-            {row.employeeName} • {row.employeeId}
-          </div>
+          <div className="text-xs text-gray-500">Employee</div>
+          <div className="font-medium">{employee}</div>
         </div>
-        <div className="text-sm text-gray-700">
-          Period: <span className="font-medium">{row.periodStart} – {row.periodEnd}</span>
+        <div className="sm:text-right">
+          <div className="text-xs text-gray-500">Period</div>
+          <div className="font-medium">{period}</div>
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-4 gap-4">
-        <Summary label="Regular" value={row.totals?.reg ?? 0} />
-        <Summary label="Overtime" value={row.totals?.ot ?? 0} />
-        <Summary label="PTO" value={row.totals?.pto ?? 0} />
-        <Summary label="Total" value={(row.totals?.reg ?? 0) + (row.totals?.ot ?? 0) + (row.totals?.pto ?? 0)} highlight />
-      </div>
-
-      <div className="overflow-hidden rounded-lg border">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-left text-gray-600">
+      <div className="overflow-x-auto rounded-md border">
+        <table className="min-w-full border-separate border-spacing-0 text-sm">
+          <thead className="bg-gray-50 text-gray-700">
             <tr>
-              <th className="px-3 py-2">Date</th>
-              <th className="px-3 py-2">In</th>
-              <th className="px-3 py-2">Out</th>
-              <th className="px-3 py-2">Hours</th>
-              <th className="px-3 py-2">Code</th>
-              <th className="px-3 py-2">Department</th>
+              <th className="border-b px-3 py-2 text-left">Date</th>
+              <th className="border-b px-3 py-2 text-left">Project / Task</th>
+              <th className="border-b px-3 py-2 text-right">Hours</th>
             </tr>
           </thead>
           <tbody>
-            {row.punches?.map((p: any, i: number) => (
-              <tr key={i} className={i % 2 ? "bg-white" : "bg-gray-50/50"}>
-                <td className="px-3 py-2">{p.date}</td>
-                <td className="px-3 py-2">{p.in}</td>
-                <td className="px-3 py-2">{p.out}</td>
-                <td className="px-3 py-2">{p.hours}</td>
-                <td className="px-3 py-2">{p.code ?? "REG"}</td>
-                <td className="px-3 py-2">{p.dept ?? "—"}</td>
+            {entries.length === 0 && (
+              <tr>
+                <td className="px-3 py-3 text-center text-gray-500" colSpan={3}>
+                  No time entries
+                </td>
+              </tr>
+            )}
+            {entries.map((e, i) => (
+              <tr key={i} className="odd:bg-white even:bg-gray-50">
+                <td className="border-b px-3 py-2">{pick(e, ["date", "workDate"], "")}</td>
+                <td className="border-b px-3 py-2">{pick(e, ["project", "task", "job"], "")}</td>
+                <td className="border-b px-3 py-2 text-right">{num(pick(e, ["hours", "hrs"], 0)).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr>
+              <td className="px-3 py-2 font-medium" colSpan={2}>
+                Total
+              </td>
+              <td className="px-3 py-2 text-right font-semibold">{totalHrs.toLocaleString()}</td>
+            </tr>
+          </tfoot>
         </table>
-      </div>
-
-      <div className="mt-3 text-xs text-gray-500">
-        Approver: Supervisor on file • Source: Time Import • Final status: Approved
-      </div>
-    </div>
-  );
-}
-
-function Summary({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
-  return (
-    <div className={`rounded-lg border p-3 ${highlight ? "border-indigo-300 bg-indigo-50" : "border-gray-200 bg-gray-50"}`}>
-      <div className="text-xs font-semibold uppercase text-gray-600">{label}</div>
-      <div className={`mt-1 text-lg font-semibold ${highlight ? "text-indigo-800" : "text-gray-900"}`}>
-        {typeof value === "number" ? value.toFixed(2) : value}
       </div>
     </div>
   );
