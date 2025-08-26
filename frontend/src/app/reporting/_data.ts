@@ -1,179 +1,250 @@
 // frontend/src/app/reporting/_data.ts
 
-// Shared types
+// --- Types ---------------------------------------------------------------
 export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards";
 
 export type ReportType = {
-  id: string;            // unique id used in URLs and API routes
-  title: string;         // display name
-  group: GroupKey;       // left-nav group
+  id: string;                 // canonical id used in routes (also slug)
+  slug: string;               // kept for backward compatibility
+  title: string;
   description?: string;
+  group: GroupKey;
   category?: string;
-  fields?: string;       // short “columns” blurb for the All Reports table
-  approxRows?: string | number;
-  slug?: string;         // optional alias for file names, etc.
-  procedure?: string;    // optional server RPC name (when you wire Supabase later)
-  docBased?: boolean;    // true = returns documents (e.g., W2 PDFs)
+  fields?: number | string;   // free-form display of # of fields/columns
+  approxRows?: number;        // for UI hints
+  docBased?: boolean;         // if the preview is typically a "facsimile" doc
+  procedure?: string;         // optional backend/stored-procedure name
+  columns?: { key: string; label: string }[];
 };
 
-// Left-nav labels
+// --- Labels --------------------------------------------------------------
 export const GROUP_LABELS: Record<GroupKey, string> = {
   employee: "Employee",
-  checks: "Checks",
+  checks: "Pay / Checks",
   jobs: "Jobs",
-  salary: "Salary",
-  timecards: "Timecards",
+  salary: "Compensation",
+  timecards: "Time & Labor",
 };
 
-// Canonical list of reports (keep ids stable!)
+// --- Reports -------------------------------------------------------------
+// Keep ids stable; these ids are used by API routes and mock factories.
 export const REPORTS: ReportType[] = [
   // Checks / Pay
   {
     id: "check-detail-history",
-    slug: "check_detail_history",
+    slug: "check-detail-history",
     title: "Check Detail History",
     group: "checks",
-    category: "Payroll",
-    fields:
-      "Check #, Pay Date, Pay Period, Gross, Taxes, Deductions, Net, Memo",
-    approxRows: "20–2,000",
-    description:
-      "Gross-to-net detail per paycheck including taxes, deductions, earnings, memos, pay date/period, and identifiers.",
+    category: "Pay",
+    approxRows: 120,
+    docBased: true,
+    columns: [
+      { key: "checkNumber", label: "Check #" },
+      { key: "payDate", label: "Pay Date" },
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "department", label: "Dept" },
+      { key: "earnings", label: "Earnings" },
+      { key: "taxes", label: "Taxes" },
+      { key: "deductions", label: "Deductions" },
+      { key: "netPay", label: "Net Pay" },
+    ],
   },
-
-  // Time
   {
     id: "timecard-detail-history",
-    slug: "timecard_detail_history",
-    title: "Time Card Detail History",
+    slug: "timecard-detail-history",
+    title: "Timecard Detail History",
     group: "timecards",
-    category: "Time & Attendance",
-    fields: "In/Out Punches, Transfers, PTO, Exceptions, Approvals",
-    approxRows: "20–10,000",
-    description:
-      "All punches, department/job transfers, PTO, and audit trail per timecard.",
+    category: "Time & Labor",
+    approxRows: 200,
+    columns: [
+      { key: "date", label: "Date" },
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "in1", label: "In" },
+      { key: "out1", label: "Out" },
+      { key: "in2", label: "In" },
+      { key: "out2", label: "Out" },
+      { key: "hours", label: "Hours" },
+      { key: "ptoHours", label: "PTO" },
+      { key: "transferDept", label: "Transfer Dept" },
+    ],
   },
 
-  // Salary / Comp
+  // Compensation / Jobs
   {
     id: "salary-history",
-    slug: "salary_history",
+    slug: "salary-history",
     title: "Salary History",
     group: "salary",
     category: "Compensation",
-    fields: "Effective Date, Amount, % Change, Reason, Memo",
-    approxRows: "10–500",
-    description:
-      "Compensation change history including effective dates, amounts, percentages, reasons, and memos.",
+    approxRows: 60,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "effectiveDate", label: "Effective" },
+      { key: "amount", label: "Amount" },
+      { key: "percentChange", label: "% Change" },
+      { key: "changeAmount", label: "Change $" },
+      { key: "reasonCode", label: "Reason" },
+    ],
   },
-
-  // Jobs / Positions
   {
     id: "job-history",
-    slug: "job_history",
+    slug: "job-history",
     title: "Job History",
     group: "jobs",
-    category: "Org",
-    fields: "Effective Date, Job Title, Location, Reason, Memo",
-    approxRows: "10–500",
-    description: "Historical job title changes with reasons and notes.",
+    category: "Jobs",
+    approxRows: 50,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "effectiveDate", label: "Effective" },
+      { key: "jobTitle", label: "Job Title" },
+      { key: "location", label: "Location" },
+      { key: "reasonCode", label: "Reason" },
+      { key: "memo", label: "Notes" },
+    ],
   },
   {
     id: "position-history",
-    slug: "position_history",
+    slug: "position-history",
     title: "Position History",
     group: "jobs",
-    category: "Org",
-    fields: "Effective Date, Position, FLSA, Grade, Supervisor",
-    approxRows: "10–500",
-    description: "Position assignments and changes over time.",
-  },
-  {
-    id: "department-analysis",
-    slug: "department_analysis",
-    title: "Department Analysis",
-    group: "jobs",
-    category: "Analytics",
-    fields: "Dept, Headcount, Avg Rate, OT, Labor Cost",
-    approxRows: "Summary",
-    description: "Departmental labor insights (headcount, pay, OT, cost).",
+    category: "Jobs",
+    approxRows: 45,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "effectiveDate", label: "Effective" },
+      { key: "position", label: "Position" },
+      { key: "flsa", label: "FLSA" },
+      { key: "grade", label: "Grade" },
+      { key: "supervisor", label: "Supervisor" },
+    ],
   },
 
-  // Employee / Documents / Benefits / Status
+  // Department Analysis (summary)
+  {
+    id: "department-analysis",
+    slug: "department-analysis",
+    title: "Department Analysis",
+    group: "checks",
+    category: "Analytics",
+    approxRows: 10,
+    columns: [
+      { key: "department", label: "Department" },
+      { key: "headcount", label: "Headcount" },
+      { key: "avgHourlyRate", label: "Avg Rate" },
+      { key: "overtimeHours", label: "OT Hours" },
+      { key: "laborCost", label: "Labor Cost" },
+    ],
+  },
+
+  // Employee status / docs / benefits etc. (kept to satisfy previous pages)
   {
     id: "status-history",
-    slug: "status_history",
+    slug: "status-history",
     title: "Status History",
     group: "employee",
-    category: "Employment",
-    fields: "Hire, Rehire, Term, Leave, Return Dates; Status",
-    approxRows: "5–200",
-    description: "Employment lifecycle events and status changes.",
-  },
-  {
-    id: "w2-images",
-    slug: "w2_images",
-    title: "W-2 Forms",
-    group: "employee",
-    category: "Tax Documents",
-    fields: "Tax Year, Employee, PDF",
-    approxRows: "Per year",
-    description: "Client-supplied W-2 PDF images by year.",
-    docBased: true,
+    approxRows: 20,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "hireDate", label: "Hire" },
+      { key: "rehireDate", label: "Rehire" },
+      { key: "leaveDate", label: "Leave" },
+      { key: "returnDate", label: "Return" },
+      { key: "termDate", label: "Term" },
+      { key: "status", label: "Status" },
+    ],
   },
   {
     id: "benefit-history",
-    slug: "benefit_history",
+    slug: "benefit-history",
     title: "Benefit History",
     group: "employee",
-    category: "Benefits",
-    fields: "Plan, Coverage, Tier, Election Date, Cost",
-    approxRows: "10–500",
-    description: "Benefit plan elections and changes over time.",
+    approxRows: 40,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "plan", label: "Plan" },
+      { key: "coverage", label: "Coverage" },
+      { key: "tier", label: "Tier" },
+      { key: "electionDate", label: "Election" },
+      { key: "eeCost", label: "EE Cost" },
+      { key: "erCost", label: "ER Cost" },
+    ],
   },
   {
     id: "recruitment-history",
-    slug: "recruitment_history",
+    slug: "recruitment-history",
     title: "Recruitment History",
-    group: "jobs",
-    category: "Talent",
-    fields: "Requisition, Stage, Dates, Resume, Notes",
-    approxRows: "10–2,000",
-    description:
-      "Recruiting events, cover letters, resumes, and recruiter notes.",
+    group: "employee",
+    approxRows: 12,
+    columns: [
+      { key: "requisition", label: "Requisition" },
+      { key: "candidate", label: "Candidate" },
+      { key: "stage", label: "Stage" },
+      { key: "stageDate", label: "Stage Date" },
+      { key: "resume", label: "Resume" },
+      { key: "notes", label: "Notes" },
+    ],
   },
   {
     id: "performance-history",
-    slug: "performance_history",
+    slug: "performance-history",
     title: "Performance History",
-    group: "jobs",
-    category: "Talent",
-    fields: "Review Date, Rating, Supervisor Notes, PDF",
-    approxRows: "5–200",
-    description:
-      "Performance reviews with supervisor notes; optionally PDF attachments.",
-    docBased: true,
+    group: "employee",
+    approxRows: 12,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "reviewDate", label: "Review Date" },
+      { key: "rating", label: "Rating" },
+      { key: "notes", label: "Notes" },
+      { key: "documentName", label: "Document" },
+    ],
   },
   {
     id: "paper-records-history",
-    slug: "paper_records_history",
+    slug: "paper-records-history",
     title: "Paper Records History",
     group: "employee",
-    category: "Documents",
-    fields: "Doc Name, Type, Date, PDF",
-    approxRows: "Varies",
-    description:
-      "Scanned historical paper files (converted to PDFs) for quick access.",
+    approxRows: 12,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "docName", label: "Document" },
+      { key: "docType", label: "Type" },
+      { key: "docDate", label: "Date" },
+    ],
+  },
+  {
+    id: "w2-images",
+    slug: "w2-images",
+    title: "W-2 Images",
+    group: "checks",
+    approxRows: 5,
     docBased: true,
+    columns: [
+      { key: "employeeId", label: "Emp ID" },
+      { key: "employeeName", label: "Employee" },
+      { key: "taxYear", label: "Tax Year" },
+      { key: "documentName", label: "Document" },
+    ],
   },
 ];
 
-// --- helpers exported forother modules ---
+// --- Helpers -------------------------------------------------------------
+export function getAllReports(): ReportType[] {
+  return REPORTS;
+}
 
-export const getAllReports = (): ReportType[] => REPORTS;
+export function getReportsByGroup(group: GroupKey): ReportType[] {
+  return REPORTS.filter((r) => r.group === group);
+}
 
-export const getReportsByGroup = (group: GroupKey): ReportType[] =>
-  REPORTS.filter((r) => r.group === group);
-
-export const getReportById = (id: string): ReportType | undefined =>
-  REPORTS.find((r) => r.id === id);
+export function getReportById(id: string): ReportType | undefined {
+  return REPORTS.find((r) => r.id === id || r.slug === id);
+}

@@ -1,9 +1,8 @@
 // frontend/src/app/reporting/_mock.ts
-// Deterministic mock data generators for each report.
+// Deterministic mock data for each report id.
 
 import { getReportById } from "./_data";
 
-// Seed data
 const EMPLOYEES = [
   { id: "E001", name: "Ava Thompson", dept: "Finance", job: "Accountant" },
   { id: "E002", name: "Liam Johnson", dept: "Operations", job: "Supervisor" },
@@ -18,13 +17,12 @@ const REASONS = ["Merit", "Promotion", "Market", "Adjustment", "Lump Sum"] as co
 const STATUSES = ["Active", "Leave", "Terminated", "Rehired"] as const;
 
 const pad = (n: number) => n.toString().padStart(2, "0");
-const date = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
+const dt = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
 const dollars = (n: number) => Number(n.toFixed(2));
-const range = (count: number) => Array.from({ length: count }, (_, i) => i);
+const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 const pick = <T,>(arr: readonly T[]) => arr[Math.floor(Math.random() * arr.length)];
 
-// ---- Mock rows per report id ----
-
+// --- Per-report factories ------------------------------------------------
 function mockCheckDetailHistory() {
   return EMPLOYEES.flatMap((e, i) =>
     range(3).map((j) => {
@@ -35,8 +33,8 @@ function mockCheckDetailHistory() {
       const net = gross - taxes - deduct;
       return {
         checkNumber: String(checkNo),
-        payDate: date(2024, 9 - j, 15),
-        payPeriod: `${date(2024, 9 - j, 1)} – ${date(2024, 9 - j, 15)}`,
+        payDate: dt(2024, 9 - j, 15),
+        payPeriod: `${dt(2024, 9 - j, 1)} – ${dt(2024, 9 - j, 15)}`,
         employeeId: e.id,
         employeeName: e.name,
         department: e.dept,
@@ -55,7 +53,7 @@ function mockTimecardDetailHistory() {
     range(5).map((d) => ({
       employeeId: e.id,
       employeeName: e.name,
-      date: date(2024, 8, 1 + d),
+      date: dt(2024, 8, 1 + d),
       in1: "08:00",
       out1: "12:00",
       in2: "13:00",
@@ -76,7 +74,7 @@ function mockSalaryHistory() {
       return {
         employeeId: e.id,
         employeeName: e.name,
-        effectiveDate: date(2023 + k, 1 + k, 1 + i),
+        effectiveDate: dt(2023 + k, 1 + k, 1 + i),
         amount: dollars(base),
         percentChange: pct,
         changeAmount: dollars((base * pct) / 100),
@@ -92,7 +90,7 @@ function mockJobHistory() {
     range(3).map((k) => ({
       employeeId: e.id,
       employeeName: e.name,
-      effectiveDate: date(2023 + k, 2 + k, 5 + i),
+      effectiveDate: dt(2023 + k, 2 + k, 5 + i),
       jobTitle: k === 2 ? `${e.job} (Sr.)` : e.job,
       location: k === 1 ? "Dallas, TX" : "Austin, TX",
       reasonCode: k === 2 ? "Promotion" : "Reassignment",
@@ -106,7 +104,7 @@ function mockPositionHistory() {
     range(2).map((k) => ({
       employeeId: e.id,
       employeeName: e.name,
-      effectiveDate: date(2024, 1 + k, 10 + i),
+      effectiveDate: dt(2024, 1 + k, 10 + i),
       position: pick(POSITIONS),
       flsa: k % 2 === 0 ? "Exempt" : "Non-Exempt",
       grade: 10 + i + k,
@@ -135,11 +133,11 @@ function mockStatusHistory() {
   return EMPLOYEES.map((e, i) => ({
     employeeId: e.id,
     employeeName: e.name,
-    hireDate: date(2021, 5 + (i % 5), 10),
-    rehireDate: i % 4 === 0 ? date(2023, 3, 1) : "",
-    leaveDate: i % 3 === 0 ? date(2024, 2, 15) : "",
-    returnDate: i % 3 === 0 ? date(2024, 3, 15) : "",
-    termDate: i === 4 ? date(2024, 9, 30) : "",
+    hireDate: dt(2021, 5 + (i % 5), 10),
+    rehireDate: i % 4 === 0 ? dt(2023, 3, 1) : "",
+    leaveDate: i % 3 === 0 ? dt(2024, 2, 15) : "",
+    returnDate: i % 3 === 0 ? dt(2024, 3, 15) : "",
+    termDate: i === 4 ? dt(2024, 9, 30) : "",
     status: i === 4 ? "Terminated" : pick(STATUSES),
   }));
 }
@@ -152,7 +150,7 @@ function mockBenefitHistory() {
       plan: "Medical PPO",
       coverage: "Employee + Spouse",
       tier: "PPO",
-      electionDate: date(2024, 1, 1),
+      electionDate: dt(2024, 1, 1),
       eeCost: dollars(115.25),
       erCost: dollars(380.0),
     },
@@ -162,7 +160,7 @@ function mockBenefitHistory() {
       plan: "Dental",
       coverage: "Employee",
       tier: "Standard",
-      electionDate: date(2024, 1, 1),
+      electionDate: dt(2024, 1, 1),
       eeCost: dollars(14.5),
       erCost: dollars(20.0),
     },
@@ -174,7 +172,7 @@ function mockRecruitmentHistory() {
     requisition: `REQ-${2024}${100 + i}`,
     candidate: i % 2 === 0 ? "Chris Park" : "Riley Stone",
     stage: ["Applied", "Phone Screen", "Onsite", "Offer", "Hired"][i % 5],
-    stageDate: date(2024, 1 + (i % 6), 6 + (i % 20)),
+    stageDate: dt(2024, 1 + (i % 6), 6 + (i % 20)),
     resume: "resume.pdf",
     notes: i % 3 === 0 ? "Strong SQL" : "Needs JS depth",
   }));
@@ -184,7 +182,7 @@ function mockPerformanceHistory() {
   return EMPLOYEES.map((e, i) => ({
     employeeId: e.id,
     employeeName: e.name,
-    reviewDate: date(2024, 3 + i, 20),
+    reviewDate: dt(2024, 3 + i, 20),
     rating: ["Meets", "Exceeds", "Outstanding"][i % 3],
     notes: "Annual performance review",
     documentName: `review_${e.id}_${2024}.pdf`,
@@ -197,7 +195,7 @@ function mockPaperRecordsHistory() {
     employeeName: e.name,
     docName: `I-9_${e.id}.pdf`,
     docType: "I-9",
-    docDate: date(2021, 5 + (i % 5), 12),
+    docDate: dt(2021, 5 + (i % 5), 12),
   }));
 }
 
@@ -237,13 +235,17 @@ export function getMockRowsForReport(id: string): any[] {
       return mockPaperRecordsHistory();
     case "w2-images":
       return mockW2Images();
-    default: {
-      const r = getReportById(id);
-      if (!r) return [];
+    default:
       return [{ sample: "No mock defined for this report id", id }];
-    }
   }
 }
 
-// --- Backward-compat export (to satisfy existing imports) ---
+// Back-compat alias (so existing imports still work)
 export const getMockRows = getMockRowsForReport;
+
+// Small helper (rarely used by callers, but handy)
+export function ensureReportHasMock(id: string) {
+  const r = getReportById(id);
+  if (!r) throw new Error(`Unknown report id: ${id}`);
+  return true;
+}

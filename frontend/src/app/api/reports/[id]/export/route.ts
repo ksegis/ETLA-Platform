@@ -1,38 +1,46 @@
+// frontend/src/app/api/reports/[id]/export/route.ts
 import { NextResponse } from "next/server";
+import { getReportById } from "@/app/reporting/_data";
 import { getMockRows } from "@/app/reporting/_mock";
 
-export const dynamic = "force-dynamic"; // no caching
+export const dynamic = "force-dynamic";
 
-function toCsv(rows: Record<string, any>[]): string {
-  if (!rows.length) return "";
-  const cols = Array.from(
-    rows.reduce<Set<string>>((s, r) => {
-      Object.keys(r).forEach((k) => s.add(k));
-      return s;
-    }, new Set())
+function toCSV(rows: any[], columns: { key: string; label: string }[]) {
+  const header = columns.map((c) => c.label).join(",");
+  const lines = rows.map((row) =>
+    columns
+      .map((c) => {
+        const v = row[c.key];
+        const s = v == null ? "" : String(v);
+        return `"${s.replace(/"/g, '""')}"`
+      })
+      .join(",")
   );
-
-  const esc = (v: any) => {
-    if (v === null || v === undefined) return "";
-    const s = String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-
-  const header = cols.join(",");
-  const body = rows.map((r) => cols.map((c) => esc(r[c])).join(",")).join("\n");
-  return `${header}\n${body}`;
+  return [header, ...lines].join("\r\n");
 }
 
-export async function GET(_req: Request, ctx: any) {
-  const id = String(ctx?.params?.id ?? "");
-  const rows = getMockRows(id);
-  const csv = toCsv(rows);
-  const filename = `${id || "report"}.csv`;
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
+  const report = getReportById(id);
+  if (!report) {
+    return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  }
 
+  const rows = getMockRows(id);
+  const cols = report.columns ?? [];
+  if (cols.length === 0) {
+    return NextResponse.json({ error: "No columns for CSV" }, { status: 400 });
+  }
+
+  const csv = toCSV(rows, cols);
   return new NextResponse(csv, {
+    status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Disposition": `attachment; filename="${report.slug || report.id}.csv"`,
       "Cache-Control": "no-store",
     },
   });
