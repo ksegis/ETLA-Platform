@@ -1,8 +1,7 @@
-// Central catalog for all reporting metadata (lists, labels, helpers)
+// frontend/src/app/reporting/_data.ts
+export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards" | "all";
 
-export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards";
-
-export const GROUP_LABELS: Record<GroupKey, string> = {
+export const GROUP_LABELS: Record<Exclude<GroupKey, "all">, string> = {
   employee: "Employee",
   checks: "Checks",
   jobs: "Jobs",
@@ -11,35 +10,19 @@ export const GROUP_LABELS: Record<GroupKey, string> = {
 };
 
 export type ReportType = {
-  id: string;            // stable identifier (used by routes)
-  slug: string;          // readable id (often same as id)
-  title: string;         // display name in the UI
-  group: GroupKey;       // menu group
-  category?: string;     // optional sub-category label shown in table
-  description?: string;  // short blurb under the title
-  fields?: number;       // number of columns in the report dataset
-  approxRows?: number;   // approximate row count shown in table
-  // optional flags for certain behaviors (kept for future use)
-  docBased?: boolean;
+  id: string;                 // <= used by /api/reports/[id]
+  title: string;
+  group: Exclude<GroupKey, "all">;
+  category?: string;
+  description?: string;
+  fields?: number;
+  approxRows?: number;
 };
 
-// ---------------------------
-// Checks (as before)
-// ---------------------------
-const CHECKS: ReportType[] = [
-  {
-    id: "benefit-group-analysis",
-    slug: "benefit-group-analysis",
-    title: "Benefit Group Analysis",
-    group: "checks",
-    category: "Payroll",
-    description: "Benefit groups by cost",
-    fields: 12,
-    approxRows: 150,
-  },
+export const REPORTS: ReportType[] = [
+  /** Checks */
   {
     id: "check-detail-history",
-    slug: "check-detail-history",
     title: "Check Detail History",
     group: "checks",
     category: "Payroll",
@@ -49,8 +32,16 @@ const CHECKS: ReportType[] = [
     approxRows: 5000,
   },
   {
+    id: "benefit-group-analysis",
+    title: "Benefit Group Analysis",
+    group: "checks",
+    category: "Payroll",
+    description: "Benefit groups by cost",
+    fields: 12,
+    approxRows: 150,
+  },
+  {
     id: "pay-period-analysis",
-    slug: "pay-period-analysis",
     title: "Pay Period Analysis",
     group: "checks",
     category: "Payroll",
@@ -60,7 +51,6 @@ const CHECKS: ReportType[] = [
   },
   {
     id: "tax-information",
-    slug: "tax-information",
     title: "Tax Information",
     group: "checks",
     category: "Payroll",
@@ -70,191 +60,130 @@ const CHECKS: ReportType[] = [
   },
   {
     id: "w2-documents",
-    slug: "w2-documents",
     title: "W-2 Documents",
     group: "checks",
     category: "Payroll",
     description: "Client-supplied W-2 PDF images with metadata and download links.",
     fields: 6,
-    approxRows: 2113,
-    docBased: true,
+    approxRows: 2100,
   },
-];
 
-// ---------------------------
-// Jobs (as before)
-// ---------------------------
-const JOBS: ReportType[] = [
+  /** Jobs */
   {
-    id: "dept-analysis",
-    slug: "dept-analysis",
+    id: "department-analysis",
     title: "Department Analysis",
     group: "jobs",
     category: "Jobs",
     description:
-      "Pay composition by department and period (headcount/FTE, regular/OT/bonus, employer taxes/benefits, burden, avg comp).",
+      "Pay composition by department and period: headcount/FTE, regular/OT/bonus, employer taxes, benefits, burden, and avg comp.",
     fields: 20,
     approxRows: 1200,
   },
   {
     id: "job-history",
-    slug: "job-history",
     title: "Job History",
     group: "jobs",
     category: "Jobs",
-    description:
-      "Effective-dated job changes: job code/title, department, cost center, location, pay group, reason.",
+    description: "Effective-dated job changes: job code/title, dept, location, FLSA, pay group.",
     fields: 22,
     approxRows: 3200,
   },
   {
     id: "position-history",
-    slug: "position-history",
     title: "Position History",
     group: "jobs",
     category: "Jobs",
-    description:
-      "Effective-dated position changes: positions, incumbents, vacancies, FTE by period/cost center/location.",
+    description: "Effective-dated position changes: position id, manager, cost center, FTE.",
     fields: 24,
     approxRows: 2600,
   },
-];
 
-// ---------------------------
-/* Employee (typical basics; if you had different names before,
-   you can just tweak the titles — the table will populate again) */
-const EMPLOYEE: ReportType[] = [
+  /** Employee */
   {
-    id: "employee-roster",
-    slug: "employee-roster",
-    title: "Employee Roster",
+    id: "employee-directory",
+    title: "Employee Directory",
     group: "employee",
-    category: "Employee",
-    description:
-      "Active roster with home/work info, department, location, manager, and identifiers.",
-    fields: 28,
-    approxRows: 450,
+    category: "Core HR",
+    description: "Directory with work contact, dept, location, manager and employment dates.",
+    fields: 18,
+    approxRows: 1500,
   },
   {
     id: "headcount-summary",
-    slug: "headcount-summary",
     title: "Headcount Summary",
     group: "employee",
-    category: "Employee",
-    description: "Headcount and FTE by org, department, location, and period.",
+    category: "Core HR",
+    description: "Headcount/FTE by department and location with hires/terms.",
     fields: 14,
-    approxRows: 60,
+    approxRows: 240,
   },
-  {
-    id: "turnover-history",
-    slug: "turnover-history",
-    title: "Turnover History",
-    group: "employee",
-    category: "Employee",
-    description:
-      "New hires, separations, and turnover rates by period with reasons and tenure bands.",
-    fields: 18,
-    approxRows: 300,
-  },
-];
 
-// ---------------------------
-// Salary (common comp reports)
-// ---------------------------
-const SALARY: ReportType[] = [
+  /** Salary / Comp */
   {
-    id: "compensation-summary",
-    slug: "compensation-summary",
-    title: "Compensation Summary",
+    id: "salary-grade-distribution",
+    title: "Salary Grade Distribution",
     group: "salary",
-    category: "Salary",
-    description:
-      "Base pay, allowances, and total comp by employee; supports range and currency-aware views.",
-    fields: 20,
-    approxRows: 420,
-  },
-  {
-    id: "range-penetration",
-    slug: "range-penetration",
-    title: "Range Penetration",
-    group: "salary",
-    category: "Salary",
-    description:
-      "Position range min/mid/max with compa-ratio and penetration by employee/grade.",
+    category: "Compensation",
+    description: "Population by grade, min/mid/max, compa-ratio and range penetration.",
     fields: 16,
-    approxRows: 420,
+    approxRows: 900,
   },
   {
-    id: "merit-history",
-    slug: "merit-history",
-    title: "Merit History",
+    id: "compa-ratio",
+    title: "Compa-Ratio by Department",
     group: "salary",
-    category: "Salary",
-    description: "Merit and market adjustments by cycle with percent and amount deltas.",
-    fields: 14,
-    approxRows: 310,
+    category: "Compensation",
+    description: "Avg compa-ratio and range penetration by department.",
+    fields: 10,
+    approxRows: 120,
   },
-];
+  {
+    id: "merit-forecast",
+    title: "Merit Increase Forecast",
+    group: "salary",
+    category: "Compensation",
+    description: "Proposed merit/market/lump-sum changes and new compa-ratio.",
+    fields: 22,
+    approxRows: 450,
+  },
 
-// ---------------------------
-// Timecards (typical time reports)
-// ---------------------------
-const TIMECARDS: ReportType[] = [
+  /** Timecards */
   {
     id: "timecard-detail",
-    slug: "timecard-detail",
     title: "Timecard Detail",
     group: "timecards",
     category: "Time",
-    description:
-      "In/Out punches, totals, approvals, and pay codes by day and employee.",
-    fields: 28,
-    approxRows: 6200,
+    description: "Punches by day with total hours, project/cost center, approvals.",
+    fields: 24,
+    approxRows: 8000,
   },
   {
-    id: "overtime-summary",
-    slug: "overtime-summary",
-    title: "Overtime Summary",
+    id: "overtime-analysis",
+    title: "Overtime Analysis",
     group: "timecards",
     category: "Time",
-    description: "OT hours and cost by employee/department/period.",
-    fields: 12,
-    approxRows: 800,
+    description: "OT hours and cost by employee/department, week and rule.",
+    fields: 18,
+    approxRows: 700,
   },
   {
-    id: "exceptions",
-    slug: "exceptions",
-    title: "Exceptions",
+    id: "absence-summary",
+    title: "Absence Summary",
     group: "timecards",
     category: "Time",
-    description:
-      "Missed punches, unapproved time, policy exceptions, and premium triggers.",
-    fields: 12,
-    approxRows: 340,
+    description: "PTO/LOA usage and balances by employee and plan.",
+    fields: 16,
+    approxRows: 650,
   },
 ];
-
-// Master list
-export const REPORTS: ReportType[] = [
-  ...EMPLOYEE,
-  ...CHECKS,
-  ...JOBS,
-  ...SALARY,
-  ...TIMECARDS,
-];
-
-// Helpers used across pages/components
-export function getReportsByGroup(group: GroupKey): ReportType[] {
-  return REPORTS.filter((r) => r.group === group);
-}
 
 export function getAllReports(): ReportType[] {
-  return REPORTS.slice();
+  return REPORTS;
 }
-
-export function getReportById(idOrSlug: string): ReportType | undefined {
-  const key = String(idOrSlug).toLowerCase();
-  return REPORTS.find(
-    (r) => r.id.toLowerCase() === key || r.slug.toLowerCase() === key
-  );
+export function getReportsByGroup(group: GroupKey | string): ReportType[] {
+  if (!group || group === "all") return REPORTS;
+  return REPORTS.filter((r) => r.group === group);
+}
+export function getReportById(id: string): ReportType | undefined {
+  return REPORTS.find((r) => r.id === id);
 }

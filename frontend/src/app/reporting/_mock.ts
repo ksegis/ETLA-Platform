@@ -1,303 +1,338 @@
-// Rich demo data for all reports.
-// Columns mirror common “big vendor” reports (ADP/UKG/Workday/Paychex style).
+// frontend/src/app/reporting/_mock.ts
+import { getReportById } from "./_data";
 
-type Row = Record<string, any>;
-
-const people = [
-  { id: "E001", name: "Aeryn Sun", dept: "SALES", cc: "4000", loc: "HQ", paygroup: "Biweekly", grade: "S1", job: "Account Executive", managerId: "M100", manager: "J. Sheyang" },
-  { id: "E002", name: "John Crichton", dept: "SRV/HUB", cc: "4100", loc: "DC-East", paygroup: "Biweekly", grade: "P2", job: "Support Engineer", managerId: "M200", manager: "T. Sun-Ha" },
-  { id: "E003", name: "D. Peacekeeper", dept: "TEACH", cc: "4200", loc: "HQ", paygroup: "Biweekly", grade: "T3", job: "Trainer", managerId: "M300", manager: "V. Chart" },
-  { id: "E004", name: "Zhaan Delvian", dept: "WORSHIP", cc: "4300", loc: "Remote", paygroup: "Biweekly", grade: "W2", job: "Chaplain", managerId: "M400", manager: "B. Orion" },
-  { id: "E005", name: "Ka D'Argo", dept: "SALES", cc: "4000", loc: "HQ", paygroup: "Biweekly", grade: "S2", job: "Sr. Account Exec", managerId: "M100", manager: "J. Sheyang" },
-  { id: "E006", name: "Rygel XVI", dept: "SRV/HUB", cc: "4100", loc: "DC-East", paygroup: "Weekly", grade: "P1", job: "Support Analyst", managerId: "M200", manager: "T. Sun-Ha" },
+const EMPLOYEES = [
+  { id: "E001", name: "Aeryn Sun", dept: "SALES", cost: 4000, loc: "HQ" },
+  { id: "E002", name: "John Crichton", dept: "SRV/HUB", cost: 4100, loc: "DC-East" },
+  { id: "E003", name: "D. Peacekeeper", dept: "TEACH", cost: 4200, loc: "HQ" },
+  { id: "E004", name: "Claudia Black", dept: "OPS", cost: 4300, loc: "Remote" },
+  { id: "E005", name: "Chiana Nebari", dept: "ENG", cost: 4400, loc: "HQ" },
+  { id: "E006", name: "Ka D'Argo", dept: "SALES", cost: 4000, loc: "HQ" },
+  { id: "E007", name: "Pilot Levi", dept: "OPS", cost: 4300, loc: "Remote" },
 ];
 
-const periods = [
-  { start: "2025-07-01", label: "Jul 2025" },
-  { start: "2025-08-01", label: "Aug 2025" },
-  { start: "2025-09-01", label: "Sep 2025" },
-];
-
-const makeMoney = (n: number) => Math.round(n * 100) / 100;
-
-// --------------------------- EMPLOYEE ---------------------------
-
-const employeeRoster: Row[] = people.map((p, i) => ({
-  EMPLOYEEID: p.id,
-  EMPLOYEENAME: p.name,
-  STATUS: i % 5 === 0 ? "Inactive" : "Active",
-  DOB: "1990-05-12",
-  SSN_LAST4: "1234",
-  HIRE_DATE: "2023-01-09",
-  TERM_DATE: i % 5 === 0 ? "2025-03-31" : "",
-  JOB_CODE: p.job.toUpperCase().slice(0, 6),
-  JOB_TITLE: p.job,
-  GRADE: p.grade,
-  DEPARTMENT: p.dept,
-  COSTCENTER: p.cc,
-  LOCATION: p.loc,
-  MANAGER_ID: p.managerId,
-  MANAGER_NAME: p.manager,
-  PAYGROUP: p.paygroup,
-  FLSA: "Nonexempt",
-  SCHEDULE: "40/wk",
-  EMAIL: `${p.name.toLowerCase().replace(/[^a-z]/g, ".")}@etla.demo`,
-  PHONE: "(555) 555-1212",
-  ADDRESS: "123 Payroll Way",
-  CITY: "Artemis",
-  STATE: "DC",
-  ZIP: "20001",
-}));
-
-const headcountSummary: Row[] = periods.flatMap((per) => [
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "SALES", COSTCENTER: "4000", LOCATION: "HQ", HEADCOUNT: 2, FTE: 2.0, HIRES: 0, TERMS: 0, NET_CHANGE: 0 },
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "SRV/HUB", COSTCENTER: "4100", LOCATION: "DC-East", HEADCOUNT: 2, FTE: 2.0, HIRES: 1, TERMS: 0, NET_CHANGE: 1 },
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "TEACH", COSTCENTER: "4200", LOCATION: "HQ", HEADCOUNT: 1, FTE: 1.0, HIRES: 0, TERMS: 0, NET_CHANGE: 0 },
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "WORSHIP", COSTCENTER: "4300", LOCATION: "Remote", HEADCOUNT: 1, FTE: 1.0, HIRES: 0, TERMS: 0, NET_CHANGE: 0 },
-]);
-
-const turnoverHistory: Row[] = periods.map((per) => ({
-  PERIODSTART: per.start,
-  PERIODLABEL: per.label,
-  DEPARTMENT: "Company",
-  AVG_HEADCOUNT: 6.0,
-  VOLUNTARY_TERMS: 0,
-  INVOLUNTARY_TERMS: 0,
-  TOTAL_TERMS: 0,
-  TURNOVER_RATE: 0,
-}));
-
-// ---------------------------- CHECKS ----------------------------
-
-const benefitGroupAnalysis: Row[] = people.map((p) => ({
-  EMPLOYEEID: p.id,
-  EMPLOYEENAME: p.name,
-  PAYDATE: "2025-08-15",
-  PAYWEEK: "2025-W33",
-  PAYNUMBER: p.paygroup === "Weekly" ? 16 : 8,
-  BENEFIT_GROUP: p.dept === "SALES" ? "Premium PPO" : "HSA Plan",
-  COVERAGE_TIER: "Employee + Spouse",
-  EMPLOYER_COST: makeMoney(600),
-  EMPLOYEE_COST: makeMoney(210),
-}));
-
-const checkDetailHistory: Row[] = people.map((p, i) => {
-  const regHours = 80;
-  const regRate = p.dept === "SALES" ? 18.5 : 19.5 + (i % 2);
-  const otHours = i % 3 === 0 ? 2 : 0;
-  const otRate = regRate * 1.5;
-  const regAmt = regHours * regRate;
-  const otAmt = otHours * otRate;
-  const bonus = i % 4 === 0 ? 300 : 0;
-
-  const fed = makeMoney(regAmt * 0.072);
-  const state = makeMoney(regAmt * 0.025);
-  const ss = makeMoney(regAmt * 0.062);
-  const medicare = makeMoney(regAmt * 0.0145);
-  const local = i % 2 ? 0 : makeMoney(regAmt * 0.01);
-
-  const k401 = makeMoney(regAmt * 0.05);
-  const medical = 156.1;
-  const dental = 25.0;
-  const vision = 8.9;
-  const garn = i % 5 === 0 ? 45 : 0;
-
-  const gross = makeMoney(regAmt + otAmt + bonus);
-  const taxes = makeMoney(fed + state + ss + medicare + local);
-  const ded = makeMoney(k401 + medical + dental + vision + garn);
-  const net = makeMoney(gross - taxes - ded);
-
-  return {
-    EMPLOYEEID: p.id,
-    EMPLOYEENAME: p.name,
-    PAYDATE: "2025-08-15",
-    PAYWEEK: "2025-W33",
-    PAYNUMBER: p.paygroup === "Weekly" ? 16 : 16,
-    CHECKNUMBER: 100100 + i,
-    PAYGROUP: p.paygroup,
-    DEPARTMENT: p.dept,
-    COSTCENTER: p.cc,
-    LOCATION: p.loc,
-
-    E_REG_HOURS: regHours,
-    E_REG_RATE: regRate,
-    E_REG_AMOUNT: regAmt,
-    E_OT_HOURS: otHours,
-    E_OT_RATE: otRate,
-    E_OT_AMOUNT: otAmt,
-    E_BONUS_AMOUNT: bonus,
-
-    T_FED: fed,
-    T_STATE: state,
-    T_LOCAL: local,
-    T_SOCSEC: ss,
-    T_MEDICARE: medicare,
-
-    D_401K: k401,
-    D_MEDICAL: medical,
-    D_DENTAL: dental,
-    D_VISION: vision,
-    D_GARNISH: garn,
-
-    MEMO: i % 2 ? "" : "New position stipend",
-    GROSS: gross,
-    TAXES: taxes,
-    DEDUCTIONS: ded,
-    NETPAY: net,
-
-    YTD_GROSS: makeMoney(1480 * 10 + gross),
-    YTD_TAXES: makeMoney(266.4 * 10 + taxes),
-    YTD_DEDUCTIONS: makeMoney(155 * 10 + ded),
-    YTD_NETPAY: makeMoney(1058.6 * 10 + net),
-  };
-});
-
-const payPeriodAnalysis: Row[] = [
-  { PERIODSTART: "2025-08-01", PERIODLABEL: "2025-W33", PAYGROUP: "Biweekly", HEADCOUNT: 6, FTE: 6, REGULARPAY: 16000, OTPAY: 330, BONUSPAY: 2500, GROSS: 18830, TAXES: 2660, DEDUCTIONS: 1550, NETPAY: 14620 },
-  { PERIODSTART: "2025-08-15", PERIODLABEL: "2025-W35", PAYGROUP: "Biweekly", HEADCOUNT: 6, FTE: 6, REGULARPAY: 16100, OTPAY: 220, BONUSPAY: 600, GROSS: 16920, TAXES: 2470, DEDUCTIONS: 1490, NETPAY: 12960 },
-];
-
-const taxInformation: Row[] = people.map((p) => ({
-  EMPLOYEEID: p.id,
-  EMPLOYEENAME: p.name,
-  STATE: "DC",
-  SUI_STATE: "DC",
-  W4_STATUS: "Single",
-  W4_DEPENDENTS: 0,
-  ADDL_WITHHOLDING: 0,
-  LOCALITY: p.loc === "DC-East" ? "DC" : "",
-  JURISDICTION_CODE: p.loc === "DC-East" ? "11001" : "",
-  RATE: 0.0525,
-  YTD_FED: 3200.12,
-  YTD_STATE: 1200.43,
-  YTD_LOCAL: p.loc === "DC-East" ? 210.25 : 0,
-}));
-
-const w2Documents: Row[] = [
-  { DOCUMENT_ID: "W2-2024-E001", EMPLOYEEID: "E001", EMPLOYEENAME: "Aeryn Sun", TAXYEAR: 2024, FILENAME: "W2_AerynSun_2024.pdf", SIZE_BYTES: 145233, DOWNLOAD_URL: "/docs/mock/W2_AerynSun_2024.pdf" },
-  { DOCUMENT_ID: "W2-2024-E002", EMPLOYEEID: "E002", EMPLOYEENAME: "John Crichton", TAXYEAR: 2024, FILENAME: "W2_JohnCrichton_2024.pdf", SIZE_BYTES: 139882, DOWNLOAD_URL: "/docs/mock/W2_JohnCrichton_2024.pdf" },
-];
-
-// ------------------------------ JOBS ------------------------------
-
-const deptAnalysis: Row[] = periods.flatMap((per) => [
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "SALES", COSTCENTER: "4000", LOCATION: "HQ", PAYGROUP: "Biweekly", HEADCOUNT: 2, FTE: 2, REGULARPAY: 16000, OTPAY: 300, BONUS: 0 },
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "SRV/HUB", COSTCENTER: "4100", LOCATION: "DC-East", PAYGROUP: "Biweekly", HEADCOUNT: 2, FTE: 2, REGULARPAY: 20600, OTPAY: 840, BONUS: 0 },
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "TEACH", COSTCENTER: "4200", LOCATION: "HQ", PAYGROUP: "Biweekly", HEADCOUNT: 1, FTE: 1, REGULARPAY: 25440, OTPAY: 300, BONUS: 0 },
-  { PERIODSTART: per.start, PERIODLABEL: per.label, DEPARTMENT: "WORSHIP", COSTCENTER: "4300", LOCATION: "Remote", PAYGROUP: "Biweekly", HEADCOUNT: 1, FTE: 1, REGULARPAY: 32700, OTPAY: 840, BONUS: 0 },
-]);
-
-const jobHistory: Row[] = [
-  { EFFECTIVE_DATE: "2025-07-08", EMPLOYEEID: "E002", EMPLOYEENAME: "John Crichton", ACTION: "Transfer", FROM_DEPT: "SALES", TO_DEPT: "SRV/HUB", FROM_JOB: "Account Executive", TO_JOB: "Support Engineer", REASON: "Business Need", PRIOR_RATE: 28.75, NEW_RATE: 30.25, FLSA: "Nonexempt", LOCATION: "DC-East", COSTCENTER: "4100" },
-  { EFFECTIVE_DATE: "2025-08-01", EMPLOYEEID: "E005", EMPLOYEENAME: "Ka D'Argo", ACTION: "Pay Change", FROM_DEPT: "SALES", TO_DEPT: "SALES", FROM_JOB: "Account Executive", TO_JOB: "Sr. Account Exec", REASON: "Merit", PRIOR_RATE: 29.5, NEW_RATE: 31.0, FLSA: "Exempt", LOCATION: "HQ", COSTCENTER: "4000" },
-  { EFFECTIVE_DATE: "2025-05-01", EMPLOYEEID: "E006", EMPLOYEENAME: "Rygel XVI", ACTION: "Hire", FROM_DEPT: "", TO_DEPT: "SRV/HUB", FROM_JOB: "", TO_JOB: "Support Analyst", REASON: "New Hire", PRIOR_RATE: 0, NEW_RATE: 22.0, FLSA: "Nonexempt", LOCATION: "DC-East", COSTCENTER: "4100" },
-];
-
-const positionHistory: Row[] = [
-  { EFFECTIVE_DATE: "2025-07-01", POSITION_ID: "POS-4000-01", POSITION_TITLE: "Account Executive", GRADE: "S1", DEPARTMENT: "SALES", COSTCENTER: "4000", LOCATION: "HQ", STATUS: "Filled", INCUMBENT_ID: "E001", INCUMBENT_NAME: "Aeryn Sun", FTE: 1.0, HEADCOUNT: 1 },
-  { EFFECTIVE_DATE: "2025-07-01", POSITION_ID: "POS-4100-01", POSITION_TITLE: "Support Engineer", GRADE: "P2", DEPARTMENT: "SRV/HUB", COSTCENTER: "4100", LOCATION: "DC-East", STATUS: "Filled", INCUMBENT_ID: "E002", INCUMBENT_NAME: "John Crichton", FTE: 1.0, HEADCOUNT: 1 },
-  { EFFECTIVE_DATE: "2025-08-01", POSITION_ID: "POS-4100-02", POSITION_TITLE: "Support Analyst", GRADE: "P1", DEPARTMENT: "SRV/HUB", COSTCENTER: "4100", LOCATION: "DC-East", STATUS: "Open", INCUMBENT_ID: "", INCUMBENT_NAME: "", FTE: 1.0, HEADCOUNT: 0 },
-];
-
-// ----------------------------- SALARY -----------------------------
-
-const compensationSummary: Row[] = people.map((p) => {
-  const base = p.grade.startsWith("S") ? 72000 : p.grade.startsWith("P") ? 68000 : 76000;
-  const allow = p.dept === "SALES" ? 3000 : 0;
-  const bonusPct = p.dept === "SALES" ? 0.10 : 0.05;
-  return {
-    EMPLOYEEID: p.id,
-    EMPLOYEENAME: p.name,
-    JOB_TITLE: p.job,
-    GRADE: p.grade,
-    DEPARTMENT: p.dept,
-    LOCATION: p.loc,
-    CURRENCY: "USD",
-    BASEPAY_ANNUAL: base,
-    ALLOWANCES: allow,
-    BONUS_TARGET_PCT: bonusPct,
-    BONUS_TARGET_AMT: makeMoney(base * bonusPct),
-    TOTAL_COMP: base + allow + makeMoney(base * bonusPct),
-  };
-});
-
-const rangePenetration: Row[] = people.map((p) => {
-  const min = 60000, mid = 75000, max = 90000;
-  const base = p.grade.startsWith("S") ? 72000 : p.grade.startsWith("P") ? 68000 : 76000;
-  return {
-    JOB_CODE: p.job.toUpperCase().slice(0, 6),
-    JOB_TITLE: p.job,
-    GRADE: p.grade,
-    RANGE_MIN: min,
-    RANGE_MID: mid,
-    RANGE_MAX: max,
-    BASEPAY_ANNUAL: base,
-    COMPA_RATIO: makeMoney(base / mid),
-    PENETRATION_PCT: makeMoney(((base - min) / (max - min)) * 100),
-  };
-});
-
-const meritHistory: Row[] = [
-  { EMPLOYEEID: "E001", EMPLOYEENAME: "Aeryn Sun", CYCLE: "2025 Merit", EFFECTIVE_DATE: "2025-04-01", PRIOR_BASE: 70000, NEW_BASE: 72000, MERIT_PCT: 0.0286, MERIT_AMT: 2000, MARKET_AMT: 0, LUMP_SUM_AMT: 0, TOTAL_INCREASE_AMT: 2000, TOTAL_INCREASE_PCT: 0.0286 },
-  { EMPLOYEEID: "E005", EMPLOYEENAME: "Ka D'Argo", CYCLE: "2025 Merit", EFFECTIVE_DATE: "2025-04-01", PRIOR_BASE: 70500, NEW_BASE: 73000, MERIT_PCT: 0.0355, MERIT_AMT: 2500, MARKET_AMT: 0, LUMP_SUM_AMT: 0, TOTAL_INCREASE_AMT: 2500, TOTAL_INCREASE_PCT: 0.0355 },
-];
-
-// --------------------------- TIMECARDS ----------------------------
-
-const timecardDetail: Row[] = [
-  { EMPLOYEEID: "E002", EMPLOYEENAME: "John Crichton", DATE: "2025-08-11", PAYCODE: "REG", IN: "08:30", OUT: "17:30", HOURS: 8.0, APPROVAL: "Approved", COSTCENTER: "4100", LOCATION: "DC-East" },
-  { EMPLOYEEID: "E002", EMPLOYEENAME: "John Crichton", DATE: "2025-08-12", PAYCODE: "REG", IN: "08:30", OUT: "17:30", HOURS: 8.0, APPROVAL: "Approved", COSTCENTER: "4100", LOCATION: "DC-East" },
-  { EMPLOYEEID: "E002", EMPLOYEENAME: "John Crichton", DATE: "2025-08-13", PAYCODE: "OT",  IN: "08:30", OUT: "19:30", HOURS: 10.0, APPROVAL: "Approved", COSTCENTER: "4100", LOCATION: "DC-East" },
-  { EMPLOYEEID: "E006", EMPLOYEENAME: "Rygel XVI",      DATE: "2025-08-12", PAYCODE: "REG", IN: "09:00", OUT: "18:00", HOURS: 8.0, APPROVAL: "Approved", COSTCENTER: "4100", LOCATION: "DC-East" },
-];
-
-const overtimeSummary: Row[] = [
-  { PERIODSTART: "2025-08-01", PERIODLABEL: "Aug W33", EMPLOYEEID: "E002", EMPLOYEENAME: "John Crichton", DEPARTMENT: "SRV/HUB", LOCATION: "DC-East", OT_HOURS: 2.0, OT_RATE: 45.38, OT_AMOUNT: 90.76 },
-  { PERIODSTART: "2025-08-01", PERIODLABEL: "Aug W33", EMPLOYEEID: "E003", EMPLOYEENAME: "D. Peacekeeper", DEPARTMENT: "TEACH", LOCATION: "HQ", OT_HOURS: 2.0, OT_RATE: 48.75, OT_AMOUNT: 97.50 },
-];
-
-const exceptions: Row[] = [
-  { EMPLOYEEID: "E006", EMPLOYEENAME: "Rygel XVI", DATE: "2025-08-13", EXCEPTION_TYPE: "Missed Punch", NOTES: "No out punch", RESOLVED: "Yes", APPROVER: "T. Sun-Ha" },
-  { EMPLOYEEID: "E002", EMPLOYEENAME: "John Crichton", DATE: "2025-08-10", EXCEPTION_TYPE: "Unapproved Time", NOTES: "Late approval", RESOLVED: "Yes", APPROVER: "T. Sun-Ha" },
-];
-
-// ------------------------ PUBLIC ACCESSORS ------------------------
-
-const byId: Record<string, Row[]> = {
-  // Employee
-  "employee-roster": employeeRoster,
-  "headcount-summary": headcountSummary,
-  "turnover-history": turnoverHistory,
-
-  // Checks
-  "benefit-group-analysis": benefitGroupAnalysis,
-  "check-detail-history": checkDetailHistory,
-  "pay-period-analysis": payPeriodAnalysis,
-  "tax-information": taxInformation,
-  "w2-documents": w2Documents,
-
-  // Jobs
-  "dept-analysis": deptAnalysis,
-  "job-history": jobHistory,
-  "position-history": positionHistory,
-
-  // Salary
-  "compensation-summary": compensationSummary,
-  "range-penetration": rangePenetration,
-  "merit-history": meritHistory,
-
-  // Timecards
-  "timecard-detail": timecardDetail,
-  "overtime-summary": overtimeSummary,
-  "exceptions": exceptions,
-};
-
-export function getMockRows(id: string, limit?: number): Row[] {
-  const key = String(id).toLowerCase();
-  const rows = byId[key] ?? [];
-  return typeof limit === "number" ? rows.slice(0, Math.max(0, limit)) : rows;
+function seeded(seed: number) {
+  let s = seed >>> 0;
+  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+}
+function weekLabel(d: Date) {
+  // Simple ISO-ish week label
+  const first = new Date(d.getFullYear(), 0, 1);
+  const diff = Math.floor((d.getTime() - first.getTime()) / 86400000);
+  const week = Math.floor(diff / 7) + 1;
+  const w = String(week).padStart(2, "0");
+  return `${d.getFullYear()}-W${w}`;
 }
 
-export function hasMock(id: string): boolean {
-  return getMockRows(id).length > 0;
+function range(n: number) {
+  return Array.from({ length: n }, (_, i) => i);
+}
+
+/** ============ Per-report generators ============ */
+
+function genChecks(count = 180) {
+  const rnd = seeded(42);
+  const base = new Date("2025-01-03T00:00:00Z");
+  return range(count).map((i) => {
+    const emp = EMPLOYEES[i % EMPLOYEES.length];
+    const payNumber = (i % 26) + 16; // matches screenshots
+    const payDate = new Date(base.getTime() + i * 14 * 86400000);
+    const gross = Math.round((1450 + rnd() * 500) * 100) / 100;
+    const taxes = Math.round((gross * (0.18 + rnd() * 0.05)) * 100) / 100;
+    const deductions = Math.round((110 + rnd() * 120) * 100) / 100;
+    const net = Math.round((gross - taxes - deductions) * 100) / 100;
+
+    return {
+      employeeid: emp.id,
+      employeename: emp.name,
+      department: emp.dept,
+      costcenter: emp.cost,
+      location: emp.loc,
+      paygroup: "Biweekly",
+      paydate: payDate.toISOString().slice(0, 10),
+      payweek: weekLabel(payDate),
+      paynumber: payNumber,
+      checknumber: 100100 + i,
+      gross,
+      taxes,
+      deductions,
+      netpay: net,
+      memo: i % 9 === 0 ? "New position" : "",
+    };
+  });
+}
+
+function genBenefitGroupAnalysis() {
+  return [
+    { benefit_group: "Medical PPO", enrolled: 62, employer_cost: 38250.0, employee_cost: 12450.0 },
+    { benefit_group: "Medical HDHP", enrolled: 41, employer_cost: 18900.0, employee_cost: 7300.0 },
+    { benefit_group: "Dental", enrolled: 95, employer_cost: 6250.0, employee_cost: 2100.0 },
+    { benefit_group: "Vision", enrolled: 88, employer_cost: 2100.0, employee_cost: 950.0 },
+    { benefit_group: "FSA", enrolled: 30, employer_cost: 0.0, employee_cost: 11500.0 },
+  ];
+}
+
+function genPayPeriodAnalysis() {
+  const periods = range(12).map((m) => new Date(2025, m, 15));
+  return periods.map((d, i) => ({
+    period: d.toISOString().slice(0, 10),
+    regular_hours: 80,
+    ot_hours: (i % 4) * 2,
+    bonus: (i % 3) * 300,
+    gross: 1480 + (i % 4) * 80 + (i % 3) * 300,
+    taxes: 266.4 + (i % 5) * 10,
+    deductions: 155 + (i % 2) * 10,
+    netpay: 1058.6 + (i % 5) * 15,
+  }));
+}
+
+function genTaxInformation() {
+  return EMPLOYEES.map((e, i) => ({
+    employeeid: e.id,
+    employeename: e.name,
+    federal_status: "Single",
+    federal_allowances: i % 3,
+    state: "DC",
+    state_status: "Single",
+    state_allowances: (i + 1) % 3,
+    locality: e.loc,
+    addl_federal: 0,
+    addl_state: 0,
+  }));
+}
+
+function genW2Documents() {
+  // Represent typical doc metadata; URL intentionally blank for preview
+  return EMPLOYEES.map((e) => ({
+    document_id: `${e.id}-2024`,
+    employeeid: e.id,
+    employeename: e.name,
+    year: 2024,
+    filename: `${e.name.replace(/\s+/g, "_")}_W2_2024.pdf`,
+    size_kb: 423,
+    url: "",
+  }));
+}
+
+function genDepartmentAnalysis(rows = 180) {
+  const rnd = seeded(7);
+  const start = new Date("2025-07-01T00:00:00Z");
+  return range(rows).map((i) => {
+    const m = Math.floor(i / 15);
+    const periodStart = new Date(start.getTime() + m * 31 * 86400000);
+    const dept = ["SALES", "SRV/HUB", "TEACH", "WORSHIP"][i % 4];
+    const costcenter = [4000, 4100, 4200, 4300][i % 4];
+    const fte = 8 + (i % 6) + (i % 2 ? 0.5 : 0);
+    const regularpay = Math.round((16000 + rnd() * 18000) * 100) / 100;
+    const otpay = Math.round((300 + rnd() * 700) * 100) / 100;
+    const bonus = Math.round((rnd() * 2500) * 100) / 100;
+
+    return {
+      periodstart: periodStart.toISOString().slice(0, 10),
+      periodlabel: periodStart.toLocaleString("en-US", { month: "short", year: "numeric" }),
+      department: dept,
+      costcenter,
+      location: i % 3 ? "HQ" : "Remote",
+      paygroup: "Biweekly",
+      headcount: Math.floor(7 + rnd() * 9),
+      fte,
+      regularpay,
+      otpay,
+      bonus,
+    };
+  });
+}
+
+function genJobHistory(rows = 120) {
+  const titles = ["Analyst I", "Analyst II", "Engineer", "Sr Engineer", "Mgr", "Sr Mgr"];
+  return range(rows).map((i) => {
+    const e = EMPLOYEES[i % EMPLOYEES.length];
+    return {
+      employeeid: e.id,
+      employeename: e.name,
+      effective_date: `2025-${String((i % 12) + 1).padStart(2, "0")}-01`,
+      action: i % 3 === 0 ? "Promotion" : i % 3 === 1 ? "Transfer" : "Pay Change",
+      job_code: `J${100 + (i % 50)}`,
+      job_title: titles[i % titles.length],
+      department: e.dept,
+      location: e.loc,
+      manager: EMPLOYEES[(i + 2) % EMPLOYEES.length].name,
+      pay_group: "Biweekly",
+    };
+  });
+}
+
+function genPositionHistory(rows = 120) {
+  return range(rows).map((i) => {
+    const e = EMPLOYEES[i % EMPLOYEES.length];
+    return {
+      position_id: `P${2000 + i}`,
+      employeeid: e.id,
+      employeename: e.name,
+      effective_date: `2025-${String((i % 12) + 1).padStart(2, "0")}-15`,
+      status: i % 5 === 0 ? "Vacant" : "Filled",
+      department: e.dept,
+      costcenter: e.cost,
+      fte: 1,
+      manager: EMPLOYEES[(i + 1) % EMPLOYEES.length].name,
+    };
+  });
+}
+
+function genEmployeeDirectory() {
+  return EMPLOYEES.map((e, i) => ({
+    employeeid: e.id,
+    employeename: e.name,
+    work_email: `${e.name.toLowerCase().replace(/\s+/g, ".")}@example.com`,
+    department: e.dept,
+    location: e.loc,
+    manager: EMPLOYEES[(i + 1) % EMPLOYEES.length].name,
+    hire_date: `2022-${String((i % 12) + 1).padStart(2, "0")}-01`,
+    status: "Active",
+  }));
+}
+
+function genHeadcountSummary() {
+  const byDept = ["SALES", "SRV/HUB", "TEACH", "OPS"].map((d, i) => ({
+    department: d,
+    headcount: 7 + i * 2,
+    fte: 6.5 + i * 1.8,
+    hires: 1 + (i % 2),
+    terms: i % 3 ? 0 : 1,
+  }));
+  return byDept;
+}
+
+function genSalaryGradeDistribution() {
+  const grades = ["G5", "G6", "G7", "G8", "G9"];
+  return grades.map((g, i) => ({
+    grade: g,
+    population: 20 + i * 7,
+    min: 55000 + i * 7000,
+    mid: 65000 + i * 7000,
+    max: 75000 + i * 7000,
+    avg_salary: 64000 + i * 6000,
+    avg_compa_ratio: Number(((64000 + i * 6000) / (65000 + i * 7000)).toFixed(2)),
+  }));
+}
+
+function genCompaRatio() {
+  return ["SALES", "SRV/HUB", "TEACH", "OPS"].map((d, i) => ({
+    department: d,
+    avg_salary: 64000 + i * 6000,
+    avg_midpoint: 70000 + i * 5000,
+    avg_compa_ratio: Number(((64000 + i * 6000) / (70000 + i * 5000)).toFixed(2)),
+  }));
+}
+
+function genMeritForecast(rows = 80) {
+  return range(rows).map((i) => {
+    const e = EMPLOYEES[i % EMPLOYEES.length];
+    const current = 65000 + (i % 8) * 2500;
+    const merit = +(current * 0.03).toFixed(2);
+    const market = +((i % 3) * 250).toFixed(2);
+    const lump = +((i % 4) * 100).toFixed(2);
+    const newSalary = +(current + merit + market + lump).toFixed(2);
+    return {
+      employeeid: e.id,
+      employeename: e.name,
+      department: e.dept,
+      current_salary: current,
+      merit_increase: merit,
+      market_adjustment: market,
+      lump_sum: lump,
+      new_salary: newSalary,
+      new_compa_ratio: Number((newSalary / 70000).toFixed(2)),
+    };
+  });
+}
+
+function genTimecardDetail(rows = 300) {
+  const projects = ["CC100", "CC200", "CC300"];
+  return range(rows).map((i) => {
+    const e = EMPLOYEES[i % EMPLOYEES.length];
+    const d = `2025-08-${String((i % 28) + 1).padStart(2, "0")}`;
+    return {
+      employeeid: e.id,
+      employeename: e.name,
+      date: d,
+      project: projects[i % projects.length],
+      in: "09:00",
+      out: "17:30",
+      hours: 8 + (i % 2 ? 0.5 : 0),
+      approved_by: EMPLOYEES[(i + 1) % EMPLOYEES.length].name,
+    };
+  });
+}
+
+function genOvertimeAnalysis() {
+  return EMPLOYEES.map((e, i) => ({
+    employeeid: e.id,
+    employeename: e.name,
+    week: `2025-W${String(30 + i).padStart(2, "0")}`,
+    ot_hours: (i % 4) * 2,
+    ot_cost: 75 * ((i % 4) * 2),
+  }));
+}
+
+function genAbsenceSummary() {
+  return EMPLOYEES.map((e, i) => ({
+    employeeid: e.id,
+    employeename: e.name,
+    plan: i % 3 === 0 ? "PTO" : "Vacation",
+    ytd_taken: (i % 6) * 1.5,
+    balance: 40 - (i % 6) * 1.5,
+  }));
+}
+
+/** Main dispatcher */
+export function getMockRows(id: string): Record<string, any>[] {
+  switch (id) {
+    /* Checks */
+    case "check-detail-history":
+      return genChecks();
+    case "benefit-group-analysis":
+      return genBenefitGroupAnalysis();
+    case "pay-period-analysis":
+      return genPayPeriodAnalysis();
+    case "tax-information":
+      return genTaxInformation();
+    case "w2-documents":
+      return genW2Documents();
+
+    /* Jobs */
+    case "department-analysis":
+      return genDepartmentAnalysis();
+    case "job-history":
+      return genJobHistory();
+    case "position-history":
+      return genPositionHistory();
+
+    /* Employee */
+    case "employee-directory":
+      return genEmployeeDirectory();
+    case "headcount-summary":
+      return genHeadcountSummary();
+
+    /* Salary / Comp */
+    case "salary-grade-distribution":
+      return genSalaryGradeDistribution();
+    case "compa-ratio":
+      return genCompaRatio();
+    case "merit-forecast":
+      return genMeritForecast();
+
+    /* Timecards */
+    case "timecard-detail":
+      return genTimecardDetail();
+    case "overtime-analysis":
+      return genOvertimeAnalysis();
+    case "absence-summary":
+      return genAbsenceSummary();
+  }
+
+  // Fallback: if id is unknown, return a simple informative row
+  const r = getReportById(id);
+  if (r) return [{ info: `No specific mock implemented for ${r.title}`, id }];
+  return [];
 }
