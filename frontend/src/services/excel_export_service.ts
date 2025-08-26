@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx'
 import { supabase } from '@/lib/supabase'
 
 interface ExportConfig {
-  reportType: string
+  Report: string
   customerId: string
   dateRange: {
     from: string
@@ -154,9 +154,9 @@ export class ExcelExportService {
       const data = await this.fetchReportData(config)
       
       // Get column definitions for the report type
-      const columns = TEMPLATE_COLUMNS[config.reportType as keyof typeof TEMPLATE_COLUMNS]
+      const columns = TEMPLATE_COLUMNS[config.Report as keyof typeof TEMPLATE_COLUMNS]
       if (!columns) {
-        throw new Error(`Unknown report type: ${config.reportType}`)
+        throw new Error(`Unknown report type: ${config.Report}`)
       }
 
       // Create workbook and worksheet
@@ -164,7 +164,7 @@ export class ExcelExportService {
       const worksheet = this.createWorksheet(data, columns, config)
       
       // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, this.getSheetName(config.reportType))
+      XLSX.utils.book_append_sheet(workbook, worksheet, this.getSheetName(config.Report))
       
       // Apply formatting and styling
       this.applyFormatting(worksheet, columns, data.length)
@@ -187,7 +187,7 @@ export class ExcelExportService {
   }
 
   private static async fetchReportData(config: ExportConfig): Promise<any[]> {
-    const tableName = this.getTableName(config.reportType)
+    const tableName = this.getTableName(config.Report)
     
     let query = supabase
       .from(tableName)
@@ -202,11 +202,11 @@ export class ExcelExportService {
     }
 
     // Apply status filters
-    if (config.filters.activeOnly && config.reportType === 'demographics') {
+    if (config.filters.activeOnly && config.Report === 'demographics') {
       query = query.eq('employee_status', 'Active')
     }
 
-    if (!config.filters.includeTerminated && config.reportType === 'demographics') {
+    if (!config.filters.includeTerminated && config.Report === 'demographics') {
       query = query.neq('employee_status', 'Terminated')
     }
 
@@ -349,7 +349,7 @@ export class ExcelExportService {
     }
   }
 
-  private static getTableName(reportType: string): string {
+  private static getTableName(Report: string): string {
     const tableMap: { [key: string]: string } = {
       'demographics': 'employee_demographics',
       'custom_fields': 'employee_custom_fields',
@@ -359,10 +359,10 @@ export class ExcelExportService {
       'tax_information': 'employee_tax_information'
     }
     
-    return tableMap[reportType] || reportType
+    return tableMap[Report] || Report
   }
 
-  private static getSheetName(reportType: string): string {
+  private static getSheetName(Report: string): string {
     const sheetNames: { [key: string]: string } = {
       'demographics': 'Current Demographic Data',
       'custom_fields': 'Current Custom Fields - if appl',
@@ -372,7 +372,7 @@ export class ExcelExportService {
       'tax_information': 'Taxes'
     }
     
-    return sheetNames[reportType] || reportType
+    return sheetNames[Report] || Report
   }
 
   static async logExportActivity(config: ExportConfig, success: boolean, error?: string): Promise<void> {
@@ -381,10 +381,10 @@ export class ExcelExportService {
         .from('data_import_audit')
         .insert({
           customer_id: config.customerId,
-          import_type: `export_${config.reportType}`,
+          import_type: `export_${config.Report}`,
           import_status: success ? 'completed' : 'failed',
           error_summary: error,
-          notes: `Excel export: ${config.reportType} report`
+          notes: `Excel export: ${config.Report} report`
         })
     } catch (auditError) {
       console.error('Error logging export activity:', auditError)

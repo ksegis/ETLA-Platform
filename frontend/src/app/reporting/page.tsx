@@ -4,20 +4,20 @@ import * as React from "react";
 import BackNav from "./_components/BackNav";
 import ReportTable from "./_components/ReportTable"; // uses your existing table
 import PreviewModal from "./_components/PreviewModal"; // existing modal
-import { getAllReports, type ReportType } from "./_data";
+import { getAllReports, type Report } from "./_data";
 
 export default function AllReportsPage() {
-  const items: ReportType[] = getAllReports();
+  const items: Report[] = getAllReports();
 
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<ReportType | null>(null);
+  const [selected, setSelected] = React.useState<Report | null>(null);
 
-  const handlePreview = (r: ReportType) => {
+  const handlePreview = (r: Report) => {
     setSelected(r);
     setOpen(true);
   };
 
-  const handleExport = (r: ReportType) => {
+  const handleExport = (r: Report) => {
     // keep the same export route you already have
     window.location.href = `/api/reports/${r.id}/export`;
   };

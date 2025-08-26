@@ -117,7 +117,7 @@ export class HRReportQueryService {
    */
   static async getCurrentDemographics(params: QueryParameters): Promise<QueryResult> {
     const startTime = Date.now()
-    const reportType = 'demographics'
+    const Report = 'demographics'
     
     try {
       // Validate parameters
@@ -129,7 +129,7 @@ export class HRReportQueryService {
           count: 0,
           execution_time: Date.now() - startTime,
           query_metadata: {
-            report_type: reportType,
+            report_type: Report,
             customer_id: params.customer_id,
             parameters_used: params,
             timestamp: new Date().toISOString()
@@ -158,7 +158,7 @@ export class HRReportQueryService {
         count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
@@ -166,7 +166,7 @@ export class HRReportQueryService {
       }
 
       // Log query execution
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
 
       return result
 
@@ -177,14 +177,14 @@ export class HRReportQueryService {
         count: 0,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
     }
   }
@@ -195,7 +195,7 @@ export class HRReportQueryService {
    */
   static async getCustomFields(params: QueryParameters): Promise<QueryResult> {
     const startTime = Date.now()
-    const reportType = 'custom_fields'
+    const Report = 'custom_fields'
     
     try {
       const validation = this.validateParameters(params)
@@ -206,7 +206,7 @@ export class HRReportQueryService {
           count: 0,
           execution_time: Date.now() - startTime,
           query_metadata: {
-            report_type: reportType,
+            report_type: Report,
             customer_id: params.customer_id,
             parameters_used: params,
             timestamp: new Date().toISOString()
@@ -230,14 +230,14 @@ export class HRReportQueryService {
         count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
 
     } catch (err) {
@@ -247,14 +247,14 @@ export class HRReportQueryService {
         count: 0,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
     }
   }
@@ -265,7 +265,7 @@ export class HRReportQueryService {
    */
   static async getStatusHistory(params: QueryParameters): Promise<QueryResult> {
     const startTime = Date.now()
-    const reportType = 'status_history'
+    const Report = 'status_history'
     
     try {
       const validation = this.validateParameters(params)
@@ -276,7 +276,7 @@ export class HRReportQueryService {
           count: 0,
           execution_time: Date.now() - startTime,
           query_metadata: {
-            report_type: reportType,
+            report_type: Report,
             customer_id: params.customer_id,
             parameters_used: params,
             timestamp: new Date().toISOString()
@@ -300,14 +300,14 @@ export class HRReportQueryService {
         count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
 
     } catch (err) {
@@ -317,14 +317,14 @@ export class HRReportQueryService {
         count: 0,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
     }
   }
@@ -335,7 +335,7 @@ export class HRReportQueryService {
    */
   static async getPayHistory(params: QueryParameters): Promise<QueryResult> {
     const startTime = Date.now()
-    const reportType = 'pay_history'
+    const Report = 'pay_history'
     
     try {
       const validation = this.validateParameters(params)
@@ -346,7 +346,7 @@ export class HRReportQueryService {
           count: 0,
           execution_time: Date.now() - startTime,
           query_metadata: {
-            report_type: reportType,
+            report_type: Report,
             customer_id: params.customer_id,
             parameters_used: params,
             timestamp: new Date().toISOString()
@@ -370,14 +370,14 @@ export class HRReportQueryService {
         count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
 
     } catch (err) {
@@ -387,14 +387,14 @@ export class HRReportQueryService {
         count: 0,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
     }
   }
@@ -405,7 +405,7 @@ export class HRReportQueryService {
    */
   static async getPositionHistory(params: QueryParameters): Promise<QueryResult> {
     const startTime = Date.now()
-    const reportType = 'position_history'
+    const Report = 'position_history'
     
     try {
       const validation = this.validateParameters(params)
@@ -416,7 +416,7 @@ export class HRReportQueryService {
           count: 0,
           execution_time: Date.now() - startTime,
           query_metadata: {
-            report_type: reportType,
+            report_type: Report,
             customer_id: params.customer_id,
             parameters_used: params,
             timestamp: new Date().toISOString()
@@ -441,14 +441,14 @@ export class HRReportQueryService {
         count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
 
     } catch (err) {
@@ -458,14 +458,14 @@ export class HRReportQueryService {
         count: 0,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
     }
   }
@@ -476,7 +476,7 @@ export class HRReportQueryService {
    */
   static async getTaxInformation(params: QueryParameters): Promise<QueryResult> {
     const startTime = Date.now()
-    const reportType = 'tax_information'
+    const Report = 'tax_information'
     
     try {
       const validation = this.validateParameters(params)
@@ -487,7 +487,7 @@ export class HRReportQueryService {
           count: 0,
           execution_time: Date.now() - startTime,
           query_metadata: {
-            report_type: reportType,
+            report_type: Report,
             customer_id: params.customer_id,
             parameters_used: params,
             timestamp: new Date().toISOString()
@@ -511,14 +511,14 @@ export class HRReportQueryService {
         count: (data || []).length,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
 
     } catch (err) {
@@ -528,14 +528,14 @@ export class HRReportQueryService {
         count: 0,
         execution_time: Date.now() - startTime,
         query_metadata: {
-          report_type: reportType,
+          report_type: Report,
           customer_id: params.customer_id,
           parameters_used: params,
           timestamp: new Date().toISOString()
         }
       }
 
-      await this.logQueryExecution(reportType, params.customer_id, params, result)
+      await this.logQueryExecution(Report, params.customer_id, params, result)
       return result
     }
   }
@@ -543,8 +543,8 @@ export class HRReportQueryService {
   /**
    * Execute report query based on report type
    */
-  static async executeReport(reportType: string, params: QueryParameters): Promise<QueryResult> {
-    switch (reportType) {
+  static async executeReport(Report: string, params: QueryParameters): Promise<QueryResult> {
+    switch (Report) {
       case 'demographics':
         return this.getCurrentDemographics(params)
       case 'custom_fields':
@@ -560,11 +560,11 @@ export class HRReportQueryService {
       default:
         return {
           data: [],
-          error: `Unknown report type: ${reportType}`,
+          error: `Unknown report type: ${Report}`,
           count: 0,
           execution_time: 0,
           query_metadata: {
-            report_type: reportType,
+            report_type: Report,
             customer_id: params.customer_id,
             parameters_used: params,
             timestamp: new Date().toISOString()
@@ -700,7 +700,7 @@ export class HRReportQueryService {
    * Log query execution for audit trail
    */
   static async logQueryExecution(
-    reportType: string,
+    Report: string,
     customerId: string,
     params: QueryParameters,
     result: QueryResult
@@ -710,7 +710,7 @@ export class HRReportQueryService {
         .from('data_import_audit')
         .insert({
           customer_id: customerId,
-          import_type: `query_${reportType}`,
+          import_type: `query_${Report}`,
           records_processed: result.count,
           records_successful: result.error ? 0 : result.count,
           records_failed: result.error ? result.count : 0,
@@ -736,7 +736,7 @@ export class HRReportQueryService {
     successfulQueries: number
     failedQueries: number
     averageExecutionTime: number
-    reportTypeBreakdown: Record<string, number>
+    ReportBreakdown: Record<string, number>
   }> {
     try {
       const cutoffDate = new Date()
@@ -755,7 +755,7 @@ export class HRReportQueryService {
           successfulQueries: 0,
           failedQueries: 0,
           averageExecutionTime: 0,
-          reportTypeBreakdown: {}
+          ReportBreakdown: {}
         }
       }
 
@@ -780,10 +780,10 @@ export class HRReportQueryService {
         : 0
 
       // Report type breakdown
-      const reportTypeBreakdown: Record<string, number> = {}
+      const ReportBreakdown: Record<string, number> = {}
       data.forEach(d => {
-        const reportType = d.import_type.replace('query_', '')
-        reportTypeBreakdown[reportType] = (reportTypeBreakdown[reportType] || 0) + 1
+        const Report = d.import_type.replace('query_', '')
+        ReportBreakdown[Report] = (ReportBreakdown[Report] || 0) + 1
       })
 
       return {
@@ -791,7 +791,7 @@ export class HRReportQueryService {
         successfulQueries,
         failedQueries,
         averageExecutionTime,
-        reportTypeBreakdown
+        ReportBreakdown
       }
     } catch (error) {
       console.error('Error fetching query statistics:', error)
@@ -800,7 +800,7 @@ export class HRReportQueryService {
         successfulQueries: 0,
         failedQueries: 0,
         averageExecutionTime: 0,
-        reportTypeBreakdown: {}
+        ReportBreakdown: {}
       }
     }
   }

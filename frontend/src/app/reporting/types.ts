@@ -2,7 +2,7 @@ export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards";
 
 export type ColumnDef = { key: string; label: string; type?: "text"|"number"|"date"|"money" };
 
-export type ReportType = {
+export type Report = {
   id: string;                  // stable id used in routes
   title: string;
   description?: string;
