@@ -2,20 +2,12 @@
 
 import React from "react";
 import { Eye, Download, FileText } from "lucide-react";
-
-type Report = {
-  id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  fields?: string[]; // simple labels shown in the table
-  kind?: "pay" | "w2" | "timecard" | string;
-};
+import type { Report } from "../_data"; // <-- use the SAME Report type as _data.ts
 
 type Props = {
   items: Report[];
   onPreview: (r: Report) => void;
-  onExport?: (r: Report) => void; // optional; we also allow client-side CSV in the modal
+  onExport?: (r: Report) => void;
 };
 
 export default function ReportTable({ items, onPreview, onExport }: Props) {
@@ -46,12 +38,13 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
                   <div className="mt-0.5 text-xs text-gray-500">{r.description}</div>
                 )}
               </td>
+
               <td className="px-3 py-2 text-gray-700">{r.category ?? "-"}</td>
+
               <td className="px-3 py-2 text-gray-700">
-                {Array.isArray(r.fields) && r.fields.length
-                  ? r.fields.join(", ")
-                  : "-"}
+                {renderFields(r.fields)}
               </td>
+
               <td className="px-3 py-2">
                 <div className="flex items-center gap-2">
                   <button
@@ -62,6 +55,7 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
                     <Eye className="h-4 w-4" />
                     View
                   </button>
+
                   <button
                     className="inline-flex items-center gap-1 rounded border px-2 py-1 hover:bg-gray-50"
                     onClick={() => (onExport ? onExport(r) : onPreview(r))}
@@ -70,14 +64,16 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
                     <Download className="h-4 w-4" />
                     CSV
                   </button>
+
                   <span className="inline-flex items-center gap-1 rounded border px-2 py-1 text-gray-500">
                     <FileText className="h-4 w-4" />
-                    {(r.kind ?? "").toUpperCase() || "GEN"}
+                    {(r.kind ?? "").toString().toUpperCase() || "GEN"}
                   </span>
                 </div>
               </td>
             </tr>
           ))}
+
           {!items.length && (
             <tr>
               <td className="px-3 py-8 text-center text-gray-500" colSpan={4}>
@@ -89,4 +85,15 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
       </table>
     </div>
   );
+}
+
+/** Normalize fields which can be string[] OR ({name|label}|string)[] */
+function renderFields(
+  fields?: Array<string | { name?: string; label?: string }>
+) {
+  if (!Array.isArray(fields) || fields.length === 0) return "-";
+  const labels = fields
+    .map((f) => (typeof f === "string" ? f : f.label ?? f.name ?? ""))
+    .filter(Boolean);
+  return labels.length ? labels.join(", ") : "-";
 }
