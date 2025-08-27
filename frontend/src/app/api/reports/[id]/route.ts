@@ -5,18 +5,14 @@ export const dynamic = "force-dynamic";
 
 type Dict<T = any> = Record<string, T>;
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const id = params.id;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function GET(req: NextRequest, ctx: any) {
+  const id = ctx?.params?.id as string;
   const url = new URL(req.url);
   const limit = Number(url.searchParams.get("limit") ?? "0");
 
-  // ✅ Await the mock rows
   const allRows: Dict[] = await getMockRows(id);
   const rows = limit > 0 ? allRows.slice(0, limit) : allRows;
-
   const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 
   return NextResponse.json({
