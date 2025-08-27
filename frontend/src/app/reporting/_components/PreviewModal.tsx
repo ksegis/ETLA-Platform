@@ -2,7 +2,7 @@
 
 import React from "react";
 import type { Report } from "../_data";
-import { getMockRows } from "../_mock"; // can be sync or async
+import { getMockRows } from "../_mock";
 
 import PayStatement from "./forms/PayStatement";
 import W2Form from "./forms/W2Form";
@@ -29,7 +29,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
         setSelectedRow(null);
         return;
       }
-      // Support both sync and async implementations of getMockRows
+      // Support both sync/async implementations of getMockRows
       const result = await Promise.resolve(getMockRows(report.id));
       if (cancelled) return;
       const arr = Array.isArray(result) ? result : [];
@@ -43,13 +43,13 @@ export default function PreviewModal({ open, report, onClose }: Props) {
 
   if (!open || !report) return null;
 
-  // Columns: use keys of first row if present; otherwise fall back to labels in report.fields
+  // Derive columns from first row; fall back to report.fields labels
   const columnKeys =
     rows.length > 0
       ? Object.keys(rows[0])
-      : (report.fields ?? []).map((f) =>
-          typeof f === "string" ? f : f.name ?? f.label ?? ""
-        ).filter(Boolean);
+      : (report.fields ?? [])
+          .map((f) => (typeof f === "string" ? f : f.name ?? f.label ?? ""))
+          .filter(Boolean);
 
   const handleDownloadCSV = () => {
     if (!rows.length) return;
@@ -66,7 +66,6 @@ export default function PreviewModal({ open, report, onClose }: Props) {
                 : typeof v === "string"
                 ? v
                 : String(v);
-            // basic CSV escaping
             const needsQuotes = s.includes(",") || s.includes('"') || s.includes("\n");
             return needsQuotes ? `"${s.replace(/"/g, '""')}"` : s;
           })
@@ -167,13 +166,11 @@ export default function PreviewModal({ open, report, onClose }: Props) {
               <div className="text-sm text-gray-500">Select a row to preview.</div>
             )}
 
-            {selectedRow && report.kind === "pay" && <PayStatement row={selectedRow} />}
-            {selectedRow && report.kind === "w2" && <W2Form row={selectedRow} />}
-            {selectedRow && report.kind === "timecard" && (
-              <TimecardForm row={selectedRow} />
-            )}
+            {selectedRow && report.kind === "pay" && <PayStatement data={selectedRow} />}
+            {selectedRow && report.kind === "w2" && <W2Form data={selectedRow} />}
+            {selectedRow && report.kind === "timecard" && <TimecardForm data={selectedRow} />}
 
-            {/* Default: show a simple details panel if no special kind */}
+            {/* Default: simple details panel when no special kind */}
             {selectedRow && !report.kind && (
               <div className="space-y-2">
                 {Object.entries(selectedRow).map(([k, v]) => (
