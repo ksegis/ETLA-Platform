@@ -4,16 +4,10 @@ import React from "react";
 import PayStatement from "./forms/PayStatement";
 import W2Form from "./forms/W2Form";
 import TimecardForm from "./forms/TimecardForm";
-import { getMockRows } from "../_mock"; // must exist; can return Array<Dict> OR { rows, columns?, total? }
+import { getMockRows } from "../_mock"; // may return Array<Dict> OR { rows, columns?, total? }
+import type { Report } from "../_data";
 
 type Dict = Record<string, any>;
-
-type Report = {
-  id: string;
-  title: string;
-  description?: string;
-  kind?: "pay" | "w2" | "timecard" | string;
-};
 
 type Props = {
   open: boolean;
@@ -21,78 +15,74 @@ type Props = {
   onClose: () => void;
 };
 
-type DataResult = Dict[] | { rows?: Dict[]; columns?: string[]; total?: number };
-
 export default function PreviewModal({ open, report, onClose }: Props) {
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const [rows, setRows] = React.useState<Dict[]>([]);
   const [columns, setColumns] = React.useState<string[]>([]);
+  const [total, setTotal] = React.useState<number | undefined>(undefined);
   const [selectedRow, setSelectedRow] = React.useState<Dict | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      if (!open || !report) {
-        setRows([]); setColumns([]); setSelectedRow(null);
-        return;
-      }
+      if (!open || !report) return;
+      setLoading(true);
+      setError(null);
+      setSelectedRow(null);
 
-      // Normalize whatever the data source returns
-      const raw: DataResult = await Promise.resolve(getMockRows(report.id));
-      const { rows: normRows, columns: normCols } = normalize(raw);
-
-      if (!cancelled) {
-        setRows(normRows);
-        setColumns(normCols);
-        setSelectedRow(normRows[0] ?? null);
+      try {
+        const raw = await (getMockRows as any)(report.id);
+        const { rows, columns, total } = normalizeRows(raw);
+        if (cancelled) return;
+        setRows(rows);
+        setColumns(columns);
+        setTotal(total);
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || "Failed to load data.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open, report]);
 
   if (!open || !report) return null;
 
-  const handleDownloadCSV = () => {
-    if (!rows.length) return;
-    const cols = columns.length ? columns : Object.keys(rows[0] ?? {});
-    const csv = toCSV(rows, cols);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const base = (report.title || report.id || "report").replace(/\s+/g, "_");
-    a.href = url;
-    a.download = `${base}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  // Make facsimile components accept any props (row/data) without TS squawks.
+  const PayAny = PayStatement as unknown as React.ComponentType<any>;
+  const W2Any = W2Form as unknown as React.ComponentType<any>;
+  const TimeAny = TimecardForm as unknown as React.ComponentType<any>;
+
+  const showFacsimile =
+    !!selectedRow &&
+    (report.kind === "pay" || report.kind === "w2" || report.kind === "timecard");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div
-        className="w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-xl bg-white shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="mx-4 w-[min(1100px,95vw)] max-h-[90vh] overflow-hidden rounded-lg bg-white shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold">{report.title}</h2>
-            {report.description ? (
-              <p className="truncate text-sm text-gray-500">{report.description}</p>
-            ) : null}
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">{report.title}</h3>
+            {report.description && (
+              <p className="mt-0.5 text-xs text-gray-500">{report.description}</p>
+            )}
           </div>
-          <div className="ml-4 flex shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
-              className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
-              onClick={handleDownloadCSV}
+              onClick={() => exportCSV(rows, columns, report.id)}
+              className="rounded border px-2 py-1 text-sm hover:bg-gray-50"
             >
-              Download CSV
+              Export CSV
             </button>
             <button
-              className="rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-black"
               onClick={onClose}
+              className="rounded border px-2 py-1 text-sm hover:bg-gray-50"
             >
               Close
             </button>
@@ -102,120 +92,129 @@ export default function PreviewModal({ open, report, onClose }: Props) {
         {/* Body */}
         <div className="grid grid-cols-12">
           {/* Left: table */}
-          <div className="col-span-5 border-r max-h-[80vh] overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white">
-                <tr>
-                  {columns.map((c) => (
-                    <th key={c} className="px-3 py-2 text-left font-medium text-gray-600">
-                      {c}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, idx) => {
-                  const selected = r === selectedRow;
-                  return (
-                    <tr
-                      key={idx}
-                      className={`cursor-pointer ${selected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
-                      onClick={() => setSelectedRow(r)}
-                    >
+          <div className={`col-span-12 ${showFacsimile ? "md:col-span-6" : ""} overflow-auto`}>
+            {loading && <div className="p-6 text-sm text-gray-500">Loading preview…</div>}
+            {error && <div className="p-6 text-sm text-red-600">{error}</div>}
+            {!loading && !error && rows.length === 0 && (
+              <div className="p-6 text-sm text-gray-500">No data.</div>
+            )}
+
+            {!loading && !error && rows.length > 0 && (
+              <div className="overflow-x-auto p-3">
+                <table className="min-w-full text-xs">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-600">
                       {columns.map((c) => (
-                        <td key={c} className="px-3 py-2 text-gray-800">
-                          {fmtCell(r?.[c])}
-                        </td>
+                        <th key={c} className="px-3 py-2 text-left font-medium">
+                          {humanize(c)}
+                        </th>
                       ))}
                     </tr>
-                  );
-                })}
-                {!rows.length && (
-                  <tr>
-                    <td className="px-3 py-8 text-center text-gray-500" colSpan={Math.max(columns.length, 1)}>
-                      No rows to display.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {rows.map((r, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-t hover:bg-indigo-50 ${
+                          selectedRow === r ? "bg-indigo-50" : ""
+                        }`}
+                        onClick={() => setSelectedRow(r)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {columns.map((c) => (
+                          <td key={c} className="px-3 py-1.5 text-gray-800">
+                            {formatCell(r[c])}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-          {/* Right: facsimile or details */}
-          <div className="col-span-7 max-h-[80vh] overflow-auto p-4">
-            {!selectedRow && <div className="text-sm text-gray-500">Select a row to preview.</div>}
-
-            {selectedRow && report.kind === "pay" && <PayStatement data={safeRow(selectedRow)} />}
-            {selectedRow && report.kind === "w2" && <W2Form data={safeRow(selectedRow)} />}
-            {selectedRow && report.kind === "timecard" && <TimecardForm data={safeRow(selectedRow)} />}
-
-            {selectedRow && !["pay", "w2", "timecard"].includes(report.kind || "") && (
-              <div className="space-y-2">
-                {columns.map((k) => (
-                  <div key={k} className="grid grid-cols-3 gap-3">
-                    <div className="col-span-1 text-sm font-medium text-gray-600">{k}</div>
-                    <div className="col-span-2 text-sm text-gray-900">{fmtCell(selectedRow?.[k])}</div>
+                {typeof total === "number" && (
+                  <div className="px-1 py-2 text-[11px] text-gray-500">
+                    Showing {rows.length} of {total}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
+
+          {/* Right: facsimile */}
+          {showFacsimile && (
+            <div className="hidden border-l md:col-span-6 md:block">
+              <div className="h-full overflow-auto p-3">
+                {report.kind === "pay" && (
+                  <PayAny row={selectedRow} data={selectedRow} />
+                )}
+                {report.kind === "w2" && (
+                  <W2Any row={selectedRow} data={selectedRow} />
+                )}
+                {report.kind === "timecard" && (
+                  <TimeAny row={selectedRow} data={selectedRow} />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------------- helpers ---------------- */
+/* -------------- helpers -------------- */
 
-function normalize(raw: DataResult): { rows: Dict[]; columns: string[] } {
-  if (Array.isArray(raw)) {
-    const rows = raw;
-    const cols = rows.length ? Object.keys(rows[0]) : [];
-    return { rows, columns: cols };
+function normalizeRows(
+  input: Dict[] | { rows: Dict[]; columns?: string[]; total?: number }
+): { rows: Dict[]; columns: string[]; total?: number } {
+  if (Array.isArray(input)) {
+    const cols = inferColumns(input);
+    return { rows: input, columns: cols, total: input.length };
   }
-  const rows = Array.isArray(raw?.rows) ? raw.rows! : [];
+  const rows = Array.isArray(input.rows) ? input.rows : [];
   const columns =
-    Array.isArray(raw?.columns) && raw.columns.length
-      ? raw.columns
-      : rows.length
-      ? Object.keys(rows[0])
-      : [];
-  return { rows, columns };
+    input.columns && input.columns.length > 0 ? input.columns : inferColumns(rows);
+  return { rows, columns, total: input.total };
 }
 
-function toCSV(rows: Dict[], columns: string[]) {
-  const header = columns.join(",");
-  const body = rows
-    .map((r) =>
-      columns
-        .map((k) => {
-          const v = r?.[k];
-          const s = v == null ? "" : typeof v === "string" ? v : String(v);
-          const needsQuotes = s.includes(",") || s.includes('"') || s.includes("\n");
-          return needsQuotes ? `"${s.replace(/"/g, '""')}"` : s;
-        })
-        .join(",")
-    )
-    .join("\n");
-  return `${header}\n${body}`;
+function inferColumns(rows: Dict[]): string[] {
+  if (!rows || rows.length === 0) return [];
+  return Object.keys(rows[0]);
 }
 
-function fmtCell(v: any) {
+function humanize(key: string): string {
+  return key
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function formatCell(v: any): string {
   if (v == null) return "";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "boolean") return v ? "Yes" : "No";
   if (v instanceof Date) return v.toISOString().slice(0, 10);
-  if (typeof v === "number") return Number.isFinite(v) ? String(v) : "";
-  if (typeof v === "object") return JSON.stringify(v);
   return String(v);
 }
 
-// Avoid facsimile components crashing on missing numbers (toFixed guards)
-function safeRow(r: Dict): Dict {
-  const clone: Dict = { ...r };
-  for (const k of Object.keys(clone)) {
-    const v = clone[k];
-    if (typeof v === "number" && !Number.isFinite(v)) clone[k] = 0;
-    if (v == null) clone[k] = "";
-  }
-  return clone;
+function toCSV(rows: Dict[], columns: string[]): string {
+  const esc = (s: any) => {
+    const t = s == null ? "" : String(s);
+    if (/[",\n]/.test(t)) return `"${t.replace(/"/g, '""')}"`;
+    return t;
+  };
+  const header = columns.map(esc).join(",");
+  const data = rows.map((r) => columns.map((c) => esc(r[c])).join(",")).join("\n");
+  return [header, data].filter(Boolean).join("\n");
+}
+
+function exportCSV(rows: Dict[], columns: string[], id: string) {
+  const csv = toCSV(rows, columns);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${id}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
