@@ -1,317 +1,375 @@
-// Mock data generators for the Demographics reports only.
-// Intentionally synchronous (returns arrays) to avoid Promise vs array build errors.
+// frontend/src/app/reporting/_mock_demographics.ts
 
-import { DEMOGRAPHIC_IDS } from "./_demographics";
+// Synchronous mock row generator for demographic reports.
+// Usage elsewhere can call either `getMockRows(id)` or `await getMockRows(id, filters, limit)`;
+// it returns arrays (not Promises), so `await` is fine but unnecessary.
 
-// ---------- helpers ----------
 type Row = Record<string, any>;
 
-const firstNames = ["Alex","Jordan","Taylor","Morgan","Avery","Riley","Casey","Drew","Jamie","Quinn","Harper","Parker","Rowan","Shawn","Skyler"];
-const lastNames  = ["Lee","Garcia","Nguyen","Patel","Kim","Cohen","Murphy","Johnson","Lopez","Wright","Lewis","Anderson","Walker","Young","Hall"];
-const genders    = ["Male","Female","Non-Binary","Unspecified"];
-const marital    = ["Single","Married","Divorced","Domestic Partner"];
-const races      = ["White","Black or African American","Hispanic or Latino","Asian","American Indian or Alaska Native","Native Hawaiian or Other Pacific Islander","Two or More Races","Not Specified"];
-const eeoCats    = ["Executive/Sr Officials","First/Mid Officials","Professionals","Technicians","Sales Workers","Administrative Support","Craft Workers","Operatives","Laborers","Service Workers"];
-const depts      = ["Operations","Sales","Engineering","Finance","HR","Marketing","Customer Support","R&D"];
-const titles     = ["Analyst","Manager","Engineer","Specialist","Coordinator","Director","Technician","Associate"];
-const locations  = ["New York, NY","Austin, TX","Chicago, IL","Phoenix, AZ","Atlanta, GA","Seattle, WA","Boston, MA","Denver, CO"];
-const states     = ["NY","TX","IL","AZ","GA","WA","MA","CO","CA","FL","NC","NJ","PA","OH","MI"];
-const filingFed  = ["Single","Married filing jointly","Married filing separately","Head of household"];
-const filingSt   = ["Single","Married","Head of household","Other"];
-const empTypes   = ["FT","PT","Seasonal","Contractor"];
-const coverageLv = ["Employee Only","Employee + Spouse","Employee + Child(ren)","Family"];
+/** Canonical IDs used by /reporting/_data.ts */
+export const DEMOGRAPHIC_IDS = {
+  EMPLOYEE_MASTER: "employee-master-demographics",
+  EEO1: "eeo-1",
+  VETS4212: "vets-4212",
+  BENEFIT_ELIG: "benefit-eligibility",
+  PAYROLL_TAX: "payroll-tax-demographics",
+  TURNOVER: "turnover-termination",
+  CUSTOM_ANALYTICS: "custom-demographic-analytics",
+} as const;
 
-function rndInt(min: number, max: number) {
-  return Math.floor(min + Math.random() * (max - min + 1));
-}
-function pick<T>(arr: T[]): T {
-  return arr[rndInt(0, arr.length - 1)];
-}
-function pad2(n: number) {
-  return n < 10 ? `0${n}` : String(n);
-}
-function dateStr(year: number, month: number, day: number) {
-  return `${year}-${pad2(month)}-${pad2(day)}`;
-}
-function randomDOB(minAge = 19, maxAge = 64) {
-  const age = rndInt(minAge, maxAge);
-  const year = new Date().getFullYear() - age;
-  return dateStr(year, rndInt(1, 12), rndInt(1, 28));
-}
-function randomHireDate() {
-  const year = rndInt(2015, new Date().getFullYear());
-  return dateStr(year, rndInt(1, 12), rndInt(1, 28));
-}
-function randomTermDate(hire: string) {
-  // ~25% chance terminated, ensure after hire
-  if (Math.random() < 0.75) return "";
-  const [hy, hm] = hire.split("-").map((x) => parseInt(x, 10));
-  const y = rndInt(Math.max(hy, 2016), new Date().getFullYear());
+type DemoId = (typeof DEMOGRAPHIC_IDS)[keyof typeof DEMOGRAPHIC_IDS];
+
+// ---------- helpers ----------
+const firstNames = [
+  "Ava","Olivia","Emma","Sophia","Mia","Isabella","Noah","Liam","Mason","Ethan",
+  "Lucas","Logan","Elijah","James","Alexander","Amelia","Harper","Evelyn","Ella","Abigail",
+];
+const lastNames = [
+  "Anderson","Brown","Clark","Davis","Evans","Garcia","Harris","Jackson","Johnson","Jones",
+  "Martinez","Miller","Moore","Robinson","Smith","Taylor","Thomas","Thompson","White","Williams",
+];
+const depts = ["Operations","Finance","HR","Sales","Marketing","Engineering","Support"];
+const titles = [
+  "Analyst","Specialist","Coordinator","Engineer I","Engineer II","Manager",
+  "Sr. Manager","Director","VP","Technician",
+];
+const locations = ["NYC HQ","Austin Plant","Remote - US","Chicago Office","LA Office"];
+const states = ["NY","TX","IL","CA","FL","WA","CO","MA","NJ","GA"];
+const races = [
+  "White","Black or African American","Hispanic or Latino","Asian",
+  "Native Hawaiian or Other Pacific Islander","American Indian or Alaska Native","Two or More Races",
+];
+const genders = ["Male","Female","Non-Binary","Unspecified"] as const;
+const maritalStatuses = ["Single","Married","Divorced","Widowed"] as const;
+const filingStatusesFed = ["Single","Married Filing Jointly","Married Filing Separately","Head of Household"] as const;
+const filingStatusesState = ["Single","Married","Head of Household","Other"] as const;
+const employmentTypes = ["FT","PT","Seasonal","Contractor"] as const;
+
+const rndInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = <T,>(arr: readonly T[]) => arr[rndInt(0, arr.length - 1)];
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const dateISO = (y: number, m: number, d: number) => `${y}-${pad2(m)}-${pad2(d)}`;
+const randDate = (y1: number, y2: number) => {
+  const y = rndInt(y1, y2);
   const m = rndInt(1, 12);
-  return dateStr(y, m, rndInt(1, 28));
-}
-function maskSSN(last4?: string) {
-  const l4 = last4 || String(rndInt(1000, 9999));
-  return `XXX-XX-${l4}`;
-}
-function randomPhone() {
-  return `(${rndInt(200, 989)}) ${rndInt(100, 999)}-${rndInt(1000, 9999)}`;
-}
-function randomEmail(first: string, last: string) {
-  const domains = ["gmail.com","yahoo.com","outlook.com","icloud.com"];
-  return `${first}.${last}`.toLowerCase() + "@" + pick(domains);
-}
-function randomAddress() {
-  const streetNo = rndInt(100, 9999);
-  const streetNm = ["Main","1st","Oak","Maple","Cedar","Park","Washington","Lake","Hill"][rndInt(0,8)];
-  const citySt = pick(locations);
-  const [city, state] = citySt.split(", ").map((s) => s.trim());
-  const zip = String(rndInt(10000, 99999));
-  return {
-    street: `${streetNo} ${streetNm} St`,
-    city,
-    state,
-    zip,
-    oneLine: `${streetNo} ${streetNm} St, ${city}, ${state} ${zip}`,
-  };
-}
-function bankLast4() {
-  return String(rndInt(1000, 9999));
-}
-function dependentSummary(count = rndInt(0, 3)) {
-  const out: string[] = [];
-  for (let i = 0; i < count; i++) {
-    const fn = pick(firstNames);
-    const ln = pick(lastNames);
-    const rel = pick(["Spouse","Child","Domestic Partner","Other"]);
-    const g = pick(["Male","Female","Non-Binary"]);
-    const dob = randomDOB(0, 24);
-    out.push(`${fn} ${ln} (${dob}, ${rel}, ${g})`);
-  }
-  return out.join("; ");
-}
-function ageFromDOB(dob: string) {
-  if (!dob) return "";
-  const d = new Date(dob);
-  const now = new Date();
-  let a = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+  const d = rndInt(1, 28);
+  return dateISO(y, m, d);
+};
+
+const maskSSN = (ssn: string) => `***-**-${ssn.replace(/\D/g, "").slice(-4).padStart(4, "0")}`;
+const bankLast4 = () => String(rndInt(0, 9999)).padStart(4, "0");
+const phone = () => `(${rndInt(200, 989)}) ${rndInt(200, 989)}-${String(rndInt(0, 9999)).padStart(4, "0")}`;
+const email = (first: string, last: string) =>
+  `${first}.${last}`.toLowerCase().replace(/[^a-z.]/g, "") + "@examplemail.com";
+const address = () => ({
+  street: `${rndInt(10, 9999)} ${pick([
+    "Main","Oak","Pine","Maple","Cedar","Elm","Sunset","Ridge","Park","Lake",
+  ])} ${pick(["St","Ave","Blvd","Rd"])}`,
+  city: pick(["New York","Austin","Chicago","Los Angeles","Miami","Seattle","Denver","Boston","Newark","Atlanta"]),
+  state: pick(states),
+  zip: String(rndInt(10000, 99999)),
+});
+
+const ageFromDOB = (dobISO: string, asOfISO = "2025-01-01") => {
+  const d1 = new Date(dobISO);
+  const d2 = new Date(asOfISO);
+  let a = d2.getFullYear() - d1.getFullYear();
+  const m = d2.getMonth() - d1.getMonth();
+  if (m < 0 || (m === 0 && d2.getDate() < d1.getDate())) a--;
   return a;
-}
-function tenureFromHire(hire: string) {
-  if (!hire) return "";
-  const d = new Date(hire);
-  const now = new Date();
-  let y = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) y--;
-  return y;
-}
+};
+const yearsBetween = (startISO: string, endISO = "2025-01-01") => {
+  const s = new Date(startISO).getTime();
+  const e = new Date(endISO).getTime();
+  return Math.max(0, +( (e - s) / (1000 * 60 * 60 * 24 * 365.25) ).toFixed(2));
+};
 
-// Build a core person record used by multiple reports
-function makePerson(idx: number) {
-  const first = pick(firstNames);
-  const last = pick(lastNames);
-  const mi = String.fromCharCode(65 + rndInt(0, 25));
-  const pref = Math.random() < 0.15 ? first : "";
-  const dob = randomDOB();
+const nameFor = (i: number) => {
+  const first = firstNames[i % firstNames.length];
+  const last = lastNames[i % lastNames.length];
+  const middle = String.fromCharCode(65 + (i % 26)); // A-Z
+  return { first, last, middle };
+};
+
+// ---------- generators per report ----------
+
+function genEmployeeMaster(i: number): Row {
+  const id = String(10000 + i);
+  const { first, last, middle } = nameFor(i);
+  const pref = rndInt(0, 4) === 0 ? first.slice(0, 3) : first;
+  const dob = randDate(1965, 2004);
   const gender = pick(genders);
-  const ms = pick(marital);
-  const ssnLast4 = String(rndInt(1000, 9999));
-  const addr = randomAddress();
-  const email = randomEmail(first, last);
-  const phone = randomPhone();
-  const ec = `${pick(firstNames)} ${pick(lastNames)} (${pick(["Spouse","Parent","Sibling","Friend"])}, ${randomPhone()})`;
-  const hire = randomHireDate();
-  const statusPool = ["Active","Active","Active","LOA","Terminated"];
-  const status = pick(statusPool);
-  const termDate = status === "Terminated" ? randomTermDate(hire) : "";
-  const jobTitle = pick(titles);
+  const marital = pick(maritalStatuses);
+  const ssn = maskSSN(`${rndInt(100, 999)}-${rndInt(10, 99)}-${rndInt(1000, 9999)}`);
+  const addr = address();
+  const hire = randDate(2010, 2024);
+  const status = pick(["Active","Terminated","LOA","Retired","Onboarding"]);
+  const termDate = status === "Terminated" ? randDate(2020, 2025) : "";
+  const job = pick(titles);
   const dept = pick(depts);
-  const loc = `${addr.city}, ${addr.state}`;
-  const empId = `E${String(10000 + idx)}`;
+  const loc = pick(locations);
+  const eName = `${pick(["Alex","Jamie","Taylor","Morgan","Casey"])} ${pick(["Lee","Reed","Nguyen","Patel","King"])}`;
+  const eRel = pick(["Spouse","Parent","Sibling","Friend","Other"]);
 
   return {
-    empId, first, last, mi, pref, dob, gender, ms,
-    ssnMasked: maskSSN(ssnLast4),
-    addressOneLine: addr.oneLine,
-    email, phone, emergency: ec,
-    hire, status, termDate,
-    jobTitle, dept, loc,
-    stateRes: addr.state,
-    workState: pick(states),
+    employeeId: id,
+    firstName: first,
+    lastName: last,
+    middleInitial: middle,
+    preferredName: pref,
+    dateOfBirth: dob,
+    gender,
+    maritalStatus: marital,
+    ssnMasked: ssn,
+    addressStreet: addr.street,
+    addressCity: addr.city,
+    addressState: addr.state,
+    addressZip: addr.zip,
+    personalEmail: email(first, last),
+    personalPhone: phone(),
+    emergencyContact: `${eName} (${eRel}) ${phone()}`,
+    hireDate: hire,
+    employmentStatus: status,
+    terminationDate: termDate,
+    jobTitle: job,
+    department: dept,
+    location: loc,
   };
 }
 
-// ---------- per-report row builders ----------
-function rowsEmpMaster(limit = 50): Row[] {
-  const out: Row[] = [];
+function genEEO1(i: number): Row {
+  const id = String(10000 + i);
+  const { first, last } = nameFor(i);
+  const gender = pick(genders);
+  const race = pick(races);
+  const jobCat = pick([
+    "1. Exec/Sr Officials & Mgrs",
+    "2. First/Mid Officials & Mgrs",
+    "3. Professionals",
+    "4. Technicians",
+    "5. Sales Workers",
+    "6. Administrative Support",
+    "7. Craft Workers",
+    "8. Operatives",
+    "9. Laborers & Helpers",
+    "10. Service Workers",
+  ]);
+  const hire = randDate(2010, 2024);
+  const loc = pick(locations);
+  const status = pick(["Active","LOA","Terminated"]);
+  return {
+    employeeId: id,
+    firstName: first,
+    lastName: last,
+    gender,
+    raceEthnicity: race,
+    jobCategory: jobCat,
+    hireDate: hire,
+    location: loc,
+    employmentStatus: status,
+  };
+}
+
+function genVets4212(i: number): Row {
+  const id = String(10000 + i);
+  const { first, last } = nameFor(i);
+  const job = pick(titles);
+  const dept = pick(depts);
+  const hire = randDate(2010, 2024);
+  const veteranStatus = pick(["Not a Veteran","Protected Veteran","Armed Forces Service Medal Vet","Recently Separated Vet"]);
+  const loc = pick(locations);
+  return {
+    employeeId: id,
+    firstName: first,
+    lastName: last,
+    jobTitle: job,
+    department: dept,
+    hireDate: hire,
+    veteranStatus,
+    location: loc,
+  };
+}
+
+function genBenefitEligibility(i: number): Row {
+  const id = String(10000 + i);
+  const { first, last } = nameFor(i);
+  const dob = randDate(1970, 2004);
+  const gender = pick(genders);
+  const marital = pick(maritalStatuses);
+  const addr = address();
+  const hire = randDate(2015, 2024);
+  const empStatus = pick(["Full-time","Part-time","Seasonal","Contractor"]);
+  const elig = randDate(2015, 2025);
+  const depNames = [
+    { n: "Jordan", g: "Male" },
+    { n: "Riley", g: "Female" },
+    { n: "Quinn", g: "Non-Binary" },
+  ];
+  const depCount = rndInt(0, 2);
+  const coverage = pick([
+    "Employee Only",
+    "Employee + Spouse",
+    "Employee + Child(ren)",
+    "Family",
+  ]);
+
+  const base: Row = {
+    employeeId: id,
+    firstName: first,
+    lastName: last,
+    dateOfBirth: dob,
+    gender,
+    maritalStatus: marital,
+    addressStreet: addr.street,
+    addressCity: addr.city,
+    addressState: addr.state,
+    addressZip: addr.zip,
+    hireDate: hire,
+    employmentStatus: empStatus,
+    benefitEligibilityDate: elig,
+    coverageLevel: coverage,
+  };
+
+  for (let d = 0; d < depCount; d++) {
+    const dn = depNames[d];
+    base[`dependent${d + 1}Name`] = `${dn.n} ${last}`;
+    base[`dependent${d + 1}DOB`] = randDate(2012, 2022);
+    base[`dependent${d + 1}Relationship`] = pick(["Child","Spouse","Domestic Partner"]);
+    base[`dependent${d + 1}Gender`] = dn.g;
+  }
+  return base;
+}
+
+function genPayrollTax(i: number): Row {
+  const id = String(10000 + i);
+  const { first, last } = nameFor(i);
+  const ssn = maskSSN(`${rndInt(100, 999)}-${rndInt(10, 99)}-${rndInt(1000, 9999)}`);
+  const addr = address();
+  const stateRes = addr.state;
+  const workState = pick(states);
+  const fedStatus = pick(filingStatusesFed);
+  const stStatus = pick(filingStatusesState);
+  const allowances = rndInt(0, 5);
+  return {
+    employeeId: id,
+    firstName: first,
+    lastName: last,
+    ssnMasked: ssn,
+    addressStreet: addr.street,
+    addressCity: addr.city,
+    addressState: addr.state,
+    addressZip: addr.zip,
+    stateOfResidence: stateRes,
+    workLocationState: workState,
+    federalFilingStatus: fedStatus,
+    stateFilingStatus: stStatus,
+    allowances,
+    directDepositLast4: bankLast4(),
+  };
+}
+
+function genTurnover(i: number): Row {
+  const id = String(10000 + i);
+  const { first, last } = nameFor(i);
+  const hire = randDate(2015, 2023);
+  const term = randDate(2020, 2025);
+  const job = pick(titles);
+  const dept = pick(depts);
+  const loc = pick(locations);
+  const statusAtExit = pick(["Voluntary","Involuntary","Layoff","Retirement","Other"]);
+  const reason = pick(["Better Pay","Attendance","Performance","Reductions","Retired","Personal"]);
+  const gender = pick(genders);
+  const race = pick(races);
+  return {
+    employeeId: id,
+    firstName: first,
+    lastName: last,
+    hireDate: hire,
+    terminationDate: term,
+    jobTitle: job,
+    department: dept,
+    location: loc,
+    employmentStatusAtExit: statusAtExit,
+    terminationReason: reason,
+    gender,
+    raceEthnicity: race,
+  };
+}
+
+function genCustomAnalytics(i: number): Row {
+  const id = String(10000 + i);
+  const { first, last } = nameFor(i);
+  const dob = randDate(1970, 2004);
+  const hire = randDate(2015, 2024);
+  const dept = pick(depts);
+  const loc = pick(locations);
+  const gender = pick(genders);
+  const race = pick(races);
+  const empType = pick(employmentTypes);
+  return {
+    employeeId: id,
+    gender,
+    raceEthnicity: race,
+    age: ageFromDOB(dob),
+    tenureYears: yearsBetween(hire),
+    department: dept,
+    location: loc,
+    employmentType: empType,
+  };
+}
+
+// ---------- main dispatcher ----------
+
+/**
+ * Return mock rows for a demographic report.
+ * @param id One of DEMOGRAPHIC_IDS values
+ * @param filters Optional filters (e.g., { location: "NYC HQ" })
+ * @param limit Number of rows (default 50)
+ */
+export function getMockRows(
+  id: string,
+  filters: Partial<Row> = {},
+  limit = 50
+): Row[] {
+  const rows: Row[] = [];
   for (let i = 0; i < limit; i++) {
-    const p = makePerson(i);
-    out.push({
-      "Employee ID": p.empId,
-      "First Name": p.first,
-      "Last Name": p.last,
-      "Middle Initial": p.mi,
-      "Preferred Name": p.pref,
-      "Date of Birth": p.dob,
-      "Gender": p.gender,
-      "Marital Status": p.ms,
-      "Social Security Number (masked)": p.ssnMasked,
-      "Address (Street, City, State, Zip)": p.addressOneLine,
-      "Personal Email": p.email,
-      "Personal Phone": p.phone,
-      "Emergency Contact (Name, Relationship, Phone)": p.emergency,
-      "Hire Date": p.hire,
-      "Employment Status": p.status,
-      "Termination Date": p.termDate,
-      "Job Title": p.jobTitle,
-      "Department": p.dept,
-      "Location": p.loc,
-    });
+    let r: Row;
+    switch (id as DemoId) {
+      case DEMOGRAPHIC_IDS.EMPLOYEE_MASTER:
+        r = genEmployeeMaster(i);
+        break;
+      case DEMOGRAPHIC_IDS.EEO1:
+        r = genEEO1(i);
+        break;
+      case DEMOGRAPHIC_IDS.VETS4212:
+        r = genVets4212(i);
+        break;
+      case DEMOGRAPHIC_IDS.BENEFIT_ELIG:
+        r = genBenefitEligibility(i);
+        break;
+      case DEMOGRAPHIC_IDS.PAYROLL_TAX:
+        r = genPayrollTax(i);
+        break;
+      case DEMOGRAPHIC_IDS.TURNOVER:
+        r = genTurnover(i);
+        break;
+      case DEMOGRAPHIC_IDS.CUSTOM_ANALYTICS:
+        r = genCustomAnalytics(i);
+        break;
+      default:
+        // Fallback to a lightweight generic row so callers never explode.
+        r = { employeeId: String(10000 + i) };
+        break;
+    }
+    rows.push(r);
   }
-  return out;
-}
 
-function rowsEEO(limit = 50): Row[] {
-  const out: Row[] = [];
-  for (let i = 0; i < limit; i++) {
-    const p = makePerson(i);
-    out.push({
-      "Employee ID": p.empId,
-      "First Name": p.first,
-      "Last Name": p.last,
-      "Gender": p.gender,
-      "Race / Ethnicity": pick(races),
-      "Job Category (EEO category)": pick(eeoCats),
-      "Hire Date": p.hire,
-      "Location / Establishment": p.loc,
-      "Employment Status": p.status,
-    });
+  // Simple client-side style filtering (exact-match on provided keys)
+  if (filters && Object.keys(filters).length) {
+    return rows.filter((row) =>
+      Object.entries(filters).every(([k, v]) => (v == null ? true : row[k] === v))
+    );
   }
-  return out;
+  return rows;
 }
-
-function rowsVETS(limit = 50): Row[] {
-  const out: Row[] = [];
-  for (let i = 0; i < limit; i++) {
-    const p = makePerson(i);
-    out.push({
-      "Employee ID": p.empId,
-      "First Name": p.first,
-      "Last Name": p.last,
-      "Job Title": p.jobTitle,
-      "Department": p.dept,
-      "Hire Date": p.hire,
-      "Veteran Status": Math.random() < 0.12 ? "Yes" : "No",
-      "Location": p.loc,
-    });
-  }
-  return out;
-}
-
-function rowsBenefit(limit = 50): Row[] {
-  const out: Row[] = [];
-  for (let i = 0; i < limit; i++) {
-    const p = makePerson(i);
-    const elig = p.status === "Active" ? p.hire : "";
-    out.push({
-      "Employee ID": p.empId,
-      "First Name": p.first,
-      "Last Name": p.last,
-      "Date of Birth": p.dob,
-      "Gender": p.gender,
-      "Marital Status": p.ms,
-      "Address (Street, City, State, Zip)": p.addressOneLine,
-      "Hire Date": p.hire,
-      "Employment Status": Math.random() < 0.8 ? "Full-time" : "Part-time",
-      "Benefit Eligibility Date": elig,
-      "Dependent Info (Name, DOB, Relationship, Gender)": dependentSummary(),
-      "Coverage Level": pick(coverageLv),
-    });
-  }
-  return out;
-}
-
-function rowsPayrollTax(limit = 50): Row[] {
-  const out: Row[] = [];
-  for (let i = 0; i < limit; i++) {
-    const p = makePerson(i);
-    out.push({
-      "Employee ID": p.empId,
-      "First Name": p.first,
-      "Last Name": p.last,
-      "SSN (masked)": p.ssnMasked,
-      "Address (Street, City, State, Zip)": p.addressOneLine,
-      "State of Residence": p.stateRes,
-      "Work Location State": p.workState,
-      "Federal Filing Status": pick(filingFed),
-      "State Filing Status": pick(filingSt),
-      "Number of Allowances / Dependents": rndInt(0, 5),
-      "Direct Deposit Bank Info (masked, last 4 digits only)": `Acct •••• ${bankLast4()}`,
-    });
-  }
-  return out;
-}
-
-function rowsTurnover(limit = 50): Row[] {
-  const out: Row[] = [];
-  for (let i = 0; i < limit; i++) {
-    const p = makePerson(i);
-    const exited = p.termDate ? "Terminated" : p.status;
-    const reason = p.termDate ? pick(["Voluntary","Involuntary","Layoff","Job Abandonment","Retirement"]) : "";
-    const code = reason ? pick(["VOL","INV","LAY","ABN","RET"]) : "";
-    out.push({
-      "Employee ID": p.empId,
-      "First Name": p.first,
-      "Last Name": p.last,
-      "Hire Date": p.hire,
-      "Termination Date": p.termDate,
-      "Job Title": p.jobTitle,
-      "Department": p.dept,
-      "Location": p.loc,
-      "Employment Status at Exit": exited,
-      "Termination Reason / Code": reason ? `${reason} (${code})` : "",
-      "Gender": p.gender,
-      "Race / Ethnicity": pick(races),
-    });
-  }
-  return out;
-}
-
-function rowsCustomAnalytics(limit = 50): Row[] {
-  const out: Row[] = [];
-  for (let i = 0; i < limit; i++) {
-    const p = makePerson(i);
-    out.push({
-      "Employee ID": p.empId,
-      "Gender": p.gender,
-      "Race / Ethnicity": pick(races),
-      "Age": ageFromDOB(p.dob),
-      "Tenure": tenureFromHire(p.hire),
-      "Department": p.dept,
-      "Location": p.loc,
-      "Employment Type": pick(empTypes),
-    });
-  }
-  return out;
-}
-
-// Public API used by the app's preview/export layer.
-// Returns an array (not a Promise) to keep the rest of your code happy.
-export function getDemographicMockRows(id: string, limit = 50): Row[] {
-  switch (id) {
-    case "emp_master_demo":       return rowsEmpMaster(limit);
-    case "eeo_1":                 return rowsEEO(limit);
-    case "vets_4212":             return rowsVETS(limit);
-    case "benefit_eligibility":   return rowsBenefit(limit);
-    case "payroll_tax_demo":      return rowsPayrollTax(limit);
-    case "turnover_demo":         return rowsTurnover(limit);
-    case "custom_demo_analytics": return rowsCustomAnalytics(limit);
-    default:                      return [];
-  }
-}
-
-// Helper so your aggregator can detect what we handle.
-export const DEMOGRAPHIC_MOCK_IDS = DEMOGRAPHIC_IDS.slice();
