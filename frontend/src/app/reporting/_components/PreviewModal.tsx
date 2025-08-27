@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import type { Report } from "../_data";
-import { getMockRows } from "../_mock";
+import { getMockRows } from "../_mock"; // must return Array<Dict> OR { rows: Array<Dict>, columns?: string[], total?: number }
 
 import PayStatement from "./forms/PayStatement";
 import W2Form from "./forms/W2Form";
@@ -10,30 +9,49 @@ import TimecardForm from "./forms/TimecardForm";
 
 type Dict = Record<string, any>;
 
+type Report = {
+  id: string;
+  title: string;
+  description?: string;
+  kind?: "pay" | "w2" | "timecard" | string;
+  // fields?: Array<string | { name?: string; label?: string }>; // optional; not required here
+};
+
 type Props = {
   open: boolean;
   report: Report | null;
   onClose: () => void;
 };
 
+type DataResult = Dict[] | { rows?: Dict[]; columns?: string[]; total?: number };
+
 export default function PreviewModal({ open, report, onClose }: Props) {
   const [rows, setRows] = React.useState<Dict[]>([]);
+  const [columns, setColumns] = React.useState<string[]>([]);
   const [selectedRow, setSelectedRow] = React.useState<Dict | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
+
     (async () => {
       if (!open || !report) {
         setRows([]);
+        setColumns([]);
         setSelectedRow(null);
         return;
       }
-      const result = await Promise.resolve(getMockRows(report.id));
+
+      // Normalize whatever getMockRows(report.id) returns
+      const raw: DataResult = await Promise.resolve(getMockRows(report.id));
+
+      const { rows: normRows, columns: normCols } = normalize(raw);
       if (cancelled) return;
-      const arr = Array.isArray(result) ? result : [];
-      setRows(arr);
-      setSelectedRow(arr[0] ?? null);
+
+      setRows(normRows);
+      setColumns(normCols);
+      setSelectedRow(normRows[0] ?? null);
     })();
+
     return () => {
       cancelled = true;
     };
@@ -41,40 +59,15 @@ export default function PreviewModal({ open, report, onClose }: Props) {
 
   if (!open || !report) return null;
 
-  const columnKeys =
-    rows.length > 0
-      ? Object.keys(rows[0])
-      : (report.fields ?? [])
-          .map((f) => (typeof f === "string" ? f : f.name ?? f.label ?? ""))
-          .filter(Boolean);
-
   const handleDownloadCSV = () => {
     if (!rows.length) return;
-    const cols = columnKeys.length ? columnKeys : Object.keys(rows[0] ?? {});
-    const header = cols.join(",");
-    const body = rows
-      .map((r) =>
-        cols
-          .map((k) => {
-            const v = r?.[k];
-            const s =
-              v === null || v === undefined
-                ? ""
-                : typeof v === "string"
-                ? v
-                : String(v);
-            const needsQuotes = s.includes(",") || s.includes('"') || s.includes("\n");
-            return needsQuotes ? `"${s.replace(/"/g, '""')}"` : s;
-          })
-          .join(",")
-      )
-      .join("\n");
-    const csv = `${header}\n${body}`;
+    const cols = columns.length ? columns : Object.keys(rows[0] ?? {});
+    const csv = buildCSV(rows, cols);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
+    const base = (report.title || report.id || "report").replace(/\s+/g, "_");
     a.href = url;
-    const base = report.title?.replace(/\s+/g, "_") || report.id;
     a.download = `${base}.csv`;
     a.click();
     URL.revokeObjectURL(url);
@@ -122,7 +115,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white">
                 <tr>
-                  {columnKeys.map((c) => (
+                  {columns.map((c) => (
                     <th key={c} className="px-3 py-2 text-left font-medium text-gray-600">
                       {c}
                     </th>
@@ -138,7 +131,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
                       className={`cursor-pointer ${selected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
                       onClick={() => setSelectedRow(r)}
                     >
-                      {columnKeys.map((c) => (
+                      {columns.map((c) => (
                         <td key={c} className="px-3 py-2 text-gray-800">
                           {formatCell(r?.[c])}
                         </td>
@@ -148,7 +141,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
                 })}
                 {rows.length === 0 && (
                   <tr>
-                    <td className="px-3 py-8 text-center text-gray-500" colSpan={columnKeys.length || 1}>
+                    <td className="px-3 py-8 text-center text-gray-500" colSpan={columns.length || 1}>
                       No rows to display.
                     </td>
                   </tr>
@@ -163,18 +156,18 @@ export default function PreviewModal({ open, report, onClose }: Props) {
               <div className="text-sm text-gray-500">Select a row to preview.</div>
             )}
 
-            {/* Props match each component’s expected API */}
+            {/* Facsimiles – prop names matched to each component */}
             {selectedRow && report.kind === "pay" && <PayStatement data={selectedRow} />}
             {selectedRow && report.kind === "w2" && <W2Form row={selectedRow} />}
             {selectedRow && report.kind === "timecard" && <TimecardForm row={selectedRow} />}
 
-            {/* Default: simple details panel when no special kind */}
-            {selectedRow && !report.kind && (
+            {/* Default details panel when there’s no facsimile */}
+            {selectedRow && !["pay", "w2", "timecard"].includes(report.kind || "") && (
               <div className="space-y-2">
-                {Object.entries(selectedRow).map(([k, v]) => (
+                {columns.map((k) => (
                   <div key={k} className="grid grid-cols-3 gap-3">
                     <div className="col-span-1 text-sm font-medium text-gray-600">{k}</div>
-                    <div className="col-span-2 text-sm text-gray-900">{formatCell(v)}</div>
+                    <div className="col-span-2 text-sm text-gray-900">{formatCell(selectedRow?.[k])}</div>
                   </div>
                 ))}
               </div>
@@ -186,9 +179,54 @@ export default function PreviewModal({ open, report, onClose }: Props) {
   );
 }
 
+/* ---------------- helpers ---------------- */
+
+function normalize(raw: DataResult): { rows: Dict[]; columns: string[] } {
+  // If an array was returned, derive columns from the first row
+  if (Array.isArray(raw)) {
+    const rows = raw;
+    const cols = rows.length ? Object.keys(rows[0]) : [];
+    return { rows, columns: cols };
+  }
+
+  // If an object shape was returned
+  const rows = Array.isArray(raw?.rows) ? raw!.rows! : [];
+  const columns =
+    Array.isArray(raw?.columns) && raw!.columns!.length
+      ? raw!.columns!
+      : rows.length
+      ? Object.keys(rows[0])
+      : [];
+
+  return { rows, columns };
+}
+
+function buildCSV(rows: Dict[], columns: string[]) {
+  const header = columns.join(",");
+  const body = rows
+    .map((r) =>
+      columns
+        .map((k) => {
+          const v = r?.[k];
+          const s =
+            v === null || v === undefined
+              ? ""
+              : typeof v === "string"
+              ? v
+              : String(v);
+          const needsQuotes = s.includes(",") || s.includes('"') || s.includes("\n");
+          return needsQuotes ? `"${s.replace(/"/g, '""')}"` : s;
+        })
+        .join(",")
+    )
+    .join("\n");
+  return `${header}\n${body}`;
+}
+
 function formatCell(v: any) {
   if (v === null || v === undefined) return "";
-  if (typeof v === "number") return Number.isFinite(v) ? v.toString() : "";
   if (v instanceof Date) return v.toISOString().slice(0, 10);
+  if (typeof v === "number") return Number.isFinite(v) ? String(v) : "";
+  if (typeof v === "object") return JSON.stringify(v); // keep nested values legible
   return String(v);
 }
