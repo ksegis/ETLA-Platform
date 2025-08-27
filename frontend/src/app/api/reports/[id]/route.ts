@@ -1,25 +1,28 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getMockRows } from "@/app/reporting/_mock";
 
-export const dynamic = "force-dynamic"; // keep previews fresh
+export const dynamic = "force-dynamic";
 
-export async function GET(req: Request, context: any) {
-  const id = String(context?.params?.id || "report");
-  const { searchParams } = new URL(req.url);
+type Dict<T = any> = Record<string, T>;
 
-  const limit = Number(searchParams.get("limit") || 50); // default preview size
-  const allRows = getMockRows(id);
-  const rows = allRows.slice(0, Math.max(0, limit));
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
+  const url = new URL(req.url);
+  const limit = Number(url.searchParams.get("limit") ?? "0");
 
-  const columns = rows[0] ? Object.keys(rows[0]) : [];
+  // ✅ Await the mock rows
+  const allRows: Dict[] = await getMockRows(id);
+  const rows = limit > 0 ? allRows.slice(0, limit) : allRows;
 
-  return NextResponse.json(
-    {
-      id,
-      total: allRows.length,
-      columns,
-      rows,
-    },
-    { status: 200 }
-  );
+  const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+
+  return NextResponse.json({
+    id,
+    total: allRows.length,
+    columns,
+    rows,
+  });
 }
