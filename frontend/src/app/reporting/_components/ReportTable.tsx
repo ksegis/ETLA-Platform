@@ -1,45 +1,54 @@
 "use client";
 
 import React from "react";
-import { Eye, Download, FileText } from "lucide-react";
-import type { Report } from "../_data"; // <-- use the SAME Report type as _data.ts
+import { FileText, Eye, Download } from "lucide-react";
+import type { Report } from "../_data";
 
 type Props = {
   items: Report[];
-  onPreview: (r: Report) => void;
-  onExport?: (r: Report) => void;
+  onPreview: (report: Report) => void;
+  onExport: (report: Report) => void;
 };
 
 export default function ReportTable({ items, onPreview, onExport }: Props) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-md border">
       <table className="min-w-full text-sm">
-        <thead>
-          <tr className="bg-gray-50 text-gray-600">
+        <thead className="bg-gray-50 text-gray-600">
+          <tr>
             <th className="px-3 py-2 text-left font-medium">Report</th>
-            <th className="px-3 py-2 text-left font-medium">Category</th>
+            <th className="px-3 py-2 text-left font-medium">Kind</th>
             <th className="px-3 py-2 text-left font-medium">Fields</th>
-            <th className="px-3 py-2 text-left font-medium">Actions</th>
+            <th className="px-3 py-2 text-left font-medium w-40">Actions</th>
           </tr>
         </thead>
         <tbody>
           {items.map((r) => (
-            <tr key={r.id} className="border-t hover:bg-gray-50">
+            <tr key={r.id} className="border-t">
               <td className="px-3 py-2">
-                {/* Title as a link-like button */}
-                <button
-                  className="text-indigo-600 underline underline-offset-2 hover:text-indigo-800"
-                  onClick={() => onPreview(r)}
-                  title="Preview"
-                >
-                  {r.title}
-                </button>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-gray-400" />
+                  {/* Clickable hyperlink, but intercept to open Preview */}
+                  <a
+                    href={`/reporting/${r.group ?? "all"}?r=${encodeURIComponent(r.id)}`}
+                    className="text-indigo-600 hover:underline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onPreview(r);
+                    }}
+                  >
+                    {r.title}
+                  </a>
+                </div>
                 {r.description && (
-                  <div className="mt-0.5 text-xs text-gray-500">{r.description}</div>
+                  <div className="mt-1 text-xs text-gray-500">{r.description}</div>
                 )}
               </td>
 
-              <td className="px-3 py-2 text-gray-700">{r.category ?? "-"}</td>
+              {/* No more r.category — show kind instead (pay, w2, timecard, demographics, etc.) */}
+              <td className="px-3 py-2 text-gray-700">
+                {r.kind ?? "-"}
+              </td>
 
               <td className="px-3 py-2 text-gray-700">
                 {renderFields(r.fields)}
@@ -48,36 +57,28 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
               <td className="px-3 py-2">
                 <div className="flex items-center gap-2">
                   <button
-                    className="inline-flex items-center gap-1 rounded border px-2 py-1 hover:bg-gray-50"
                     onClick={() => onPreview(r)}
-                    title="Preview"
+                    className="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-gray-50"
                   >
-                    <Eye className="h-4 w-4" />
-                    View
+                    <Eye className="h-3.5 w-3.5" />
+                    Preview
                   </button>
-
                   <button
-                    className="inline-flex items-center gap-1 rounded border px-2 py-1 hover:bg-gray-50"
-                    onClick={() => (onExport ? onExport(r) : onPreview(r))}
-                    title="Export CSV"
+                    onClick={() => onExport(r)}
+                    className="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-gray-50"
                   >
-                    <Download className="h-4 w-4" />
-                    CSV
+                    <Download className="h-3.5 w-3.5" />
+                    Export
                   </button>
-
-                  <span className="inline-flex items-center gap-1 rounded border px-2 py-1 text-gray-500">
-                    <FileText className="h-4 w-4" />
-                    {(r.kind ?? "").toString().toUpperCase() || "GEN"}
-                  </span>
                 </div>
               </td>
             </tr>
           ))}
 
-          {!items.length && (
+          {items.length === 0 && (
             <tr>
-              <td className="px-3 py-8 text-center text-gray-500" colSpan={4}>
-                No reports found.
+              <td colSpan={4} className="px-3 py-6 text-center text-sm text-gray-500">
+                No reports.
               </td>
             </tr>
           )}
@@ -87,13 +88,24 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
   );
 }
 
-/** Normalize fields which can be string[] OR ({name|label}|string)[] */
-function renderFields(
-  fields?: Array<string | { name?: string; label?: string }>
-) {
-  if (!Array.isArray(fields) || fields.length === 0) return "-";
-  const labels = fields
-    .map((f) => (typeof f === "string" ? f : f.label ?? f.name ?? ""))
-    .filter(Boolean);
-  return labels.length ? labels.join(", ") : "-";
+/** Render fields whether they’re:
+ *  - string[]
+ *  - Array<{ name?: string; label?: string }>
+ *  - a single string/number
+ */
+function renderFields(fields: unknown): string {
+  if (Array.isArray(fields)) {
+    const parts = (fields as any[]).map((f) => {
+      if (typeof f === "string") return f;
+      if (f && typeof f === "object") {
+        return (f as any).label || (f as any).name || "";
+      }
+      return "";
+    });
+    return parts.filter(Boolean).slice(0, 8).join(", ");
+  }
+  if (typeof fields === "string" || typeof fields === "number") {
+    return String(fields);
+  }
+  return "-";
 }
