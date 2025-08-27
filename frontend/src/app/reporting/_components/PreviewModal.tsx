@@ -20,7 +20,6 @@ export default function PreviewModal({ open, report, onClose }: Props) {
   const [rows, setRows] = React.useState<Dict[]>([]);
   const [selectedRow, setSelectedRow] = React.useState<Dict | null>(null);
 
-  // Load mock rows whenever the modal opens for a report
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -29,7 +28,6 @@ export default function PreviewModal({ open, report, onClose }: Props) {
         setSelectedRow(null);
         return;
       }
-      // Support both sync/async implementations of getMockRows
       const result = await Promise.resolve(getMockRows(report.id));
       if (cancelled) return;
       const arr = Array.isArray(result) ? result : [];
@@ -43,7 +41,6 @@ export default function PreviewModal({ open, report, onClose }: Props) {
 
   if (!open || !report) return null;
 
-  // Derive columns from first row; fall back to report.fields labels
   const columnKeys =
     rows.length > 0
       ? Object.keys(rows[0])
@@ -166,9 +163,10 @@ export default function PreviewModal({ open, report, onClose }: Props) {
               <div className="text-sm text-gray-500">Select a row to preview.</div>
             )}
 
+            {/* Props match each component’s expected API */}
             {selectedRow && report.kind === "pay" && <PayStatement data={selectedRow} />}
-            {selectedRow && report.kind === "w2" && <W2Form data={selectedRow} />}
-            {selectedRow && report.kind === "timecard" && <TimecardForm data={selectedRow} />}
+            {selectedRow && report.kind === "w2" && <W2Form row={selectedRow} />}
+            {selectedRow && report.kind === "timecard" && <TimecardForm row={selectedRow} />}
 
             {/* Default: simple details panel when no special kind */}
             {selectedRow && !report.kind && (
