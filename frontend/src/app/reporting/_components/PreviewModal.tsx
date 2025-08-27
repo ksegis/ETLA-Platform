@@ -1,142 +1,199 @@
 "use client";
 
 import React from "react";
-import type { ReportType, Column } from "../_data";
-import { getMockRows, type Dict } from "../_mock";
+import type { Report } from "../_data";
+import { getMockRows } from "../_mock"; // can be sync or async
+
+import PayStatement from "./forms/PayStatement";
+import W2Form from "./forms/W2Form";
+import TimecardForm from "./forms/TimecardForm";
+
+type Dict = Record<string, any>;
 
 type Props = {
   open: boolean;
-  report: ReportType | null;
+  report: Report | null;
   onClose: () => void;
-};
-
-const toCSV = (rows: Dict[], cols: Column[]) => {
-  const header = cols.map((c) => `"${(c.label ?? c.key).replace(/"/g, '""')}"`).join(",");
-  const body = rows
-    .map((r) =>
-      cols
-        .map((c) => {
-          const v = r[c.key];
-          const s =
-            v == null
-              ? ""
-              : typeof v === "string"
-              ? v
-              : typeof v === "number"
-              ? String(v)
-              : JSON.stringify(v);
-          return `"${String(s).replace(/"/g, '""')}"`;
-        })
-        .join(","),
-    )
-    .join("\n");
-  return `${header}\n${body}`;
 };
 
 export default function PreviewModal({ open, report, onClose }: Props) {
   const [rows, setRows] = React.useState<Dict[]>([]);
-  const [filter, setFilter] = React.useState("");
-  const limit = 60;
+  const [selectedRow, setSelectedRow] = React.useState<Dict | null>(null);
 
-  const cols: Column[] = React.useMemo(() => {
-    if (!report) return [];
-    return Array.isArray(report.fields) ? report.fields : [];
-  }, [report]);
-
+  // Load mock rows whenever the modal opens for a report
   React.useEffect(() => {
-    let ignore = false;
+    let cancelled = false;
     (async () => {
-      if (!report) return;
-      const data = await getMockRows(report.id, {}, limit);
-      if (!ignore) setRows(data);
+      if (!open || !report) {
+        setRows([]);
+        setSelectedRow(null);
+        return;
+      }
+      // Support both sync and async implementations of getMockRows
+      const result = await Promise.resolve(getMockRows(report.id));
+      if (cancelled) return;
+      const arr = Array.isArray(result) ? result : [];
+      setRows(arr);
+      setSelectedRow(arr[0] ?? null);
     })();
     return () => {
-      ignore = true;
+      cancelled = true;
     };
-  }, [report]);
-
-  const filtered = React.useMemo(() => {
-    if (!filter) return rows;
-    const term = filter.toLowerCase();
-    return rows.filter((r) =>
-      cols.some((c) => String(r[c.key] ?? "").toLowerCase().includes(term)),
-    );
-  }, [rows, filter, cols]);
+  }, [open, report]);
 
   if (!open || !report) return null;
 
+  // Columns: use keys of first row if present; otherwise fall back to labels in report.fields
+  const columnKeys =
+    rows.length > 0
+      ? Object.keys(rows[0])
+      : (report.fields ?? []).map((f) =>
+          typeof f === "string" ? f : f.name ?? f.label ?? ""
+        ).filter(Boolean);
+
+  const handleDownloadCSV = () => {
+    if (!rows.length) return;
+    const cols = columnKeys.length ? columnKeys : Object.keys(rows[0] ?? {});
+    const header = cols.join(",");
+    const body = rows
+      .map((r) =>
+        cols
+          .map((k) => {
+            const v = r?.[k];
+            const s =
+              v === null || v === undefined
+                ? ""
+                : typeof v === "string"
+                ? v
+                : String(v);
+            // basic CSV escaping
+            const needsQuotes = s.includes(",") || s.includes('"') || s.includes("\n");
+            return needsQuotes ? `"${s.replace(/"/g, '""')}"` : s;
+          })
+          .join(",")
+      )
+      .join("\n");
+    const csv = `${header}\n${body}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const base = report.title?.replace(/\s+/g, "_") || report.id;
+    a.download = `${base}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 p-4">
-      <div className="w-full max-w-6xl rounded-md bg-white shadow-lg">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <h2 className="text-base font-semibold">{report.title}</h2>
-          <div className="flex items-center gap-2">
-            <input
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Filter…"
-              className="rounded border px-2 py-1 text-sm"
-            />
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-semibold">{report.title}</h2>
+            {report.description ? (
+              <p className="truncate text-sm text-gray-500">{report.description}</p>
+            ) : null}
+          </div>
+          <div className="ml-4 flex shrink-0 items-center gap-2">
             <button
-              onClick={() => {
-                const csv = toCSV(filtered, cols);
-                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${report.id}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-              className="rounded border px-2 py-1 text-sm hover:bg-gray-50"
+              className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+              onClick={handleDownloadCSV}
             >
-              Export CSV
+              Download CSV
             </button>
-            <button onClick={onClose} className="rounded border px-2 py-1 text-sm hover:bg-gray-50">
+            <button
+              className="rounded-md bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-black"
+              onClick={onClose}
+            >
               Close
             </button>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="max-h-[70vh] overflow-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
-              <tr>
-                {cols.map((c) => (
-                  <th key={c.key} className="px-3 py-2 text-left font-medium">
-                    {c.label ?? c.key}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r, i) => (
-                <tr key={i} className="border-t">
-                  {cols.map((c) => (
-                    <td key={c.key} className="px-3 py-2 text-gray-800">
-                      {r[c.key] ?? ""}
-                    </td>
+        {/* Body */}
+        <div className="grid grid-cols-12 gap-0">
+          {/* Left: list */}
+          <div className="col-span-5 border-r max-h-[80vh] overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-white">
+                <tr>
+                  {columnKeys.map((c) => (
+                    <th key={c} className="px-3 py-2 text-left font-medium text-gray-600">
+                      {c}
+                    </th>
                   ))}
                 </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td className="px-3 py-8 text-center text-gray-500" colSpan={cols.length}>
-                    No matching rows
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => {
+                  const selected = r === selectedRow;
+                  return (
+                    <tr
+                      key={idx}
+                      className={`cursor-pointer ${selected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
+                      onClick={() => setSelectedRow(r)}
+                    >
+                      {columnKeys.map((c) => (
+                        <td key={c} className="px-3 py-2 text-gray-800">
+                          {formatCell(r?.[c])}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+                {rows.length === 0 && (
+                  <tr>
+                    <td className="px-3 py-8 text-center text-gray-500" colSpan={columnKeys.length || 1}>
+                      No rows to display.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-        {/* Footer */}
-        <div className="border-t px-4 py-2 text-xs text-gray-500">
-          Showing {filtered.length} of {rows.length} rows
+          {/* Right: facsimile panel */}
+          <div className="col-span-7 max-h-[80vh] overflow-auto p-4">
+            {!selectedRow && (
+              <div className="text-sm text-gray-500">Select a row to preview.</div>
+            )}
+
+            {selectedRow && report.kind === "pay" && <PayStatement row={selectedRow} />}
+            {selectedRow && report.kind === "w2" && <W2Form row={selectedRow} />}
+            {selectedRow && report.kind === "timecard" && (
+              <TimecardForm row={selectedRow} />
+            )}
+
+            {/* Default: show a simple details panel if no special kind */}
+            {selectedRow && !report.kind && (
+              <div className="space-y-2">
+                {Object.entries(selectedRow).map(([k, v]) => (
+                  <div key={k} className="grid grid-cols-3 gap-3">
+                    <div className="col-span-1 text-sm font-medium text-gray-600">{k}</div>
+                    <div className="col-span-2 text-sm text-gray-900">{formatCell(v)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+function formatCell(v: any) {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "number") return Number.isFinite(v) ? v.toString() : "";
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v);
 }
