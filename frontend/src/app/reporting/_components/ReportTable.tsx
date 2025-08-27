@@ -1,4 +1,4 @@
-// frontend/src/app/reporting/_components/ReportTable.tsx
+
 "use client";
 
 import React from "react";
