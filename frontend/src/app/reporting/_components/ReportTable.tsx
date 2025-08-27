@@ -1,93 +1,76 @@
-
 "use client";
-
 import React from "react";
 import { FileText, Eye, Download } from "lucide-react";
-import type { Report } from "../_data";
+import type { ReportType } from "../_data";
 
 type Props = {
-  items: Report[];
-  onPreview: (r: Report) => void;
-  onExport: (r: Report) => void;
+  items: ReportType[];
+  onPreview: (r: ReportType) => void;
+  onExport: (r: ReportType) => void;
 };
 
 export default function ReportTable({ items, onPreview, onExport }: Props) {
-  if (!items?.length) {
-    return (
-      <div className="rounded-md border p-6 text-sm text-gray-600">
-        No reports found.
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-x-auto rounded-md border">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className="overflow-hidden rounded-md border border-gray-200 bg-white">
+      <table className="min-w-full text-sm">
+        <thead className="bg-gray-50 text-gray-600">
           <tr>
-            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-              Report
-            </th>
-            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-              Group
-            </th>
-            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-              Columns
-            </th>
-            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-              Actions
-            </th>
+            <th className="px-3 py-2 text-left font-medium">Report</th>
+            <th className="px-3 py-2 text-left font-medium">Category</th>
+            <th className="px-3 py-2 text-left font-medium">Fields</th>
+            <th className="px-3 py-2 text-left font-medium">~ Rows</th>
+            <th className="px-3 py-2 text-left font-medium">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
-          {items.map((r) => {
-            const colCount = Array.isArray((r as any).columns)
-              ? (r as any).columns.length
-              : undefined;
-            return (
-              <tr key={r.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-400" />
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {r.title}
-                      </div>
-                      {r.description ? (
-                        <div className="text-xs text-gray-500">
-                          {r.description}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-3 py-2 text-sm text-gray-700">{r.group}</td>
-                <td className="px-3 py-2 text-sm text-gray-700">
-                  {colCount ?? "-"}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onPreview(r)}
-                      className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm hover:bg-gray-50"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Preview
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onExport(r)}
-                      className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm hover:bg-gray-50"
-                    >
-                      <Download className="h-4 w-4" />
-                      Export CSV
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
+        <tbody>
+          {items.length === 0 && (
+            <tr>
+              <td className="px-3 py-6 text-center text-gray-500" colSpan={5}>
+                No reports
+              </td>
+            </tr>
+          )}
+
+          {items.map((r) => (
+            <tr key={r.id} className="border-t">
+              <td className="px-3 py-2">
+                {/* Title as hyperlink-styled button that opens preview */}
+                <button
+                  type="button"
+                  onClick={() => onPreview(r)}
+                  className="text-indigo-600 hover:underline inline-flex items-center gap-1"
+                >
+                  <FileText className="h-4 w-4" />
+                  {r.title}
+                </button>
+              </td>
+              <td className="px-3 py-2 text-gray-700">{r.category}</td>
+              <td className="px-3 py-2 text-gray-700">
+                {Array.isArray(r.fields) ? r.fields.length : r.fields ?? "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-700">{r.approxRows ?? "-"}</td>
+              <td className="px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onPreview(r)}
+                    className="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-gray-50"
+                    title="Preview"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => onExport(r)}
+                    className="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-gray-50"
+                    title="Export CSV"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
