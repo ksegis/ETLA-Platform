@@ -10,10 +10,6 @@ import { getPayStatementsMock } from "../../../../mocks/payStatements.mock";
 import { getCheckRegisterMock } from "../../../../mocks/checkRegister.mock";
 import { getDirectDepositRegisterMock } from "../../../../mocks/directDepositRegister.mock";
 
-// Normalize report id segments like:
-//   ["checks","pay-statements"]         -> "checks/pay-statements"
-//   ["checks-pay-statements"]           -> "checks/pay-statements"
-//   ["checks_pay_statements","preview"] -> "checks/pay-statements"
 function normalizeId(segments: string[]): string {
   const raw = segments.join("/").toLowerCase();
   return raw
@@ -34,25 +30,21 @@ function toCSV(rows: any[]): string {
   return [headers.join(","), ...rows.map(r => headers.map(h => esc(r[h])).join(","))].join("\n");
 }
 
-function fitDate(iso: string, start?: string | null, end?: string | null) {
+function fitDate(iso?: string | null, start?: string | null, end?: string | null) {
   if (!start && !end) return iso ?? "";
   return (end ?? start) ?? (iso ?? "");
 }
 
-// ✅ Next 15-compliant handler signature (inline type; flexible params map)
-export async function GET(
-  req: Request,
-  { params }: { params: Record<string, string | string[]> }
-) {
+// ✅ Use `any` for the 2nd arg to satisfy Next 15's strict checker
+export async function GET(req: Request, ctx: any) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
   const end   = url.searchParams.get("end");
 
-  // Catch-all can be string or string[]
-  const raw = params?.id;
+  const raw = ctx?.params?.id;
   const segs = Array.isArray(raw) ? [...raw] : (raw ? [raw] : []);
 
-  // Last token may be "preview" or "export"; default = preview (JSON)
+  // Last token may be "preview" or "export" (default = preview)
   let action: "preview" | "export" = "preview";
   const last = segs[segs.length - 1]?.toLowerCase();
   if (last === "preview" || last === "export") {
