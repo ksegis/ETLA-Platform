@@ -576,8 +576,39 @@ export default function ReportingDashboardPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col h-full">
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">ETLA</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="sm">
+              <Bell className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <User className="h-5 w-5 text-gray-600" />
+              </div>
+              <span className="text-sm text-gray-700">demo@company.com</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex flex-col h-[calc(100vh-73px)]">
         {/* Top Navigation Tabs */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -632,6 +663,6 @@ export default function ReportingDashboardPage() {
           {renderTabContent()}
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }
