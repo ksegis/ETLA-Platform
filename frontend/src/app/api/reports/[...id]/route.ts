@@ -20,22 +20,23 @@ function toCSV(rows: any[]): string {
   return [headers.join(","), ...rows.map(r => headers.map(h => esc(r[h])).join(","))].join("\n");
 }
 
-// ✅ NOTE: Next 15 expects { params: { id: string[] } } for `[...id]`
-export async function GET(
-  req: Request,
-  ctx: { params: { id: string[] } }
-) {
+export async function GET(req: Request) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
   const end = url.searchParams.get("end");
   const customerId = url.searchParams.get("customerId") || "DEMO";
 
-  // segments + possible trailing action
-  const segs = [...(ctx.params?.id ?? [])];
+  // Extract segments from the pathname instead of using `{ params }`
+  // e.g. /api/reports/checks/pay-statements/preview
+  const base = "/api/reports/";
+  const idx = url.pathname.indexOf(base);
+  const tail = idx >= 0 ? url.pathname.slice(idx + base.length) : "";
+  const segs = tail.split("/").filter(Boolean);
+
   let action: "preview" | "export" = "preview";
   const last = segs[segs.length - 1]?.toLowerCase();
   if (last === "preview" || last === "export") {
-    action = last as any;
+    action = last as "preview" | "export";
     segs.pop();
   }
   const id = normalizeId(segs);
@@ -335,9 +336,8 @@ export async function GET(
 
   if (action === "export") {
     const csv = toCSV(rows);
-    const filename = (segs.length ? segs.join("_") : "report")
-      .toLowerCase()
-      .replace(/\W+/g, "-") + ".csv";
+    const filename =
+      (segs.length ? segs.join("_") : "report").toLowerCase().replace(/\W+/g, "-") + ".csv";
     return new NextResponse(csv, {
       headers: {
         "content-type": "text/csv; charset=utf-8",
