@@ -204,7 +204,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [pathname])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen flex bg-gray-50">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -218,7 +218,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center">
               <Building2 className="h-8 w-8 text-blue-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">ETLA</span>
@@ -232,7 +232,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Search */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 flex-shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -311,7 +311,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </nav>
 
           {/* User Profile */}
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-gray-200 p-4 flex-shrink-0">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
@@ -337,10 +337,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="lg:pl-64">
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
+        <div className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between h-16 px-6">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -368,8 +368,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Page content */}
-        <main className="flex-1">
+        {/* Page content - No padding/margin to eliminate white space */}
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>
