@@ -20,9 +20,10 @@ function toCSV(rows: any[]): string {
   return [headers.join(","), ...rows.map(r => headers.map(h => esc(r[h])).join(","))].join("\n");
 }
 
+// ✅ NOTE: Next 15 expects { params: { id: string[] } } for `[...id]`
 export async function GET(
   req: Request,
-  ctx: { params: { id?: string[] } }
+  ctx: { params: { id: string[] } }
 ) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
@@ -30,7 +31,7 @@ export async function GET(
   const customerId = url.searchParams.get("customerId") || "DEMO";
 
   // segments + possible trailing action
-  const segs = Array.isArray(ctx.params?.id) ? [...ctx.params!.id] : [];
+  const segs = [...(ctx.params?.id ?? [])];
   let action: "preview" | "export" = "preview";
   const last = segs[segs.length - 1]?.toLowerCase();
   if (last === "preview" || last === "export") {
