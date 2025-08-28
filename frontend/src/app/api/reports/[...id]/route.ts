@@ -208,6 +208,83 @@ export async function GET(req: Request) {
       }));
       break;
     }
+    // --- Employees: additional demographic reports (Supabase views) ---
+    case "employees/employee-master-demographics": {
+      const { data, error } = await supabase
+        .from("vw_employee_master_demographics")
+        .select("*")
+        .eq("customer_id", customerId)
+        .limit(100000);
+      if (error) break;
+      rows = data ?? [];
+      break;
+    }
+
+    case "employees/eeo-1": {
+      const { data, error } = await supabase
+        .from("vw_eeo1")
+        .select("*")
+        .eq("customer_id", customerId)
+        .limit(100000);
+      if (error) break;
+      rows = data ?? [];
+      break;
+    }
+
+    case "employees/vets-4212": {
+      const { data, error } = await supabase
+        .from("vw_vets_4212")
+        .select("*")
+        .eq("customer_id", customerId)
+        .limit(100000);
+      if (error) break;
+      rows = data ?? [];
+      break;
+    }
+
+    case "employees/benefit-eligibility": {
+      const { data, error } = await supabase
+        .from("vw_benefit_eligibility")
+        .select("*")
+        .eq("customer_id", customerId)
+        .limit(100000);
+      if (error) break;
+      rows = data ?? [];
+      break;
+    }
+
+    case "employees/payroll-tax-demographics": {
+      const { data, error } = await supabase
+        .from("vw_payroll_tax_demographics")
+        .select("*")
+        .eq("customer_id", customerId)
+        .limit(100000);
+      if (error) break;
+      rows = data ?? [];
+      break;
+    }
+
+    case "employees/turnover-termination": {
+      const { data, error } = await supabase
+        .from("vw_turnover_termination")
+        .select("*")
+        .eq("customer_id", customerId)
+        .limit(100000);
+      if (error) break;
+      rows = data ?? [];
+      break;
+    }
+
+    case "employees/custom-demographic-analytics": {
+      const { data, error } = await supabase
+        .from("vw_custom_demographic_analytics")
+        .select("*")
+        .eq("customer_id", customerId)
+        .limit(100000);
+      if (error) break;
+      rows = data ?? [];
+      break;
+    }
 
     // ===== JOBS =====
     case "jobs/job-roster": {
