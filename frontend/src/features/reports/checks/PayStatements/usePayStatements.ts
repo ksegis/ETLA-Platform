@@ -13,27 +13,27 @@ type PayStatementRow = {
   depositLast4?: string;
 };
 
-function normalizePayStatements(rows: any[], start?: string, end?: string): PayStatementRow[] {
-  const fitDate = (iso?: string | null) => {
-    if (!start && !end) return iso ?? "";
-    return (end ?? start) ?? (iso ?? "");
-  };
+function normalize(rows: any[], start?: string, end?: string): PayStatementRow[] {
+  const fitDate = (iso?: string | null) => (end ?? start ?? iso ?? "");
   return rows.map((r, idx) => ({
     id: r.id ?? r.checkNumber ?? `PS-${idx + 1}`,
     checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + idx}`,
     employeeId: r.employeeId ?? r.employee_id ?? "",
     employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
     payDate: fitDate(r.payDate ?? r.pay_date),
-    payPeriodStart: r.payPeriodStart ?? r.pay_period_start ?? (start ?? r.payPeriodStart ?? ""),
-    payPeriodEnd: r.payPeriodEnd ?? r.pay_period_end ?? (end ?? r.payPeriodEnd ?? ""),
+    payPeriodStart: r.payPeriodStart ?? r.pay_period_start ?? (start ?? ""),
+    payPeriodEnd: r.payPeriodEnd ?? r.pay_period_end ?? (end ?? ""),
     netPay: Number(r.netPay ?? r.net_pay ?? r.amount ?? 0),
     depositLast4: r.depositLast4 ?? r.accountLast4 ?? r.last4 ?? "",
   }));
 }
 
 export function usePayStatements(params: { start?: string; end?: string }) {
-  const [rows, setRows] = useState<PayStatementRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 🔒 Always start with mocks so the grid has rows immediately
+  const [rows, setRows] = useState<PayStatementRow[]>(
+    normalize(getPayStatementsMock(), params.start, params.end)
+  );
+  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -47,28 +47,18 @@ export function usePayStatements(params: { start?: string; end?: string }) {
 
         const res = await fetch(`/api/reports/checks/pay-statements?${qs.toString()}`, {
           credentials: "include",
+          cache: "no-store",
         });
 
-        let data: any[] = [];
-        if (res.ok) data = await res.json();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-        // Force fallback when empty or on non-OK responses
-        if (!Array.isArray(data) || data.length === 0) {
-          const mock = getPayStatementsMock();
-          const normalized = normalizePayStatements(mock, params.start, params.end);
+        if (Array.isArray(data) && data.length > 0) {
+          const normalized = normalize(data, params.start, params.end);
           if (!cancelled) setRows(normalized);
-          return;
         }
-
-        const normalized = normalizePayStatements(data, params.start, params.end);
-        if (!cancelled) setRows(normalized);
       } catch (e: any) {
-        const mock = getPayStatementsMock();
-        const normalized = normalizePayStatements(mock, params.start, params.end);
-        if (!cancelled) {
-          setErr(e);
-          setRows(normalized);
-        }
+        if (!cancelled) setErr(e);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -76,5 +66,6 @@ export function usePayStatements(params: { start?: string; end?: string }) {
     return () => { cancelled = true; };
   }, [params.start, params.end]);
 
-  return { rows, loading, error: err };
+  // Return both rows and data for compatibility with various table wrappers
+  return { rows, data: rows, loading, error: err };
 }

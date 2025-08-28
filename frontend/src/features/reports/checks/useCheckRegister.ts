@@ -13,11 +13,8 @@ type CheckRegisterRow = {
   netPay: number;
 };
 
-function normalizeCheckRegister(rows: any[], start?: string, end?: string): CheckRegisterRow[] {
-  const fitDate = (iso?: string | null) => {
-    if (!start && !end) return iso ?? "";
-    return (end ?? start) ?? (iso ?? "");
-  };
+function normalize(rows: any[], start?: string, end?: string): CheckRegisterRow[] {
+  const fitDate = (iso?: string | null) => (end ?? start ?? iso ?? "");
   return rows.map((r, idx) => ({
     id: r.id ?? r.checkNumber ?? `CR-${idx + 1}`,
     checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + idx}`,
@@ -32,8 +29,11 @@ function normalizeCheckRegister(rows: any[], start?: string, end?: string): Chec
 }
 
 export function useCheckRegister(params: { start?: string; end?: string }) {
-  const [rows, setRows] = useState<CheckRegisterRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 🔒 Always start with mocks so the grid has rows immediately
+  const [rows, setRows] = useState<CheckRegisterRow[]>(
+    normalize(getCheckRegisterMock(), params.start, params.end)
+  );
+  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -47,27 +47,18 @@ export function useCheckRegister(params: { start?: string; end?: string }) {
 
         const res = await fetch(`/api/reports/checks/check-register?${qs.toString()}`, {
           credentials: "include",
+          cache: "no-store",
         });
 
-        let data: any[] = [];
-        if (res.ok) data = await res.json();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-        if (!Array.isArray(data) || data.length === 0) {
-          const mock = getCheckRegisterMock();
-          const normalized = normalizeCheckRegister(mock, params.start, params.end);
+        if (Array.isArray(data) && data.length > 0) {
+          const normalized = normalize(data, params.start, params.end);
           if (!cancelled) setRows(normalized);
-          return;
         }
-
-        const normalized = normalizeCheckRegister(data, params.start, params.end);
-        if (!cancelled) setRows(normalized);
       } catch (e: any) {
-        const mock = getCheckRegisterMock();
-        const normalized = normalizeCheckRegister(mock, params.start, params.end);
-        if (!cancelled) {
-          setErr(e);
-          setRows(normalized);
-        }
+        if (!cancelled) setErr(e);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -75,5 +66,6 @@ export function useCheckRegister(params: { start?: string; end?: string }) {
     return () => { cancelled = true; };
   }, [params.start, params.end]);
 
-  return { rows, loading, error: err };
+  // Return both rows and data for compatibility with various table wrappers
+  return { rows, data: rows, loading, error: err };
 }
