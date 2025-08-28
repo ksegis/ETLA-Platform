@@ -44,6 +44,7 @@ interface NavigationGroup {
   color: string;
   bgColor: string;
   hoverColor: string;
+  textColor: string;
   defaultExpanded?: boolean;
   items: NavigationItem[];
 }
@@ -55,7 +56,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['migration-workbench'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['migration-workbench', 'historical-data'])
   const router = useRouter()
   const pathname = usePathname()
 
@@ -68,6 +69,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       color: 'text-blue-600',
       bgColor: 'bg-blue-600',
       hoverColor: 'hover:bg-blue-50',
+      textColor: 'text-blue-900',
       defaultExpanded: true,
       items: [
         { name: 'File Upload', href: '/upload', icon: Upload },
@@ -83,6 +85,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       color: 'text-green-600',
       bgColor: 'bg-green-600',
       hoverColor: 'hover:bg-green-50',
+      textColor: 'text-green-900',
+      defaultExpanded: true,
       items: [
         { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
         { name: 'Reporting', href: '/reporting', icon: TrendingUp },
@@ -97,6 +101,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       color: 'text-orange-600',
       bgColor: 'bg-orange-600',
       hoverColor: 'hover:bg-orange-50',
+      textColor: 'text-orange-900',
       items: [
         { name: 'Access Control', href: '/access-control', icon: Shield },
         { name: 'Settings', href: '/settings', icon: Settings },
@@ -111,10 +116,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       color: 'text-purple-600',
       bgColor: 'bg-purple-600',
       hoverColor: 'hover:bg-purple-50',
+      textColor: 'text-purple-900',
       items: [
         { name: 'Work Requests', href: '/work-requests', icon: Briefcase },
         { name: 'Project Management', href: '/project-management', icon: Calendar },
-        { name: 'Employee Directory', href: '/employees', icon: Users },
+        { name: 'Employee Directory', href: '/employee-directory', icon: Users },
         { name: 'System Health', href: '/system-health', icon: Activity, isNew: true }
       ]
     }
@@ -238,7 +244,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+          <nav className="flex-1 px-4 py-4 space-y-3 overflow-y-auto">
             {navigationGroups.map((group) => {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
@@ -248,22 +254,26 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   {/* Group Header */}
                   <button
                     onClick={() => toggleGroup(group.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm font-semibold rounded-md transition-colors duration-200 ${group.color} ${group.hoverColor}`}
+                    className={`w-full flex items-center justify-between px-3 py-3 text-sm font-bold rounded-lg transition-all duration-200 ${group.color} ${group.hoverColor} border border-gray-100 shadow-sm`}
                   >
                     <div className="flex items-center">
                       <GroupIcon className="h-5 w-5 mr-3" />
-                      <span>{group.title}</span>
+                      <span className="font-semibold">{group.title}</span>
                     </div>
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
+                    <div className="transition-transform duration-200">
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </div>
                   </button>
 
-                  {/* Group Items */}
-                  {isExpanded && (
-                    <div className="ml-6 space-y-1">
+                  {/* Group Items with Animation */}
+                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                    isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                  }`}>
+                    <div className="ml-4 pl-4 border-l-2 border-gray-100 space-y-1 pt-2">
                       {group.items.map((item) => {
                         const ItemIcon = item.icon
                         const isActive = isActiveItem(item.href)
@@ -272,10 +282,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           <a
                             key={item.name}
                             href={item.href}
-                            className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-200 ${
+                            className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 ${
                               isActive
-                                ? `${group.bgColor} text-white`
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                                ? `${group.bgColor} text-white shadow-md`
+                                : `text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm`
                             }`}
                           >
                             <ItemIcon className="h-4 w-4 mr-3" />
@@ -294,7 +304,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         )
                       })}
                     </div>
-                  )}
+                  </div>
                 </div>
               )
             })}
