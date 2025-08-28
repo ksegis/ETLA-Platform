@@ -26,7 +26,11 @@ import {
   ChevronRight,
   DollarSign,
   Building,
-  Activity
+  Activity,
+  PieChart,
+  Users2,
+  Clock,
+  Target
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -60,7 +64,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Navigation groups with 4 primary categories
+  // Navigation groups with 4 primary categories - reorganized structure
   const navigationGroups: NavigationGroup[] = [
     {
       id: 'migration-workbench',
@@ -72,6 +76,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       textColor: 'text-blue-900',
       defaultExpanded: true,
       items: [
+        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3 }, // Moved current dashboard here
         { name: 'File Upload', href: '/upload', icon: Upload },
         { name: 'Job Management', href: '/jobs-enhanced', icon: Cog },
         { name: 'Data Validation', href: '/validation', icon: CheckCircle },
@@ -88,10 +93,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       textColor: 'text-green-900',
       defaultExpanded: true,
       items: [
-        { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+        { name: 'HR Analytics Dashboard', href: '/historical-dashboard', icon: PieChart, isNew: true }, // New HR dashboard
         { name: 'Reporting', href: '/reporting', icon: TrendingUp },
         { name: 'Audit Trail', href: '/audit', icon: Eye },
-        { name: 'Data Analytics', href: '/analytics', icon: Database, isNew: true }
+        { name: 'Data Analytics', href: '/analytics', icon: Database }
       ]
     },
     {
@@ -121,7 +126,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'Work Requests', href: '/work-requests', icon: Briefcase },
         { name: 'Project Management', href: '/project-management', icon: Calendar },
         { name: 'Employee Directory', href: '/employee-directory', icon: Users },
-        { name: 'System Health', href: '/system-health', icon: Activity, isNew: true }
+        { name: 'System Health', href: '/system-health', icon: Activity }
       ]
     }
   ]
