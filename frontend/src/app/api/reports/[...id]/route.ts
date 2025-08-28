@@ -35,13 +35,13 @@ function fitDate(iso?: string | null, start?: string | null, end?: string | null
   return (end ?? start) ?? (iso ?? "");
 }
 
-// ✅ Use `any` for the 2nd arg to satisfy Next 15's strict checker
+// Use `any` for ctx to satisfy Next 15’s strict checker without fighting the type system
 export async function GET(req: Request, ctx: any) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
   const end   = url.searchParams.get("end");
 
-  const raw = ctx?.params?.id;
+  const raw = ctx?.params?.id as string | string[] | undefined;
   const segs = Array.isArray(raw) ? [...raw] : (raw ? [raw] : []);
 
   // Last token may be "preview" or "export" (default = preview)
@@ -56,8 +56,9 @@ export async function GET(req: Request, ctx: any) {
   let rows: any[] = [];
 
   switch (id) {
-    case "checks/pay-statements":
-      rows = getPayStatementsMock().map((r, i) => ({
+    case "checks/pay-statements": {
+      const src = getPayStatementsMock() as any[];
+      rows = src.map((r: any, i: number) => ({
         id: r.id ?? r.checkNumber ?? `PS-${i + 1}`,
         checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
         employeeId: r.employeeId ?? r.employee_id ?? "",
@@ -69,9 +70,11 @@ export async function GET(req: Request, ctx: any) {
         depositLast4: r.depositLast4 ?? r.accountLast4 ?? r.last4 ?? "",
       }));
       break;
+    }
 
-    case "checks/check-register":
-      rows = getCheckRegisterMock().map((r, i) => ({
+    case "checks/check-register": {
+      const src = getCheckRegisterMock() as any[];
+      rows = src.map((r: any, i: number) => ({
         id: r.id ?? r.checkNumber ?? `CR-${i + 1}`,
         checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
         employeeId: r.employeeId ?? r.employee_id ?? "",
@@ -83,9 +86,11 @@ export async function GET(req: Request, ctx: any) {
         netPay: Number(r.netPay ?? r.net_pay ?? r.amount ?? 0),
       }));
       break;
+    }
 
-    case "checks/direct-deposit-register":
-      rows = getDirectDepositRegisterMock().map((r, i) => ({
+    case "checks/direct-deposit-register": {
+      const src = getDirectDepositRegisterMock() as any[];
+      rows = src.map((r: any, i: number) => ({
         id: r.id ?? r.employeeId ?? `DD-${i + 1}`,
         employeeId: r.employeeId ?? r.employee_id ?? "",
         employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
@@ -97,6 +102,7 @@ export async function GET(req: Request, ctx: any) {
         routingMasked: r.routingMasked ?? r.routing_masked ?? undefined,
       }));
       break;
+    }
 
     default:
       rows = []; // unknown report id
