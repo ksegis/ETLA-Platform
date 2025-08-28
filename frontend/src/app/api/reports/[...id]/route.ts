@@ -1,14 +1,9 @@
-// src/app/api/reports/[...id]/route.ts
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextResponse } from "next/server";
 
-/**
- * Use RELATIVE imports to avoid alias issues in API routes
- * (route.ts is at: src/app/api/reports/[...id]/route.ts)
- * ../../../../../ gets you back to src/
- */
+// Use RELATIVE imports (safe in API routes)
 import { getPayStatementsMock } from "../../../../../mocks/payStatements.mock";
 import { getCheckRegisterMock } from "../../../../../mocks/checkRegister.mock";
 import { getDirectDepositRegisterMock } from "../../../../../mocks/directDepositRegister.mock";
@@ -44,20 +39,20 @@ export async function GET(req: Request, ctx: { params: { id: string[] } }) {
   const end   = url.searchParams.get("end");
 
   const segs = [...(ctx.params.id || [])];
-  // Detect action from the LAST segment; `[...id]` must be the last path segment.
+
+  // Last token may be "preview" or "export"
   let action: "preview" | "export" = "preview";
   const last = segs[segs.length - 1]?.toLowerCase();
   if (last === "export" || last === "preview") {
     action = last as "preview" | "export";
-    segs.pop(); // remove the action from the id segments
+    segs.pop();
   }
 
   const id = normalizeId(segs);
-
-  // Get rows (DB later; for now mocks with normalization & guaranteed id)
   let rows: any[] = [];
+
   switch (id) {
-    case "checks/pay-statements": {
+    case "checks/pay-statements":
       rows = getPayStatementsMock().map((r, i) => ({
         id: r.id ?? r.checkNumber ?? `PS-${i + 1}`,
         checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
@@ -70,8 +65,8 @@ export async function GET(req: Request, ctx: { params: { id: string[] } }) {
         depositLast4: r.depositLast4 ?? r.accountLast4 ?? r.last4 ?? "",
       }));
       break;
-    }
-    case "checks/check-register": {
+
+    case "checks/check-register":
       rows = getCheckRegisterMock().map((r, i) => ({
         id: r.id ?? r.checkNumber ?? `CR-${i + 1}`,
         checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
@@ -84,8 +79,8 @@ export async function GET(req: Request, ctx: { params: { id: string[] } }) {
         netPay: Number(r.netPay ?? r.net_pay ?? r.amount ?? 0),
       }));
       break;
-    }
-    case "checks/direct-deposit-register": {
+
+    case "checks/direct-deposit-register":
       rows = getDirectDepositRegisterMock().map((r, i) => ({
         id: r.id ?? r.employeeId ?? `DD-${i + 1}`,
         employeeId: r.employeeId ?? r.employee_id ?? "",
@@ -98,10 +93,9 @@ export async function GET(req: Request, ctx: { params: { id: string[] } }) {
         routingMasked: r.routingMasked ?? r.routing_masked ?? undefined,
       }));
       break;
-    }
-    default: {
-      rows = []; // unknown report id
-    }
+
+    default:
+      rows = [];
   }
 
   if (action === "export") {
@@ -116,6 +110,5 @@ export async function GET(req: Request, ctx: { params: { id: string[] } }) {
     });
   }
 
-  // default: preview/json
-  return NextResponse.json(rows);
+  return NextResponse.json(rows); // preview/default
 }
