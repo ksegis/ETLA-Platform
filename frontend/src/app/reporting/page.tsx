@@ -578,6 +578,11 @@ export default function ReportingDashboardPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col h-full">
+        {/* VISUAL INDICATOR - UPDATED CODE VERSION */}
+        <div className="bg-red-500 text-white text-center py-2 text-sm font-bold">
+          🔴 UPDATED CODE VERSION - Aug 28, 2025 - 10:55 PM 🔴
+        </div>
+        
         {/* Top Navigation Tabs */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -635,3 +640,4 @@ export default function ReportingDashboardPage() {
     </DashboardLayout>
   )
 }
+
