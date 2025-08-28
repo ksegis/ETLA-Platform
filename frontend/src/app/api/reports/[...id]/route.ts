@@ -8,8 +8,6 @@ import { getPayStatementsMock } from "../../../../mocks/payStatements.mock";
 import { getCheckRegisterMock } from "../../../../mocks/checkRegister.mock";
 import { getDirectDepositRegisterMock } from "../../../../mocks/directDepositRegister.mock";
 
-// Accept the official shape Next expects: id can be string | string[]
-type RouteParams = { params: { id: string | string[] } };
 
 function normalizeId(segments: string[]): string {
   const raw = segments.join("/").toLowerCase();
@@ -37,7 +35,10 @@ function fitDate(iso: string, start?: string | null, end?: string | null) {
 }
 
 // ✅ Use the union type for params; normalize to string[]
-export async function GET(req: Request, { params }: RouteParams) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string | string[] } }
+) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
   const end   = url.searchParams.get("end");
