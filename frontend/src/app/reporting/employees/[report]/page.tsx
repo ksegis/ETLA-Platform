@@ -5,110 +5,109 @@ import { createClient } from "@supabase/supabase-js";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!;
 
-const MAP: Record<
-  string,
-  { title: string; view: string; columns: { key: string; header: string }[] }
-> = {
+type Col = { key: string; label: string };
+
+const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   "employee-master-demographics": {
     title: "Employee Master Demographics",
     view: "vw_employee_master_demographics",
     columns: [
-      { key: "employee_id", header: "Employee ID" },
-      { key: "first_name", header: "First Name" },
-      { key: "last_name", header: "Last Name" },
-      { key: "employment_status", header: "Status" },
-      { key: "department", header: "Department" },
-      { key: "location", header: "Location" },
-      { key: "job_title", header: "Job Title" },
-      { key: "hire_date", header: "Hire Date" },
-      { key: "term_date", header: "Term Date" },
+      { key: "employee_id", label: "Employee ID" },
+      { key: "first_name", label: "First Name" },
+      { key: "last_name", label: "Last Name" },
+      { key: "employment_status", label: "Status" },
+      { key: "department", label: "Department" },
+      { key: "location", label: "Location" },
+      { key: "job_title", label: "Job Title" },
+      { key: "hire_date", label: "Hire Date" },
+      { key: "term_date", label: "Term Date" },
     ],
   },
   "eeo-1": {
     title: "EEO-1",
     view: "vw_eeo1",
     columns: [
-      { key: "employee_id", header: "Employee ID" },
-      { key: "first_name", header: "First Name" },
-      { key: "last_name", header: "Last Name" },
-      { key: "gender", header: "Gender" },
-      { key: "race_ethnicity", header: "Race/Ethnicity" },
-      { key: "job_category", header: "Job Category" },
-      { key: "establishment", header: "Establishment" },
+      { key: "employee_id", label: "Employee ID" },
+      { key: "first_name", label: "First Name" },
+      { key: "last_name", label: "Last Name" },
+      { key: "gender", label: "Gender" },
+      { key: "race_ethnicity", label: "Race/Ethnicity" },
+      { key: "job_category", label: "Job Category" },
+      { key: "establishment", label: "Establishment" },
     ],
   },
   "vets-4212": {
     title: "VETS-4212",
     view: "vw_vets_4212",
     columns: [
-      { key: "employee_id", header: "Employee ID" },
-      { key: "first_name", header: "First Name" },
-      { key: "last_name", header: "Last Name" },
-      { key: "job_title", header: "Job Title" },
-      { key: "department", header: "Department" },
-      { key: "hire_date", header: "Hire Date" },
-      { key: "veteran_status", header: "Veteran Status" },
-      { key: "location", header: "Location" },
+      { key: "employee_id", label: "Employee ID" },
+      { key: "first_name", label: "First Name" },
+      { key: "last_name", label: "Last Name" },
+      { key: "job_title", label: "Job Title" },
+      { key: "department", label: "Department" },
+      { key: "hire_date", label: "Hire Date" },
+      { key: "veteran_status", label: "Veteran Status" },
+      { key: "location", label: "Location" },
     ],
   },
   "benefit-eligibility": {
     title: "Benefit Eligibility / Carrier Feed",
     view: "vw_benefit_eligibility",
     columns: [
-      { key: "employee_id", header: "Employee ID" },
-      { key: "first_name", header: "First Name" },
-      { key: "last_name", header: "Last Name" },
-      { key: "date_of_birth", header: "DOB" },
-      { key: "gender", header: "Gender" },
-      { key: "marital_status", header: "Marital Status" },
-      { key: "address", header: "Address" },
-      { key: "hire_date", header: "Hire Date" },
+      { key: "employee_id", label: "Employee ID" },
+      { key: "first_name", label: "First Name" },
+      { key: "last_name", label: "Last Name" },
+      { key: "date_of_birth", label: "DOB" },
+      { key: "gender", label: "Gender" },
+      { key: "marital_status", label: "Marital Status" },
+      { key: "address", label: "Address" },
+      { key: "hire_date", label: "Hire Date" },
     ],
   },
   "payroll-tax-demographics": {
     title: "Payroll & Tax Demographics",
     view: "vw_payroll_tax_demographics",
     columns: [
-      { key: "employee_id", header: "Employee ID" },
-      { key: "first_name", header: "First Name" },
-      { key: "last_name", header: "Last Name" },
-      { key: "ssn_masked", header: "SSN (masked)" },
-      { key: "state_of_residence", header: "State of Residence" },
-      { key: "work_location_state", header: "Work Location State" },
-      { key: "federal_filing_status", header: "Federal Filing Status" },
+      { key: "employee_id", label: "Employee ID" },
+      { key: "first_name", label: "First Name" },
+      { key: "last_name", label: "Last Name" },
+      { key: "ssn_masked", label: "SSN (masked)" },
+      { key: "state_of_residence", label: "State of Residence" },
+      { key: "work_location_state", label: "Work Location State" },
+      { key: "federal_filing_status", label: "Federal Filing Status" },
     ],
   },
   "turnover-termination": {
     title: "Turnover / Termination Demographics",
     view: "vw_turnover_termination",
     columns: [
-      { key: "employee_id", header: "Employee ID" },
-      { key: "first_name", header: "First Name" },
-      { key: "last_name", header: "Last Name" },
-      { key: "hire_date", header: "Hire Date" },
-      { key: "termination_date", header: "Termination Date" },
-      { key: "job_title", header: "Job Title" },
-      { key: "department", header: "Department" },
-      { key: "location", header: "Location" },
+      { key: "employee_id", label: "Employee ID" },
+      { key: "first_name", label: "First Name" },
+      { key: "last_name", label: "Last Name" },
+      { key: "hire_date", label: "Hire Date" },
+      { key: "termination_date", label: "Termination Date" },
+      { key: "job_title", label: "Job Title" },
+      { key: "department", label: "Department" },
+      { key: "location", label: "Location" },
     ],
   },
   "custom-demographic-analytics": {
     title: "Custom Demographic Analytics",
     view: "vw_custom_demographic_analytics",
     columns: [
-      { key: "employee_id", header: "Employee ID" },
-      { key: "gender", header: "Gender" },
-      { key: "race_ethnicity", header: "Race/Ethnicity" },
-      { key: "age", header: "Age" },
-      { key: "tenure_months", header: "Tenure (mo)" },
-      { key: "department", header: "Department" },
-      { key: "location", header: "Location" },
-      { key: "employment_type", header: "Employment Type" },
+      { key: "employee_id", label: "Employee ID" },
+      { key: "gender", label: "Gender" },
+      { key: "race_ethnicity", label: "Race/Ethnicity" },
+      { key: "age", label: "Age" },
+      { key: "tenure_months", label: "Tenure (mo)" },
+      { key: "department", label: "Department" },
+      { key: "location", label: "Location" },
+      { key: "employment_type", label: "Employment Type" },
     ],
   },
 };
 
-// NOTE: don't constrain the arg type to Next's PageProps; unwrap if Promises (Next 15).
+// Avoid PageProps typing; unwrap if Promises (Next 15).
 export default async function Page(props: any) {
   const maybeParams = props?.params;
   const maybeSearch = props?.searchParams;
@@ -131,9 +130,11 @@ export default async function Page(props: any) {
   const customerId = (searchParams?.customerId as string) ?? "DEMO";
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let query = supabase.from(cfg.view).select("*").eq("customer_id", customerId);
-  // (Optional) add date filtering per view later if needed
-  const { data: rows, error } = await query.limit(2000);
+  const { data: rows, error } = await supabase
+    .from(cfg.view)
+    .select("*")
+    .eq("customer_id", customerId)
+    .limit(2000);
 
   if (error) {
     return (
@@ -156,7 +157,11 @@ export default async function Page(props: any) {
           Export CSV
         </a>
       </div>
-      <GenericReportTable columns={cfg.columns} rows={rows ?? []} keyField="employee_id" />
+      <GenericReportTable
+        columns={cfg.columns}
+        rows={rows ?? []}
+        keyField="employee_id"
+      />
     </div>
   );
 }
