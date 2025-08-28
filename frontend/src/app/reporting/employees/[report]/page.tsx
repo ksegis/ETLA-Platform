@@ -108,27 +108,33 @@ const MAP: Record<
   },
 };
 
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: { report: string };
-  searchParams?: { customerId?: string; start?: string; end?: string };
-}) {
-  const cfg = MAP[params.report];
+// NOTE: don't constrain the arg type to Next's PageProps; unwrap if Promises (Next 15).
+export default async function Page(props: any) {
+  const maybeParams = props?.params;
+  const maybeSearch = props?.searchParams;
+
+  const params =
+    maybeParams && typeof maybeParams.then === "function"
+      ? await maybeParams
+      : maybeParams || {};
+  const searchParams =
+    maybeSearch && typeof maybeSearch.then === "function"
+      ? await maybeSearch
+      : maybeSearch || {};
+
+  const report = params?.report as string;
+  const cfg = MAP[report];
   if (!cfg) {
-    return <div className="p-6">Unknown report.</div>;
+    return <div className="p-6 text-sm">Unknown report.</div>;
   }
 
-  const customerId = searchParams?.customerId ?? "DEMO";
+  const customerId = (searchParams?.customerId as string) ?? "DEMO";
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let query = supabase.from(cfg.view).select("*").eq("customer_id", customerId);
-  // (Optional) add date window if your view exposes a date column named hire_date or period_end, etc.
-  if (searchParams?.start) query = query.gte("hire_date", searchParams.start);
-  if (searchParams?.end) query = query.lte("hire_date", searchParams.end);
-
+  // (Optional) add date filtering per view later if needed
   const { data: rows, error } = await query.limit(2000);
+
   if (error) {
     return (
       <div className="p-6 text-sm text-red-600">
@@ -143,18 +149,14 @@ export default async function Page({
         <h1 className="text-2xl font-semibold">{cfg.title}</h1>
         <a
           className="text-sm underline underline-offset-2"
-          href={`/api/reports/employees/${params.report}?format=csv&customerId=${encodeURIComponent(
-            customerId
-          )}`}
+          href={`/api/reports/employees/${encodeURIComponent(
+            report
+          )}?format=csv&customerId=${encodeURIComponent(customerId)}`}
         >
           Export CSV
         </a>
       </div>
-      <GenericReportTable
-        columns={cfg.columns}
-        rows={rows ?? []}
-        keyField="employee_id"
-      />
+      <GenericReportTable columns={cfg.columns} rows={rows ?? []} keyField="employee_id" />
     </div>
   );
 }
