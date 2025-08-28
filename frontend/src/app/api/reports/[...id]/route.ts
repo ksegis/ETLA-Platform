@@ -4,9 +4,9 @@ export const revalidate = 0;
 import { NextResponse } from "next/server";
 
 // Use RELATIVE imports (safe in API routes)
-import { getPayStatementsMock } from "../../../../../mocks/payStatements.mock";
-import { getCheckRegisterMock } from "../../../../../mocks/checkRegister.mock";
-import { getDirectDepositRegisterMock } from "../../../../../mocks/directDepositRegister.mock";
+import { getPayStatementsMock } from "../../../../mocks/payStatements.mock";
+import { getCheckRegisterMock } from "../../../../mocks/checkRegister.mock";
+import { getDirectDepositRegisterMock } from "../../../../mocks/directDepositRegister.mock";
 
 function normalizeId(segments: string[]): string {
   const raw = segments.join("/").toLowerCase();
