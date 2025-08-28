@@ -62,33 +62,31 @@ export default function ReportingHomePage() {
               <td className="border p-2">{r.fields}</td>
               <td className="border p-2">
                 <div className="flex gap-2">
-                  {/* Preview → go to page for Pay Statements only */}
+                  {/* Preview → page for Pay Statements */}
                   {r.id === "checks/pay-statements" ? (
                     <Link
                       href="/reporting/checks/pay-statements"
+                      prefetch={false}
                       className="rounded px-2 py-1 border hover:bg-gray-50"
                     >
                       Preview
                     </Link>
                   ) : (
-                    <button
-                      className="rounded px-2 py-1 border text-gray-400 cursor-not-allowed"
+                    <span
+                      className="rounded px-2 py-1 border text-gray-400"
                       title="Preview not implemented yet"
-                      disabled
                     >
                       Preview
-                    </button>
+                    </span>
                   )}
 
-                  {/* Export keeps existing behavior */}
-                  <button
-                    onClick={() =>
-                      (window.location.href = `/api/reports/${r.id}/export`)
-                    }
+                  {/* Export → plain link (no onClick in server components) */}
+                  <a
+                    href={`/api/reports/${r.id}/export`}
                     className="rounded px-2 py-1 border hover:bg-gray-50"
                   >
                     Export
-                  </button>
+                  </a>
                 </div>
               </td>
             </tr>
