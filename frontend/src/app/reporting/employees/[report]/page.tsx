@@ -1,16 +1,12 @@
 // src/app/reporting/employees/[report]/page.tsx
 import GenericReportTable from "@/features/reports/GenericReportTable";
-import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!;
 
 type Col = { key: string; label: string };
 
-const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
+const MAP: Record<string, { title: string; reportId: string; columns: Col[] }> = {
   "employee-master-demographics": {
     title: "Employee Master Demographics",
-    view: "vw_employee_master_demographics",
+    reportId: "employees/employee-master-demographics",
     columns: [
       { key: "employee_id", label: "Employee ID" },
       { key: "first_name", label: "First Name" },
@@ -25,7 +21,7 @@ const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   },
   "eeo-1": {
     title: "EEO-1",
-    view: "vw_eeo1",
+    reportId: "employees/eeo-1",
     columns: [
       { key: "employee_id", label: "Employee ID" },
       { key: "first_name", label: "First Name" },
@@ -38,7 +34,7 @@ const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   },
   "vets-4212": {
     title: "VETS-4212",
-    view: "vw_vets_4212",
+    reportId: "employees/vets-4212",
     columns: [
       { key: "employee_id", label: "Employee ID" },
       { key: "first_name", label: "First Name" },
@@ -52,7 +48,7 @@ const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   },
   "benefit-eligibility": {
     title: "Benefit Eligibility / Carrier Feed",
-    view: "vw_benefit_eligibility",
+    reportId: "employees/benefit-eligibility",
     columns: [
       { key: "employee_id", label: "Employee ID" },
       { key: "first_name", label: "First Name" },
@@ -66,7 +62,7 @@ const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   },
   "payroll-tax-demographics": {
     title: "Payroll & Tax Demographics",
-    view: "vw_payroll_tax_demographics",
+    reportId: "employees/payroll-tax-demographics",
     columns: [
       { key: "employee_id", label: "Employee ID" },
       { key: "first_name", label: "First Name" },
@@ -79,7 +75,7 @@ const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   },
   "turnover-termination": {
     title: "Turnover / Termination Demographics",
-    view: "vw_turnover_termination",
+    reportId: "employees/turnover-termination",
     columns: [
       { key: "employee_id", label: "Employee ID" },
       { key: "first_name", label: "First Name" },
@@ -93,7 +89,7 @@ const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   },
   "custom-demographic-analytics": {
     title: "Custom Demographic Analytics",
-    view: "vw_custom_demographic_analytics",
+    reportId: "employees/custom-demographic-analytics",
     columns: [
       { key: "employee_id", label: "Employee ID" },
       { key: "gender", label: "Gender" },
@@ -107,7 +103,7 @@ const MAP: Record<string, { title: string; view: string; columns: Col[] }> = {
   },
 };
 
-// Avoid PageProps typing; unwrap if Promises (Next 15).
+// Avoid PageProps typing; unwrap Promises if Next supplies them.
 export default async function Page(props: any) {
   const maybeParams = props?.params;
   const maybeSearch = props?.searchParams;
@@ -123,26 +119,11 @@ export default async function Page(props: any) {
 
   const report = params?.report as string;
   const cfg = MAP[report];
-  if (!cfg) {
-    return <div className="p-6 text-sm">Unknown report.</div>;
-  }
+  if (!cfg) return <div className="p-6 text-sm">Unknown report.</div>;
 
   const customerId = (searchParams?.customerId as string) ?? "DEMO";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  const { data: rows, error } = await supabase
-    .from(cfg.view)
-    .select("*")
-    .eq("customer_id", customerId)
-    .limit(2000);
-
-  if (error) {
-    return (
-      <div className="p-6 text-sm text-red-600">
-        {cfg.title}: {error.message}
-      </div>
-    );
-  }
+  const start = (searchParams?.start as string) || undefined;
+  const end = (searchParams?.end as string) || undefined;
 
   return (
     <div className="p-6">
@@ -150,17 +131,23 @@ export default async function Page(props: any) {
         <h1 className="text-2xl font-semibold">{cfg.title}</h1>
         <a
           className="text-sm underline underline-offset-2"
-          href={`/api/reports/employees/${encodeURIComponent(
-            report
-          )}?format=csv&customerId=${encodeURIComponent(customerId)}`}
+          href={`/api/reports/${encodeURIComponent(
+            cfg.reportId
+          )}?format=csv&customerId=${encodeURIComponent(customerId)}${
+            start ? `&start=${encodeURIComponent(start)}` : ""
+          }${end ? `&end=${encodeURIComponent(end)}` : ""}`}
         >
           Export CSV
         </a>
       </div>
+
       <GenericReportTable
+        title={cfg.title}
+        reportId={cfg.reportId}
+        customerId={customerId}
+        start={start}
+        end={end}
         columns={cfg.columns}
-        rows={rows ?? []}
-        keyField="employee_id"
       />
     </div>
   );
