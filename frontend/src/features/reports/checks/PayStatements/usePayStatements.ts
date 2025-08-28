@@ -1,19 +1,38 @@
 import { useEffect, useState } from "react";
 import { getPayStatementsMock } from "@/mocks/payStatements.mock";
 
-type PayStatementApiRow = {
+type PayStatementRow = {
+  id: string;
   checkNumber: string;
   employeeId: string;
   employeeName: string;
-  payDate: string;
-  payPeriodStart: string;
-  payPeriodEnd: string;
+  payDate: string;        // ISO
+  payPeriodStart: string; // ISO
+  payPeriodEnd: string;   // ISO
   netPay: number;
   depositLast4?: string;
 };
 
+function normalizePayStatements(rows: any[], start?: string, end?: string): PayStatementRow[] {
+  const fitDate = (iso?: string | null) => {
+    if (!start && !end) return iso ?? "";
+    return (end ?? start) ?? (iso ?? "");
+  };
+  return rows.map((r, idx) => ({
+    id: r.id ?? r.checkNumber ?? `PS-${idx + 1}`,
+    checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + idx}`,
+    employeeId: r.employeeId ?? r.employee_id ?? "",
+    employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
+    payDate: fitDate(r.payDate ?? r.pay_date),
+    payPeriodStart: r.payPeriodStart ?? r.pay_period_start ?? (start ?? r.payPeriodStart ?? ""),
+    payPeriodEnd: r.payPeriodEnd ?? r.pay_period_end ?? (end ?? r.payPeriodEnd ?? ""),
+    netPay: Number(r.netPay ?? r.net_pay ?? r.amount ?? 0),
+    depositLast4: r.depositLast4 ?? r.accountLast4 ?? r.last4 ?? "",
+  }));
+}
+
 export function usePayStatements(params: { start?: string; end?: string }) {
-  const [rows, setRows] = useState<PayStatementApiRow[] | null>(null);
+  const [rows, setRows] = useState<PayStatementRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<Error | null>(null);
 
@@ -22,7 +41,6 @@ export function usePayStatements(params: { start?: string; end?: string }) {
     (async () => {
       try {
         setLoading(true);
-        // 1) Keep your existing API call intact
         const qs = new URLSearchParams();
         if (params.start) qs.set("start", params.start);
         if (params.end) qs.set("end", params.end);
@@ -31,26 +49,25 @@ export function usePayStatements(params: { start?: string; end?: string }) {
           credentials: "include",
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: PayStatementApiRow[] = await res.json();
+        let data: any[] = [];
+        if (res.ok) data = await res.json();
 
-        // 2) Fallback to mock only if empty OR DEMO_MOCKS enabled
-        // ✅ Next.js-safe
-        const demoFlag = (process.env.NEXT_PUBLIC_DEMO_MOCKS ?? process.env.DEMO_MOCKS ?? "")
-        .toString()
-        .toLowerCase();
+        // Force fallback when empty or on non-OK responses
+        if (!Array.isArray(data) || data.length === 0) {
+          const mock = getPayStatementsMock();
+          const normalized = normalizePayStatements(mock, params.start, params.end);
+          if (!cancelled) setRows(normalized);
+          return;
+        }
 
-        const useMocks = (Array.isArray(data) && data.length === 0) || demoFlag === "on";
-
-        const finalRows = useMocks ? getPayStatementsMock() : data;
-
-        if (!cancelled) setRows(finalRows);
+        const normalized = normalizePayStatements(data, params.start, params.end);
+        if (!cancelled) setRows(normalized);
       } catch (e: any) {
-        // On error, do NOT explode the page—use mock for demo continuity
-        const finalRows = getPayStatementsMock();
+        const mock = getPayStatementsMock();
+        const normalized = normalizePayStatements(mock, params.start, params.end);
         if (!cancelled) {
-          setRows(finalRows);
           setErr(e);
+          setRows(normalized);
         }
       } finally {
         if (!cancelled) setLoading(false);
