@@ -3,20 +3,18 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { getPayStatementsMock } from "../../../../../mocks/payStatements.mock";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const start = url.searchParams.get("start") ?? null;
-  const end   = url.searchParams.get("end") ?? null;
+  const start = url.searchParams.get("start");
+  const end   = url.searchParams.get("end");
 
-  // Server-only: never expose service key to the browser
-  const supabase = createServerClient(
+  // ✅ No cookies object needed
+  const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,   // or use anon key if RLS fits your case
-    { cookies }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   let rows: any[] = [];
@@ -24,7 +22,6 @@ export async function GET(req: Request) {
     let q = supabase.from("pay_statements").select("*");
     if (start) q = q.gte("pay_date", start);
     if (end)   q = q.lte("pay_date", end);
-
     const { data, error } = await q;
     if (error) throw error;
     rows = data ?? [];
@@ -34,13 +31,10 @@ export async function GET(req: Request) {
 
   const demo = (process.env.DEMO_MOCKS ?? process.env.NEXT_PUBLIC_DEMO_MOCKS ?? "")
     .toString().toLowerCase() === "on";
+  if (demo || rows.length === 0) rows = getPayStatementsMock();
 
-  if (demo || rows.length === 0) {
-    rows = getPayStatementsMock();
-  }
-
-  // normalize + guarantee id
-  const normalized = rows.map((r, i) => ({
+  // normalize + id guard (keeps the grid from rendering blank)
+  const normalized = rows.map((r: any, i: number) => ({
     id: r.id ?? r.checkNumber ?? `PS-${i + 1}`,
     checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
     employeeId: r.employeeId ?? r.employee_id ?? "",
