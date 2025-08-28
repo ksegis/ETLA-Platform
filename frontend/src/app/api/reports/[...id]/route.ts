@@ -3,10 +3,13 @@ export const revalidate = 0;
 
 import { NextResponse } from "next/server";
 
-// Use RELATIVE imports (safe in API routes)
+// ✅ correct relative depth (4x ../)
 import { getPayStatementsMock } from "../../../../mocks/payStatements.mock";
 import { getCheckRegisterMock } from "../../../../mocks/checkRegister.mock";
 import { getDirectDepositRegisterMock } from "../../../../mocks/directDepositRegister.mock";
+
+// Accept the official shape Next expects: id can be string | string[]
+type RouteParams = { params: { id: string | string[] } };
 
 function normalizeId(segments: string[]): string {
   const raw = segments.join("/").toLowerCase();
@@ -33,14 +36,17 @@ function fitDate(iso: string, start?: string | null, end?: string | null) {
   return (end ?? start) ?? iso;
 }
 
-export async function GET(req: Request, ctx: { params: { id: string[] } }) {
+// ✅ Use the union type for params; normalize to string[]
+export async function GET(req: Request, { params }: RouteParams) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
   const end   = url.searchParams.get("end");
 
-  const segs = [...(ctx.params.id || [])];
+  const segs = Array.isArray(params?.id)
+    ? [...params.id]
+    : (params?.id ? [params.id] : []);
 
-  // Last token may be "preview" or "export"
+  // last token may be "preview" or "export"
   let action: "preview" | "export" = "preview";
   const last = segs[segs.length - 1]?.toLowerCase();
   if (last === "export" || last === "preview") {
@@ -110,5 +116,5 @@ export async function GET(req: Request, ctx: { params: { id: string[] } }) {
     });
   }
 
-  return NextResponse.json(rows); // preview/default
+  return NextResponse.json(rows);
 }
