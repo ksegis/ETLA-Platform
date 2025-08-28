@@ -1,14 +1,19 @@
-﻿export const dynamic = "force-dynamic";
+﻿// src/app/api/reports/[...id]/route.ts
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextResponse } from "next/server";
 
-// ✅ correct relative depth (4x ../)
+// NOTE: this file lives at src/app/api/reports/[...id]/route.ts
+//       so mocks are 4 levels up from here:
 import { getPayStatementsMock } from "../../../../mocks/payStatements.mock";
 import { getCheckRegisterMock } from "../../../../mocks/checkRegister.mock";
 import { getDirectDepositRegisterMock } from "../../../../mocks/directDepositRegister.mock";
 
-
+// Normalize report id segments like:
+//   ["checks","pay-statements"]         -> "checks/pay-statements"
+//   ["checks-pay-statements"]           -> "checks/pay-statements"
+//   ["checks_pay_statements","preview"] -> "checks/pay-statements"
 function normalizeId(segments: string[]): string {
   const raw = segments.join("/").toLowerCase();
   return raw
@@ -30,27 +35,27 @@ function toCSV(rows: any[]): string {
 }
 
 function fitDate(iso: string, start?: string | null, end?: string | null) {
-  if (!start && !end) return iso;
-  return (end ?? start) ?? iso;
+  if (!start && !end) return iso ?? "";
+  return (end ?? start) ?? (iso ?? "");
 }
 
-// ✅ Use the union type for params; normalize to string[]
+// ✅ Next 15-compliant handler signature (inline type; flexible params map)
 export async function GET(
   req: Request,
-  { params }: { params: { id: string | string[] } }
+  { params }: { params: Record<string, string | string[]> }
 ) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
   const end   = url.searchParams.get("end");
 
-  const segs = Array.isArray(params?.id)
-    ? [...params.id]
-    : (params?.id ? [params.id] : []);
+  // Catch-all can be string or string[]
+  const raw = params?.id;
+  const segs = Array.isArray(raw) ? [...raw] : (raw ? [raw] : []);
 
-  // last token may be "preview" or "export"
+  // Last token may be "preview" or "export"; default = preview (JSON)
   let action: "preview" | "export" = "preview";
   const last = segs[segs.length - 1]?.toLowerCase();
-  if (last === "export" || last === "preview") {
+  if (last === "preview" || last === "export") {
     action = last as "preview" | "export";
     segs.pop();
   }
@@ -65,7 +70,7 @@ export async function GET(
         checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
         employeeId: r.employeeId ?? r.employee_id ?? "",
         employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
-        payDate: fitDate(r.payDate ?? r.pay_date ?? "", start, end),
+        payDate: fitDate(r.payDate ?? r.pay_date, start, end),
         payPeriodStart: r.payPeriodStart ?? r.pay_period_start ?? (start ?? ""),
         payPeriodEnd: r.payPeriodEnd ?? r.pay_period_end ?? (end ?? ""),
         netPay: Number(r.netPay ?? r.net_pay ?? r.amount ?? 0),
@@ -79,7 +84,7 @@ export async function GET(
         checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
         employeeId: r.employeeId ?? r.employee_id ?? "",
         employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
-        payDate: fitDate(r.payDate ?? r.pay_date ?? "", start, end),
+        payDate: fitDate(r.payDate ?? r.pay_date, start, end),
         grossPay: Number(r.grossPay ?? r.gross_pay ?? 0),
         taxes: Number(r.taxes ?? r.tax ?? 0),
         deductions: Number(r.deductions ?? r.deduction ?? 0),
@@ -92,7 +97,7 @@ export async function GET(
         id: r.id ?? r.employeeId ?? `DD-${i + 1}`,
         employeeId: r.employeeId ?? r.employee_id ?? "",
         employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
-        payDate: fitDate(r.payDate ?? r.pay_date ?? "", start, end),
+        payDate: fitDate(r.payDate ?? r.pay_date, start, end),
         amount: Number(r.amount ?? r.netPay ?? r.net_pay ?? 0),
         bankName: r.bankName ?? r.bank_name ?? "",
         accountType: r.accountType ?? r.account_type ?? "Checking",
@@ -102,12 +107,14 @@ export async function GET(
       break;
 
     default:
-      rows = [];
+      rows = []; // unknown report id
   }
 
   if (action === "export") {
     const csv = toCSV(rows);
-    const filename = (segs.length ? segs.join("_") : "report").toLowerCase().replace(/\W+/g, "-") + ".csv";
+    const filename = (segs.length ? segs.join("_") : "report")
+      .toLowerCase()
+      .replace(/\W+/g, "-") + ".csv";
     return new NextResponse(csv, {
       headers: {
         "content-type": "text/csv; charset=utf-8",
@@ -117,5 +124,6 @@ export async function GET(
     });
   }
 
+  // default: preview/json
   return NextResponse.json(rows);
 }
