@@ -103,7 +103,7 @@ const MAP: Record<string, { title: string; reportId: string; columns: Col[] }> =
   },
 };
 
-// Avoid PageProps typing; unwrap Promises if Next supplies them.
+// Avoid PageProps typings; unwrap if Next passes Promises
 export default async function Page(props: any) {
   const maybeParams = props?.params;
   const maybeSearch = props?.searchParams;
@@ -128,7 +128,10 @@ export default async function Page(props: any) {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">{cfg.title}</h1>
+        <div className="flex items-center gap-3">
+          <a href="/reporting/employees" className="text-sm underline">&larr; Back</a>
+          <h1 className="text-2xl font-semibold">{cfg.title}</h1>
+        </div>
         <a
           className="text-sm underline underline-offset-2"
           href={`/api/reports/${encodeURIComponent(
