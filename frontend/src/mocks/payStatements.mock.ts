@@ -1,17 +1,19 @@
 export type PayStatementRow = {
+  id: string;                 // <-- added
   checkNumber: string;
   employeeId: string;
   employeeName: string;
-  payDate: string;           // ISO date
-  payPeriodStart: string;    // ISO date
-  payPeriodEnd: string;      // ISO date
-  netPay: number;            // in dollars
-  depositLast4?: string;     // optional
+  payDate: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  netPay: number;
+  depositLast4?: string;
 };
 
 export function getPayStatementsMock(): PayStatementRow[] {
   return [
     {
+      id: "PS-001245",        // <-- added
       checkNumber: "001245",
       employeeId: "E-1001",
       employeeName: "Maria Alvarez",
@@ -22,6 +24,7 @@ export function getPayStatementsMock(): PayStatementRow[] {
       depositLast4: "4821",
     },
     {
+      id: "PS-001246",
       checkNumber: "001246",
       employeeId: "E-1002",
       employeeName: "David Chen",
@@ -32,6 +35,7 @@ export function getPayStatementsMock(): PayStatementRow[] {
       depositLast4: "1138",
     },
     {
+      id: "PS-001247",
       checkNumber: "001247",
       employeeId: "E-1003",
       employeeName: "Sofia Martinez",

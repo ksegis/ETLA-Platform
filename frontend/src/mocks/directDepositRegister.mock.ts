@@ -1,20 +1,19 @@
-// ✅ make sure both the type and the function are exported
-
 export type DirectDepositRow = {
+  id: string;                 // <-- added
   employeeId: string;
   employeeName: string;
-  payDate: string;       // ISO
-  amount: number;        // dollars
+  payDate: string;
+  amount: number;
   bankName: string;
   accountType: "Checking" | "Savings";
-  accountLast4: string;  // last 4 only
+  accountLast4: string;
   routingMasked?: string;
 };
 
-// ✅ NAMED EXPORT — this is what your route imports
 export function getDirectDepositRegisterMock(): DirectDepositRow[] {
   return [
     {
+      id: "DD-1001",          // <-- added
       employeeId: "E-1001",
       employeeName: "Maria Alvarez",
       payDate: "2025-08-15",
@@ -25,20 +24,22 @@ export function getDirectDepositRegisterMock(): DirectDepositRow[] {
       routingMasked: "*****-***-001",
     },
     {
+      id: "DD-1002",
       employeeId: "E-1002",
       employeeName: "David Chen",
       payDate: "2025-08-15",
-      amount: 1789.10,
+      amount: 1789.1,
       bankName: "Atlantic Intl",
       accountType: "Savings",
       accountLast4: "1138",
       routingMasked: "*****-***-104",
     },
     {
+      id: "DD-1003",
       employeeId: "E-1003",
       employeeName: "Sofia Martinez",
       payDate: "2025-08-15",
-      amount: 1498.30,
+      amount: 1498.3,
       bankName: "Heritage Bank",
       accountType: "Checking",
       accountLast4: "9022",
