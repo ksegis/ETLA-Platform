@@ -1,110 +1,30 @@
-// lib/supabase.ts
-import { createClient } from '@supabase/supabase-js'
+// src/lib/supabase.ts
+import { createClient as createSupabaseClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
+/**
+ * Singleton browser-safe Supabase client.
+ * Uses the public (anon) key. Works in both client & server components.
+ * Required env vars:
+ *  - NEXT_PUBLIC_SUPABASE_URL
+ *  - NEXT_PUBLIC_SUPABASE_ANON_TOKEN
+ */
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!;
 
-// Database types
-export interface WorkRequest {
-  id: string
-  tenant_id: string
-  title: string
-  description: string
-  category: string
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  urgency: 'low' | 'medium' | 'high' | 'urgent'
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
-  customer_id: string
-  assigned_to?: string
-  estimated_hours?: number
-  actual_hours: number
-  budget?: number
-  required_completion_date?: string
-  created_at: string
-  updated_at: string
-}
+let _client: SupabaseClient | null = null;
 
-export interface Project {
-  id: string
-  tenant_id: string
-  work_request_id: string
-  title: string
-  description?: string
-  status: 'scheduled' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  assigned_team_lead: string
-  estimated_hours: number
-  actual_hours: number
-  budget?: number
-  start_date: string
-  end_date: string
-  completion_percentage: number
-  client_satisfaction_score?: number
-  on_time_delivery?: boolean
-  created_at: string
-  updated_at: string
-}
+export function createClient(): SupabaseClient {
+  if (_client) return _client;
 
-export interface Tenant {
-  id: string
-  company_name: string
-  subdomain?: string
-  industry?: string
-  status: 'active' | 'trial' | 'suspended' | 'cancelled'
-  subscription_plan: 'trial' | 'professional' | 'enterprise'
-  created_at: string
-}
-
-export interface User {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  role: 'host_admin' | 'program_manager' | 'client_admin' | 'client_user'
-  tenant_id?: string
-  is_active: boolean
-  created_at: string
-}
-
-// Auth helpers
-export const signInWithRole = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  })
-  
-  if (data.user) {
-    // Get user profile with role and tenant
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role, tenant_id, first_name, last_name')
-      .eq('id', data.user.id)
-      .single()
-    
-    return { user: data.user, profile, error }
+  if (!SUPABASE_URL || !SUPABASE_ANON) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_TOKEN env vars."
+    );
   }
-  
-  return { user: null, profile: null, error }
+
+  _client = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON);
+  return _client;
 }
 
-export const signOut = async () => {
-  const { error } = await supabase.auth.signOut()
-  return { error }
-}
-
-// Database helpers
-export const getCurrentUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-  
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-  
-  return { ...user, profile }
-}
-
+export type { SupabaseClient };
