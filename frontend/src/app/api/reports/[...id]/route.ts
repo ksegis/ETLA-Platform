@@ -3,12 +3,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextResponse } from "next/server";
-
-// NOTE: this file lives at src/app/api/reports/[...id]/route.ts
-//       so mocks are 4 levels up from here:
-import { getPayStatementsMock } from "../../../../mocks/payStatements.mock";
-import { getCheckRegisterMock } from "../../../../mocks/checkRegister.mock";
-import { getDirectDepositRegisterMock } from "../../../../mocks/directDepositRegister.mock";
+import { createClient } from "@supabase/supabase-js";
 
 function normalizeId(segments: string[]): string {
   const raw = segments.join("/").toLowerCase();
@@ -30,12 +25,7 @@ function toCSV(rows: any[]): string {
   return [headers.join(","), ...rows.map(r => headers.map(h => esc(r[h])).join(","))].join("\n");
 }
 
-function fitDate(iso?: string | null, start?: string | null, end?: string | null) {
-  if (!start && !end) return iso ?? "";
-  return (end ?? start) ?? (iso ?? "");
-}
-
-// Use `any` for ctx to satisfy Next 15’s strict checker without fighting the type system
+// Use `any` for ctx to avoid Next 15 route signature type noise
 export async function GET(req: Request, ctx: any) {
   const url = new URL(req.url);
   const start = url.searchParams.get("start");
@@ -44,7 +34,7 @@ export async function GET(req: Request, ctx: any) {
   const raw = ctx?.params?.id as string | string[] | undefined;
   const segs = Array.isArray(raw) ? [...raw] : (raw ? [raw] : []);
 
-  // Last token may be "preview" or "export" (default = preview)
+  // trailing "preview" or "export" (default: preview JSON)
   let action: "preview" | "export" = "preview";
   const last = segs[segs.length - 1]?.toLowerCase();
   if (last === "preview" || last === "export") {
@@ -55,57 +45,42 @@ export async function GET(req: Request, ctx: any) {
   const id = normalizeId(segs);
   let rows: any[] = [];
 
-  switch (id) {
-    case "checks/pay-statements": {
-      const src = getPayStatementsMock() as any[];
-      rows = src.map((r: any, i: number) => ({
-        id: r.id ?? r.checkNumber ?? `PS-${i + 1}`,
-        checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
-        employeeId: r.employeeId ?? r.employee_id ?? "",
-        employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
-        payDate: fitDate(r.payDate ?? r.pay_date, start, end),
-        payPeriodStart: r.payPeriodStart ?? r.pay_period_start ?? (start ?? ""),
-        payPeriodEnd: r.payPeriodEnd ?? r.pay_period_end ?? (end ?? ""),
-        netPay: Number(r.netPay ?? r.net_pay ?? r.amount ?? 0),
-        depositLast4: r.depositLast4 ?? r.accountLast4 ?? r.last4 ?? "",
-      }));
-      break;
+  if (id === "checks/pay-statements") {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
+    );
+
+    // Build query with optional date filter
+    let q = supabase.from("pay_statements").select("*");
+    if (start) q = q.gte("pay_date", start);
+    if (end)   q = q.lte("pay_date", end);
+    q = q.order("pay_date", { ascending: false });
+
+    const { data, error } = await q;
+    if (error) {
+      // Surface an empty list to UI but include header for debugging if needed
+      return NextResponse.json([], {
+        headers: { "x-error": `pay_statements:${error.message}` },
+        status: 200,
+      });
     }
 
-    case "checks/check-register": {
-      const src = getCheckRegisterMock() as any[];
-      rows = src.map((r: any, i: number) => ({
-        id: r.id ?? r.checkNumber ?? `CR-${i + 1}`,
-        checkNumber: r.checkNumber ?? r.check_number ?? r.checkNo ?? `MOCK-${1000 + i}`,
-        employeeId: r.employeeId ?? r.employee_id ?? "",
-        employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
-        payDate: fitDate(r.payDate ?? r.pay_date, start, end),
-        grossPay: Number(r.grossPay ?? r.gross_pay ?? 0),
-        taxes: Number(r.taxes ?? r.tax ?? 0),
-        deductions: Number(r.deductions ?? r.deduction ?? 0),
-        netPay: Number(r.netPay ?? r.net_pay ?? r.amount ?? 0),
-      }));
-      break;
-    }
-
-    case "checks/direct-deposit-register": {
-      const src = getDirectDepositRegisterMock() as any[];
-      rows = src.map((r: any, i: number) => ({
-        id: r.id ?? r.employeeId ?? `DD-${i + 1}`,
-        employeeId: r.employeeId ?? r.employee_id ?? "",
-        employeeName: r.employeeName ?? r.employee_name ?? r.name ?? "",
-        payDate: fitDate(r.payDate ?? r.pay_date, start, end),
-        amount: Number(r.amount ?? r.netPay ?? r.net_pay ?? 0),
-        bankName: r.bankName ?? r.bank_name ?? "",
-        accountType: r.accountType ?? r.account_type ?? "Checking",
-        accountLast4: r.accountLast4 ?? r.last4 ?? "",
-        routingMasked: r.routingMasked ?? r.routing_masked ?? undefined,
-      }));
-      break;
-    }
-
-    default:
-      rows = []; // unknown report id
+    // Normalize DB → UI shape (camelCase)
+    rows = (data ?? []).map((r: any) => ({
+      id: r.id,
+      checkNumber: r.check_number,
+      employeeId: r.employee_id,
+      employeeName: r.employee_name,
+      payDate: r.pay_date,
+      payPeriodStart: r.pay_period_start,
+      payPeriodEnd: r.pay_period_end,
+      netPay: Number(r.net_pay),
+      depositLast4: r.deposit_last4 ?? null,
+    }));
+  } else {
+    // Not implementing other reports in this pass; return empty
+    rows = [];
   }
 
   if (action === "export") {
@@ -122,6 +97,5 @@ export async function GET(req: Request, ctx: any) {
     });
   }
 
-  // default: preview/json
   return NextResponse.json(rows);
 }
