@@ -1,107 +1,51 @@
-// frontend/src/app/reporting/employees/page.tsx
+import ReportGrid from "@/app/reporting/_components/ReportGrid";
+import type { Col } from "@/features/reports/GenericReportTable";
 
-export default async function EmployeeReportsGroup(props: any) {
-  // Support Next 15's async searchParams, but also work if it's sync
-  const sp = props?.searchParams;
-  const resolved: Record<string, string | string[] | undefined> =
-    sp && typeof sp.then === "function" ? await sp : (sp ?? {});
-
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = (await searchParams) ?? {};
   const customerId =
-    (typeof resolved.customerId === "string" ? resolved.customerId : undefined) ||
-    process.env.NEXT_PUBLIC_DEFAULT_CUSTOMER_ID ||
-    "DEMO";
+    typeof sp.customerId === "string" ? sp.customerId : "DEMO";
 
-  const rows = [
+  const employeesReports: {
+    id: string;
+    title: string;
+    description?: string;
+    columns: Col[];
+    hasFacsimile?: boolean;
+  }[] = [
     {
-      id: "employee-master-demographics",
-      title: "Employee Master Demographics",
-      fields:
-        "Employee ID, First Name, Last Name, Middle Initial, Preferred Name, Date of Birth, Gender, Marital Status",
+      id: "employees/active",
+      title: "Active Employees",
+      description: "Current active headcount",
+      columns: [
+        { key: "employee_id", label: "Employee ID" },
+        { key: "name", label: "Name" },
+        { key: "department", label: "Department" },
+        { key: "status", label: "Status" },
+        { key: "hire_date", label: "Hire Date" },
+      ],
     },
     {
-      id: "eeo-1",
-      title: "EEO-1",
-      fields:
-        "Employee ID, First Name, Last Name, Gender, Race / Ethnicity, Job Category, Hire Date, Location / Establishment",
+      id: "employees/roster",
+      title: "Employee Roster",
+      description: "All employees with contact details",
+      columns: [
+        { key: "employee_id", label: "Employee ID" },
+        { key: "name", label: "Name" },
+        { key: "email", label: "Email" },
+        { key: "department", label: "Department" },
+        { key: "status", label: "Status" },
+      ],
     },
-    {
-      id: "vets-4212",
-      title: "VETS-4212",
-      fields:
-        "Employee ID, First Name, Last Name, Job Title, Department, Hire Date, Veteran Status, Location",
-    },
-    {
-      id: "benefit-eligibility",
-      title: "Benefit Eligibility / Carrier Feed",
-      fields:
-        "Employee ID, First Name, Last Name, Date of Birth, Gender, Marital Status, Address, Hire Date",
-    },
-    {
-      id: "payroll-tax-demographics",
-      title: "Payroll & Tax Demographics",
-      fields:
-        "Employee ID, First Name, Last Name, SSN (masked), Address, State of Residence, Work Location State, Federal Filing Status",
-    },
-    {
-      id: "turnover-termination",
-      title: "Turnover / Termination Demographics",
-      fields:
-        "Employee ID, First Name, Last Name, Hire Date, Termination Date, Job Title, Department, Location",
-    },
-    {
-      id: "custom-demographic-analytics",
-      title: "Custom Demographic Analytics",
-      fields:
-        "Employee ID, Gender, Race / Ethnicity, Age, Tenure, Department, Location, Employment Type",
-    },
-  ] as const;
+  ];
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Employee Reports</h1>
-        <a href="/reporting" className="text-sm underline">
-          &larr; Back to All Reports
-        </a>
-      </div>
-
-      <div className="rounded border divide-y">
-        <div className="grid grid-cols-12 gap-4 p-3 bg-gray-50 text-sm font-medium">
-          <div className="col-span-5">Report</div>
-          <div className="col-span-1">Kind</div>
-          <div className="col-span-4">Fields</div>
-          <div className="col-span-2 text-right">Actions</div>
-        </div>
-
-        {rows.map((r) => {
-          const previewHref = `/reporting/employees/${r.id}?customerId=${encodeURIComponent(
-            customerId
-          )}`;
-          const exportHref = `/api/reports/employees/${r.id}?format=csv&customerId=${encodeURIComponent(
-            customerId
-          )}`;
-
-          return (
-            <div key={r.id} className="grid grid-cols-12 gap-4 p-3 items-center">
-              <div className="col-span-5">
-                <a href={previewHref} className="underline">
-                  {r.title}
-                </a>
-              </div>
-              <div className="col-span-1">table</div>
-              <div className="col-span-4 text-sm">{r.fields}</div>
-              <div className="col-span-2 flex justify-end gap-2">
-                <a className="px-3 py-1 border rounded text-sm" href={previewHref}>
-                  Preview
-                </a>
-                <a className="px-3 py-1 border rounded text-sm" href={exportHref}>
-                  Export
-                </a>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+    <div className="px-2">
+      <ReportGrid customerId={customerId} reports={employeesReports} />
     </div>
   );
 }
