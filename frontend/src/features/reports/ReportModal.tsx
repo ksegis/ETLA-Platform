@@ -1,124 +1,95 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { REPORTS, ReportDef, Col } from "./reportCatalog";
-import GenericReportTable from "@/features/reports/GenericReportTable";
+import { useEffect } from 'react';
+import GenericReportTable from '@/features/reports/GenericReportTable';
 
-type Props = {
-  open: boolean;
-  onClose: () => void;
-  report: ReportDef | null;
-  customerId: string;
+export type Col = { key: string; label: string };
+export type ReportDef = {
+  id: string;
+  title: string;
+  columns: Col[];
+  hasFacsimile?: boolean;
 };
 
-function FilterBar({
-  report,
-  value,
-  onChange,
-}: {
+type PropsShapeA = {
+  open: boolean;
+  onClose: () => void;
+  customerId: string;
   report: ReportDef;
-  value: Record<string, string>;
-  onChange: (next: Record<string, string>) => void;
-}) {
+  initialFilters?: Record<string, any>;
+};
+
+type PropsShapeB = {
+  open: boolean;
+  onClose: () => void;
+  customerId: string;
+  title: string;
+  reportId: string;
+  columns: Col[];
+  hasFacsimile?: boolean;
+  initialFilters?: Record<string, any>;
+};
+
+// allow either shape; ignore unknown props safely
+type Props = PropsShapeA | PropsShapeB;
+
+export default function ReportModal(props: Props) {
+  if (!props.open) return null;
+
+  // normalize into a single report object + filters
+  const report: ReportDef =
+    'report' in props
+      ? props.report
+      : {
+          id: props.reportId,
+          title: props.title,
+          columns: props.columns,
+          hasFacsimile: props.hasFacsimile,
+        };
+
+  const customerId = props.customerId;
+  const filters = (props as any).initialFilters ?? { customerId };
+
+  // trap ESC to close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && props.onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [props]);
+
   return (
-    <div className="w-full border-b bg-white sticky top-0 z-10">
-      <div className="flex flex-wrap gap-3 p-3">
-        {report.filters.map((f) => {
-          if (f.type === "search") {
-            return (
-              <input
-                key={f.key}
-                type="text"
-                className="input input-bordered h-9"
-                placeholder={f.placeholder || ""}
-                value={value[f.key] ?? ""}
-                onChange={(e) => onChange({ ...value, [f.key]: e.target.value })}
-              />
-            );
-          }
-          if (f.type === "date") {
-            return (
-              <div key={f.key} className="flex items-center gap-2">
-                <span className="text-sm text-slate-600">{f.label}</span>
-                <input
-                  type="date"
-                  className="input input-bordered h-9"
-                  value={value[f.key] ?? ""}
-                  onChange={(e) => onChange({ ...value, [f.key]: e.target.value })}
-                />
-              </div>
-            );
-          }
-          // select
-          return (
-            <div key={f.key} className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">{f.label}</span>
-              <select
-                className="select select-bordered h-9"
-                value={value[f.key] ?? ""}
-                onChange={(e) => onChange({ ...value, [f.key]: e.target.value })}
-              >
-                <option value="">All</option>
-                {f.options.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-          );
-        })}
-        <div className="flex-1" />
-        <a
-          href={`/api/reports/${report.id}/export?${new URLSearchParams(value).toString()}`}
-          className="btn btn-sm btn-primary"
-          rel="noopener noreferrer"
-        >
-          Export CSV
-        </a>
-      </div>
-    </div>
-  );
-}
+    <div
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/40"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="relative w-[98vw] h-[92vh] bg-white rounded-lg shadow-xl overflow-hidden">
+        {/* header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h3 className="text-base sm:text-lg font-semibold">{report.title}</h3>
+          <button
+            type="button"
+            onClick={props.onClose}
+            className="px-2 py-1 text-sm rounded hover:bg-gray-100"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
 
-export default function ReportModal({ open, onClose, report, customerId }: Props) {
-  const [filters, setFilters] = useState<Record<string, string>>({});
-
-  const table = useMemo(() => {
-    if (!report) return null;
-
-    // Always include customer_id; GenericReportTable forwards to /api/reports/[...id]/preview
-    const query = { ...filters, customerId };
-
-    return (
-      <div className="w-full h-full overflow-auto">
-        <FilterBar report={report} value={filters} onChange={setFilters} />
-        <div className="p-3">
+        {/* body: full-bleed, scrollable */}
+        <div className="w-full h-[calc(92vh-56px)] overflow-auto p-3">
           <GenericReportTable
             title={report.title}
             reportId={report.id}
             customerId={customerId}
-            columns={report.columns as Col[]}
-            filters={query}
-            // If your GenericReportTable exposes these props already, they’ll be forwarded
-            // to your API and handle pagination server-side.
-            // Otherwise GenericReportTable can ignore unknown props safely.
+            columns={report.columns}
+            keyField={report.columns[0]?.key ?? 'id'}
+            pageSize={25}
+            filters={filters}
             hasFacsimile={!!report.hasFacsimile}
           />
         </div>
-      </div>
-    );
-  }, [report, filters, customerId]);
-
-  if (!open || !report) return null;
-
-  return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="absolute inset-0 bg-white shadow-xl flex flex-col">
-        <div className="flex items-center justify-between px-4 h-12 border-b bg-white">
-          <div className="font-medium">{report.title}</div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>Close</button>
-        </div>
-        {table}
       </div>
     </div>
   );
