@@ -1,20 +1,13 @@
 // frontend/src/app/reporting/employees/page.tsx
 
-export default async function EmployeeReportsGroup({
-  searchParams,
-}: {
-  // Allow both the new async and legacy sync searchParams
-  searchParams?:
-    | Record<string, string | string[] | undefined>
-    | Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolved =
-    searchParams && typeof (searchParams as any).then === "function"
-      ? await (searchParams as Promise<Record<string, string | string[] | undefined>>)
-      : (searchParams as Record<string, string | string[] | undefined> | undefined) ?? {};
+export default async function EmployeeReportsGroup(props: any) {
+  // Support Next 15's async searchParams, but also work if it's sync
+  const sp = props?.searchParams;
+  const resolved: Record<string, string | string[] | undefined> =
+    sp && typeof sp.then === "function" ? await sp : (sp ?? {});
 
   const customerId =
-    (typeof resolved?.customerId === "string" ? resolved.customerId : undefined) ||
+    (typeof resolved.customerId === "string" ? resolved.customerId : undefined) ||
     process.env.NEXT_PUBLIC_DEFAULT_CUSTOMER_ID ||
     "DEMO";
 
