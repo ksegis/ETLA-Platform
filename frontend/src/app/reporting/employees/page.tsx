@@ -1,5 +1,7 @@
 // src/app/reporting/employees/page.tsx
+
 export default async function EmployeeReportsGroup(props: any) {
+  // searchParams can be a plain object or a Promise in Next 15. Handle both.
   const maybeSearch = props?.searchParams;
   const searchParams =
     maybeSearch && typeof maybeSearch.then === "function"
@@ -81,7 +83,6 @@ export default async function EmployeeReportsGroup(props: any) {
               >
                 {r.title}
               </a>
-              <div className="text-xs text-gray-500">{/* optional subtitle */}</div>
             </div>
             <div className="col-span-1">table</div>
             <div className="col-span-4 text-sm">{r.fields}</div>
