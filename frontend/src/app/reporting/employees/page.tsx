@@ -41,6 +41,18 @@ export default async function Page({
         { key: "status", label: "Status" },
       ],
     },
+    {
+      id: "employees/status-history",
+      title: "Status History",
+      description: "Historical status changes by employee",
+      hasFacsimile: false,
+      columns: [
+        { key: "employee_code", label: "Employee" },
+        { key: "status", label: "Status" },
+        { key: "effective_date", label: "Effective Date" },
+        { key: "created_at", label: "Created" },
+      ],
+    },
   ];
 
   return (
