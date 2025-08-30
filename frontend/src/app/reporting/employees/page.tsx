@@ -1,22 +1,11 @@
+// src/app/reporting/employees/page.tsx
 import ReportGrid from "@/app/reporting/_components/ReportGrid";
-import type { Col } from "@/features/reports/GenericReportTable";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function Page({ searchParams }: any) {
   const sp = (await searchParams) ?? {};
-  const customerId =
-    typeof sp.customerId === "string" ? sp.customerId : "DEMO";
+  const customerId = typeof sp?.customerId === "string" ? sp.customerId : "DEMO";
 
-  const employeesReports: {
-    id: string;
-    title: string;
-    description?: string;
-    columns: Col[];
-    hasFacsimile?: boolean;
-  }[] = [
+  const employeesReports = [
     {
       id: "employees/active",
       title: "Active Employees",
@@ -39,18 +28,6 @@ export default async function Page({
         { key: "email", label: "Email" },
         { key: "department", label: "Department" },
         { key: "status", label: "Status" },
-      ],
-    },
-    {
-      id: "employees/status-history",
-      title: "Status History",
-      description: "Historical status changes by employee",
-      hasFacsimile: false,
-      columns: [
-        { key: "employee_code", label: "Employee" },
-        { key: "status", label: "Status" },
-        { key: "effective_date", label: "Effective Date" },
-        { key: "created_at", label: "Created" },
       ],
     },
   ];

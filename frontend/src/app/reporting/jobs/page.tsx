@@ -1,69 +1,41 @@
-import Link from "next/link";
+// src/app/reporting/jobs/page.tsx
 import ReportGrid from "@/app/reporting/_components/ReportGrid";
 
-type PageProps = {
-  searchParams?:
-    | Promise<Record<string, string | string[] | undefined>>
-    | Record<string, string | string[] | undefined>;
-};
+export default async function Page({ searchParams }: any) {
+  const sp = (await searchParams) ?? {};
+  const customerId = typeof sp?.customerId === "string" ? sp.customerId : "DEMO";
 
-function getParam(
-  obj: Record<string, string | string[] | undefined> | undefined,
-  key: string,
-  fallback = ""
-) {
-  const v = obj?.[key];
-  return Array.isArray(v) ? (v[0] ?? fallback) : (v ?? fallback);
-}
-
-export default async function JobsReports({ searchParams }: PageProps) {
-  const resolved =
-    searchParams && typeof (searchParams as any).then === "function"
-      ? await (searchParams as Promise<Record<string, string | string[] | undefined>>)
-      : ((searchParams ?? {}) as Record<string, string | string[] | undefined>);
-  const customerId = getParam(resolved, "customerId", "DEMO");
-
-  const reports = [
+  const jobsReports = [
     {
       id: "jobs/job-roster",
       title: "Job Roster",
-      subtitle: "All active jobs",
-      hasFacsimile: false,
+      description: "All jobs with status and dates",
       columns: [
-        { key: "job_id", label: "Job ID" },
+        { key: "job_code", label: "Job Code" },
         { key: "job_name", label: "Job Name" },
-        { key: "location", label: "Location" },
         { key: "status", label: "Status" },
-        { key: "start_date", label: "Start" },
-        { key: "end_date", label: "End" },
+        { key: "start_date", label: "Start Date" },
+        { key: "end_date", label: "End Date" },
       ],
     },
     {
       id: "jobs/job-costing",
       title: "Job Costing",
-      subtitle: "Labor, material, other costs",
-      hasFacsimile: false,
+      description: "Labor & materials by job/period",
       columns: [
-        { key: "job_id", label: "Job ID" },
-        { key: "job_name", label: "Job Name" },
-        { key: "period_start", label: "Start" },
-        { key: "period_end", label: "End" },
-        { key: "labor_cost", label: "Labor" },
-        { key: "material_cost", label: "Material" },
-        { key: "total_cost", label: "Total" },
+        { key: "job_code", label: "Job Code" },
+        { key: "period_start", label: "Period Start" },
+        { key: "period_end", label: "Period End" },
+        { key: "labor_cost", label: "Labor Cost" },
+        { key: "materials_cost", label: "Materials Cost" },
+        { key: "total_cost", label: "Total Cost" },
       ],
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Job Reports</h1>
-        <Link href="/reporting" className="text-sm text-blue-600 hover:underline">
-          ← Back to all groups
-        </Link>
-      </div>
-      <ReportGrid customerId={customerId} reports={reports as any} />
+    <div className="px-2">
+      <ReportGrid customerId={customerId} reports={jobsReports} />
     </div>
   );
 }
