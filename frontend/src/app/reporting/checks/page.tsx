@@ -1,81 +1,112 @@
+import Link from "next/link";
 import ReportGrid from "@/app/reporting/_components/ReportGrid";
-import type { Col } from "@/features/reports/GenericReportTable";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = (await searchParams) ?? {};
-  const customerId =
-    typeof sp.customerId === "string" ? sp.customerId : "DEMO";
+type PageProps = {
+  searchParams?:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
+};
 
-  const checksReports: {
-    id: string;
-    title: string;
-    description?: string;
-    columns: Col[];
-    hasFacsimile?: boolean;
-  }[] = [
+function getParam(
+  obj: Record<string, string | string[] | undefined> | undefined,
+  key: string,
+  fallback = ""
+) {
+  const v = obj?.[key];
+  return Array.isArray(v) ? (v[0] ?? fallback) : (v ?? fallback);
+}
+
+export default async function ChecksReports({ searchParams }: PageProps) {
+  const resolved =
+    searchParams && typeof (searchParams as any).then === "function"
+      ? await (searchParams as Promise<Record<string, string | string[] | undefined>>)
+      : ((searchParams ?? {}) as Record<string, string | string[] | undefined>);
+  const customerId = getParam(resolved, "customerId", "DEMO");
+
+  const reports = [
     {
       id: "checks/pay-statements",
       title: "Pay Statements",
-      description: "Issued checks with net pay",
+      subtitle: "Employee pay stubs within range",
       hasFacsimile: true,
       columns: [
-        { key: "checkNumber", label: "Check #" },
-        { key: "employeeId", label: "Employee ID" },
-        { key: "employeeName", label: "Employee" },
-        { key: "payDate", label: "Pay Date" },
-        { key: "netPay", label: "Net Pay" },
-        { key: "depositLast4", label: "Acct Last 4" },
+        { key: "check_number", label: "Check #" },
+        { key: "employee_id", label: "Emp ID" },
+        { key: "employee_name", label: "Name" },
+        { key: "pay_date", label: "Pay Date" },
+        { key: "net_pay", label: "Net Pay" },
+        { key: "deposit_last4", label: "Acct ••••" },
       ],
     },
     {
       id: "checks/check-register",
       title: "Check Register",
-      description: "Gross, tax, deductions, net",
+      subtitle: "All checks for the period",
+      hasFacsimile: false,
       columns: [
-        { key: "checkNumber", label: "Check #" },
-        { key: "employeeId", label: "Employee ID" },
-        { key: "employeeName", label: "Employee" },
-        { key: "payDate", label: "Pay Date" },
-        { key: "grossPay", label: "Gross" },
+        { key: "check_number", label: "Check #" },
+        { key: "employee_id", label: "Emp ID" },
+        { key: "employee_name", label: "Name" },
+        { key: "pay_date", label: "Pay Date" },
+        { key: "gross_pay", label: "Gross" },
         { key: "taxes", label: "Taxes" },
         { key: "deductions", label: "Deductions" },
-        { key: "netPay", label: "Net" },
+        { key: "net_pay", label: "Net" },
       ],
     },
     {
       id: "checks/direct-deposit-register",
       title: "Direct Deposit Register",
-      description: "ACH payouts",
+      subtitle: "ACH payments summary",
+      hasFacsimile: false,
       columns: [
-        { key: "employeeId", label: "Employee ID" },
-        { key: "employeeName", label: "Employee" },
-        { key: "payDate", label: "Pay Date" },
-        { key: "netPay", label: "Net Pay" },
-        { key: "depositLast4", label: "Acct Last 4" },
+        { key: "employee_id", label: "Emp ID" },
+        { key: "employee_name", label: "Name" },
+        { key: "pay_date", label: "Pay Date" },
+        { key: "net_pay", label: "Amount" },
+        { key: "deposit_last4", label: "Acct ••••" },
+      ],
+    },
+    {
+      id: "checks/garnishment-register",
+      title: "Garnishment Register",
+      subtitle: "Ordered deductions detail",
+      hasFacsimile: false,
+      columns: [
+        { key: "employee_id", label: "Emp ID" },
+        { key: "employee_name", label: "Name" },
+        { key: "order_type", label: "Type" },
+        { key: "order_number", label: "Order #" },
+        { key: "pay_date", label: "Pay Date" },
+        { key: "amount", label: "Amount" },
+        { key: "ytd_amount", label: "YTD" },
       ],
     },
     {
       id: "checks/w2-forms",
       title: "W-2 Forms",
-      description: "Year-end wage & tax statements",
+      subtitle: "Year-end forms by employee",
       hasFacsimile: true,
       columns: [
-        { key: "employeeId", label: "Employee ID" },
-        { key: "employeeName", label: "Employee" },
-        { key: "taxYear", label: "Tax Year" },
+        { key: "employee_id", label: "Emp ID" },
+        { key: "employee_name", label: "Name" },
+        { key: "tax_year", label: "Year" },
         { key: "wages", label: "Wages" },
-        { key: "taxWithheld", label: "Tax Withheld" },
+        { key: "federal_tax", label: "Fed Tax" },
+        { key: "state_tax", label: "State Tax" },
       ],
     },
   ];
 
   return (
-    <div className="px-2">
-      <ReportGrid customerId={customerId} reports={checksReports} />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Checks & Payroll Outputs</h1>
+        <Link href="/reporting" className="text-sm text-blue-600 hover:underline">
+          ← Back to all groups
+        </Link>
+      </div>
+      <ReportGrid customerId={customerId} reports={reports as any} />
     </div>
   );
 }

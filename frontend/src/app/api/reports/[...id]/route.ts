@@ -285,6 +285,44 @@ export async function GET(req: Request) {
       rows = data ?? [];
       break;
     }
+    case 'employees/status-history': {
+  const url = new URL(req.url);
+  const customerParam = url.searchParams.get('customerId') ?? 'DEMO';
+  const limit = Number(url.searchParams.get('limit') ?? '25');
+  const page  = Math.max(1, Number(url.searchParams.get('page') ?? '1'));
+  const from = (page - 1) * limit;
+  const to   = from + limit - 1;
+
+  // Resolve customer UUID if a customer_code like "DEMO" is passed
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerParam);
+  let customerUuid = customerParam;
+  if (!isUuid) {
+    const { data: c, error: cErr } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('customer_code', customerParam)
+      .single();
+    if (cErr) return NextResponse.json({ error: cErr.message }, { status: 500 });
+    customerUuid = c?.id ?? customerParam;
+  }
+
+  const { data, error, count } = await supabase
+    .from('employee_status_history')
+    .select('employee_code,status,effective_date,created_at', { count: 'exact' })
+    .eq('customer_id', customerUuid)
+    .order('effective_date', { ascending: false })
+    .range(from, to);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({
+    rows: data ?? [],
+    total: count ?? 0,
+    page,
+    pageSize: limit,
+  });
+}
+
 
     // ===== JOBS =====
     case "jobs/job-roster": {
