@@ -35,15 +35,27 @@ export interface ProjectCharter {
   tenant_id: string
   project_code: string
   project_name: string
+  business_case: string
+  project_justification?: string
+  success_criteria: string
+  project_objectives: string
+  measurable_objectives?: any
+  project_scope?: string
+  scope_inclusions?: string
+  scope_exclusions?: string
   project_sponsor: string
   project_manager: string
-  business_case: string
-  project_objectives: string
-  success_criteria: string
-  budget?: number
-  start_date?: string
-  end_date?: string
-  status: 'draft' | 'approved' | 'active' | 'completed' | 'cancelled' | 'on_hold' | 'planning' | 'archived'
+  key_stakeholders?: any
+  planned_start_date?: string
+  planned_end_date?: string
+  estimated_budget?: number
+  approved_budget?: number
+  charter_status: 'draft' | 'approved' | 'active' | 'completed' | 'cancelled' | 'on_hold' | 'planning' | 'archived'
+  authorized_by?: string
+  authorization_date?: string
+  high_level_risks?: string
+  key_assumptions?: string
+  created_by?: string
   created_at: string
   updated_at: string
 }
@@ -52,16 +64,28 @@ export interface RiskRegister {
   id: string
   tenant_id: string
   project_id: string
+  risk_code?: string
+  risk_title: string
   risk_description: string
   risk_category: 'technical' | 'organizational' | 'external' | 'project_management'
-  probability_score: number
-  impact_score: number
+  risk_source?: string
+  probability_rating: number
+  impact_rating: number
   risk_score: number
   risk_level: 'low' | 'medium' | 'high' | 'critical'
   response_strategy: 'avoid' | 'mitigate' | 'transfer' | 'accept'
-  mitigation_plan?: string
-  owner: string
+  response_actions?: string
+  contingency_plan?: string
+  risk_owner: string
+  assigned_to?: string
+  identified_date?: string
+  target_resolution_date?: string
+  actual_resolution_date?: string
   status: 'identified' | 'assessed' | 'mitigated' | 'resolved' | 'closed'
+  last_review_date?: string
+  next_review_date?: string
+  review_notes?: string
+  created_by?: string
   created_at: string
   updated_at: string
 }
@@ -79,7 +103,7 @@ export class PMBOKService {
       throw new Error('Supabase URL and Key are required. No mock data allowed.')
     }
     this.supabase = createClient(supabaseUrl, supabaseKey)
-    this.currentTenantId = tenantId || 'DEMO001'
+    this.currentTenantId = tenantId || '99883779-9517-4ca9-a3f8-7fdc59051f0e' // DEMO001 actual ID
   }
 
   // =====================================================
@@ -209,5 +233,5 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_TOKEN environment variables are required')
 }
 
-export const pmbok = new PMBOKService(supabaseUrl, supabaseKey, 'DEMO001')
+export const pmbok = new PMBOKService(supabaseUrl, supabaseKey, '99883779-9517-4ca9-a3f8-7fdc59051f0e')
 
