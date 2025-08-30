@@ -878,7 +878,7 @@ export default function ProjectManagementPage() {
           </div>
         </div>
 
-        {/* PMBOK Navigation Tabs */}
+        {/* PMBOK NavigationTabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 overflow-x-auto">
             {pmTabs.map((tab) => {
