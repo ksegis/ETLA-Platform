@@ -122,7 +122,7 @@ export class PMBOKService {
       throw new Error('Supabase URL and Key are required. No mock data allowed.')
     }
     this.supabase = createClient(supabaseUrl, supabaseKey)
-    this.currentTenantId = tenantId || '99883779-9517-4ca9-a3f8-7fdc59051f0e' // DEMO001 actual ID
+    this.currentTenantId = tenantId || '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Tenant with actual work requests
   }
 
   // =====================================================
@@ -134,7 +134,7 @@ export class PMBOKService {
       throw new Error('Supabase client not initialized')
     }
 
-    // Get work requests with customer information
+    // Get work requests with customer information for current tenant
     const { data, error } = await this.supabase
       .from('work_requests')
       .select(`
@@ -144,6 +144,7 @@ export class PMBOKService {
           contact_email
         )
       `)
+      .eq('tenant_id', this.currentTenantId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -265,5 +266,5 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_TOKEN environment variables are required')
 }
 
-export const pmbok = new PMBOKService(supabaseUrl, supabaseKey, '99883779-9517-4ca9-a3f8-7fdc59051f0e')
+export const pmbok = new PMBOKService(supabaseUrl, supabaseKey, '54afbd1d-e72a-41e1-9d39-2c8a08a257ff')
 
