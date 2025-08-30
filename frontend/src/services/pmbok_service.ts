@@ -20,14 +20,33 @@ export interface WorkRequest {
   id: string
   tenant_id: string
   title: string
+  description: string
   category: string
-  customer_name: string
-  customer_email: string
   priority: 'low' | 'medium' | 'high' | 'critical'
-  status: 'submitted' | 'under_review' | 'approved' | 'in_progress' | 'completed' | 'cancelled' | 'scheduled'
-  submitted_at: string
+  urgency: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+  customer_id: string
+  assigned_to?: string
+  estimated_hours?: number
+  actual_hours?: number
+  budget?: number
+  required_completion_date?: string
+  scheduled_start_date?: string
+  scheduled_end_date?: string
+  actual_start_date?: string
+  actual_completion_date?: string
+  rejection_reason?: string
+  internal_notes?: string
+  customer_notes?: string
+  tags?: string[]
+  attachments?: any
   created_at: string
   updated_at: string
+  request_id?: string
+  // Computed fields for display
+  customer_name?: string
+  customer_email?: string
+  submitted_at?: string
 }
 
 export interface ProjectCharter {
@@ -115,14 +134,27 @@ export class PMBOKService {
       throw new Error('Supabase client not initialized')
     }
 
+    // Get work requests with customer information
     const { data, error } = await this.supabase
       .from('work_requests')
-      .select('*')
-      .eq('tenant_id', this.currentTenantId)
+      .select(`
+        *,
+        customers:customer_id (
+          company_name,
+          contact_email
+        )
+      `)
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    
+    // Transform data to match interface
+    return (data || []).map(request => ({
+      ...request,
+      customer_name: request.customers?.company_name || 'Unknown Customer',
+      customer_email: request.customers?.contact_email || '',
+      submitted_at: request.created_at
+    }))
   }
 
   async getProjectCharters(): Promise<ProjectCharter[]> {
