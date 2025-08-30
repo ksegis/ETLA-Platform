@@ -82,7 +82,7 @@ interface RiskRegister {
 const mockRequests: WorkRequest[] = [
   {
     id: '1',
-    title: 'Payroll System Integration',
+    title: 'Payroll Mock System Integration',
     customerName: 'Acme Corporation',
     customerEmail: 'john.smith@acme.com',
     category: 'system_integration',
