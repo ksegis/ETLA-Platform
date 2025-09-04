@@ -15,8 +15,8 @@ interface TestResult {
 }
 
 export default function RBACTestPanel() {
-  const { user, role } = useAuth()
-  const { hasPermission, canAccessFeature, permissions } = usePermissions()
+  const { user, currentUserRole: role, currentTenantId } = useAuth()
+  const { hasPermission, canAccessFeature, userPermissions } = usePermissions()
   const [testResults, setTestResults] = useState<TestResult[]>([])
   const [isRunning, setIsRunning] = useState(false)
 
@@ -127,10 +127,10 @@ export default function RBACTestPanel() {
                 </span>
               </div>
               <div>
-                <span className="font-medium">Tenant ID:</span> {user?.tenant_id || 'Not available'}
+                <span className="font-medium">Tenant ID:</span> {currentTenantId || 'Not available'}
               </div>
               <div>
-                <span className="font-medium">Total Permissions:</span> {permissions?.length || 0}
+                <span className="font-medium">Total Permissions:</span> {userPermissions?.length || 0}
               </div>
             </div>
           </div>

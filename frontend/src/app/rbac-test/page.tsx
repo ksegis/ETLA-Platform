@@ -98,16 +98,16 @@ export default function RBACTestPage() {
               <p className="text-yellow-700">Open your browser's developer console (F12) and run these commands:</p>
               <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs space-y-1">
                 <div>// Check current user role</div>
-                <div>console.log('Role:', JSON.parse(localStorage.getItem('authState') || '{}').user?.role)</div>
+                <div>console.log('Role:', JSON.parse(localStorage.getItem('authState') || '&#123;&#125;').user?.role)</div>
                 <div></div>
                 <div>// Check permissions</div>
-                <div>console.log('Permissions:', JSON.parse(localStorage.getItem('authState') || '{}').permissions)</div>
+                <div>console.log('Permissions:', JSON.parse(localStorage.getItem('authState') || '&#123;&#125;').permissions)</div>
                 <div></div>
                 <div>// Test specific permission</div>
-                <div>window.testPermission = (feature, permission) => {`{`}</div>
-                <div>  const auth = JSON.parse(localStorage.getItem('authState') || '{}')</div>
-                <div>  return auth.permissions?.some(p => p.feature === feature && p.permission === permission)</div>
-                <div>{`}`}</div>
+                <div>window.testPermission = (feature, permission) =&gt; &#123;</div>
+                <div>  const auth = JSON.parse(localStorage.getItem('authState') || '&#123;&#125;')</div>
+                <div>  return auth.permissions?.some(p =&gt; p.feature === feature && p.permission === permission)</div>
+                <div>&#125;</div>
                 <div>testPermission('project-management', 'manage')</div>
               </div>
             </div>
