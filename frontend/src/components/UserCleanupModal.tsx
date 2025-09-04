@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, Trash2, AlertTriangle, CheckCircle, Users, Calendar, Database } from 'lucide-react'
-import { pmbok } from '@/services/pmbok_service'
+import { supabase } from "@/lib/supabase"
 
 interface UserCleanupModalProps {
   isOpen: boolean
@@ -53,7 +53,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
     setError('')
 
     try {
-      const response = await pmbok.previewUserCleanup(cleanupOptions)
+      const response = await supabase.previewUserCleanup(cleanupOptions)
       if (response.success) {
         setPreview(response.data)
         setStep('preview')
@@ -73,7 +73,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
     setError('')
 
     try {
-      const response = await pmbok.executeUserCleanup(cleanupOptions)
+      const response = await supabase.executeUserCleanup(cleanupOptions)
       if (response.success) {
         setSuccess(true)
         setTimeout(() => {

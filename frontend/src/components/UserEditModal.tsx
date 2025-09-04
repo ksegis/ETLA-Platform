@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase, Save } from 'lucide-react'
-import { pmbok } from '@/services/pmbok_service'
+import { supabase } from "@/lib/supabase"
 
 interface User {
   id: string
@@ -108,7 +108,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
     setError('')
 
     try {
-      const response = await pmbok.updateUser(user.id, formData)
+      const response = await supabase.updateUser(user.id, formData)
       if (response.success) {
         onSuccess()
         onClose()
@@ -127,7 +127,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
     if (window.confirm('Are you sure you want to deactivate this user? They will lose access to the system.')) {
       setLoading(true)
       try {
-        const response = await pmbok.deactivateUser(user.id)
+        const response = await supabase.deactivateUser(user.id)
         if (response.success) {
           onSuccess()
           onClose()
@@ -146,7 +146,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
   const handleActivate = async () => {
     setLoading(true)
     try {
-      const response = await pmbok.activateUser(user.id)
+      const response = await supabase.activateUser(user.id)
       if (response.success) {
         onSuccess()
         onClose()

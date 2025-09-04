@@ -35,7 +35,7 @@ import UserInviteModal from '@/components/UserInviteModal'
 import UserEditModal from '@/components/UserEditModal'
 import PasswordResetModal from '@/components/PasswordResetModal'
 import UserCleanupModal from '@/components/UserCleanupModal'
-import { pmbok } from '@/services/pmbok_service'
+import { supabase } from '@/lib/supabase'
 
 interface User {
   id: string
@@ -86,7 +86,7 @@ interface RoleStats {
 
 export default function AccessControlPageEnhanced() {
   const { user, isAuthenticated, tenant } = useAuth()
-  const { hasPermission, userRole, roleLevel } = usePermissions()
+  const { hasPermission, currentRole, isHostAdmin } = usePermissions()
   
   // State management
   const [users, setUsers] = useState<User[]>([])
@@ -94,6 +94,7 @@ export default function AccessControlPageEnhanced() {
   const [invites, setInvites] = useState<InviteStatus[]>([])
   const [roleStats, setRoleStats] = useState<RoleStats[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTenant, setSelectedTenant] = useState<string>('all')
   const [selectedRole, setSelectedRole] = useState<string>('all')
@@ -108,7 +109,7 @@ export default function AccessControlPageEnhanced() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   // Check if user has access to this page
-  const canAccessUserManagement = hasPermission('user-management', 'manage') && roleLevel === 'host'
+  const canAccessUserManagement = hasPermission('user-management', 'manage') && isHostAdmin()
   const canViewUserManagement = hasPermission('user-management', 'view') || canAccessUserManagement
 
   useEffect(() => {
@@ -133,76 +134,150 @@ export default function AccessControlPageEnhanced() {
     }
   }
 
-  const loadUsers = async () => {
+   const loadUsers = async () => {
     try {
-      const response = await pmbok.getAllUsers()
-      if (response.success) {
-        setUsers(response.data)
-      }
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          tenant_users!inner(
+            role,
+            role_level,
+            is_active,
+            tenant_id,
+            tenants(name)
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      const formattedUsers: User[] = users?.map(user => ({
+        id: user.id,
+        email: user.email || 'N/A',
+        full_name: user.full_name || 'Unknown',
+        role: user.tenant_users[0]?.role || 'user',
+        role_level: user.tenant_users[0]?.role_level || 'sub_client',
+        tenant_name: user.tenant_users[0]?.tenants?.name || 'No Tenant',
+        tenant_id: user.tenant_users[0]?.tenant_id,
+        is_active: user.tenant_users[0]?.is_active ?? true,
+        created_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        phone: user.phone,
+        department: user.department,
+        job_title: user.job_title,
+        can_invite_users: ['admin', 'manager'].includes(user.tenant_users[0]?.role || ''),
+        can_manage_sub_clients: user.tenant_users[0]?.role_level === 'primary_client',
+        permission_scope: user.tenant_users[0]?.permission_scope || 'own'
+      })) || []
+
+      setUsers(formattedUsers)
     } catch (error) {
       console.error('Error loading users:', error)
+      setError('Failed to load users')
     }
   }
 
   const loadTenants = async () => {
     try {
-      const response = await pmbok.getAllTenants()
-      if (response.success) {
-        setTenants(response.data)
-      }
+      const { data: tenants, error } = await supabase
+        .from('tenants')
+        .select('*')
+        .order('name')
+
+      if (error) throw error
+      setTenants(tenants || [])
     } catch (error) {
       console.error('Error loading tenants:', error)
+      setError('Failed to load tenants')
     }
   }
 
   const loadInvites = async () => {
     try {
-      const response = await pmbok.getPendingInvites()
-      if (response.success) {
-        setInvites(response.data)
-      }
+      // This would need to be implemented based on your invitation system
+      // For now, using empty array
+      setInvites([])
     } catch (error) {
       console.error('Error loading invites:', error)
+      setError('Failed to load invites')
     }
   }
 
   const loadRoleStats = async () => {
     try {
-      const response = await pmbok.getRoleStatistics()
-      if (response.success) {
-        setRoleStats(response.data)
-      }
+      const { data: stats, error } = await supabase
+        .from('tenant_users')
+        .select('role, role_level')
+
+      if (error) throw error
+
+      const roleStats: RoleStats[] = Object.entries(stats?.reduce((acc, user) => {
+        const key = `${user.role_level}_${user.role}`
+        acc[key] = (acc[key] || 0) + 1
+        return acc
+      }, {} as Record<string, number>) || {}).map(([key, count]) => {
+        const [role_level, role] = key.split('_')
+        return {
+          role,
+          role_level,
+          count,
+          description: `${role_level} ${role}s`
+        }
+      })
+
+      setRoleStats(roleStats)
     } catch (error) {
       console.error('Error loading role stats:', error)
+      setError('Failed to load role stats')
     }
   }
 
-  const handleDeleteUser = async (userId: string) => {
+   const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
-        const response = await pmbok.deleteUser(userId)
-        if (response.success) {
-          await loadUsers()
-        }
+        // Delete from tenant_users first (foreign key constraint)
+        const { error: tenantUserError } = await supabase
+          .from('tenant_users')
+          .delete()
+          .eq('user_id', userId)
+
+        if (tenantUserError) throw tenantUserError
+
+        // Delete from profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', userId)
+
+        if (profileError) throw profileError
+
+        // Note: auth.users deletion requires admin privileges
+        // This would typically be done via a server-side function
+        console.log('User deleted from profiles and tenant_users. Auth user may need manual cleanup.')
+        
+        await loadUsers()
       } catch (error) {
         console.error('Error deleting user:', error)
+        setError('Failed to delete user')
       }
     }
   }
 
-  const handlePasswordReset = async (userId: string, email: string) => {
+  const handlePasswordReset = (userId: string, email: string) => {
     setSelectedUser(users.find(u => u.id === userId) || null)
     setShowPasswordModal(true)
   }
 
   const handleResendInvite = async (inviteId: string) => {
     try {
-      const response = await pmbok.resendInvite(inviteId)
-      if (response.success) {
-        await loadInvites()
-      }
+      // TODO: Implement invite resend functionality
+      console.log('Resending invite:', inviteId)
+      // This would typically call a server function to resend the invitation email
+      await loadInvites()
     } catch (error) {
       console.error('Error resending invite:', error)
+      setError('Failed to resend invite')
     }
   }
 
@@ -944,6 +1019,11 @@ export default function AccessControlPageEnhanced() {
             <PasswordResetModal
               isOpen={showPasswordModal}
               onClose={() => {
+                setShowPasswordModal(false)
+                setSelectedUser(null)
+              }}
+              onSuccess={() => {
+                loadUsers()
                 setShowPasswordModal(false)
                 setSelectedUser(null)
               }}

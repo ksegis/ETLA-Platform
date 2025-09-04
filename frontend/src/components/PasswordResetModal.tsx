@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, Key, Mail, AlertTriangle, CheckCircle } from 'lucide-react'
-import { pmbok } from '@/services/pmbok_service'
+import { supabase } from '@/lib/supabase'
 
 interface User {
   id: string
@@ -34,59 +34,50 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     }
     setNewPassword(password)
   }
-
   const handleEmailReset = async () => {
     setLoading(true)
     setError('')
-    setSuccess(false)
 
     try {
-      const response = await pmbok.sendPasswordResetEmail(user.id)
-      if (response.success) {
-        setSuccess(true)
-        setTimeout(() => {
-          onSuccess()
-          onClose()
-        }, 2000)
-      } else {
-        setError(response.error || 'Failed to send password reset email')
-      }
-    } catch (err) {
-      setError('An error occurred while sending the password reset email')
-      console.error('Password reset email error:', err)
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+      
+      if (error) throw error
+      
+      setSuccess(true)
+      setTimeout(() => {
+        onSuccess()
+      }, 2000)
+    } catch (error: any) {
+      setError(error.message || 'Failed to send password reset email')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDirectReset = async () => {
-    if (!newPassword) {
-      setError('Please enter a new password')
+    if (!newPassword || newPassword.length < 8) {
+      setError('Password must be at least 8 characters long')
       return
     }
 
     setLoading(true)
     setError('')
-    setSuccess(false)
 
     try {
-      const response = await pmbok.resetUserPassword(user.id, newPassword)
-      if (response.success) {
-        setSuccess(true)
-        setTimeout(() => {
-          onSuccess()
-          onClose()
-        }, 2000)
-      } else {
-        setError(response.error || 'Failed to reset password')
-      }
-    } catch (err) {
-      setError('An error occurred while resetting the password')
-      console.error('Direct password reset error:', err)
+      // Note: Direct password reset requires admin privileges
+      // This would typically be done via a server-side function
+      console.log('Direct password reset would be implemented server-side')
+      setError('Direct password reset requires server-side implementation')
+    } catch (error: any) {
+      setError(error.message || 'Failed to reset password')
     } finally {
       setLoading(false)
     }
   }
+
+  if (!isOpen) return null
 
   const handleClose = () => {
     setError('')

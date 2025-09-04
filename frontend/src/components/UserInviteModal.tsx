@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, Mail, Building, Shield, Send, Users } from 'lucide-react'
-import { pmbok } from '@/services/pmbok_service'
+import { supabase } from "@/lib/supabase"
 
 interface UserInviteModalProps {
   isOpen: boolean
@@ -87,7 +87,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
         throw new Error('Please enter at least one valid email address')
       }
 
-      const response = await pmbok.inviteUsers({
+      const response = await supabase.inviteUsers({
         emails: validEmails,
         role: formData.role,
         role_level: formData.role_level,

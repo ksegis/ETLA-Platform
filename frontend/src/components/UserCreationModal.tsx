@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase } from 'lucide-react'
-import { pmbok } from '@/services/pmbok_service'
+import { supabase } from "@/lib/supabase"
 
 interface UserCreationModalProps {
   isOpen: boolean
@@ -82,7 +82,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
     setError('')
 
     try {
-      const response = await pmbok.createUser(formData)
+      const response = await supabase.createUser(formData)
       if (response.success) {
         onSuccess()
         onClose()
