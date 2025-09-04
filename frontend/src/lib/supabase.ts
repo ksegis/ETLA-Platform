@@ -184,7 +184,7 @@ export const getCurrentUser = async () => {
 
 // User Management Methods
 export const userManagement = {
-  // Create a new user
+  // Create a new user with complete RBAC setup
   createUser: async (userData: UserCreationData) => {
     try {
       // First, create the auth user
@@ -207,9 +207,9 @@ export const userManagement = {
         return { success: false, error: 'Failed to create user account' }
       }
 
-      // Then create the user profile
+      // Create the user profile (FIXED: using 'profiles' not 'user_profiles')
       const { error: profileError } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .insert({
           id: authData.user.id,
           email: userData.email,
@@ -229,9 +229,58 @@ export const userManagement = {
         })
 
       if (profileError) {
-        // If profile creation fails, we should clean up the auth user
+        // If profile creation fails, clean up the auth user
         await supabase.auth.admin.deleteUser(authData.user.id)
-        return { success: false, error: profileError.message }
+        return { success: false, error: `Profile creation failed: ${profileError.message}` }
+      }
+
+      // NEW: Create tenant_users record for RBAC
+      const { error: tenantUserError } = await supabase
+        .from('tenant_users')
+        .insert({
+          tenant_id: userData.tenant_id,
+          user_id: authData.user.id,
+          role: userData.role,
+          role_level: userData.role_level,
+          can_invite_users: userData.can_invite_users,
+          can_manage_sub_clients: userData.can_manage_sub_clients,
+          permission_scope: userData.permission_scope,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (tenantUserError) {
+        // If tenant_users creation fails, clean up auth user and profile
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        await supabase.from('profiles').delete().eq('id', authData.user.id)
+        return { success: false, error: `Tenant assignment failed: ${tenantUserError.message}` }
+      }
+
+      // OPTIONAL: Create audit log if table exists
+      try {
+        await supabase
+          .from('audit_logs')
+          .insert({
+            user_id: authData.user.id,
+            tenant_id: userData.tenant_id,
+            action: 'user_created',
+            resource_type: 'user',
+            resource_id: authData.user.id,
+            details: {
+              created_by: 'admin_interface',
+              role: userData.role,
+              role_level: userData.role_level,
+              email: userData.email
+            },
+            ip_address: '127.0.0.1',
+            user_agent: 'Admin Interface',
+            severity: 'info',
+            created_at: new Date().toISOString()
+          })
+      } catch (auditError) {
+        // Audit log is optional, don't fail the user creation
+        console.warn('Audit log creation failed:', auditError)
       }
 
       return { success: true, data: authData.user }
@@ -305,7 +354,7 @@ export const userManagement = {
   updateUser: async (userId: string, updateData: UserUpdateData) => {
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .update({
           ...updateData,
           updated_at: new Date().toISOString()
@@ -326,7 +375,7 @@ export const userManagement = {
   deactivateUser: async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .update({
           is_active: false,
           updated_at: new Date().toISOString()
@@ -347,7 +396,7 @@ export const userManagement = {
   activateUser: async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .update({
           is_active: true,
           updated_at: new Date().toISOString()
@@ -406,7 +455,7 @@ export const userManagement = {
       if (options.deleteInactiveUsers) {
         const cutoffDate = new Date(Date.now() - options.inactiveDays * 24 * 60 * 60 * 1000).toISOString()
         const { count } = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .select('*', { count: 'exact', head: true })
           .lt('last_login', cutoffDate)
           .eq('is_active', true)
@@ -461,7 +510,7 @@ export const userManagement = {
         
         // Get inactive users
         const { data: inactiveUsers } = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .select('id')
           .lt('last_login', cutoffDate)
           .eq('is_active', true)
@@ -472,7 +521,7 @@ export const userManagement = {
             await supabase.auth.admin.deleteUser(user.id)
             // Delete profile
             await supabase
-              .from('user_profiles')
+              .from('profiles')
               .delete()
               .eq('id', user.id)
           }
@@ -486,14 +535,14 @@ export const userManagement = {
         // This would require admin access to auth.users table
         // For now, we'll mark them as inactive
         const { data: unconfirmedUsers } = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .select('id')
           .lt('created_at', cutoffDate)
           .eq('is_active', true)
 
         if (unconfirmedUsers) {
           await supabase
-            .from('user_profiles')
+            .from('profiles')
             .update({ is_active: false })
             .in('id', unconfirmedUsers.map(u => u.id))
           
