@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase } from 'lucide-react'
-import { supabase } from "@/lib/supabase"
+import { userManagement, type UserCreationData } from "@/lib/supabase"
 
 interface UserCreationModalProps {
   isOpen: boolean
@@ -82,7 +82,30 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
     setError('')
 
     try {
-      const response = await supabase.createUser(formData)
+      // Validate required fields
+      if (!formData.email || !formData.full_name || !formData.tenant_id || !formData.password) {
+        setError('Please fill in all required fields')
+        return
+      }
+
+      // Prepare user creation data
+      const userData: UserCreationData = {
+        email: formData.email,
+        full_name: formData.full_name,
+        phone: formData.phone || undefined,
+        department: formData.department || undefined,
+        job_title: formData.job_title || undefined,
+        role: formData.role,
+        role_level: formData.role_level,
+        tenant_id: formData.tenant_id,
+        password: formData.password,
+        can_invite_users: formData.can_invite_users,
+        can_manage_sub_clients: formData.can_manage_sub_clients,
+        permission_scope: formData.permission_scope
+      }
+
+      const response = await userManagement.createUser(userData)
+      
       if (response.success) {
         onSuccess()
         onClose()

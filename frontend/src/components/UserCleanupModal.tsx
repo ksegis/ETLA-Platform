@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, Trash2, AlertTriangle, CheckCircle, Users, Calendar, Database } from 'lucide-react'
-import { supabase } from "@/lib/supabase"
+import { userManagement, type CleanupOptions } from "@/lib/supabase"
 
 interface UserCleanupModalProps {
   isOpen: boolean
@@ -12,7 +12,7 @@ interface UserCleanupModalProps {
   onSuccess: () => void
 }
 
-interface CleanupOptions {
+interface CleanupFormOptions {
   deleteInactiveUsers: boolean
   deleteUnconfirmedUsers: boolean
   deleteExpiredInvites: boolean
@@ -32,7 +32,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [step, setStep] = useState<'options' | 'preview' | 'confirm'>('options')
-  const [cleanupOptions, setCleanupOptions] = useState<CleanupOptions>({
+  const [cleanupOptions, setCleanupOptions] = useState<CleanupFormOptions>({
     deleteInactiveUsers: false,
     deleteUnconfirmedUsers: true,
     deleteExpiredInvites: true,
@@ -41,7 +41,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
   })
   const [preview, setPreview] = useState<CleanupPreview | null>(null)
 
-  const handleOptionChange = (field: keyof CleanupOptions, value: boolean | number) => {
+  const handleOptionChange = (field: keyof CleanupFormOptions, value: boolean | number) => {
     setCleanupOptions(prev => ({
       ...prev,
       [field]: value
@@ -53,8 +53,18 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
     setError('')
 
     try {
-      const response = await supabase.previewUserCleanup(cleanupOptions)
-      if (response.success) {
+      // Convert form options to Supabase CleanupOptions format
+      const options: CleanupOptions = {
+        deleteInactiveUsers: cleanupOptions.deleteInactiveUsers,
+        deleteUnconfirmedUsers: cleanupOptions.deleteUnconfirmedUsers,
+        deleteExpiredInvites: cleanupOptions.deleteExpiredInvites,
+        inactiveDays: cleanupOptions.inactiveDays,
+        unconfirmedDays: cleanupOptions.unconfirmedDays
+      }
+
+      const response = await userManagement.previewUserCleanup(options)
+      
+      if (response.success && response.data) {
         setPreview(response.data)
         setStep('preview')
       } else {
@@ -73,7 +83,17 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
     setError('')
 
     try {
-      const response = await supabase.executeUserCleanup(cleanupOptions)
+      // Convert form options to Supabase CleanupOptions format
+      const options: CleanupOptions = {
+        deleteInactiveUsers: cleanupOptions.deleteInactiveUsers,
+        deleteUnconfirmedUsers: cleanupOptions.deleteUnconfirmedUsers,
+        deleteExpiredInvites: cleanupOptions.deleteExpiredInvites,
+        inactiveDays: cleanupOptions.inactiveDays,
+        unconfirmedDays: cleanupOptions.unconfirmedDays
+      }
+
+      const response = await userManagement.executeUserCleanup(options)
+      
       if (response.success) {
         setSuccess(true)
         setTimeout(() => {
@@ -369,26 +389,17 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-900">What will be deleted:</h4>
-                    <ul className="space-y-2 text-sm text-gray-700">
-                      {cleanupOptions.deleteInactiveUsers && preview.inactiveUsers > 0 && (
-                        <li className="flex items-center">
-                          <Users className="h-4 w-4 mr-2" />
-                          {preview.inactiveUsers} inactive user account{preview.inactiveUsers > 1 ? 's' : ''}
-                        </li>
+                  <div className="bg-white border border-gray-200 rounded-md p-4">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Summary of actions:</h4>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      {cleanupOptions.deleteInactiveUsers && (
+                        <li>• Delete {preview.inactiveUsers} users inactive for more than {cleanupOptions.inactiveDays} days</li>
                       )}
-                      {cleanupOptions.deleteUnconfirmedUsers && preview.unconfirmedUsers > 0 && (
-                        <li className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {preview.unconfirmedUsers} unconfirmed user account{preview.unconfirmedUsers > 1 ? 's' : ''}
-                        </li>
+                      {cleanupOptions.deleteUnconfirmedUsers && (
+                        <li>• Delete {preview.unconfirmedUsers} unconfirmed users created more than {cleanupOptions.unconfirmedDays} days ago</li>
                       )}
-                      {cleanupOptions.deleteExpiredInvites && preview.expiredInvites > 0 && (
-                        <li className="flex items-center">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {preview.expiredInvites} expired invitation{preview.expiredInvites > 1 ? 's' : ''}
-                        </li>
+                      {cleanupOptions.deleteExpiredInvites && (
+                        <li>• Delete {preview.expiredInvites} expired invitation records</li>
                       )}
                     </ul>
                   </div>
@@ -398,12 +409,11 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                       Back
                     </Button>
                     <Button 
-                      onClick={executeCleanup} 
+                      onClick={executeCleanup}
                       disabled={loading}
                       variant="destructive"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {loading ? 'Deleting...' : 'Execute Cleanup'}
+                      {loading ? 'Executing Cleanup...' : 'Execute Cleanup'}
                     </Button>
                   </div>
                 </div>

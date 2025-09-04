@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, Mail, Building, Shield, Send, Users } from 'lucide-react'
-import { supabase } from "@/lib/supabase"
+import { userManagement, type UserInvitationData } from "@/lib/supabase"
 
 interface UserInviteModalProps {
   isOpen: boolean
@@ -87,14 +87,21 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
         throw new Error('Please enter at least one valid email address')
       }
 
-      const response = await supabase.inviteUsers({
+      if (!formData.tenant_id) {
+        throw new Error('Please select a tenant')
+      }
+
+      // Prepare invitation data
+      const invitationData: UserInvitationData = {
         emails: validEmails,
         role: formData.role,
         role_level: formData.role_level,
         tenant_id: formData.tenant_id,
-        message: formData.message,
+        message: formData.message || undefined,
         expires_in_days: formData.expires_in_days
-      })
+      }
+
+      const response = await userManagement.inviteUsers(invitationData)
 
       if (response.success) {
         onSuccess()

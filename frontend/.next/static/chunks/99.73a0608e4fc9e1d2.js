@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[99],{2099:(e,l,a)=>{a.d(l,{createClient:()=>p});var s=a(2354);let t="https://placeholder.supabase.co",c="placeholder_key";(0,s.UU)(t,c);let p=()=>(0,s.UU)(t,c)}}]);

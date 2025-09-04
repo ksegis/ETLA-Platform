@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, Key, Mail, AlertTriangle, CheckCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { userManagement } from '@/lib/supabase'
 
 interface User {
   id: string
@@ -34,21 +34,23 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     }
     setNewPassword(password)
   }
+
   const handleEmailReset = async () => {
     setLoading(true)
     setError('')
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/reset-password`
-      })
+      const response = await userManagement.resetUserPassword(user.email)
       
-      if (error) throw error
-      
-      setSuccess(true)
-      setTimeout(() => {
-        onSuccess()
-      }, 2000)
+      if (response.success) {
+        setSuccess(true)
+        setTimeout(() => {
+          onSuccess()
+          handleClose()
+        }, 2000)
+      } else {
+        setError(response.error || 'Failed to send password reset email')
+      }
     } catch (error: any) {
       setError(error.message || 'Failed to send password reset email')
     } finally {
@@ -66,18 +68,23 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     setError('')
 
     try {
-      // Note: Direct password reset requires admin privileges
-      // This would typically be done via a server-side function
-      console.log('Direct password reset would be implemented server-side')
-      setError('Direct password reset requires server-side implementation')
+      const response = await userManagement.resetUserPassword(user.email, newPassword)
+      
+      if (response.success) {
+        setSuccess(true)
+        setTimeout(() => {
+          onSuccess()
+          handleClose()
+        }, 2000)
+      } else {
+        setError(response.error || 'Failed to reset password')
+      }
     } catch (error: any) {
       setError(error.message || 'Failed to reset password')
     } finally {
       setLoading(false)
     }
   }
-
-  if (!isOpen) return null
 
   const handleClose = () => {
     setError('')

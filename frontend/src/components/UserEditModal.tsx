@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase, Save } from 'lucide-react'
-import { supabase } from "@/lib/supabase"
+import { userManagement, type UserUpdateData } from "@/lib/supabase"
 
 interface User {
   id: string
@@ -36,7 +36,7 @@ interface UserEditModalProps {
   }>
 }
 
-interface UserUpdateData {
+interface UserUpdateFormData {
   full_name: string
   phone: string
   department: string
@@ -51,7 +51,7 @@ interface UserUpdateData {
 }
 
 export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenants }: UserEditModalProps) {
-  const [formData, setFormData] = useState<UserUpdateData>({
+  const [formData, setFormData] = useState<UserUpdateFormData>({
     full_name: '',
     phone: '',
     department: '',
@@ -86,7 +86,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
     }
   }, [user])
 
-  const handleInputChange = (field: keyof UserUpdateData, value: string | boolean) => {
+  const handleInputChange = (field: keyof UserUpdateFormData, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -108,7 +108,29 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
     setError('')
 
     try {
-      const response = await supabase.updateUser(user.id, formData)
+      // Validate required fields
+      if (!formData.full_name || !formData.tenant_id) {
+        setError('Please fill in all required fields')
+        return
+      }
+
+      // Prepare update data
+      const updateData: UserUpdateData = {
+        full_name: formData.full_name,
+        phone: formData.phone || undefined,
+        department: formData.department || undefined,
+        job_title: formData.job_title || undefined,
+        role: formData.role,
+        role_level: formData.role_level,
+        tenant_id: formData.tenant_id,
+        is_active: formData.is_active,
+        can_invite_users: formData.can_invite_users,
+        can_manage_sub_clients: formData.can_manage_sub_clients,
+        permission_scope: formData.permission_scope
+      }
+
+      const response = await userManagement.updateUser(user.id, updateData)
+      
       if (response.success) {
         onSuccess()
         onClose()
@@ -126,8 +148,10 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
   const handleDeactivate = async () => {
     if (window.confirm('Are you sure you want to deactivate this user? They will lose access to the system.')) {
       setLoading(true)
+      setError('')
+      
       try {
-        const response = await supabase.deactivateUser(user.id)
+        const response = await userManagement.deactivateUser(user.id)
         if (response.success) {
           onSuccess()
           onClose()
@@ -145,8 +169,10 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
 
   const handleActivate = async () => {
     setLoading(true)
+    setError('')
+    
     try {
-      const response = await supabase.activateUser(user.id)
+      const response = await userManagement.activateUser(user.id)
       if (response.success) {
         onSuccess()
         onClose()
@@ -205,11 +231,11 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                     {user.is_active ? 'Active' : 'Inactive'}
                   </span>
                   {user.is_active ? (
-                    <Button type="button" size="sm" variant="outline" onClick={handleDeactivate}>
+                    <Button type="button" size="sm" variant="outline" onClick={handleDeactivate} disabled={loading}>
                       Deactivate
                     </Button>
                   ) : (
-                    <Button type="button" size="sm" onClick={handleActivate}>
+                    <Button type="button" size="sm" onClick={handleActivate} disabled={loading}>
                       Activate
                     </Button>
                   )}
