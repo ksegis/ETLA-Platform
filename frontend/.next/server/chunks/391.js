@@ -1,0 +1,1 @@
+"use strict";exports.id=391,exports.ids=[391],exports.modules={6391:(e,s,t)=>{t.d(s,{createClient:()=>o});var U=t(9285);let r=process.env.NEXT_PUBLIC_SUPABASE_URL,_=process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN;(0,U.UU)(r,_);let o=()=>(0,U.UU)(r,_)}};

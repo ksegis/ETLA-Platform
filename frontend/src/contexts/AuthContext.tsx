@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import type { User, Session } from '@supabase/supabase-js'
+import { setServiceAuthContext } from '@/utils/serviceAuth'
 
 interface Tenant {
   id: string
@@ -32,10 +33,22 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
   refreshTenant: () => Promise<void>
+  refreshSession: () => Promise<void>
   isStable: boolean
+  isAuthenticated: boolean
+  isDemoMode: boolean
+  currentUserId: string | null
+  currentTenantId: string | null
+  currentUserRole: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key'
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -52,42 +65,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updated_at: new Date().toISOString()
   })
   
-  const [tenantUser, setTenantUser] = useState<TenantUser | null>(null)
-  
-  // Create Supabase client with environment variables
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || ''
-  )
+  // Tenant user state with demo fallback
+  const [tenantUser, setTenantUser] = useState<TenantUser | null>({
+    id: 'demo-tenant-user-id',
+    tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
+    user_id: 'demo-user-id',
+    role: 'client_admin', // Default to client_admin for demo
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  })
 
+  // Computed properties for RBAC
+  const isAuthenticated = !!user || !!session
+  const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co'
+  const currentUserId = user?.id || tenantUser?.user_id || null
+  const currentTenantId = tenant?.id || null
+  const currentUserRole = tenantUser?.role || null
+
+  // Helper function to update service auth context
+  const updateServiceAuthContext = () => {
+    setServiceAuthContext({
+      userId: currentUserId,
+      tenantId: currentTenantId,
+      userRole: currentUserRole,
+      isAuthenticated,
+      isDemoMode
+    })
+  }
+
+  // Initialize authentication state
   useEffect(() => {
-    console.log('🔧 AuthProvider: Initializing authentication...')
+    console.log('🔐 AuthProvider: Initializing authentication state')
     
-    // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('❌ AuthProvider: Error getting initial session:', error)
-          // Fallback to demo user for stability
+          console.error('❌ AuthProvider: Error getting session:', error)
+          // Fall back to demo mode
           setUser({
             id: 'demo-user-id',
             email: 'demo@company.com',
-            user_metadata: { name: 'Demo User' }
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            confirmation_sent_at: new Date().toISOString()
           } as unknown as User)
-          setSession(null)
+          
+          setTenantUser({
+            id: 'demo-tenant-user-id',
+            tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
+            user_id: 'demo-user-id',
+            role: 'client_admin',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
         } else if (initialSession) {
-          console.log('✅ AuthProvider: Found existing session for:', initialSession.user.email)
-          setUser(initialSession.user)
+          console.log('✅ AuthProvider: Found existing session')
           setSession(initialSession)
+          setUser(initialSession.user)
           
           // Set tenant user for authenticated user
           setTenantUser({
             id: 'demo-tenant-user-id',
             tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
             user_id: initialSession.user.id,
-            role: 'admin',
+            role: 'client_admin',
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -98,16 +146,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser({
             id: 'demo-user-id',
             email: 'demo@company.com',
-            user_metadata: { name: 'Demo User' }
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            confirmation_sent_at: new Date().toISOString()
           } as unknown as User)
-          setSession(null)
           
           // Set demo tenant user
           setTenantUser({
             id: 'demo-tenant-user-id',
             tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
             user_id: 'demo-user-id',
-            role: 'admin',
+            role: 'client_admin',
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -116,28 +168,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setLoading(false)
         setIsStable(true)
+        updateServiceAuthContext()
         console.log('✅ AuthProvider: Authentication state stabilized')
         
       } catch (error) {
-        console.error('❌ AuthProvider: Error during initialization:', error)
-        // Fallback to demo user for stability
-        setUser({
-          id: 'demo-user-id',
-          email: 'demo@company.com',
-          user_metadata: { name: 'Demo User' }
-        } as unknown as User)
+        console.error('❌ AuthProvider: Unexpected error during initialization:', error)
+        // Ensure we always have a stable state
+        setUser(null)
         setSession(null)
         setTenantUser({
           id: 'demo-tenant-user-id',
           tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
           user_id: 'demo-user-id',
-          role: 'admin',
+          role: 'client_admin',
           is_active: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         setLoading(false)
         setIsStable(true)
+        updateServiceAuthContext()
       }
     }
 
@@ -146,27 +196,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('🔄 AuthProvider: Auth state change:', event, newSession?.user?.email || 'no user')
+        console.log('🔄 AuthProvider: Auth state changed:', event)
         
-        // Prevent rapid state changes during token refresh
-        if (event === 'TOKEN_REFRESHED' && user && newSession?.user?.id === user.id) {
-          console.log('🔄 AuthProvider: Token refreshed for same user, maintaining stability')
-          setSession(newSession)
-          return
-        }
-        
-        // Handle significant auth changes
         if (newSession) {
-          console.log('✅ AuthProvider: User authenticated:', newSession.user.email)
-          setUser(newSession.user)
           setSession(newSession)
+          setUser(newSession.user)
           
           // Set tenant user for authenticated user
           setTenantUser({
             id: 'demo-tenant-user-id',
             tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
             user_id: newSession.user.id,
-            role: 'admin',
+            role: 'client_admin',
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -177,7 +218,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser({
             id: 'demo-user-id',
             email: 'demo@company.com',
-            user_metadata: { name: 'Demo User' }
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            confirmation_sent_at: new Date().toISOString()
           } as unknown as User)
           setSession(null)
           
@@ -186,7 +232,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: 'demo-tenant-user-id',
             tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
             user_id: 'demo-user-id',
-            role: 'admin',
+            role: 'client_admin',
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -195,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setLoading(false)
         setIsStable(true)
+        updateServiceAuthContext()
       }
     )
 
@@ -204,83 +251,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔐 AuthProvider: Attempting sign in for:', email)
-    setLoading(true)
-    setIsStable(false)
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      return { error }
+    } catch (error) {
       console.error('❌ AuthProvider: Sign in error:', error)
-      setLoading(false)
-      setIsStable(true)
+      return { error }
     }
-    
-    return { error }
   }
 
   const signUp = async (email: string, password: string) => {
-    console.log('📝 AuthProvider: Attempting sign up for:', email)
-    setLoading(true)
-    setIsStable(false)
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+      return { error }
+    } catch (error) {
       console.error('❌ AuthProvider: Sign up error:', error)
-      setLoading(false)
-      setIsStable(true)
+      return { error }
     }
-    
-    return { error }
   }
 
   const signOut = async () => {
-    console.log('🚪 AuthProvider: Signing out user')
-    setLoading(true)
-    setIsStable(false)
-    
+    console.log('🔐 AuthProvider: Signing out')
     await supabase.auth.signOut()
     
-    // Immediately set demo user for stability
-    setUser({
-      id: 'demo-user-id',
-      email: 'demo@company.com',
-      user_metadata: { name: 'Demo User' }
-    } as unknown as User)
+    // Reset to demo state
+    setUser(null)
     setSession(null)
     setTenantUser({
       id: 'demo-tenant-user-id',
       tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
       user_id: 'demo-user-id',
-      role: 'admin',
+      role: 'client_admin',
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })
     setLoading(false)
     setIsStable(true)
+    updateServiceAuthContext()
   }
 
   const refreshTenant = async () => {
     console.log('🔄 AuthProvider: Refreshing tenant information')
-    // Mock implementation - in real app would fetch from database
-    setTenant({
-      id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-      name: 'Demo Company',
-      slug: 'demo-company',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
+    // In a real implementation, this would fetch fresh tenant data
+    // For now, we maintain the demo state
   }
 
-  const value = {
+  const refreshSession = async () => {
+    console.log('🔄 AuthProvider: Refreshing session')
+    try {
+      const { data: { session }, error } = await supabase.auth.refreshSession()
+      if (error) {
+        console.error('❌ AuthProvider: Error refreshing session:', error)
+      } else {
+        setSession(session)
+        if (session?.user) {
+          setUser(session.user)
+        }
+      }
+    } catch (error) {
+      console.error('❌ AuthProvider: Unexpected error refreshing session:', error)
+    }
+  }
+
+  const value: AuthContextType = {
     user,
     tenant,
     tenantUser,
@@ -290,7 +330,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     refreshTenant,
-    isStable
+    refreshSession,
+    isStable,
+    isAuthenticated,
+    isDemoMode,
+    currentUserId,
+    currentTenantId,
+    currentUserRole
   }
 
   return (
@@ -307,4 +353,6 @@ export function useAuth() {
   }
   return context
 }
+
+export default AuthContext
 
