@@ -1,0 +1,114 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# ===================================
+# ENHANCED REPORTING SOLUTION ADDITIONS
+# ===================================
+
+# Excel export files and temporary reports
+*.xlsx
+*.xls
+*.csv
+/exports/
+/reports/
+/temp-reports/
+/frontend/exports/
+/frontend/reports/
+/frontend/temp-reports/
+
+# Report generation temporary files
+/tmp/reports/
+/frontend/tmp/reports/
+/public/downloads/
+/frontend/public/downloads/
+/public/exports/
+/frontend/public/exports/
+
+# Excel template cache
+/src/assets/templates/cache/
+/frontend/src/assets/templates/cache/
+/templates/cache/
+
+# Report audit logs (if stored locally)
+/logs/exports/
+/logs/reports/
+/frontend/logs/
+
+# Environment-specific report configurations
+.env.reports
+.env.export
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backup files
+*.backup
+*.bak
+src/app/reporting/page.tsx.backup
+frontend/src/app/reporting/page.tsx.backup
+
+# Database dumps or exports
+*.sql.backup
+*.dump
+
+# Report preview cache
+/cache/previews/
+/frontend/cache/previews/
+/public/cache/
+/frontend/public/cache/
+
+# User-uploaded files
+/uploads/reports/
+/frontend/uploads/reports/
+/public/uploads/
+/frontend/public/uploads/
+
+# Sensitive data files (extra protection)
+**/sensitive-data/
+**/ssn-data/
+**/employee-data-exports/
+
+# OS generated files
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+

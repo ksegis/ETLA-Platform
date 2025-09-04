@@ -125,6 +125,12 @@
       "namedRegex": "^/project\\-management/schedule(?:/)?$"
     },
     {
+      "page": "/rbac-test",
+      "regex": "^/rbac\\-test(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/rbac\\-test(?:/)?$"
+    },
+    {
       "page": "/reporting",
       "regex": "^/reporting(?:/)?$",
       "routeKeys": {},

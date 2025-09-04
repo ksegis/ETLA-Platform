@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[99],{2099:(e,_,U)=>{U.d(_,{createClient:()=>n});var E=U(2354),N=U(9509);let t=N.env.NEXT_PUBLIC_SUPABASE_URL,l=N.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN;(0,E.UU)(t,l);let n=()=>(0,E.UU)(t,l)}}]);

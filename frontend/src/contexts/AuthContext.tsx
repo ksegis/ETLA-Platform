@@ -46,7 +46,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || 'demo-key'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 

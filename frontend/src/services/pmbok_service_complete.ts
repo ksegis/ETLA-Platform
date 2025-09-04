@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 // Build-safe environment check
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN
 
 console.log('🔧 PMBOK Service Environment Check:', {
   hasUrl: !!supabaseUrl,
