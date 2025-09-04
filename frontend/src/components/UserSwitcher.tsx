@@ -19,7 +19,7 @@ interface TestUser {
 const TEST_USERS: TestUser[] = [
   {
     email: 'admin@etla-platform.com',
-    password: 'HostAdmin123!',
+    password: 'Password123!',
     name: 'System Administrator',
     role: 'admin',
     roleLevel: 'host',
@@ -28,7 +28,7 @@ const TEST_USERS: TestUser[] = [
   },
   {
     email: 'manager@etla-platform.com',
-    password: 'HostManager123!',
+    password: 'Password123!',
     name: 'Platform Manager',
     role: 'manager',
     roleLevel: 'host',
@@ -37,7 +37,7 @@ const TEST_USERS: TestUser[] = [
   },
   {
     email: 'admin@acme.com',
-    password: 'PrimaryAdmin123!',
+    password: 'Password123!',
     name: 'Michael Chen',
     role: 'admin',
     roleLevel: 'primary_client',
@@ -46,7 +46,7 @@ const TEST_USERS: TestUser[] = [
   },
   {
     email: 'manager@acme.com',
-    password: 'PrimaryManager123!',
+    password: 'Password123!',
     name: 'Sarah Johnson',
     role: 'manager',
     roleLevel: 'primary_client',
@@ -55,7 +55,7 @@ const TEST_USERS: TestUser[] = [
   },
   {
     email: 'admin@subsidiary.com',
-    password: 'SubAdmin123!',
+    password: 'Password123!',
     name: 'Alex Thompson',
     role: 'admin',
     roleLevel: 'sub_client',
@@ -64,7 +64,7 @@ const TEST_USERS: TestUser[] = [
   },
   {
     email: 'user@subsidiary.com',
-    password: 'SubUser123!',
+    password: 'Password123!',
     name: 'Emma Davis',
     role: 'user',
     roleLevel: 'sub_client',
@@ -73,7 +73,7 @@ const TEST_USERS: TestUser[] = [
   },
   {
     email: 'viewer@subsidiary.com',
-    password: 'SubViewer123!',
+    password: 'Password123!',
     name: 'Jordan Smith',
     role: 'viewer',
     roleLevel: 'sub_client',
