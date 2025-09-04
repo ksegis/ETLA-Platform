@@ -94,6 +94,7 @@ export default function UserSwitcher() {
     try {
       // Sign out current user first
       if (isAuthenticated) {
+        console.log('Signing out current user...')
         await signOut()
       }
       
@@ -101,21 +102,44 @@ export default function UserSwitcher() {
       await new Promise(resolve => setTimeout(resolve, 500))
       
       // Sign in as the test user
+      console.log(`Attempting to sign in as: ${testUser.email}`)
       const { error } = await signIn(testUser.email, testUser.password)
       
       if (error) {
-        console.error('Login error:', error)
-        alert(`Failed to login as ${testUser.name}: ${error.message}`)
+        console.error('Detailed login error:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText,
+          name: error.name,
+          cause: error.cause
+        })
+        
+        // Show detailed error message
+        const errorDetails = [
+          `Message: ${error.message}`,
+          error.status ? `Status: ${error.status}` : '',
+          error.statusText ? `Status Text: ${error.statusText}` : '',
+          error.name ? `Error Type: ${error.name}` : ''
+        ].filter(Boolean).join('\n')
+        
+        alert(`Failed to login as ${testUser.name}:\n\n${errorDetails}\n\nPlease check the browser console for more details.`)
       } else {
+        console.log('Login successful, refreshing page...')
         // Small delay to ensure login completes
         await new Promise(resolve => setTimeout(resolve, 1000))
         
         // Refresh the page to update all components
         window.location.reload()
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Switch user error:', error)
-      alert(`Failed to switch to ${testUser.name}`)
+      
+      // Show detailed error for debugging
+      const errorMessage = error?.message || 'Unknown error occurred'
+      const errorStack = error?.stack || 'No stack trace available'
+      
+      alert(`Failed to switch to ${testUser.name}:\n\nError: ${errorMessage}\n\nCheck browser console for full details.`)
+      console.error('Full error details:', { error, stack: errorStack })
     } finally {
       setIsLoading(false)
       setLoadingUser(null)
