@@ -2,6 +2,7 @@
 
 import React from 'react'
 import RBACTestPanel from '@/components/RBACTestPanel'
+import UserSwitcher from '@/components/UserSwitcher'
 import { PermissionGuard, FeatureGuard } from '@/components/PermissionGuards'
 import { FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
 
@@ -16,6 +17,11 @@ export default function RBACTestPage() {
           <p className="text-gray-600">
             Verify that Role-Based Access Control is working correctly
           </p>
+        </div>
+
+        {/* User Switcher */}
+        <div className="mb-8">
+          <UserSwitcher />
         </div>
 
         {/* Main Test Panel */}
