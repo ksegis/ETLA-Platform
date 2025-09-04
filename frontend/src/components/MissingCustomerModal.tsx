@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -23,11 +21,13 @@ export default function MissingCustomerModal({
 }: MissingCustomerModalProps) {
   const [step, setStep] = useState<'choose' | 'create' | 'link'>('choose')
   const [loading, setLoading] = useState(false)
-  const [availableCustomers, setAvailableCustomers] = useState<Array<{ id: string; name: string; email: string }>>([])
+  const [availableCustomers, setAvailableCustomers] = useState<Array<{ id: string; name: string }>>([])
   
   // Create new customer form
   const [newCustomerName, setNewCustomerName] = useState('')
   const [newCustomerEmail, setNewCustomerEmail] = useState('')
+  const [newCustomerPhone, setNewCustomerPhone] = useState('')
+  const [newCustomerAddress, setNewCustomerAddress] = useState('')
   
   // Link to existing customer
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
@@ -51,27 +51,30 @@ export default function MissingCustomerModal({
   }
 
   const handleCreateCustomer = async () => {
-    if (!newCustomerName.trim() || !newCustomerEmail.trim()) {
-      alert('Please fill in both name and email')
+    if (!newCustomerName.trim()) {
+      alert('Customer name is required')
       return
     }
 
     try {
       setLoading(true)
       
-      // Create the customer
-      const createResult = await pmbok.createMissingCustomer(newCustomerName.trim(), newCustomerEmail.trim())
+      // Create the customer using correct method signature
+      const createResult = await pmbok.createMissingCustomer(
+        newCustomerName.trim(), 
+        newCustomerEmail.trim()
+      )
       
-      if (!createResult.success) {
-        alert(`Error creating customer: ${createResult.error}`)
+      if (!createResult || !createResult.success || !createResult.customerId) {
+        alert(createResult?.error || 'Failed to create customer')
         return
       }
 
       // Link the work request to the new customer
-      const linkResult = await pmbok.linkWorkRequestToCustomer(workRequestId, createResult.customerId!)
+      const linkResult = await pmbok.linkWorkRequestToCustomer(workRequestId, createResult.customerId)
       
-      if (!linkResult.success) {
-        alert(`Error linking work request: ${linkResult.error}`)
+      if (!linkResult || !linkResult.success) {
+        alert(linkResult?.error || 'Failed to link work request')
         return
       }
 
@@ -87,7 +90,7 @@ export default function MissingCustomerModal({
     }
   }
 
-  const handleLinkToExisting = async () => {
+  const handleLinkExistingCustomer = async () => {
     if (!selectedCustomerId) {
       alert('Please select a customer')
       return
@@ -96,10 +99,10 @@ export default function MissingCustomerModal({
     try {
       setLoading(true)
       
-      const result = await pmbok.linkWorkRequestToCustomer(workRequestId, selectedCustomerId)
+      const linkResult = await pmbok.linkWorkRequestToCustomer(workRequestId, selectedCustomerId)
       
-      if (!result.success) {
-        alert(`Error linking work request: ${result.error}`)
+      if (!linkResult || !linkResult.success) {
+        alert(linkResult?.error || 'Failed to link work request')
         return
       }
 
@@ -108,186 +111,179 @@ export default function MissingCustomerModal({
       onClose()
       
     } catch (error) {
-      console.error('Error linking to existing customer:', error)
-      alert('Failed to link to existing customer')
+      console.error('Error linking customer:', error)
+      alert('Failed to link customer')
     } finally {
       setLoading(false)
     }
   }
 
-  const resetModal = () => {
-    setStep('choose')
+  const resetForm = () => {
     setNewCustomerName('')
     setNewCustomerEmail('')
+    setNewCustomerPhone('')
+    setNewCustomerAddress('')
     setSelectedCustomerId('')
-    setLoading(false)
+    setStep('choose')
+  }
+
+  const handleClose = () => {
+    resetForm()
+    onClose()
   }
 
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              Missing Customer Information
-            </CardTitle>
-            <CardDescription>
-              Work request "{workRequestTitle}" is missing customer information. 
-              Choose how to fix this issue.
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            {step === 'choose' && (
-              <div className="space-y-3">
+      <Card className="w-full max-w-md mx-4">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <CardTitle>Missing Customer</CardTitle>
+          </div>
+          <CardDescription>
+            Work request "{workRequestTitle}" needs a customer assigned
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {step === 'choose' && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                How would you like to resolve this?
+              </p>
+              
+              <div className="space-y-2">
                 <Button
                   onClick={() => setStep('create')}
-                  className="w-full flex items-center gap-2"
+                  className="w-full justify-start"
                   variant="outline"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-2" />
                   Create New Customer
                 </Button>
                 
                 <Button
                   onClick={() => setStep('link')}
-                  className="w-full flex items-center gap-2"
+                  className="w-full justify-start"
                   variant="outline"
                 >
-                  <Link className="h-4 w-4" />
+                  <Link className="h-4 w-4 mr-2" />
                   Link to Existing Customer
                 </Button>
-                
-                <Button
-                  onClick={() => { resetModal(); onClose(); }}
-                  variant="ghost"
-                  className="w-full"
-                >
+              </div>
+              
+              <div className="flex justify-end">
+                <Button onClick={handleClose} variant="ghost">
                   Cancel
                 </Button>
               </div>
-            )}
+            </div>
+          )}
 
-            {step === 'create' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Customer Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={newCustomerName}
-                      onChange={(e) => setNewCustomerName(e.target.value)}
-                      placeholder="Enter customer name"
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Customer Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
-                      type="email"
-                      value={newCustomerEmail}
-                      onChange={(e) => setNewCustomerEmail(e.target.value)}
-                      placeholder="Enter customer email"
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleCreateCustomer}
-                    disabled={loading || !newCustomerName.trim() || !newCustomerEmail.trim()}
-                    className="flex-1"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create Customer'
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setStep('choose')}
-                    variant="outline"
-                  >
-                    Back
-                  </Button>
-                </div>
+          {step === 'create' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Customer Name *</label>
+                <input
+                  type="text"
+                  value={newCustomerName}
+                  onChange={(e) => setNewCustomerName(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Enter customer name"
+                />
               </div>
-            )}
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <input
+                  type="email"
+                  value={newCustomerEmail}
+                  onChange={(e) => setNewCustomerEmail(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Enter email address"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone</label>
+                <input
+                  type="tel"
+                  value={newCustomerPhone}
+                  onChange={(e) => setNewCustomerPhone(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Enter phone number"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Address</label>
+                <textarea
+                  value={newCustomerAddress}
+                  onChange={(e) => setNewCustomerAddress(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Enter address"
+                  rows={2}
+                />
+              </div>
+              
+              <div className="flex justify-between">
+                <Button onClick={() => setStep('choose')} variant="ghost">
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleCreateCustomer} 
+                  disabled={loading || !newCustomerName.trim()}
+                >
+                  {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Create & Link
+                </Button>
+              </div>
+            </div>
+          )}
 
-            {step === 'link' && (
-              <div className="space-y-4">
+          {step === 'link' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Customer</label>
                 {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                    <span className="ml-2">Loading customers...</span>
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Loading customers...
                   </div>
                 ) : (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Select Existing Customer</label>
-                      <select
-                        value={selectedCustomerId}
-                        onChange={(e) => setSelectedCustomerId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Choose a customer...</option>
-                        {availableCustomers.map(customer => (
-                          <option key={customer.id} value={customer.id}>
-                            {customer.name} ({customer.email})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    {availableCustomers.length === 0 && (
-                      <div className="text-center py-4 text-gray-500">
-                        No existing customers found. Consider creating a new customer instead.
-                      </div>
-                    )}
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleLinkToExisting}
-                        disabled={loading || !selectedCustomerId}
-                        className="flex-1"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Linking...
-                          </>
-                        ) : (
-                          'Link Customer'
-                        )}
-                      </Button>
-                      
-                      <Button
-                        onClick={() => setStep('choose')}
-                        variant="outline"
-                      >
-                        Back
-                      </Button>
-                    </div>
-                  </>
+                  <select
+                    value={selectedCustomerId}
+                    onChange={(e) => setSelectedCustomerId(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md"
+                  >
+                    <option value="">Choose a customer...</option>
+                    {availableCustomers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </option>
+                    ))}
+                  </select>
                 )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              
+              <div className="flex justify-between">
+                <Button onClick={() => setStep('choose')} variant="ghost">
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleLinkExistingCustomer} 
+                  disabled={loading || !selectedCustomerId}
+                >
+                  {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Link Customer
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
