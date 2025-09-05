@@ -34,7 +34,7 @@ export default function TenantSelector() {
         <div className="flex items-center gap-2">
           <Building className="h-4 w-4" />
           <span className="truncate">
-            {selectedTenant?.company_name || 'Select Tenant'}
+            {selectedTenant?.name || 'Select Tenant'}
           </span>
         </div>
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -58,10 +58,10 @@ export default function TenantSelector() {
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-gray-900">
-                    {tenant.company_name}
+                    {tenant.name}
                   </span>
                   <span className="text-sm text-gray-500">
-                    {tenant.industry} • {tenant.subscription_plan}
+                    {tenant.domain} • {tenant.subscription_plan}
                   </span>
                 </div>
                 
