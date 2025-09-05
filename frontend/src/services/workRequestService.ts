@@ -70,8 +70,7 @@ class WorkRequestService {
       .from('work_requests')
       .select(`
         *,
-        customer:users!customer_id(first_name, last_name, email),
-        assigned:team_members!assigned_to(name)
+        customer:customers!customer_id(first_name, last_name, email, company_name)
       `)
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
@@ -85,7 +84,7 @@ class WorkRequestService {
       ...item,
       customer_name: item.customer ? `${item.customer.first_name} ${item.customer.last_name}` : 'Unknown',
       customer_email: item.customer?.email || '',
-      assigned_name: item.assigned?.name || ''
+      assigned_name: '' // No team_members table, so empty for now
     }))
   }
 
@@ -95,8 +94,7 @@ class WorkRequestService {
       .from('work_requests')
       .select(`
         *,
-        customer:users!customer_id(first_name, last_name, email),
-        assigned:team_members!assigned_to(name)
+        customer:customers!customer_id(first_name, last_name, email, company_name)
       `)
       .eq('customer_id', userId)
       .eq('tenant_id', tenantId)
@@ -111,7 +109,7 @@ class WorkRequestService {
       ...item,
       customer_name: item.customer ? `${item.customer.first_name} ${item.customer.last_name}` : 'Unknown',
       customer_email: item.customer?.email || '',
-      assigned_name: item.assigned?.name || ''
+      assigned_name: '' // No team_members table, so empty for now
     }))
   }
 
@@ -121,8 +119,7 @@ class WorkRequestService {
       .from('work_requests')
       .select(`
         *,
-        customer:users!customer_id(first_name, last_name, email),
-        assigned:team_members!assigned_to(name)
+        customer:customers!customer_id(first_name, last_name, email, company_name)
       `)
       .eq('id', id)
       .single()
@@ -136,7 +133,7 @@ class WorkRequestService {
       ...data,
       customer_name: data.customer ? `${data.customer.first_name} ${data.customer.last_name}` : 'Unknown',
       customer_email: data.customer?.email || '',
-      assigned_name: data.assigned?.name || ''
+      assigned_name: '' // No team_members table, so empty for now
     }
   }
 
