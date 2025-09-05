@@ -66,14 +66,16 @@ export function useFriendlyTenantName(tenantId?: string): string {
   const tenant = availableTenants.find(t => t.id === targetTenantId)
   
   if (tenant) {
-    if (tenant.name && tenant.code) {
-      return `${tenant.name} (${tenant.code})`
+    // Type assertion to handle extended tenant properties
+    const extendedTenant = tenant as any
+    if (tenant.name && extendedTenant.code) {
+      return `${tenant.name} (${extendedTenant.code})`
     }
     if (tenant.name) {
       return tenant.name
     }
-    if (tenant.code) {
-      return tenant.code
+    if (extendedTenant.code) {
+      return extendedTenant.code
     }
   }
   

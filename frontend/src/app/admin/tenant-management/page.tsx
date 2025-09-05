@@ -4,12 +4,24 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Badge } from '@/components/ui/Badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Building, Users, Plus, Edit, Trash2, UserPlus, Search } from 'lucide-react'
 import { Tenant, User } from '@/types'
+
+interface ExtendedTenant extends Tenant {
+  code?: string
+  tenant_type?: string
+  contact_email?: string
+  is_active?: boolean
+  tenant_level?: number
+  max_projects?: number
+  feature_flags?: Record<string, any>
+  usage_quotas?: Record<string, any>
+  rbac_settings?: Record<string, any>
+}
 
 interface TenantUser {
   id: string
@@ -21,12 +33,18 @@ interface TenantUser {
   created_at: string
 }
 
+interface AuthUser {
+  id: string
+  email: string
+  created_at: string
+}
+
 export default function TenantManagementPage() {
   const { tenantUser } = useAuth()
   const { selectedTenant } = useTenant()
-  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [tenants, setTenants] = useState<ExtendedTenant[]>([])
   const [users, setUsers] = useState<TenantUser[]>([])
-  const [allUsers, setAllUsers] = useState<User[]>([])
+  const [allUsers, setAllUsers] = useState<AuthUser[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -267,11 +285,12 @@ export default function TenantManagementPage() {
             </CardDescription>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
+              <input
+                type="text"
                 placeholder="Search tenants..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </CardHeader>
@@ -299,9 +318,9 @@ export default function TenantManagementPage() {
                         Type: {tenant.tenant_type || 'Unknown'}
                       </p>
                     </div>
-                    <Badge variant={tenant.status === 'active' ? 'default' : 'secondary'}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${tenant.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                       {tenant.status}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
               ))}
@@ -361,9 +380,9 @@ export default function TenantManagementPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge className={getRoleColor(user.role)}>
+                          <span className={getRoleColor(user.role)}>
                             {user.role}
-                          </Badge>
+                          </span>
                           <select
                             value={user.role}
                             onChange={(e) => updateUserRole(user.id, e.target.value)}
