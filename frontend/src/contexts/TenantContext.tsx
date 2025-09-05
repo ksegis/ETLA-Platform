@@ -75,7 +75,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
         const { data, error } = await supabase
           .from('tenants')
           .select('*')
-          .order('company_name')
+          .order('name')
 
         if (error) throw error
         setAvailableTenants(data || [])
@@ -86,39 +86,36 @@ export function TenantProvider({ children }: TenantProviderProps) {
       } 
       // For other roles, get tenants they have access to
       else {
-        const { data, error } = await supabase
+        // First, get the user's tenant access records
+        const { data: accessData, error: accessError } = await supabase
           .from('user_tenant_access')
-          .select(`
-            tenants (
-              id,
-              name,
-              domain,
-              status,
-              subscription_plan,
-              subscription_start_date,
-              subscription_end_date,
-              max_users,
-              current_users,
-              settings,
-              billing_email,
-              billing_address,
-              tenant_id,
-              created_at,
-              updated_at,
-              created_by
-            )
-          `)
+          .select('tenant_id')
           .eq('user_id', user.id)
           .eq('is_active', true)
 
-        if (error) throw error
+        if (accessError) throw accessError
         
-        const tenants = data?.map(item => item.tenants).filter(Boolean) || []
-        setAvailableTenants(tenants)
-        
-        // Set user's primary tenant or first available
-        const primaryTenant = tenants.find(t => t.id === tenantUser?.tenant_id) || tenants[0] || null
-        setSelectedTenant(primaryTenant)
+        if (accessData && accessData.length > 0) {
+          const tenantIds = accessData.map(item => item.tenant_id)
+          
+          // Then get the actual tenant records
+          const { data: tenantsData, error: tenantsError } = await supabase
+            .from('tenants')
+            .select('*')
+            .in('id', tenantIds)
+            .order('name')
+
+          if (tenantsError) throw tenantsError
+          
+          setAvailableTenants(tenantsData || [])
+          
+          // Set user's primary tenant or first available
+          const primaryTenant = tenantsData?.find(t => t.id === tenantUser?.tenant_id) || tenantsData?.[0] || null
+          setSelectedTenant(primaryTenant)
+        } else {
+          setAvailableTenants([])
+          setSelectedTenant(null)
+        }
       }
     } catch (error) {
       console.error('Error loading tenants:', error)
