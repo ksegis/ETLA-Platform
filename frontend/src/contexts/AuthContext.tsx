@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import type { User, Session } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { setServiceAuthContext } from '@/utils/serviceAuth'
 
 interface Tenant {
@@ -43,12 +43,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || 'demo-key'
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)

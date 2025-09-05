@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { supabase } from "@/lib/supabase"
 
 export interface Project {
   id: string
@@ -89,11 +89,11 @@ export interface ProjectDeliverable {
 }
 
 class ProjectService {
-  private supabase = createClient()
+  private supabaseClient = supabase
 
   // Get all projects for a tenant
   async getProjects(tenantId: string): Promise<Project[]> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('projects')
       .select(`
         *,
@@ -119,7 +119,7 @@ class ProjectService {
 
   // Get a single project by ID
   async getProject(id: string): Promise<Project | null> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('projects')
       .select(`
         *,
@@ -148,7 +148,7 @@ class ProjectService {
     // Generate project code
     const projectCode = await this.generateProjectCode(tenantId)
     
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('projects')
       .insert({
         ...projectData,
@@ -181,7 +181,7 @@ class ProjectService {
 
   // Update a project
   async updateProject(id: string, updateData: UpdateProjectData): Promise<Project> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('projects')
       .update({
         ...updateData,
@@ -211,7 +211,7 @@ class ProjectService {
 
   // Delete a project
   async deleteProject(id: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await this.supabaseClient
       .from('projects')
       .delete()
       .eq('id', id)
@@ -231,7 +231,7 @@ class ProjectService {
     on_hold: number
     cancelled: number
   }> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('projects')
       .select('status')
       .eq('tenant_id', tenantId)
@@ -262,7 +262,7 @@ class ProjectService {
   // Generate unique project code
   private async generateProjectCode(tenantId: string): Promise<string> {
     const year = new Date().getFullYear()
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('projects')
       .select('project_code')
       .eq('tenant_id', tenantId)
@@ -288,7 +288,7 @@ class ProjectService {
 
   // Get project milestones
   async getProjectMilestones(projectId: string): Promise<ProjectMilestone[]> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('project_milestones')
       .select('*')
       .eq('project_id', projectId)
@@ -304,7 +304,7 @@ class ProjectService {
 
   // Get project deliverables
   async getProjectDeliverables(projectId: string): Promise<ProjectDeliverable[]> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('project_deliverables')
       .select('*')
       .eq('project_id', projectId)

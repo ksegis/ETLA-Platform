@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export interface WorkRequest {
   id: string
@@ -62,11 +62,11 @@ export interface UpdateWorkRequestData {
 }
 
 class WorkRequestService {
-  private supabase = createClient()
+  private supabaseClient = supabase
 
   // Get all work requests for a tenant
   async getWorkRequests(tenantId: string): Promise<WorkRequest[]> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('work_requests')
       .select(`
         *,
@@ -91,7 +91,7 @@ class WorkRequestService {
 
   // Get work requests for a specific user (customer)
   async getWorkRequestsForUser(userId: string, tenantId: string): Promise<WorkRequest[]> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('work_requests')
       .select(`
         *,
@@ -117,7 +117,7 @@ class WorkRequestService {
 
   // Get a single work request by ID
   async getWorkRequest(id: string): Promise<WorkRequest | null> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('work_requests')
       .select(`
         *,
@@ -142,7 +142,7 @@ class WorkRequestService {
 
   // Create a new work request
   async createWorkRequest(requestData: CreateWorkRequestData, customerId: string, tenantId: string): Promise<WorkRequest> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('work_requests')
       .insert({
         ...requestData,
@@ -172,7 +172,7 @@ class WorkRequestService {
 
   // Update a work request
   async updateWorkRequest(id: string, updateData: UpdateWorkRequestData): Promise<WorkRequest> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('work_requests')
       .update({
         ...updateData,
@@ -201,7 +201,7 @@ class WorkRequestService {
 
   // Delete a work request
   async deleteWorkRequest(id: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await this.supabaseClient
       .from('work_requests')
       .delete()
       .eq('id', id)
@@ -222,7 +222,7 @@ class WorkRequestService {
     in_progress: number
     completed: number
   }> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('work_requests')
       .select('status')
       .eq('tenant_id', tenantId)
@@ -253,7 +253,7 @@ class WorkRequestService {
 
   // Get team members for assignment
   async getTeamMembers(tenantId: string): Promise<Array<{id: string, name: string, role: string}>> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.supabaseClient
       .from('team_members')
       .select('id, name, role')
       .eq('is_active', true)

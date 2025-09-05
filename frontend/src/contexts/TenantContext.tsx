@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { createClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from './AuthContext'
 import { Tenant } from '@/types'
 
@@ -35,7 +35,6 @@ export function TenantProvider({ children }: TenantProviderProps) {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   // Demo tenant for demo mode - will be replaced with real tenant data when authenticated
   const demoTenant: Tenant = {
