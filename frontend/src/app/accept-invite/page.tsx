@@ -73,7 +73,7 @@ function AcceptInviteForm() {
             ...prev,
             isValidInvite: true,
             isCheckingInvite: false,
-            email: session.user.email,
+            email: session.user.email || '',
             inviteData
           }))
         } else {
