@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -15,7 +15,7 @@ interface ForgotPasswordState {
   success: boolean
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -48,32 +48,22 @@ export default function LoginPage() {
     }
   }, [searchParams])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
-    setMessage('')
 
     try {
-      console.log(`Attempting login with: ${email}`)
-      const { error } = await signIn(email, password)
-      
-      if (error) {
-        console.error('Login error:', error)
-        setError(`Login failed: ${error.message}`)
-      } else {
-        console.log('Login successful, redirecting...')
-        router.push('/access-control')
-      }
+      await signIn(email, password)
+      router.push('/dashboard')
     } catch (err: any) {
-      console.error('Login exception:', err)
-      setError(`Login error: ${err.message || 'Unknown error'}`)
+      setError(err.message || 'Login failed')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!forgotState.email) {
@@ -84,124 +74,94 @@ export default function LoginPage() {
     setForgotState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
-      const result = await userManagement.sendPasswordReset(forgotState.email)
-
-      if (result.success) {
-        setForgotState(prev => ({
-          ...prev,
-          isLoading: false,
-          success: true
-        }))
-      } else {
-        setForgotState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: result.error || 'Failed to send password reset email'
-        }))
-      }
+      await userManagement.sendPasswordReset(forgotState.email)
+      setForgotState(prev => ({
+        ...prev,
+        isLoading: false,
+        success: true
+      }))
     } catch (err: any) {
       setForgotState(prev => ({
         ...prev,
         isLoading: false,
-        error: err.message || 'Failed to send password reset email'
+        error: err.message || 'Failed to send reset email. Please try again.'
       }))
     }
   }
 
-  const fillTestCredentials = (testEmail: string, testPassword: string) => {
-    setEmail(testEmail)
-    setPassword(testPassword)
+  const fillTestCredentials = (role: 'host_admin' | 'host_manager' | 'primary_client_admin' | 'sub_client_user') => {
+    const credentials = {
+      host_admin: { email: 'kevin.shelton@outlook.com', password: 'TestPassword123!' },
+      host_manager: { email: 'kt.shelton@outlook.com', password: 'TestPassword123!' },
+      primary_client_admin: { email: 'ke.shelton@outlook.com', password: 'TestPassword123!' },
+      sub_client_user: { email: 'kevin.shelton@invictusbpo.com', password: 'TestPassword123!' }
+    }
+    
+    const cred = credentials[role]
+    setEmail(cred.email)
+    setPassword(cred.password)
     setActiveTab('login')
-  }
-
-  const switchToLogin = () => {
-    setActiveTab('login')
-    setForgotState({
-      email: '',
-      isLoading: false,
-      error: null,
-      success: false
-    })
-  }
-
-  const switchToForgot = () => {
-    setActiveTab('forgot')
-    setForgotState(prev => ({
-      ...prev,
-      email: email // Pre-fill with login email if available
-    }))
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            ETLA Platform
-          </h1>
-          <p className="text-gray-600">
-            {activeTab === 'login' ? 'Sign in to access your account' : 'Reset your password'}
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-gray-900">ETLA Platform</CardTitle>
+          <CardDescription className="text-gray-600">
+            Sign in to access your account
+          </CardDescription>
+        </CardHeader>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {activeTab === 'login' ? (
-                <>
-                  <LogIn className="h-5 w-5" />
-                  Login
-                </>
-              ) : (
-                <>
-                  <Mail className="h-5 w-5" />
-                  Reset Password
-                </>
-              )}
-            </CardTitle>
-            <CardDescription>
-              {activeTab === 'login' 
-                ? 'Enter your credentials to access the platform'
-                : 'Enter your email to receive a password reset link'
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Tab Navigation */}
-            <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={switchToLogin}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'login'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={switchToForgot}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'forgot'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Forgot Password
-              </button>
-            </div>
-
-            {/* Success/Error Messages */}
-            {message && (
-              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md mb-4">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-sm text-green-700">{message}</span>
+        <CardContent>
+          {message && (
+            <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-3">
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                <p className="text-sm text-green-600">{message}</p>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Login Form */}
-            {activeTab === 'login' && (
-              <form onSubmit={handleLogin} className="space-y-4">
+          {/* Tab Navigation */}
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('login')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'login'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <LogIn className="h-4 w-4 inline mr-2" />
+              Sign In
+            </button>
+            <button
+              onClick={() => setActiveTab('forgot')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'forgot'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Mail className="h-4 w-4 inline mr-2" />
+              Forgot Password
+            </button>
+          </div>
+
+          {activeTab === 'login' ? (
+            <>
+              {/* Login Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                     Email
@@ -211,9 +171,9 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter your email"
+                    required
                     disabled={isLoading}
                   />
                 </div>
@@ -228,9 +188,9 @@ export default function LoginPage() {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                       placeholder="Enter your password"
+                      required
                       disabled={isLoading}
                     />
                     <button
@@ -248,22 +208,15 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {error && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-red-700">{error}</span>
-                  </div>
-                )}
-
                 <Button
                   type="submit"
-                  disabled={isLoading}
                   className="w-full"
+                  disabled={isLoading}
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Signing in...
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Signing In...
                     </>
                   ) : (
                     <>
@@ -276,7 +229,7 @@ export default function LoginPage() {
                 <div className="text-center">
                   <button
                     type="button"
-                    onClick={switchToForgot}
+                    onClick={() => setActiveTab('forgot')}
                     className="text-sm text-blue-600 hover:text-blue-500"
                     disabled={isLoading}
                   >
@@ -284,155 +237,178 @@ export default function LoginPage() {
                   </button>
                 </div>
               </form>
-            )}
 
-            {/* Forgot Password Form */}
-            {activeTab === 'forgot' && (
-              <>
-                {forgotState.success ? (
-                  <div className="text-center space-y-4">
-                    <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Check Your Email</h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        We've sent a password reset link to <strong>{forgotState.email}</strong>
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Didn't receive the email? Check your spam folder or try again.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Button
-                        onClick={() => setForgotState(prev => ({ ...prev, success: false }))}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        Send Another Email
-                      </Button>
-                      <Button
-                        onClick={switchToLogin}
-                        className="w-full"
-                      >
-                        Back to Sign In
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
-                    {forgotState.error && (
-                      <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                        <AlertCircle className="h-4 w-4 text-red-500" />
-                        <span className="text-sm text-red-700">{forgotState.error}</span>
-                      </div>
-                    )}
+              {/* Test Credentials */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Test Credentials</h3>
+                <p className="text-xs text-gray-500 mb-3">Click to fill in test user credentials</p>
+                
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('host_admin')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    Host Admin
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('host_manager')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                    Host Manager
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('primary_client_admin')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                    Primary Client Admin
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('sub_client_user')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Sub Client User
+                  </Button>
+                </div>
 
-                    <div>
-                      <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        id="forgot-email"
-                        type="email"
-                        value={forgotState.email}
-                        onChange={(e) => setForgotState(prev => ({ ...prev, email: e.target.value, error: null }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter your email address"
-                        required
-                        disabled={forgotState.isLoading}
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={forgotState.isLoading}
-                    >
-                      {forgotState.isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Sending Reset Link...
-                        </>
-                      ) : (
-                        <>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Send Reset Link
-                        </>
-                      )}
-                    </Button>
-
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={switchToLogin}
-                        className="text-sm text-blue-600 hover:text-blue-500"
-                        disabled={forgotState.isLoading}
-                      >
-                        Back to Sign In
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Test Credentials - Only show on login tab */}
-        {activeTab === 'login' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Test Credentials</CardTitle>
-              <CardDescription>
-                Click to fill in test user credentials
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('kevin.shelton@outlook.com', 'TestPassword123!')}
-                >
-                  Host Admin
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('kt.shelton@outlook.com', 'TestPassword123!')}
-                >
-                  Host Manager
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('ke.shelton@outlook.com', 'TestPassword123!')}
-                >
-                  Primary Client Admin
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('kevin.shelton@invictusbpo.com', 'TestPassword123!')}
-                >
-                  Sub Client User
-                </Button>
+                <div className="mt-4 text-center">
+                  <a
+                    href="/rbac-test"
+                    className="text-sm text-blue-600 hover:text-blue-500"
+                  >
+                    RBAC Test Page
+                  </a>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </>
+          ) : (
+            <>
+              {/* Forgot Password Form */}
+              {forgotState.success ? (
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Check Your Email</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      We've sent a password reset link to <strong>{forgotState.email}</strong>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Didn't receive the email? Check your spam folder or try again.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setForgotState({ email: '', isLoading: false, error: null, success: false })}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Send Another Email
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Reset Your Password</h3>
+                    <p className="text-sm text-gray-600">
+                      Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                  </div>
 
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Need help? Check the{' '}
-            <a href="/rbac-test" className="text-blue-600 hover:text-blue-500">
-              RBAC Test Page
-            </a>
-          </p>
-        </div>
-      </div>
+                  {forgotState.error && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                      <div className="flex items-center">
+                        <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
+                        <p className="text-sm text-red-600">{forgotState.error}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      value={forgotState.email}
+                      onChange={(e) => setForgotState(prev => ({ ...prev, email: e.target.value, error: null }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter your email address"
+                      required
+                      disabled={forgotState.isLoading}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={forgotState.isLoading || !forgotState.email}
+                  >
+                    {forgotState.isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Sending Reset Link...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Send Reset Link
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading...</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <LoginForm />
+    </Suspense>
   )
 }
 

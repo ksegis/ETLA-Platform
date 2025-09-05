@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -17,7 +17,7 @@ interface PasswordResetState {
   isCheckingSession: boolean
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
@@ -368,6 +368,29 @@ export default function ResetPasswordPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading...</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }
 
