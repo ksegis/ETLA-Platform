@@ -102,7 +102,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
 
         if (error) throw error
         
-        const tenants = data?.map(item => item.tenant).filter(Boolean) || []
+        const tenants = (data?.map(item => item.tenant).filter(Boolean) as Tenant[]) || []
         setAvailableTenants(tenants)
         
         // Set user's primary tenant or first available
