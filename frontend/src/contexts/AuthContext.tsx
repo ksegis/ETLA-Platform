@@ -77,8 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   // Computed properties for RBAC
-  const isAuthenticated = !!user || !!session
-  const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co'
+  const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+                     process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
+                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+  const isAuthenticated = !!user || !!session || isDemoMode
   const currentUserId = user?.id || tenantUser?.user_id || null
   const currentTenantId = tenant?.id || null
   const currentUserRole = tenantUser?.role || null
