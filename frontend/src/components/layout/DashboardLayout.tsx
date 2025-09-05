@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import {
   Building2,
   Users,
@@ -153,8 +154,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const getCurrentUser = async () => {
       try {
         // Dynamic import to handle missing Supabase gracefully
-        const { createClient } = await import('@/lib/supabase')
-        const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
       } catch (error) {
@@ -168,8 +167,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     // Listen for auth changes - with error handling
     const setupAuthListener = async () => {
       try {
-        const { createClient } = await import('@/lib/supabase')
-        const supabase = createClient()
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null)
         })
@@ -197,8 +194,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const handleSignOut = async () => {
     try {
-      const { createClient } = await import('@/lib/supabase')
-      const supabase = createClient()
       await supabase.auth.signOut()
       router.push('/login')
     } catch (error) {

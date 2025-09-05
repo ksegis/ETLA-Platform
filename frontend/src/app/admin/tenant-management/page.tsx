@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import { Button } from '@/components/ui/Button'
@@ -50,7 +50,7 @@ export default function TenantManagementPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false)
-  const supabase = createClient()
+  // Using singleton supabase instance
 
   // Check if user has admin access
   const hasAdminAccess = tenantUser?.role === 'host_admin' || tenantUser?.role === 'program_manager'
