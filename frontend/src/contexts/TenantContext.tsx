@@ -88,7 +88,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
       else {
         // First, get the user's tenant access records
         const { data: accessData, error: accessError } = await supabase
-          .from('user_tenant_access')
+          .from('tenant_users')
           .select('tenant_id')
           .eq('user_id', user.id)
           .eq('is_active', true)
