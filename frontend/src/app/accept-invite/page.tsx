@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -25,7 +25,7 @@ interface InviteAcceptanceState {
   } | null
 }
 
-export default function AcceptInvitePage() {
+function AcceptInviteForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
@@ -60,32 +60,22 @@ export default function AcceptInvitePage() {
           return
         }
 
-        // Check if this is an invite session (user exists but hasn't set password)
-        if (session?.user) {
-          const user = session.user
-          
-          // Check if user has confirmed their email and this is their first login
-          if (user.email_confirmed_at && !user.last_sign_in_at) {
-            setState(prev => ({
-              ...prev,
-              isValidInvite: true,
-              isCheckingInvite: false,
-              email: user.email || '',
-              inviteData: {
-                email: user.email || '',
-                invited_by_name: user.user_metadata?.invited_by_name,
-                tenant_name: user.user_metadata?.tenant_name,
-                role: user.user_metadata?.role
-              }
-            }))
-          } else {
-            setState(prev => ({
-              ...prev,
-              isValidInvite: false,
-              isCheckingInvite: false,
-              error: 'This invite has already been used or is no longer valid.'
-            }))
+        // Check if this is an invite session
+        if (session?.user?.email && session?.user?.user_metadata?.invited) {
+          const inviteData = {
+            email: session.user.email,
+            invited_by_name: session.user.user_metadata.invited_by_name,
+            tenant_name: session.user.user_metadata.tenant_name,
+            role: session.user.user_metadata.role
           }
+
+          setState(prev => ({
+            ...prev,
+            isValidInvite: true,
+            isCheckingInvite: false,
+            email: session.user.email,
+            inviteData
+          }))
         } else {
           setState(prev => ({
             ...prev,
@@ -168,7 +158,7 @@ export default function AcceptInvitePage() {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
-      // Update user password
+      // Update the user's password
       const { error: passwordError } = await supabase.auth.updateUser({
         password: state.password
       })
@@ -186,31 +176,15 @@ export default function AcceptInvitePage() {
       if (state.fullName.trim()) {
         const { error: metadataError } = await supabase.auth.updateUser({
           data: {
-            full_name: state.fullName.trim()
+            full_name: state.fullName.trim(),
+            invite_accepted: true,
+            invite_accepted_at: new Date().toISOString()
           }
         })
 
         if (metadataError) {
           console.warn('Failed to update user metadata:', metadataError.message)
           // Don't fail the entire process for metadata update issues
-        }
-
-        // Also update the profiles table if it exists
-        try {
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            await supabase
-              .from('profiles')
-              .upsert({
-                id: user.id,
-                email: user.email,
-                full_name: state.fullName.trim(),
-                updated_at: new Date().toISOString()
-              })
-          }
-        } catch (profileError) {
-          console.warn('Failed to update profile:', profileError)
-          // Don't fail the entire process for profile update issues
         }
       }
 
@@ -220,7 +194,7 @@ export default function AcceptInvitePage() {
         success: true
       }))
 
-      // Sign out the temporary session and redirect after a brief delay
+      // Sign out the invite session and redirect after a brief delay
       setTimeout(async () => {
         await supabase.auth.signOut()
         router.push('/login?message=Account setup completed successfully. Please sign in with your new password.')
@@ -230,14 +204,13 @@ export default function AcceptInvitePage() {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: err.message || 'Failed to complete account setup. Please try again.'
+        error: err.message || 'Failed to set up your account. Please try again.'
       }))
     }
   }
 
-  const handleContactAdmin = () => {
-    // In a real app, this might open a support ticket or email
-    router.push('/login?message=Please contact your administrator for a new invitation.')
+  const handleRequestNewInvite = () => {
+    router.push('/login?message=Please contact your administrator to request a new invitation.')
   }
 
   // Loading state while checking invite
@@ -267,15 +240,16 @@ export default function AcceptInvitePage() {
             </div>
             <CardTitle className="text-xl text-gray-900">Invalid Invitation</CardTitle>
             <CardDescription className="text-gray-600">
-              {state.error || 'This invitation link is invalid, expired, or has already been used.'}
+              {state.error || 'This invitation link is invalid or has expired.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={handleContactAdmin}
+              onClick={handleRequestNewInvite}
               className="w-full"
             >
-              Contact Administrator
+              <Mail className="h-4 w-4 mr-2" />
+              Request New Invitation
             </Button>
             <Button 
               variant="outline" 
@@ -302,7 +276,7 @@ export default function AcceptInvitePage() {
             </div>
             <CardTitle className="text-xl text-gray-900">Welcome to ETLA Platform!</CardTitle>
             <CardDescription className="text-gray-600">
-              Your account has been successfully set up. You will be redirected to sign in shortly.
+              Your account has been set up successfully. You will be redirected to sign in shortly.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -326,29 +300,29 @@ export default function AcceptInvitePage() {
           </div>
           <CardTitle className="text-xl text-gray-900">Welcome to ETLA Platform</CardTitle>
           <CardDescription className="text-gray-600">
-            Complete your account setup to get started
+            You've been invited to join as <strong>{state.inviteData?.role || 'a user'}</strong>
+            {state.inviteData?.tenant_name && (
+              <> at <strong>{state.inviteData.tenant_name}</strong></>
+            )}
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          {/* Invitation Details */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-            <div className="flex items-center mb-2">
+          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center">
               <Mail className="h-4 w-4 text-blue-600 mr-2" />
-              <span className="text-sm font-medium text-blue-900">You've been invited to join</span>
+              <p className="text-sm text-blue-700">
+                <strong>Email:</strong> {state.email}
+              </p>
             </div>
-            <div className="text-sm text-blue-800 space-y-1">
-              <p><strong>Email:</strong> {state.inviteData?.email}</p>
-              {state.inviteData?.tenant_name && (
-                <p><strong>Organization:</strong> {state.inviteData.tenant_name}</p>
-              )}
-              {state.inviteData?.role && (
-                <p><strong>Role:</strong> {state.inviteData.role}</p>
-              )}
-              {state.inviteData?.invited_by_name && (
-                <p><strong>Invited by:</strong> {state.inviteData.invited_by_name}</p>
-              )}
-            </div>
+            {state.inviteData?.invited_by_name && (
+              <div className="flex items-center mt-2">
+                <User className="h-4 w-4 text-blue-600 mr-2" />
+                <p className="text-sm text-blue-700">
+                  <strong>Invited by:</strong> {state.inviteData.invited_by_name}
+                </p>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -363,8 +337,7 @@ export default function AcceptInvitePage() {
 
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                <User className="h-4 w-4 inline mr-1" />
-                Full Name (Optional)
+                Full Name <span className="text-gray-400">(optional)</span>
               </label>
               <input
                 id="fullName"
@@ -379,7 +352,7 @@ export default function AcceptInvitePage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password *
+                Password
               </label>
               <div className="relative">
                 <input
@@ -409,7 +382,7 @@ export default function AcceptInvitePage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password *
+                Confirm Password
               </label>
               <div className="relative">
                 <input
@@ -455,10 +428,13 @@ export default function AcceptInvitePage() {
               {state.isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Setting up account...
+                  Setting up your account...
                 </>
               ) : (
-                'Complete Setup'
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Complete Setup
+                </>
               )}
             </Button>
 
@@ -476,6 +452,29 @@ export default function AcceptInvitePage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading...</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AcceptInviteForm />
+    </Suspense>
   )
 }
 
