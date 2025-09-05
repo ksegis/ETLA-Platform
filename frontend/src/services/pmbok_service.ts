@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 
 // Enhanced WorkRequest interface with approval workflow fields
 export interface WorkRequest {
@@ -108,11 +108,8 @@ class PMBOKService {
   private isInitialized: boolean = false
 
   constructor() {
-    // Create Supabase client with environment variables
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || ''
-    )
+    // Use singleton Supabase client
+    this.supabase = supabase
     console.log('🔧 PMBOK Service: Created with default demo context')
   }
 
