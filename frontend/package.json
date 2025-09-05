@@ -9,20 +9,20 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.263.1",
     "next": "15.3.3",
+    "qrcode": "^1.5.4",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "lucide-react": "^0.263.1",
-    "clsx": "^2.0.0",
-    "tailwind-merge": "^2.0.0",
-    "@supabase/supabase-js": "^2.39.0",
-    "qrcode": "^1.5.3"
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "@types/qrcode": "^1.5.5",
     "autoprefixer": "^10.0.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "15.3.3",
@@ -31,4 +31,3 @@
     "typescript": "^5.0.0"
   }
 }
-
