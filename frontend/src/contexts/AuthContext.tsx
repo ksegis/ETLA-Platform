@@ -278,23 +278,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     console.log('🔐 AuthProvider: Signing out')
-    await supabase.auth.signOut()
-    
-    // Reset to demo state
-    setUser(null)
-    setSession(null)
-    setTenantUser({
-      id: 'demo-tenant-user-id',
-      tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-      user_id: 'demo-user-id',
-      role: 'client_admin',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
-    setLoading(false)
-    setIsStable(true)
-    updateServiceAuthContext()
+    try {
+      await supabase.auth.signOut()
+      
+      // Reset to demo state
+      setUser(null)
+      setSession(null)
+      setTenantUser({
+        id: 'demo-tenant-user-id',
+        tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
+        user_id: 'demo-user-id',
+        role: 'client_admin',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      setLoading(false)
+      setIsStable(true)
+      updateServiceAuthContext()
+      
+      // Redirect to login page
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+    } catch (error) {
+      console.error('❌ AuthProvider: Error during sign out:', error)
+      // Still redirect even if there's an error
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+    }
   }
 
   const refreshTenant = async () => {

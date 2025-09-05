@@ -567,6 +567,147 @@ export const userManagement = {
   }
 }
 
+export const mfaManagement = {
+  // Check if user has MFA enabled
+  checkMFAStatus: async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('mfa_enabled')
+        .eq('id', userId)
+        .single()
+
+      if (error) throw error
+      return { mfaEnabled: data?.mfa_enabled || false }
+    } catch (error: any) {
+      console.error('Error checking MFA status:', error)
+      return { mfaEnabled: false, error: error.message }
+    }
+  },
+
+  // Enable MFA for user
+  enableMFA: async () => {
+    try {
+      // Enroll for TOTP MFA
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: 'ETLA Platform TOTP'
+      })
+
+      if (error) throw error
+      return { success: true, data }
+    } catch (error: any) {
+      console.error('Error enabling MFA:', error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  // Verify MFA setup
+  verifyMFASetup: async (factorId: string, code: string) => {
+    try {
+      // Create challenge first
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId
+      })
+
+      if (challengeError) throw challengeError
+
+      // Verify the code
+      const { data, error } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId: challenge.id,
+        code
+      })
+
+      if (error) throw error
+
+      // Update user profile to indicate MFA is enabled
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            mfa_enabled: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+      }
+
+      return { success: true, data }
+    } catch (error: any) {
+      console.error('Error verifying MFA setup:', error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  // Disable MFA for user
+  disableMFA: async () => {
+    try {
+      // Get all factors
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors()
+      
+      if (factorsError) throw factorsError
+
+      // Unenroll all TOTP factors
+      if (factors?.totp) {
+        for (const factor of factors.totp) {
+          await supabase.auth.mfa.unenroll({ factorId: factor.id })
+        }
+      }
+
+      // Update user profile
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            mfa_enabled: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      console.error('Error disabling MFA:', error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  // Generate backup codes (simulated - in production this would be handled by your backend)
+  generateBackupCodes: async () => {
+    try {
+      // Generate 8 backup codes
+      const codes = Array.from({ length: 8 }, () => 
+        Math.random().toString(36).substring(2, 8).toUpperCase()
+      )
+
+      // In production, you would store these securely in your backend
+      // For now, we'll just return them
+      return { success: true, codes }
+    } catch (error: any) {
+      console.error('Error generating backup codes:', error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  // Verify backup code (simulated - in production this would verify against stored codes)
+  verifyBackupCode: async (code: string) => {
+    try {
+      // In production, you would verify this against stored backup codes
+      // For demo purposes, we'll accept any 6+ character code
+      if (code.length >= 6) {
+        return { success: true }
+      } else {
+        throw new Error('Invalid backup code')
+      }
+    } catch (error: any) {
+      console.error('Error verifying backup code:', error)
+      return { success: false, error: error.message }
+    }
+  }
+}
+
 // Add user management methods to the main supabase object for backward compatibility
 Object.assign(supabase, userManagement)
 
