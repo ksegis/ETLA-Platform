@@ -3,17 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from './AuthContext'
-
-export interface Tenant {
-  id: string
-  company_name: string
-  subdomain?: string
-  industry?: string
-  company_size?: string
-  status: 'active' | 'trial' | 'suspended' | 'cancelled'
-  subscription_plan: 'trial' | 'professional' | 'enterprise'
-  created_at: string
-}
+import { Tenant } from '@/types'
 
 interface TenantContextType {
   // Current selected tenant
@@ -50,13 +40,17 @@ export function TenantProvider({ children }: TenantProviderProps) {
   // Demo tenant for demo mode - will be replaced with real tenant data when authenticated
   const demoTenant: Tenant = {
     id: 'demo-tenant-id',
-    company_name: 'Demo Company',
-    subdomain: 'demo',
-    industry: 'Technology',
-    company_size: '50-100',
+    name: 'Demo Company',
+    domain: 'demo.company.com',
     status: 'active',
     subscription_plan: 'professional',
-    created_at: new Date().toISOString()
+    subscription_start_date: new Date().toISOString(),
+    max_users: 100,
+    current_users: 5,
+    settings: {},
+    tenant_id: 'demo-tenant-id',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 
   // Load available tenants for current user
@@ -95,14 +89,31 @@ export function TenantProvider({ children }: TenantProviderProps) {
         const { data, error } = await supabase
           .from('user_tenant_access')
           .select(`
-            tenant:tenants(*)
+            tenants (
+              id,
+              name,
+              domain,
+              status,
+              subscription_plan,
+              subscription_start_date,
+              subscription_end_date,
+              max_users,
+              current_users,
+              settings,
+              billing_email,
+              billing_address,
+              tenant_id,
+              created_at,
+              updated_at,
+              created_by
+            )
           `)
           .eq('user_id', user.id)
           .eq('is_active', true)
 
         if (error) throw error
         
-        const tenants = (data?.map(item => item.tenant).filter(Boolean) as Tenant[]) || []
+        const tenants = data?.map(item => item.tenants).filter(Boolean) || []
         setAvailableTenants(tenants)
         
         // Set user's primary tenant or first available
