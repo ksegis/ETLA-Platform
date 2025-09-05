@@ -17,6 +17,8 @@
   },
   "components/layout/DashboardLayout.tsx -> @/lib/supabase": {
     "id": "components/layout/DashboardLayout.tsx -> @/lib/supabase",
-    "files": []
+    "files": [
+      "static/chunks/_app-pages-browser_src_lib_supabase_ts.js"
+    ]
   }
 }
