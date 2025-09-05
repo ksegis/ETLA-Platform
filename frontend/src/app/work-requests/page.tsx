@@ -77,11 +77,11 @@ export default function WorkRequestsPage() {
   })
 
   const { user } = useAuth()
-  const { currentTenant } = useTenant()
+  const { selectedTenant } = useTenant()
 
   // Load work requests from database
   const loadWorkRequests = async () => {
-    if (!currentTenant?.id) {
+    if (!selectedTenant?.id) {
       setLoading(false)
       return
     }
@@ -97,7 +97,7 @@ export default function WorkRequestsPage() {
           *,
           customer:customers(first_name, last_name, email, company_name)
         `)
-        .eq('tenant_id', currentTenant.id)
+        .eq('tenant_id', selectedTenant.id)
         .order('created_at', { ascending: false })
 
       if (queryError) {
@@ -155,7 +155,7 @@ export default function WorkRequestsPage() {
   // Load data when tenant changes
   useEffect(() => {
     loadWorkRequests()
-  }, [currentTenant?.id])
+  }, [selectedTenant?.id])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
@@ -176,7 +176,7 @@ export default function WorkRequestsPage() {
     return 'Unknown Customer'
   }
 
-  if (!currentTenant) {
+  if (!selectedTenant) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
