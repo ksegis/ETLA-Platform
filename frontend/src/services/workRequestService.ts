@@ -178,8 +178,7 @@ class WorkRequestService {
       .eq('id', id)
       .select(`
         *,
-        customer:users!customer_id(first_name, last_name, email),
-        assigned:team_members!assigned_to(name)
+        customer:customers!customer_id(first_name, last_name, email, company_name)
       `)
       .single()
 
@@ -192,7 +191,7 @@ class WorkRequestService {
       ...data,
       customer_name: data.customer ? `${data.customer.first_name} ${data.customer.last_name}` : 'Unknown',
       customer_email: data.customer?.email || '',
-      assigned_name: data.assigned?.name || ''
+      assigned_name: '' // No team_members table, so empty for now
     }
   }
 
@@ -250,18 +249,9 @@ class WorkRequestService {
 
   // Get team members for assignment
   async getTeamMembers(tenantId: string): Promise<Array<{id: string, name: string, role: string}>> {
-    const { data, error } = await this.supabaseClient
-      .from('team_members')
-      .select('id, name, role')
-      .eq('is_active', true)
-      .order('name')
-
-    if (error) {
-      console.error('Error fetching team members:', error)
-      return []
-    }
-
-    return data || []
+    // team_members table doesn't exist yet, return empty array
+    console.log('getTeamMembers: team_members table not implemented yet')
+    return []
   }
 }
 
