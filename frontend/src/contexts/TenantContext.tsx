@@ -47,9 +47,9 @@ export function TenantProvider({ children }: TenantProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
-  // Demo tenant for demo mode
+  // Demo tenant for demo mode - using the real tenant ID with existing data
   const demoTenant: Tenant = {
-    id: 'demo-tenant-id',
+    id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
     company_name: 'Demo Company',
     subdomain: 'demo',
     industry: 'Technology',
@@ -159,7 +159,7 @@ export function useCurrentTenantId(): string | null {
   const { selectedTenant, isDemoMode } = useTenant()
   
   if (isDemoMode) {
-    return 'demo-tenant-id'
+    return '99883779-9517-4ca9-a3f8-7fdc59051f0e'
   }
   
   return selectedTenant?.id || null
