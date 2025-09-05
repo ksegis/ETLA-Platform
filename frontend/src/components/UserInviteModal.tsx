@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, Mail, Building, Shield, Send, Users } from 'lucide-react'
-import { userManagement, type UserInvitationData } from "@/lib/supabase"
+import { userManagement, supabase, type UserInvitationData } from "@/lib/supabase"
 
 interface UserInviteModalProps {
   isOpen: boolean
@@ -91,34 +91,50 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
         throw new Error('Please select a tenant')
       }
 
-      // Prepare invitation data
-      const invitationData: UserInvitationData = {
-        emails: validEmails,
-        role: formData.role,
-        role_level: formData.role_level,
-        tenant_id: formData.tenant_id,
-        message: formData.message || undefined,
-        expires_in_days: formData.expires_in_days
-      }
+      // Get current user info for invitation metadata
+      const { data: { user } } = await supabase.auth.getUser()
+      const currentUserName = user?.user_metadata?.full_name || user?.email || 'Admin'
+      
+      // Get tenant name for invitation
+      const { data: tenantData } = await supabase
+        .from('tenants')
+        .select('name')
+        .eq('id', formData.tenant_id)
+        .single()
 
-      const response = await userManagement.inviteUsers(invitationData)
-
-      if (response.success) {
-        onSuccess()
-        onClose()
-        // Reset form
-        setFormData({
-          emails: '',
-          role: 'user',
-          role_level: 'sub_client',
-          tenant_id: '',
-          message: '',
-          expires_in_days: 7
+      // Send invitations one by one using the new sendInvitation method
+      const results = []
+      for (const email of validEmails) {
+        const result = await userManagement.sendInvitation({
+          email: email,
+          tenant_id: formData.tenant_id,
+          role: formData.role,
+          role_level: formData.role_level,
+          invited_by_name: currentUserName,
+          tenant_name: tenantData?.name || 'ETLA Platform'
         })
-        setEmailCount(0)
-      } else {
-        setError(response.error || 'Failed to send invitations')
+        results.push({ email, ...result })
       }
+
+      // Check if all invitations were successful
+      const failedInvites = results.filter(r => !r.success)
+      if (failedInvites.length > 0) {
+        const failedEmails = failedInvites.map(f => f.email).join(', ')
+        throw new Error(`Failed to send invitations to: ${failedEmails}`)
+      }
+
+      onSuccess()
+      onClose()
+      // Reset form
+      setFormData({
+        emails: '',
+        role: 'user',
+        role_level: 'sub_client',
+        tenant_id: '',
+        message: '',
+        expires_in_days: 7
+      })
+      setEmailCount(0)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while sending invitations')
       console.error('Invitation error:', err)

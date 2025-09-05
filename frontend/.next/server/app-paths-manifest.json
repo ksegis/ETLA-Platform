@@ -1,5 +1,6 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/access-control/page-enhanced": "app/access-control/page-enhanced.js",
+  "/login/page": "app/login/page.js",
+  "/accept-invite/page": "app/accept-invite/page.js",
+  "/reset-password/page": "app/reset-password/page.js",
   "/access-control/page": "app/access-control/page.js"
 }

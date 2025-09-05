@@ -289,7 +289,226 @@ export const userManagement = {
     }
   },
 
-  // Invite users via email
+  // Send password reset email
+  sendPasswordReset: async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true, message: 'Password reset email sent successfully' }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to send password reset email' }
+    }
+  },
+
+  // Send user invitation
+  sendInvitation: async (invitationData: {
+    email: string
+    tenant_id: string
+    role: string
+    role_level: string
+    invited_by_name?: string
+    tenant_name?: string
+  }) => {
+    try {
+      // Create the user account with a temporary password
+      const tempPassword = Math.random().toString(36).slice(-12) + 'A1!'
+      
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: invitationData.email,
+        password: tempPassword,
+        email_confirm: false, // User must confirm via invite email
+        user_metadata: {
+          role: invitationData.role,
+          role_level: invitationData.role_level,
+          invited_by_name: invitationData.invited_by_name,
+          tenant_name: invitationData.tenant_name,
+          is_invited: true
+        }
+      })
+
+      if (authError) {
+        return { success: false, error: authError.message }
+      }
+
+      if (!authData.user) {
+        return { success: false, error: 'Failed to create user account' }
+      }
+
+      // Create profile record
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: invitationData.email,
+          role: invitationData.role,
+          role_level: invitationData.role_level,
+          tenant_id: invitationData.tenant_id,
+          is_active: false, // Will be activated when they accept invite
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (profileError) {
+        // Clean up auth user if profile creation fails
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        return { success: false, error: `Profile creation failed: ${profileError.message}` }
+      }
+
+      // Create tenant_users record
+      const { error: tenantUserError } = await supabase
+        .from('tenant_users')
+        .insert({
+          tenant_id: invitationData.tenant_id,
+          user_id: authData.user.id,
+          role: invitationData.role,
+          role_level: invitationData.role_level,
+          is_active: false, // Will be activated when they accept invite
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (tenantUserError) {
+        // Clean up auth user and profile if tenant_users creation fails
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        await supabase.from('profiles').delete().eq('id', authData.user.id)
+        return { success: false, error: `Tenant assignment failed: ${tenantUserError.message}` }
+      }
+
+      // Send invitation email
+      const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(invitationData.email, {
+        redirectTo: `${window.location.origin}/accept-invite`,
+        data: {
+          role: invitationData.role,
+          role_level: invitationData.role_level,
+          invited_by_name: invitationData.invited_by_name,
+          tenant_name: invitationData.tenant_name
+        }
+      })
+
+      if (inviteError) {
+        // Clean up created records if invite email fails
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        await supabase.from('profiles').delete().eq('id', authData.user.id)
+        await supabase.from('tenant_users').delete().eq('user_id', authData.user.id)
+        return { success: false, error: `Failed to send invitation: ${inviteError.message}` }
+      }
+
+      // Create invitation record for tracking (if table exists)
+      try {
+        await supabase
+          .from('user_invitations')
+          .insert({
+            email: invitationData.email,
+            tenant_id: invitationData.tenant_id,
+            invited_by: authData.user.id,
+            role: invitationData.role,
+            role_level: invitationData.role_level,
+            status: 'sent',
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+            created_at: new Date().toISOString()
+          })
+      } catch (inviteRecordError) {
+        // Invitation record is optional, don't fail the entire process
+        console.warn('Failed to create invitation record:', inviteRecordError)
+      }
+
+      return { success: true, data: authData.user, message: 'Invitation sent successfully' }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to send invitation' }
+    }
+  },
+
+  // Resend invitation
+  resendInvitation: async (email: string) => {
+    try {
+      const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${window.location.origin}/accept-invite`
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      // Update invitation record status (if table exists)
+      try {
+        await supabase
+          .from('user_invitations')
+          .update({
+            status: 'resent',
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', email)
+          .eq('status', 'sent')
+      } catch (updateError) {
+        // Invitation record update is optional
+        console.warn('Failed to update invitation record:', updateError)
+      }
+
+      return { success: true, message: 'Invitation resent successfully' }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to resend invitation' }
+    }
+  },
+
+  // Activate user account after invite acceptance
+  activateInvitedUser: async (userId: string) => {
+    try {
+      // Update profile to active
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (profileError) {
+        return { success: false, error: `Failed to activate profile: ${profileError.message}` }
+      }
+
+      // Update tenant_users to active
+      const { error: tenantUserError } = await supabase
+        .from('tenant_users')
+        .update({
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+
+      if (tenantUserError) {
+        return { success: false, error: `Failed to activate tenant assignment: ${tenantUserError.message}` }
+      }
+
+      // Update invitation record status (if table exists)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.email) {
+          await supabase
+            .from('user_invitations')
+            .update({
+              status: 'accepted',
+              accepted_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', user.email)
+            .in('status', ['sent', 'resent'])
+        }
+      } catch (updateError) {
+        // Invitation record update is optional
+        console.warn('Failed to update invitation record:', updateError)
+      }
+
+      return { success: true, message: 'User account activated successfully' }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to activate user account' }
+    }
+  },
   inviteUsers: async (invitationData: UserInvitationData) => {
     try {
       const invitations = []
