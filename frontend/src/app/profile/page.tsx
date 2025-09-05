@@ -579,7 +579,7 @@ export default function ProfilePage() {
                 />
                 <label htmlFor="avatar-upload">
                   <Button
-                    as="span"
+                    type="button"
                     variant="outline"
                     disabled={state.isUploadingAvatar}
                     className="cursor-pointer"
