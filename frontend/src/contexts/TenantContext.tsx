@@ -47,9 +47,9 @@ export function TenantProvider({ children }: TenantProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
-  // Demo tenant for demo mode - using the real tenant ID with existing data
+  // Demo tenant for demo mode - will be replaced with real tenant data when authenticated
   const demoTenant: Tenant = {
-    id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    id: 'demo-tenant-id',
     company_name: 'Demo Company',
     subdomain: 'demo',
     industry: 'Technology',
@@ -86,8 +86,8 @@ export function TenantProvider({ children }: TenantProviderProps) {
         if (error) throw error
         setAvailableTenants(data || [])
         
-        // Set demo tenant as default for host admin
-        const defaultTenant = data?.find(t => t.company_name === 'Demo Company') || data?.[0] || null
+        // Set first tenant as default for host admin
+        const defaultTenant = data?.[0] || null
         setSelectedTenant(defaultTenant)
       } 
       // For other roles, get tenants they have access to
@@ -159,7 +159,7 @@ export function useCurrentTenantId(): string | null {
   const { selectedTenant, isDemoMode } = useTenant()
   
   if (isDemoMode) {
-    return '99883779-9517-4ca9-a3f8-7fdc59051f0e'
+    return 'demo-tenant-id'
   }
   
   return selectedTenant?.id || null

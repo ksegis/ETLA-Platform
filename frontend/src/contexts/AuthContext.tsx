@@ -56,30 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isStable, setIsStable] = useState(false)
   
-  // Tenant state with demo fallback
-  const [tenant, setTenant] = useState<Tenant | null>({
-    id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-    name: 'Demo Company',
-    slug: 'demo-company',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
+  // Tenant state - will be managed by TenantContext
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   
-  // Tenant user state with demo fallback
-  const [tenantUser, setTenantUser] = useState<TenantUser | null>({
-    id: 'demo-tenant-user-id',
-    tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-    user_id: 'demo-user-id',
-    role: 'client_admin', // Default to client_admin for demo
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
+  // Tenant user state - will be loaded dynamically based on authentication
+  const [tenantUser, setTenantUser] = useState<TenantUser | null>(null)
 
   // Computed properties for RBAC
   const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
                      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
+                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')
   const isAuthenticated = !!user || !!session || isDemoMode
   const currentUserId = user?.id || tenantUser?.user_id || null
   const currentTenantId = tenant?.id || null
@@ -159,9 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Set demo tenant user
           setTenantUser({
             id: 'demo-tenant-user-id',
-            tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
+            tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
             user_id: 'demo-user-id',
-            role: 'client_admin',
+            role: 'host_admin', // Give demo user admin access to see all tenants
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -232,9 +219,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Set demo tenant user
           setTenantUser({
             id: 'demo-tenant-user-id',
-            tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
+            tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
             user_id: 'demo-user-id',
-            role: 'client_admin',
+            role: 'host_admin', // Give demo user admin access to see all tenants
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -288,9 +275,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null)
       setTenantUser({
         id: 'demo-tenant-user-id',
-        tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
+        tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
         user_id: 'demo-user-id',
-        role: 'client_admin',
+        role: 'host_admin', // Give demo user admin access
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
