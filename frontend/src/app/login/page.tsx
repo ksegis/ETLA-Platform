@@ -451,50 +451,76 @@ function LoginForm() {
           )}
         </Card>
 
-        {/* Test Credentials - Only show on login tab */}
+        {/* Demo Accounts - Only show on login tab */}
         {state.activeTab === 'login' && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Test Credentials</CardTitle>
+              <CardTitle className="text-sm">Demo Accounts</CardTitle>
               <CardDescription>
-                Click to fill in test user credentials
+                Use these demo accounts to explore different user roles and permissions
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="space-y-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => fillTestCredentials('kevin.shelton@outlook.com', 'TestPassword123!')}
+                  onClick={() => fillTestCredentials('demo.hostadmin@democompany.com', 'demo123')}
                   disabled={state.isLoading || state.isGoogleLoading}
+                  className="w-full justify-start text-left"
                 >
-                  Host Admin
+                  <div className="flex flex-col items-start">
+                    <div className="font-medium">Host Admin</div>
+                    <div className="text-xs text-gray-500">demo.hostadmin@democompany.com</div>
+                    <div className="text-xs text-blue-600">Full system access, can manage all tenants</div>
+                  </div>
                 </Button>
+                
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => fillTestCredentials('kt.shelton@outlook.com', 'TestPassword123!')}
+                  onClick={() => fillTestCredentials('demo.hostmanager@democompany.com', 'demo123')}
                   disabled={state.isLoading || state.isGoogleLoading}
+                  className="w-full justify-start text-left"
                 >
-                  Host Manager
+                  <div className="flex flex-col items-start">
+                    <div className="font-medium">Host Manager</div>
+                    <div className="text-xs text-gray-500">demo.hostmanager@democompany.com</div>
+                    <div className="text-xs text-blue-600">Host-level management access, can oversee operations</div>
+                  </div>
                 </Button>
+                
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => fillTestCredentials('ke.shelton@outlook.com', 'TestPassword123!')}
+                  onClick={() => fillTestCredentials('demo.clientadmin@democompany.com', 'demo123')}
                   disabled={state.isLoading || state.isGoogleLoading}
+                  className="w-full justify-start text-left"
                 >
-                  Primary Client Admin
+                  <div className="flex flex-col items-start">
+                    <div className="font-medium">Primary Client Admin</div>
+                    <div className="text-xs text-gray-500">demo.clientadmin@democompany.com</div>
+                    <div className="text-xs text-blue-600">Primary client admin access, can manage tenant users</div>
+                  </div>
                 </Button>
+                
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => fillTestCredentials('kevin.shelton@invictusbpo.com', 'TestPassword123!')}
+                  onClick={() => fillTestCredentials('demo.subclientuser@democompany.com', 'demo123')}
                   disabled={state.isLoading || state.isGoogleLoading}
+                  className="w-full justify-start text-left"
                 >
-                  Sub Client User
+                  <div className="flex flex-col items-start">
+                    <div className="font-medium">Sub Client User</div>
+                    <div className="text-xs text-gray-500">demo.subclientuser@democompany.com</div>
+                    <div className="text-xs text-blue-600">Limited access, can view own data and submit requests</div>
+                  </div>
                 </Button>
               </div>
+              <p className="text-xs text-gray-600 mt-3 text-center">
+                All demo accounts use password: <code className="bg-gray-100 px-1 rounded">demo123</code>
+              </p>
             </CardContent>
           </Card>
         )}

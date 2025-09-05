@@ -140,6 +140,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       textColor: 'text-orange-900',
       items: [
         { name: 'Access Control', href: '/access-control', icon: Shield },
+        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
         { name: 'Employee Directory', href: '/employee-directory', icon: Users },
         { name: 'Benefits Management', href: '/benefits', icon: Building },
         { name: 'Payroll Management', href: '/payroll', icon: DollarSign }
