@@ -39,12 +39,21 @@ interface WorkRequestModalProps {
 }
 
 function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string
+    description: string
+    category: string
+    priority: 'low' | 'medium' | 'high' | 'critical'
+    urgency: 'low' | 'medium' | 'high' | 'urgent'
+    estimated_hours: string
+    budget: string
+    required_completion_date: string
+  }>({
     title: '',
     description: '',
     category: '',
-    priority: 'medium' as const,
-    urgency: 'medium' as const,
+    priority: 'medium',
+    urgency: 'medium',
     estimated_hours: '',
     budget: '',
     required_completion_date: ''
