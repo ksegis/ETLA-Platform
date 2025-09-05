@@ -31,7 +31,9 @@ import {
   Users2,
   Clock,
   Target,
-  Zap
+  Zap,
+  Key,
+  User
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -60,6 +62,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['migration-workbench', 'operations'])
   const router = useRouter()
@@ -177,6 +180,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
 
     setupAuthListener()
+
+    // Close profile dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (!target.closest('.profile-dropdown')) {
+        setProfileDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const handleSignOut = async () => {
@@ -371,15 +385,82 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Bell className="h-6 w-6" />
               </button>
               <div className="h-6 w-px bg-gray-300" />
-              <div className="flex items-center space-x-2">
-                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-gray-900">
-                  {user?.email || 'demo@company.com'}
-                </span>
+              
+              {/* User Profile Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 hover:border-gray-300"
+                >
+                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs text-gray-500 uppercase tracking-wide">Profile</span>
+                    <span className="text-sm font-medium text-gray-900 truncate max-w-32">
+                      {user?.email || 'demo@company.com'}
+                    </span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-gray-400 ml-2" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 profile-dropdown">
+                    <div className="py-1">
+                      {/* User Info Header */}
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {user?.email || 'demo@company.com'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {user?.user_metadata?.full_name || 'User Account'}
+                        </p>
+                      </div>
+                      
+                      {/* Profile Options */}
+                      <a
+                        href="/profile"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-3 text-gray-400" />
+                        Profile Settings
+                      </a>
+                      
+                      <a
+                        href="/profile#security"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        <Shield className="h-4 w-4 mr-3 text-gray-400" />
+                        Security & MFA
+                      </a>
+                      
+                      <a
+                        href="/reset-password"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        <Key className="h-4 w-4 mr-3 text-gray-400" />
+                        Change Password
+                      </a>
+                      
+                      <div className="border-t border-gray-100 my-1"></div>
+                      
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false)
+                          handleSignOut()
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4 mr-3" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
