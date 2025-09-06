@@ -45,25 +45,19 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import { supabase } from '@/lib/supabase'
 
-// Database-aligned interfaces based on discovered table structure
+// Schema-compatible interfaces that work with existing database structure
 interface ProjectCharter {
   id: string
-  // Try multiple possible field names for title
-  name?: string
-  title?: string
-  project_name?: string
-  project_title?: string
+  name?: string // Use 'name' if 'title' doesn't exist
+  title?: string // Keep title as optional
   description?: string
   status?: string
   priority?: string
   start_date?: string
   end_date?: string
   budget?: number
-  // Try multiple possible field names for team lead
   assigned_team_lead?: string
-  team_lead?: string
-  project_manager?: string
-  manager?: string
+  team_lead?: string // Alternative field name
   tenant_id: string
   created_at: string
   updated_at: string
@@ -88,10 +82,8 @@ interface ProjectCharter {
 
 interface WorkRequest {
   id: string
-  // Try multiple possible field names
-  name?: string
+  name?: string // Use 'name' if 'title' doesn't exist
   title?: string
-  request_title?: string
   description?: string
   status?: string
   priority?: string
@@ -111,18 +103,13 @@ interface WorkRequest {
 
 interface Risk {
   id: string
-  // Try multiple possible field names for risk title
-  name?: string
-  title?: string
+  name?: string // Use 'name' if 'risk_title' doesn't exist
   risk_title?: string
-  risk_name?: string
-  description?: string
+  title?: string
   risk_description?: string
-  // Try multiple possible field names for risk level
+  description?: string
   risk_level?: string
   level?: string
-  severity?: string
-  priority?: string
   status?: string
   project_id?: string
   tenant_id: string
@@ -141,7 +128,7 @@ interface ProjectFilters {
   dateRange: string
 }
 
-export default function DatabaseAlignedProjectManagementPage() {
+export default function EnhancedProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectCharter[]>([])
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [risks, setRisks] = useState<Risk[]>([])
@@ -152,6 +139,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState<ProjectCharter | null>(null)
   const [activeTab, setActiveTab] = useState<'projects' | 'work-requests' | 'risks' | 'charter' | 'wbs' | 'schedule' | 'evm' | 'stakeholders' | 'compliance'>('projects')
+  const [availableTables, setAvailableTables] = useState<string[]>([])
 
   // Enhanced filters
   const [filters, setFilters] = useState<ProjectFilters>({
@@ -164,8 +152,8 @@ export default function DatabaseAlignedProjectManagementPage() {
 
   // New project form state
   const [newProject, setNewProject] = useState<Partial<ProjectCharter>>({
-    name: '',
     title: '',
+    name: '',
     description: '',
     status: 'planning',
     priority: 'medium',
@@ -173,6 +161,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     end_date: '',
     budget: 0,
     assigned_team_lead: '',
+    team_lead: '',
     project_scope: '',
     success_criteria: '',
     stakeholders: [],
@@ -193,32 +182,47 @@ export default function DatabaseAlignedProjectManagementPage() {
   const { user } = useAuth()
   const { selectedTenant } = useTenant()
 
-  // Helper function to get display title from project (try multiple field names)
+  // Helper function to get display title from project
   const getProjectTitle = (project: ProjectCharter): string => {
-    return project.title || project.name || project.project_name || project.project_title || 'Untitled Project'
+    return project.title || project.name || 'Untitled Project'
   }
 
   // Helper function to get display name from work request
   const getWorkRequestTitle = (workRequest: WorkRequest): string => {
-    return workRequest.title || workRequest.name || workRequest.request_title || 'Untitled Request'
+    return workRequest.title || workRequest.name || 'Untitled Request'
   }
 
   // Helper function to get display name from risk
   const getRiskTitle = (risk: Risk): string => {
-    return risk.risk_title || risk.title || risk.name || risk.risk_name || 'Untitled Risk'
+    return risk.risk_title || risk.title || risk.name || 'Untitled Risk'
   }
 
-  // Helper function to get team lead (try multiple field names)
+  // Helper function to get team lead
   const getTeamLead = (project: ProjectCharter): string => {
-    return project.assigned_team_lead || project.team_lead || project.project_manager || project.manager || ''
+    return project.assigned_team_lead || project.team_lead || ''
   }
 
-  // Helper function to get risk level (try multiple field names)
-  const getRiskLevel = (risk: Risk): string => {
-    return risk.risk_level || risk.level || risk.severity || risk.priority || 'medium'
+  // Check available tables in database
+  const checkAvailableTables = async () => {
+    try {
+      // Try to query information_schema to see what tables exist
+      const { data, error } = await supabase
+        .from('information_schema.tables')
+        .select('table_name')
+        .eq('table_schema', 'public')
+        .eq('table_type', 'BASE TABLE')
+
+      if (!error && data) {
+        const tableNames = data.map(row => row.table_name)
+        setAvailableTables(tableNames)
+        console.log('Available tables:', tableNames)
+      }
+    } catch (err) {
+      console.log('Could not check available tables, will try direct queries')
+    }
   }
 
-  // Enhanced load data function with database-aligned queries
+  // Enhanced load data function with schema compatibility
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
@@ -232,75 +236,98 @@ export default function DatabaseAlignedProjectManagementPage() {
       
       console.log('Loading project data for tenant:', selectedTenant.id, selectedTenant.name)
 
-      // Load projects from project_charters table
-      try {
-        console.log('Loading from project_charters table...')
-        const { data: projectData, error: projectError } = await supabase
-          .from('project_charters')
-          .select('*')
-          .eq('tenant_id', selectedTenant.id)
-          .order('created_at', { ascending: false })
+      // Check available tables first
+      await checkAvailableTables()
 
-        if (projectError) {
-          console.error('Project charters query error:', projectError)
-          setError(`Failed to load projects: ${projectError.message}`)
-        } else {
-          console.log('Successfully loaded projects from project_charters:', projectData?.length || 0)
-          setProjects(projectData || [])
+      // Try multiple table names for projects
+      const projectTableNames = ['project_charters', 'projects', 'project_charter']
+      let projectData: any[] = []
+      
+      for (const tableName of projectTableNames) {
+        try {
+          console.log(`Trying to load from table: ${tableName}`)
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('tenant_id', selectedTenant.id)
+            .order('created_at', { ascending: false })
+
+          if (!error && data) {
+            console.log(`Successfully loaded ${data.length} projects from ${tableName}`)
+            projectData = data
+            break
+          } else if (error) {
+            console.log(`Table ${tableName} query failed:`, error.message)
+          }
+        } catch (err) {
+          console.log(`Error querying ${tableName}:`, err)
         }
-      } catch (projectErr) {
-        console.error('Error loading projects:', projectErr)
-        setProjects([])
-        setError('Failed to load projects. Please check database connection.')
       }
+      
+      setProjects(projectData || [])
 
-      // Load work requests
-      try {
-        console.log('Loading from work_requests table...')
-        const { data: workRequestData, error: workRequestError } = await supabase
-          .from('work_requests')
-          .select('*')
-          .eq('tenant_id', selectedTenant.id)
-          .order('created_at', { ascending: false })
+      // Try multiple table names for work requests
+      const workRequestTableNames = ['work_requests', 'workrequests', 'requests']
+      let workRequestData: any[] = []
+      
+      for (const tableName of workRequestTableNames) {
+        try {
+          console.log(`Trying to load from table: ${tableName}`)
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('tenant_id', selectedTenant.id)
+            .order('created_at', { ascending: false })
 
-        if (workRequestError) {
-          console.error('Work requests query error:', workRequestError)
-          console.log('Work requests table may not be accessible, continuing without work requests')
-          setWorkRequests([])
-        } else {
-          console.log('Successfully loaded work requests:', workRequestData?.length || 0)
-          setWorkRequests(workRequestData || [])
+          if (!error && data) {
+            console.log(`Successfully loaded ${data.length} work requests from ${tableName}`)
+            workRequestData = data
+            break
+          } else if (error) {
+            console.log(`Table ${tableName} query failed:`, error.message)
+          }
+        } catch (err) {
+          console.log(`Error querying ${tableName}:`, err)
         }
-      } catch (workRequestErr) {
-        console.error('Error loading work requests:', workRequestErr)
-        setWorkRequests([])
       }
+      
+      setWorkRequests(workRequestData || [])
 
-      // Load risks from risk_register table
-      try {
-        console.log('Loading from risk_register table...')
-        const { data: riskData, error: riskError } = await supabase
-          .from('risk_register')
-          .select('*')
-          .eq('tenant_id', selectedTenant.id)
-          .order('created_at', { ascending: false })
+      // Try multiple table names for risks
+      const riskTableNames = ['risks', 'risk', 'project_risks']
+      let riskData: any[] = []
+      
+      for (const tableName of riskTableNames) {
+        try {
+          console.log(`Trying to load from table: ${tableName}`)
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('tenant_id', selectedTenant.id)
+            .order('created_at', { ascending: false })
 
-        if (riskError) {
-          console.error('Risk register query error:', riskError)
-          console.log('Risk register table may not be accessible, continuing without risks')
-          setRisks([])
-        } else {
-          console.log('Successfully loaded risks from risk_register:', riskData?.length || 0)
-          setRisks(riskData || [])
+          if (!error && data) {
+            console.log(`Successfully loaded ${data.length} risks from ${tableName}`)
+            riskData = data
+            break
+          } else if (error) {
+            console.log(`Table ${tableName} query failed:`, error.message)
+          }
+        } catch (err) {
+          console.log(`Error querying ${tableName}:`, err)
         }
-      } catch (riskErr) {
-        console.error('Error loading risks:', riskErr)
-        setRisks([])
+      }
+      
+      setRisks(riskData || [])
+
+      // Show informational message about available data
+      if (projectData.length === 0 && workRequestData.length === 0 && riskData.length === 0) {
+        setError('No project management tables found or they contain no data. You may need to set up the database schema.')
       }
 
     } catch (err) {
       console.error('Unexpected error loading data:', err)
-      setError('Failed to load project management data. Please check your database connection.')
+      setError('Failed to load project management data. The database schema may need to be set up.')
     } finally {
       setLoading(false)
     }
@@ -322,11 +349,11 @@ export default function DatabaseAlignedProjectManagementPage() {
     approvedWorkRequests: workRequests.filter(wr => wr.status === 'approved').length,
     totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
     totalRisks: risks.length,
-    highRisks: risks.filter(r => getRiskLevel(r) === 'high').length,
+    highRisks: risks.filter(r => (r.risk_level || r.level) === 'high').length,
     mitigatedRisks: risks.filter(r => r.status === 'resolved').length
   }
 
-  // Filter projects with database compatibility
+  // Filter projects with schema compatibility
   const filteredProjects = projects.filter(project => {
     const title = getProjectTitle(project)
     const description = project.description || ''
@@ -344,7 +371,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     return matchesSearch && matchesStatus && matchesPriority && matchesTeamLead
   })
 
-  // Filter work requests with database compatibility
+  // Filter work requests with schema compatibility
   const filteredWorkRequests = workRequests.filter(wr => {
     const title = getWorkRequestTitle(wr)
     const description = wr.description || ''
@@ -359,7 +386,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     return matchesSearch && matchesStatus && matchesPriority
   })
 
-  // Filter risks with database compatibility
+  // Filter risks with schema compatibility
   const filteredRisks = risks.filter(risk => {
     const title = getRiskTitle(risk)
     const description = risk.risk_description || risk.description || ''
@@ -367,7 +394,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
                          description.toLowerCase().includes(filters.searchTerm.toLowerCase())
     const matchesStatus = filters.status === 'all' || risk.status === filters.status
-    const matchesPriority = filters.priority === 'all' || getRiskLevel(risk) === filters.priority
+    const matchesPriority = filters.priority === 'all' || (risk.risk_level || risk.level) === filters.priority
     
     return matchesSearch && matchesStatus && matchesPriority
   })
@@ -432,7 +459,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     }
   }
 
-  // Database-aligned create project function
+  // Schema-compatible create project function
   const handleCreateProject = async () => {
     if (!selectedTenant?.id || (!newProject.title && !newProject.name)) {
       setError('Please provide a project title and ensure a tenant is selected.')
@@ -442,66 +469,43 @@ export default function DatabaseAlignedProjectManagementPage() {
     try {
       setError(null)
       
-      // Prepare data with multiple field variations for maximum compatibility
+      // Prepare data with both title and name fields for compatibility
       const projectData = {
-        // Include both title and name fields
+        ...newProject,
         title: newProject.title || newProject.name,
         name: newProject.name || newProject.title,
-        project_name: newProject.name || newProject.title,
-        project_title: newProject.title || newProject.name,
-        
-        description: newProject.description,
-        status: newProject.status,
-        priority: newProject.priority,
-        start_date: newProject.start_date,
-        end_date: newProject.end_date,
-        budget: newProject.budget,
-        
-        // Include multiple team lead field variations
-        assigned_team_lead: newProject.assigned_team_lead,
-        team_lead: newProject.assigned_team_lead,
-        project_manager: newProject.assigned_team_lead,
-        manager: newProject.assigned_team_lead,
-        
         tenant_id: selectedTenant.id,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        
-        // PMBOK fields
-        project_scope: newProject.project_scope,
-        success_criteria: newProject.success_criteria,
-        stakeholders: newProject.stakeholders,
-        risk_assessment: newProject.risk_assessment,
-        quality_metrics: newProject.quality_metrics,
-        communication_plan: newProject.communication_plan,
-        resource_requirements: newProject.resource_requirements,
-        milestone_schedule: newProject.milestone_schedule,
-        deliverables: newProject.deliverables,
-        constraints: newProject.constraints,
-        assumptions: newProject.assumptions,
-        work_request_id: newProject.work_request_id,
-        project_code: newProject.project_code,
-        business_case: newProject.business_case,
-        charter_status: newProject.charter_status
+        updated_at: new Date().toISOString()
       }
 
-      console.log('Creating project with data:', projectData)
+      // Try different table names
+      const projectTableNames = ['project_charters', 'projects', 'project_charter']
+      let success = false
+      
+      for (const tableName of projectTableNames) {
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .insert([projectData])
+            .select()
 
-      const { data, error } = await supabase
-        .from('project_charters')
-        .insert([projectData])
-        .select()
-
-      if (error) {
-        console.error('Error creating project:', error)
-        setError(`Failed to create project: ${error.message}`)
-        return
+          if (!error && data) {
+            console.log(`Project created in ${tableName}:`, data)
+            setProjects(prev => [data[0], ...prev])
+            setShowCreateModal(false)
+            resetNewProject()
+            success = true
+            break
+          }
+        } catch (err) {
+          console.log(`Failed to create in ${tableName}:`, err)
+        }
       }
-
-      console.log('Project created successfully:', data)
-      setProjects(prev => [data[0], ...prev])
-      setShowCreateModal(false)
-      resetNewProject()
+      
+      if (!success) {
+        setError('Could not create project. The database tables may not be set up correctly.')
+      }
     } catch (err) {
       console.error('Unexpected error creating project:', err)
       setError('Failed to create project due to an unexpected error.')
@@ -511,8 +515,8 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Reset new project form
   const resetNewProject = () => {
     setNewProject({
-      name: '',
       title: '',
+      name: '',
       description: '',
       status: 'planning',
       priority: 'medium',
@@ -520,6 +524,7 @@ export default function DatabaseAlignedProjectManagementPage() {
       end_date: '',
       budget: 0,
       assigned_team_lead: '',
+      team_lead: '',
       project_scope: '',
       success_criteria: '',
       stakeholders: [],
@@ -538,7 +543,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     })
   }
 
-  // Database-aligned update project function
+  // Schema-compatible update project function
   const handleUpdateProject = async () => {
     if (!selectedProject?.id) {
       setError('No project selected for update.')
@@ -548,97 +553,87 @@ export default function DatabaseAlignedProjectManagementPage() {
     try {
       setError(null)
       
-      // Prepare update data with multiple field variations
+      // Prepare data with both title and name fields for compatibility
       const updateData = {
-        // Include both title and name fields
+        ...selectedProject,
         title: selectedProject.title || selectedProject.name,
         name: selectedProject.name || selectedProject.title,
-        project_name: selectedProject.name || selectedProject.title,
-        project_title: selectedProject.title || selectedProject.name,
-        
-        description: selectedProject.description,
-        status: selectedProject.status,
-        priority: selectedProject.priority,
-        start_date: selectedProject.start_date,
-        end_date: selectedProject.end_date,
-        budget: selectedProject.budget,
-        
-        // Include multiple team lead field variations
-        assigned_team_lead: selectedProject.assigned_team_lead,
-        team_lead: selectedProject.assigned_team_lead,
-        project_manager: selectedProject.assigned_team_lead,
-        manager: selectedProject.assigned_team_lead,
-        
-        updated_at: new Date().toISOString(),
-        
-        // PMBOK fields
-        project_scope: selectedProject.project_scope,
-        success_criteria: selectedProject.success_criteria,
-        stakeholders: selectedProject.stakeholders,
-        risk_assessment: selectedProject.risk_assessment,
-        quality_metrics: selectedProject.quality_metrics,
-        communication_plan: selectedProject.communication_plan,
-        resource_requirements: selectedProject.resource_requirements,
-        milestone_schedule: selectedProject.milestone_schedule,
-        deliverables: selectedProject.deliverables,
-        constraints: selectedProject.constraints,
-        assumptions: selectedProject.assumptions,
-        work_request_id: selectedProject.work_request_id,
-        project_code: selectedProject.project_code,
-        business_case: selectedProject.business_case,
-        charter_status: selectedProject.charter_status
+        updated_at: new Date().toISOString()
       }
 
-      console.log('Updating project with data:', updateData)
+      // Try different table names
+      const projectTableNames = ['project_charters', 'projects', 'project_charter']
+      let success = false
+      
+      for (const tableName of projectTableNames) {
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .update(updateData)
+            .eq('id', selectedProject.id)
+            .select()
 
-      const { data, error } = await supabase
-        .from('project_charters')
-        .update(updateData)
-        .eq('id', selectedProject.id)
-        .select()
-
-      if (error) {
-        console.error('Error updating project:', error)
-        setError(`Failed to update project: ${error.message}`)
-        return
+          if (!error && data) {
+            console.log(`Project updated in ${tableName}:`, data)
+            setProjects(prev => prev.map(p => p.id === selectedProject.id ? data[0] : p))
+            setShowEditModal(false)
+            setSelectedProject(null)
+            success = true
+            break
+          }
+        } catch (err) {
+          console.log(`Failed to update in ${tableName}:`, err)
+        }
       }
-
-      console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map(p => p.id === selectedProject.id ? data[0] : p))
-      setShowEditModal(false)
-      setSelectedProject(null)
+      
+      if (!success) {
+        setError('Could not update project. The database tables may not be set up correctly.')
+      }
     } catch (err) {
       console.error('Unexpected error updating project:', err)
       setError('Failed to update project due to an unexpected error.')
     }
   }
 
-  // Database-aligned delete project function
+  // Schema-compatible delete project function
   const handleDeleteProject = async (projectId: string) => {
     if (!confirm('Are you sure you want to delete this project?')) return
 
     try {
       setError(null)
       
-      const { error } = await supabase
-        .from('project_charters')
-        .delete()
-        .eq('id', projectId)
+      // Try different table names
+      const projectTableNames = ['project_charters', 'projects', 'project_charter']
+      let success = false
+      
+      for (const tableName of projectTableNames) {
+        try {
+          const { error } = await supabase
+            .from(tableName)
+            .delete()
+            .eq('id', projectId)
 
-      if (error) {
-        console.error('Error deleting project:', error)
-        setError(`Failed to delete project: ${error.message}`)
-        return
+          if (!error) {
+            console.log(`Project deleted from ${tableName}`)
+            setProjects(prev => prev.filter(p => p.id !== projectId))
+            success = true
+            break
+          }
+        } catch (err) {
+          console.log(`Failed to delete from ${tableName}:`, err)
+        }
       }
-
-      setProjects(prev => prev.filter(p => p.id !== projectId))
+      
+      if (!success) {
+        setError('Could not delete project. The database tables may not be set up correctly.')
+      }
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')
     }
   }
 
-  // Create project from work request with database alignment
+  // Create project from work request
   const createProjectFromWorkRequest = (workRequest: WorkRequest) => {
     const title = getWorkRequestTitle(workRequest)
     setNewProject({
@@ -651,6 +646,7 @@ export default function DatabaseAlignedProjectManagementPage() {
       end_date: workRequest.requested_completion_date || '',
       budget: workRequest.estimated_budget || 0,
       assigned_team_lead: '',
+      team_lead: '',
       project_scope: workRequest.description,
       success_criteria: '',
       stakeholders: [workRequest.requestor_name || workRequest.customer_name || ''],
@@ -670,28 +666,41 @@ export default function DatabaseAlignedProjectManagementPage() {
     setShowCreateModal(true)
   }
 
-  // Database-aligned work request action
+  // Schema-compatible work request action
   const handleWorkRequestAction = async (workRequestId: string, action: 'approve' | 'decline', comments?: string) => {
     try {
       setError(null)
       const newStatus = action === 'approve' ? 'approved' : 'declined'
       
-      const { data, error } = await supabase
-        .from('work_requests')
-        .update({
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', workRequestId)
-        .select()
+      // Try different table names
+      const workRequestTableNames = ['work_requests', 'workrequests', 'requests']
+      let success = false
+      
+      for (const tableName of workRequestTableNames) {
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .update({
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', workRequestId)
+            .select()
 
-      if (error) {
-        console.error('Error updating work request:', error)
-        setError(`Failed to ${action} work request: ${error.message}`)
-        return
+          if (!error && data) {
+            console.log(`Work request updated in ${tableName}:`, data)
+            setWorkRequests(prev => prev.map(wr => wr.id === workRequestId ? data[0] : wr))
+            success = true
+            break
+          }
+        } catch (err) {
+          console.log(`Failed to update work request in ${tableName}:`, err)
+        }
       }
-
-      setWorkRequests(prev => prev.map(wr => wr.id === workRequestId ? data[0] : wr))
+      
+      if (!success) {
+        setError(`Could not ${action} work request. The database tables may not be set up correctly.`)
+      }
     } catch (err) {
       console.error(`Unexpected error ${action}ing work request:`, err)
       setError(`Failed to ${action} work request due to an unexpected error.`)
@@ -720,7 +729,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     </div>
   )
 
-  // Render project list view with database compatibility
+  // Render project list view with schema compatibility
   const renderProjectListView = () => (
     <div className="space-y-4">
       {filteredProjects.map((project) => (
@@ -793,7 +802,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     </div>
   )
 
-  // Render project grid view with database compatibility
+  // Render project grid view with schema compatibility
   const renderProjectGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredProjects.map((project) => (
@@ -858,7 +867,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     </div>
   )
 
-  // Render work requests with database compatibility
+  // Render work requests with schema compatibility
   const renderWorkRequests = () => (
     <div className="space-y-4">
       {filteredWorkRequests.map((workRequest) => (
@@ -946,7 +955,7 @@ export default function DatabaseAlignedProjectManagementPage() {
     </div>
   )
 
-  // Render risks with database compatibility
+  // Render risks with schema compatibility
   const renderRisks = () => (
     <div className="space-y-4">
       {filteredRisks.map((risk) => (
@@ -958,8 +967,8 @@ export default function DatabaseAlignedProjectManagementPage() {
                 <Badge className={getStatusColor(risk.status)}>
                   {risk.status || 'Unknown'}
                 </Badge>
-                <Badge className={getPriorityColor(getRiskLevel(risk))}>
-                  {getRiskLevel(risk)} Risk
+                <Badge className={getPriorityColor(risk.risk_level || risk.level)}>
+                  {(risk.risk_level || risk.level || 'Unknown')} Risk
                 </Badge>
               </div>
               <p className="text-gray-600 mb-3">{risk.risk_description || risk.description || 'No description'}</p>
@@ -1052,10 +1061,10 @@ export default function DatabaseAlignedProjectManagementPage() {
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-red-700">{error}</p>
+              <AlertCircle className="h-5 w-5 text-yellow-500 mr-2" />
+              <p className="text-yellow-700">{error}</p>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -1064,6 +1073,20 @@ export default function DatabaseAlignedProjectManagementPage() {
               >
                 <X className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Database Schema Info */}
+        {availableTables.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <Building className="h-5 w-5 text-blue-500 mr-2" />
+              <p className="text-blue-700">
+                Available database tables: {availableTables.filter(t => 
+                  t.includes('project') || t.includes('work') || t.includes('risk')
+                ).join(', ') || 'None found'}
+              </p>
             </div>
           </div>
         )}
@@ -1295,7 +1318,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                   <p className="text-gray-600 mb-2">No projects found</p>
                   <p className="text-sm text-gray-500">
                     {projects.length === 0 
-                      ? 'Create your first project to get started.' 
+                      ? 'Create your first project to get started or set up the database schema.' 
                       : 'Try adjusting your search or filter criteria.'
                     }
                   </p>
@@ -1317,7 +1340,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                   <p className="text-gray-600 mb-2">No work requests found</p>
                   <p className="text-sm text-gray-500">
                     {workRequests.length === 0 
-                      ? 'No work requests exist yet.' 
+                      ? 'No work requests exist yet or the database schema needs to be set up.' 
                       : 'Try adjusting your search or filter criteria.'
                     }
                   </p>
@@ -1332,7 +1355,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                   <p className="text-gray-600 mb-2">No risks found</p>
                   <p className="text-sm text-gray-500">
                     {risks.length === 0 
-                      ? 'No risks identified yet.' 
+                      ? 'No risks identified yet or the database schema needs to be set up.' 
                       : 'Try adjusting your search or filter criteria.'
                     }
                   </p>
@@ -1490,7 +1513,11 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <Input
                           value={newProject.assigned_team_lead || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
+                          onChange={(e) => setNewProject(prev => ({ 
+                            ...prev, 
+                            assigned_team_lead: e.target.value,
+                            team_lead: e.target.value // Keep both fields in sync
+                          }))}
                           placeholder="Enter team lead name"
                         />
                       </div>
@@ -1786,7 +1813,11 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <Input
                           value={getTeamLead(selectedProject)}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, assigned_team_lead: e.target.value }) : null)}
+                          onChange={(e) => setSelectedProject(prev => prev ? ({ 
+                            ...prev, 
+                            assigned_team_lead: e.target.value,
+                            team_lead: e.target.value
+                          }) : null)}
                           placeholder="Enter team lead name"
                         />
                       </div>
