@@ -88,7 +88,7 @@ const HRPayrollReporting = () => {
     setEmployeeData(data || []);
   };
 
-  // Checks data loading (pay statements)
+  // Checks data loading (pay statements) - Fixed to work with actual table structure
   const loadChecksData = async () => {
     if (!selectedTenant?.id) return;
     
