@@ -9,6 +9,7 @@ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboar
 import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
+import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3 } from 'lucide-react';
 
 // Enhanced interfaces for the new database schema
 interface EnhancedEmployee {
@@ -265,6 +266,7 @@ const EnhancedReportingPage: React.FC = () => {
   const [benefitData, setBenefitData] = useState<BenefitDeduction[]>([]);
   const [complianceData, setComplianceData] = useState<ComplianceRecord[]>([]);
   const [selectedPayStatement, setSelectedPayStatement] = useState<PayStatementDetail | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   // Enhanced filters
   const [filters, setFilters] = useState<EnhancedFilters>({
@@ -739,11 +741,51 @@ const EnhancedReportingPage: React.FC = () => {
   const renderEmployeeData = () => {
     const filteredData = applyFilters(employeeData, 'employees');
     
+    const employeeColumns = [
+      { key: 'employee_code', label: 'Employee Code', sortable: true },
+      { key: 'full_name', label: 'Full Name', sortable: true, render: (employee: EnhancedEmployee) => employee.full_name || employee.employee_name },
+      { key: 'position', label: 'Position', sortable: true },
+      { key: 'home_department', label: 'Department', sortable: true },
+      { key: 'division', label: 'Division', sortable: true },
+      { key: 'cost_center', label: 'Cost Center', sortable: true },
+      { key: 'flsa_status', label: 'FLSA Status', sortable: true, render: (employee: EnhancedEmployee) => (
+        <Badge variant={employee.flsa_status === 'exempt' ? 'default' : 'secondary'}>
+          {employee.flsa_status}
+        </Badge>
+      )},
+      { key: 'pay_type', label: 'Pay Type', sortable: true },
+      { key: 'union_status', label: 'Union Status', sortable: true },
+      { key: 'employment_status', label: 'Status', sortable: true, render: (employee: EnhancedEmployee) => (
+        <Badge variant={employee.employment_status === 'active' ? 'default' : 'secondary'}>
+          {employee.employment_status}
+        </Badge>
+      )}
+    ];
+    
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">Enhanced Employee Directory ({filteredData.length} records)</h3>
           <div className="flex gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex border rounded-md">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="rounded-r-none"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="rounded-l-none"
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+            </div>
             <Button onClick={() => downloadCSV(filteredData, 'enhanced_employees')} variant="outline">
               Export CSV
             </Button>
@@ -753,29 +795,38 @@ const EnhancedReportingPage: React.FC = () => {
           </div>
         </div>
         
-        <div className="grid gap-4">
-          {filteredData.map((employee) => (
-            <Card key={employee.id} className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <h4 className="font-semibold">{employee.full_name || employee.employee_name}</h4>
-                  <p className="text-sm text-gray-600">{employee.employee_code}</p>
-                  <p className="text-sm">{employee.position}</p>
+        {viewMode === 'list' ? (
+          <TraditionalReportTable
+            data={filteredData}
+            columns={employeeColumns}
+            searchTerm={filters.searchTerm}
+            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+          />
+        ) : (
+          <div className="grid gap-4">
+            {filteredData.map((employee) => (
+              <Card key={employee.id} className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <h4 className="font-semibold">{employee.full_name || employee.employee_name}</h4>
+                    <p className="text-sm text-gray-600">{employee.employee_code}</p>
+                    <p className="text-sm">{employee.position}</p>
+                  </div>
+                  <div>
+                    <p><strong>Department:</strong> {employee.home_department}</p>
+                    <p><strong>Division:</strong> {employee.division}</p>
+                    <p><strong>Cost Center:</strong> {employee.cost_center}</p>
+                  </div>
+                  <div>
+                    <p><strong>FLSA Status:</strong> <Badge variant={employee.flsa_status === 'exempt' ? 'default' : 'secondary'}>{employee.flsa_status}</Badge></p>
+                    <p><strong>Pay Type:</strong> {employee.pay_type}</p>
+                    <p><strong>Union Status:</strong> {employee.union_status}</p>
+                  </div>
                 </div>
-                <div>
-                  <p><strong>Department:</strong> {employee.home_department}</p>
-                  <p><strong>Division:</strong> {employee.division}</p>
-                  <p><strong>Cost Center:</strong> {employee.cost_center}</p>
-                </div>
-                <div>
-                  <p><strong>FLSA Status:</strong> <Badge variant={employee.flsa_status === 'exempt' ? 'default' : 'secondary'}>{employee.flsa_status}</Badge></p>
-                  <p><strong>Pay Type:</strong> {employee.pay_type}</p>
-                  <p><strong>Union Status:</strong> {employee.union_status}</p>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
