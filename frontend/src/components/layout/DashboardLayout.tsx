@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'data-library'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit'])
   const router = useRouter()
   const pathname = usePathname()
 
@@ -79,26 +79,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-blue-600',
       hoverColor: 'hover:bg-blue-50',
       textColor: 'text-blue-900',
-      defaultExpanded: true,
       items: [
-        { name: 'Work Requests', href: '/work-requests', icon: Briefcase },
+        { name: 'Work Requests', href: '/work-requests', icon: FileText },
         { name: 'Project Management', href: '/project-management', icon: Calendar },
-        { name: 'Job Management', href: '/jobs-enhanced', icon: Cog },
-        { name: 'Employee Data Processing', href: '/employees', icon: Users }
+        { name: 'Reporting', href: '/reporting', icon: TrendingUp },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true }
       ]
     },
     {
-      id: 'data-library',
-      title: 'Data Library',
-      icon: BarChart3,
+      id: 'etl-cockpit',
+      title: 'ETL Cockpit',
+      icon: Database,
       color: 'text-green-600',
       bgColor: 'bg-green-600',
       hoverColor: 'hover:bg-green-50',
       textColor: 'text-green-900',
       items: [
         { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3 },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true },
-        { name: 'Reporting', href: '/reporting', icon: TrendingUp },
+        { name: 'Job Management', href: '/jobs', icon: Briefcase },
+        { name: 'Employee Data Processing', href: '/employees', icon: Users },
         { name: 'Data Analytics', href: '/analytics', icon: Database },
         { name: 'Audit Trail', href: '/audit', icon: Eye }
       ]
