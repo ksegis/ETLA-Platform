@@ -93,13 +93,10 @@ export default function WorkRequestsPage() {
       
       console.log('Loading work requests for tenant:', selectedTenant.id, selectedTenant.name)
 
-      // Query work requests with customer data
+      // Query work requests WITHOUT customer data to avoid foreign key issues
       const { data, error: queryError } = await supabase
         .from('work_requests')
-        .select(`
-          *,
-          customer:customers(first_name, last_name, email, company_name)
-        `)
+        .select('*')
         .eq('tenant_id', selectedTenant.id)
         .order('created_at', { ascending: false })
 
@@ -167,18 +164,9 @@ export default function WorkRequestsPage() {
   }
 
   const getCustomerName = (request: WorkRequest) => {
-    if (request.customer) {
-      if (request.customer.company_name) {
-        return request.customer.company_name
-      }
-      if (request.customer.first_name && request.customer.last_name) {
-        return `${request.customer.first_name} ${request.customer.last_name}`
-      }
-      if (request.customer.email) {
-        return request.customer.email
-      }
-    }
-    return 'Unknown Customer'
+    // Customer data not loaded due to foreign key issues
+    // Show customer_id instead for now
+    return request.customer_id ? `Customer ID: ${request.customer_id}` : 'No Customer'
   }
 
   if (!selectedTenant) {
