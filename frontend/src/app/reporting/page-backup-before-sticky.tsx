@@ -1385,73 +1385,61 @@ const EnhancedReportingPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-screen">
-        {/* Sticky Header Section */}
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-          <div className="p-6 pb-0">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold">Enhanced Reporting System</h1>
-              <p className="text-gray-600 mt-2">
-                Comprehensive payroll and HR analytics with enhanced data extraction capabilities and flexible view options
-              </p>
-            </div>
-
-            {/* Enhanced Tab Navigation */}
-            <div className="flex flex-wrap gap-2 mb-6 border-b">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white border-b-2 border-blue-500'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Enhanced Filters */}
-          <div className="px-6 pb-6">
-            {renderEnhancedFilters()}
-          </div>
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Enhanced Reporting System</h1>
+          <p className="text-gray-600 mt-2">
+            Comprehensive payroll and HR analytics with enhanced data extraction capabilities and flexible view options
+          </p>
         </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            {/* Loading and Error States */}
-            {loading && (
-              <div className="flex justify-center items-center py-8">
-                <div className="text-lg">Loading enhanced data...</div>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {error}
-              </div>
-            )}
-
-            {/* Enhanced Content with List/Grid Views */}
-            {!loading && !error && (
-              <div>
-                {activeTab === 'employees' && renderEmployeeData()}
-                {activeTab === 'pay-statements' && renderPayStatementData()}
-                {activeTab === 'timecards' && renderTimecardData()}
-                {activeTab === 'jobs' && renderJobData()}
-                {activeTab === 'tax-records' && renderTaxData()}
-                {activeTab === 'benefits-deductions' && renderBenefitData()}
-                {activeTab === 'compliance' && renderComplianceData()}
-                {activeTab === 'all-reports' && renderAllReports()}
-              </div>
-            )}
-          </div>
+        {/* Enhanced Tab Navigation */}
+        <div className="flex flex-wrap gap-2 mb-6 border-b">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-blue-500 text-white border-b-2 border-blue-500'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
+
+        {/* Enhanced Filters */}
+        {renderEnhancedFilters()}
+
+        {/* Loading and Error States */}
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-lg">Loading enhanced data...</div>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        {/* Enhanced Content with List/Grid Views */}
+        {!loading && !error && (
+          <div>
+            {activeTab === 'employees' && renderEmployeeData()}
+            {activeTab === 'pay-statements' && renderPayStatementData()}
+            {activeTab === 'timecards' && renderTimecardData()}
+            {activeTab === 'jobs' && renderJobData()}
+            {activeTab === 'tax-records' && renderTaxData()}
+            {activeTab === 'benefits-deductions' && renderBenefitData()}
+            {activeTab === 'compliance' && renderComplianceData()}
+            {activeTab === 'all-reports' && renderAllReports()}
+          </div>
+        )}
 
         {/* Pay Statement Detail Modal */}
         {selectedPayStatement && (
