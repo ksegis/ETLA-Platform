@@ -94,10 +94,7 @@ const HRPayrollReporting = () => {
     
     const { data, error } = await supabase
       .from('pay_statements')
-      .select(`
-        *,
-        employee:employees(employee_name, employee_code)
-      `)
+      .select('*')
       .eq('customer_id', selectedTenant.id)
       .order('pay_date', { ascending: false });
     
@@ -156,10 +153,7 @@ const HRPayrollReporting = () => {
     
     const { data, error } = await supabase
       .from('timecards')
-      .select(`
-        *,
-        employee:employees(employee_name, employee_code)
-      `)
+      .select('*')
       .eq('customer_id', selectedTenant.id)
       .order('work_date', { ascending: false });
     
