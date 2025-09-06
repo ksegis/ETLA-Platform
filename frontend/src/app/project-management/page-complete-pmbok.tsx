@@ -288,7 +288,7 @@ export default function ProjectManagementPage() {
 
   // Create new project
   const handleCreateProject = async (projectData: Partial<ProjectCharter>) => {
-    if (!currentTenant?.id || !user?.id) return
+    if (!selectedTenant?.id || !user?.id) return
 
     try {
       const newProject = {
