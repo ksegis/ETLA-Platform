@@ -131,18 +131,18 @@ export default function ProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter(p => p.status === 'active' || p.status === 'in_progress').length,
-    completedProjects: projects.filter(p => p.status === 'completed').length,
+    activeProjects: projects.filter(p => (p.status || '') === 'active' || (p.status || '') === 'in_progress').length,
+    completedProjects: projects.filter(p => (p.status || '') === 'completed').length,
     totalWorkRequests: workRequests.length,
-    pendingWorkRequests: workRequests.filter(wr => wr.status === 'submitted' || wr.status === 'under_review').length,
-    approvedWorkRequests: workRequests.filter(wr => wr.status === 'approved').length
+    pendingWorkRequests: workRequests.filter(wr => (wr.status || '') === 'submitted' || (wr.status || '') === 'under_review').length,
+    approvedWorkRequests: workRequests.filter(wr => (wr.status || '') === 'approved').length
   }
 
   // Filter projects
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter
+    const matchesSearch = (project.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (project.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || (project.status || '') === statusFilter
     return matchesSearch && matchesStatus
   })
 
@@ -158,8 +158,9 @@ export default function ProjectManagementPage() {
     }).format(amount)
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusColor = (status: string | null | undefined) => {
+    const statusLower = (status || '').toLowerCase()
+    switch (statusLower) {
       case 'active':
       case 'in_progress':
         return 'bg-blue-100 text-blue-800'
@@ -174,8 +175,9 @@ export default function ProjectManagementPage() {
     }
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
+  const getPriorityColor = (priority: string | null | undefined) => {
+    const priorityLower = (priority || '').toLowerCase()
+    switch (priorityLower) {
       case 'high':
       case 'critical':
         return 'bg-red-100 text-red-800'
@@ -393,15 +395,15 @@ export default function ProjectManagementPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+                          <h3 className="text-lg font-semibold text-gray-900">{project.title || 'Untitled Project'}</h3>
                           <Badge className={getStatusColor(project.status)}>
-                            {project.status}
+                            {project.status || 'Unknown'}
                           </Badge>
                           <Badge className={getPriorityColor(project.priority)}>
-                            {project.priority}
+                            {project.priority || 'Unknown'}
                           </Badge>
                         </div>
-                        <p className="text-gray-600 mb-3">{project.description}</p>
+                        <p className="text-gray-600 mb-3">{project.description || 'No description available'}</p>
                         <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
