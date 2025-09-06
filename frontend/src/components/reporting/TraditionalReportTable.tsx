@@ -6,29 +6,30 @@ interface Column {
   label: string;
   sortable?: boolean;
   width?: string;
+  render?: (item: any) => React.ReactNode;
 }
 
 interface TraditionalReportTableProps {
-  title: string;
   data: any[];
   columns: Column[];
-  totalRecords: number;
-  onExportCSV: () => void;
-  onExportJSON: () => void;
-  searchValue: string;
-  onSearchChange: (value: string) => void;
+  searchTerm?: string;
+  onSearch?: (term: string) => void;
+  title?: string;
+  totalRecords?: number;
+  onExportCSV?: () => void;
+  onExportJSON?: () => void;
   filters?: React.ReactNode;
 }
 
 export default function TraditionalReportTable({
-  title,
   data,
   columns,
+  searchTerm = '',
+  onSearch,
+  title = 'Report',
   totalRecords,
   onExportCSV,
   onExportJSON,
-  searchValue,
-  onSearchChange,
   filters
 }: TraditionalReportTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,9 +38,10 @@ export default function TraditionalReportTable({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Calculate pagination
-  const totalPages = Math.ceil(totalRecords / itemsPerPage);
+  const actualTotalRecords = totalRecords || data.length;
+  const totalPages = Math.ceil(actualTotalRecords / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalRecords);
+  const endIndex = Math.min(startIndex + itemsPerPage, actualTotalRecords);
 
   // Handle sorting
   const handleSort = (columnKey: string) => {
@@ -107,7 +109,7 @@ export default function TraditionalReportTable({
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <p className="text-sm text-gray-600">
-              Showing {startIndex + 1}-{endIndex} of {totalRecords} records
+              Showing {startIndex + 1}-{endIndex} of {actualTotalRecords} records
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -136,8 +138,8 @@ export default function TraditionalReportTable({
               <input
                 type="text"
                 placeholder="Search records..."
-                value={searchValue}
-                onChange={(e) => onSearchChange(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => onSearch?.(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -181,7 +183,7 @@ export default function TraditionalReportTable({
               <tr key={index} className="hover:bg-gray-50">
                 {columns.map((column) => (
                   <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {row[column.key] || '-'}
+                    {column.render ? column.render(row) : (row[column.key] || '-')}
                   </td>
                 ))}
               </tr>
