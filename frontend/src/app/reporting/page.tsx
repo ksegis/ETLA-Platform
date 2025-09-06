@@ -1,16 +1,64 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
-import ReactECharts from 'echarts-for-react';
+import { supabase } from '@/lib/supabase';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
 
-const HRPayrollReporting = () => {
+interface Employee {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  employee_code: string;
+  position: string;
+  home_department: string;
+  employment_status: string;
+  employment_type: string;
+  work_location: string;
+  pay_period_salary: number;
+  hourly_rate: number;
+  pay_type: string;
+  created_at: string;
+  updated_at: string;
+  customer_id: string;
+}
+
+interface PayStatement {
+  id: string;
+  customer_id: string;
+  employee_code: string;
+  employee_name: string;
+  pay_date: string;
+  gross_pay: number;
+  net_pay: number;
+  created_at: string;
+}
+
+interface JobSummary {
+  position: string;
+  department: string;
+  employment_type: string;
+  location: string;
+  count: number;
+}
+
+interface Timecard {
+  id: string;
+  customer_id: string;
+  employee_id: string;
+  employee_code: string;
+  employee_name: string;
+  work_date: string;
+  total_hours: number;
+  regular_hours: number;
+  department: string;
+}
+
+export default function ReportingPage() {
   const { user } = useAuth();
   const { selectedTenant } = useTenant();
   const [activeTab, setActiveTab] = useState('employees');
@@ -18,25 +66,23 @@ const HRPayrollReporting = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter states for data extraction
+  // Data states
+  const [employeeData, setEmployeeData] = useState<Employee[]>([]);
+  const [checksData, setChecksData] = useState<PayStatement[]>([]);
+  const [jobsData, setJobsData] = useState<JobSummary[]>([]);
+  const [salaryData, setSalaryData] = useState<Employee[]>([]);
+  const [timecardsData, setTimecardsData] = useState<Timecard[]>([]);
+
+  // Filter states
   const [filters, setFilters] = useState({
     dateRange: { start: '', end: '' },
     department: '',
     employeeStatus: '',
-    payPeriod: '',
-    jobTitle: '',
     location: '',
+    jobTitle: '',
     payType: '',
     salaryRange: { min: '', max: '' }
   });
-
-  // Data states
-  const [employeeData, setEmployeeData] = useState<any[]>([]);
-  const [checksData, setChecksData] = useState<any[]>([]);
-  const [jobsData, setJobsData] = useState<any[]>([]);
-  const [salaryData, setSalaryData] = useState<any[]>([]);
-  const [timecardsData, setTimecardsData] = useState<any[]>([]);
-  const [reportingData, setReportingData] = useState<any>({});
 
   // Load data based on active tab
   const loadTabData = async (tabId: string) => {
@@ -88,7 +134,7 @@ const HRPayrollReporting = () => {
     setEmployeeData(data || []);
   };
 
-  // Checks data loading (pay statements) - Fixed to work with actual table structure
+  // Checks data loading (pay statements)
   const loadChecksData = async () => {
     if (!selectedTenant?.id) return;
     
@@ -115,7 +161,7 @@ const HRPayrollReporting = () => {
     if (error) throw error;
     
     // Group by job characteristics
-    const jobSummary = data.reduce((acc: any, emp: any) => {
+    const jobSummary = data.reduce((acc: Record<string, JobSummary>, emp: any) => {
       const key = `${emp.position}-${emp.home_department}`;
       if (!acc[key]) {
         acc[key] = {
@@ -128,7 +174,7 @@ const HRPayrollReporting = () => {
       }
       acc[key].count++;
       return acc;
-    }, {} as any);
+    }, {} as Record<string, JobSummary>);
     
     setJobsData(Object.values(jobSummary));
   };
@@ -165,42 +211,38 @@ const HRPayrollReporting = () => {
   const loadAllReportsData = async () => {
     if (!selectedTenant?.id) return;
     
-    const reports = await Promise.all([
-      supabase.from('employee_headcount_monthly').select('*').eq('customer_id', selectedTenant.id),
-      supabase.from('employee_status_summary').select('*').eq('customer_id', selectedTenant.id),
-      supabase.from('termination_analysis').select('*').eq('customer_id', selectedTenant.id),
-      supabase.from('retention_analysis').select('*').eq('customer_id', selectedTenant.id)
+    // Load all data types for comprehensive reporting
+    await Promise.all([
+      loadEmployeeData(),
+      loadChecksData(),
+      loadJobsData(),
+      loadSalaryData(),
+      loadTimecardsData()
     ]);
-    
-    setReportingData({
-      headcount: reports[0].data || [],
-      status: reports[1].data || [],
-      terminations: reports[2].data || [],
-      retention: reports[3].data || []
-    });
   };
 
-  // Data extraction function
-  const extractData = async (format = 'csv') => {
-    const currentData = getCurrentTabData();
-    const filteredData = applyFilters(currentData);
-    
-    if (format === 'csv') {
-      downloadCSV(filteredData, `${activeTab}_report_${new Date().toISOString().split('T')[0]}.csv`);
-    } else if (format === 'json') {
-      downloadJSON(filteredData, `${activeTab}_report_${new Date().toISOString().split('T')[0]}.json`);
+  // Load data when tab changes or tenant changes
+  useEffect(() => {
+    if (selectedTenant?.id) {
+      loadTabData(activeTab);
     }
-  };
+  }, [activeTab, selectedTenant?.id]);
 
-  // Get current tab data
-  const getCurrentTabData = () => {
+  // Get current data based on active tab
+  const getCurrentData = () => {
     switch (activeTab) {
       case 'employees': return employeeData;
       case 'checks': return checksData;
       case 'jobs': return jobsData;
       case 'salary': return salaryData;
       case 'timecards': return timecardsData;
-      case 'all-reports': return reportingData;
+      case 'all-reports': return {
+        employees: employeeData,
+        checks: checksData,
+        jobs: jobsData,
+        salary: salaryData,
+        timecards: timecardsData
+      };
       default: return [];
     }
   };
@@ -209,43 +251,60 @@ const HRPayrollReporting = () => {
   const applyFilters = (data: any[]) => {
     if (!Array.isArray(data)) return [];
     
-    return data.filter(item => {
-      // Date range filter
-      if (filters.dateRange.start && item.created_at) {
-        if (new Date(item.created_at) < new Date(filters.dateRange.start)) return false;
-      }
-      if (filters.dateRange.end && item.created_at) {
-        if (new Date(item.created_at) > new Date(filters.dateRange.end)) return false;
-      }
-      
-      // Department filter
-      if (filters.department && item.home_department !== filters.department) return false;
-      
-      // Employee status filter
-      if (filters.employeeStatus && item.employment_status !== filters.employeeStatus) return false;
-      
-      // Job title filter
-      if (filters.jobTitle && !item.position?.toLowerCase().includes(filters.jobTitle.toLowerCase())) return false;
-      
-      // Location filter
-      if (filters.location && item.work_location !== filters.location) return false;
-      
-      // Pay type filter
-      if (filters.payType && item.pay_type !== filters.payType) return false;
-      
-      // Salary range filter
-      if (filters.salaryRange.min && item.pay_period_salary < parseFloat(filters.salaryRange.min)) return false;
-      if (filters.salaryRange.max && item.pay_period_salary > parseFloat(filters.salaryRange.max)) return false;
-      
+    return data.filter((item: any) => {
       // Search term filter
       if (searchTerm) {
-        const searchFields = ['employee_name', 'employee_code', 'position', 'home_department'];
+        const searchFields = ['employee_name', 'employee_code', 'position', 'home_department', 'employment_status'];
         const matchesSearch = searchFields.some(field => 
-          item[field]?.toLowerCase().includes(searchTerm.toLowerCase())
+          item[field]?.toString().toLowerCase().includes(searchTerm.toLowerCase())
         );
         if (!matchesSearch) return false;
       }
-      
+
+      // Department filter
+      if (filters.department && item.home_department !== filters.department) {
+        return false;
+      }
+
+      // Employee status filter
+      if (filters.employeeStatus && item.employment_status !== filters.employeeStatus) {
+        return false;
+      }
+
+      // Location filter
+      if (filters.location && item.work_location !== filters.location) {
+        return false;
+      }
+
+      // Job title filter
+      if (filters.jobTitle && !item.position?.toLowerCase().includes(filters.jobTitle.toLowerCase())) {
+        return false;
+      }
+
+      // Pay type filter
+      if (filters.payType && item.pay_type !== filters.payType) {
+        return false;
+      }
+
+      // Salary range filter
+      if (filters.salaryRange.min && item.pay_period_salary < parseFloat(filters.salaryRange.min)) {
+        return false;
+      }
+      if (filters.salaryRange.max && item.pay_period_salary > parseFloat(filters.salaryRange.max)) {
+        return false;
+      }
+
+      // Date range filter
+      if (filters.dateRange.start || filters.dateRange.end) {
+        const itemDate = new Date(item.created_at || item.pay_date || item.work_date);
+        if (filters.dateRange.start && itemDate < new Date(filters.dateRange.start)) {
+          return false;
+        }
+        if (filters.dateRange.end && itemDate > new Date(filters.dateRange.end)) {
+          return false;
+        }
+      }
+
       return true;
     });
   };
@@ -280,510 +339,323 @@ const HRPayrollReporting = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Filter panel component
-  const FilterPanel = () => (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>🔍 Data Extraction Filters</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Start Date</label>
-            <Input
-              type="date"
-              value={filters.dateRange.start}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                dateRange: { ...prev.dateRange, start: e.target.value }
-              }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">End Date</label>
-            <Input
-              type="date"
-              value={filters.dateRange.end}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                dateRange: { ...prev.dateRange, end: e.target.value }
-              }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Department</label>
-            <Input
-              placeholder="Enter department"
-              value={filters.department}
-              onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Employee Status</label>
-            <select
-              className="w-full p-2 border rounded"
-              value={filters.employeeStatus}
-              onChange={(e) => setFilters(prev => ({ ...prev, employeeStatus: e.target.value }))}
-            >
-              <option value="">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Terminated">Terminated</option>
-              <option value="On Leave">On Leave</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Job Title</label>
-            <Input
-              placeholder="Enter job title"
-              value={filters.jobTitle}
-              onChange={(e) => setFilters(prev => ({ ...prev, jobTitle: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
-            <Input
-              placeholder="Enter location"
-              value={filters.location}
-              onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Min Salary</label>
-            <Input
-              type="number"
-              placeholder="0"
-              value={filters.salaryRange.min}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                salaryRange: { ...prev.salaryRange, min: e.target.value }
-              }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Max Salary</label>
-            <Input
-              type="number"
-              placeholder="999999"
-              value={filters.salaryRange.max}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                salaryRange: { ...prev.salaryRange, max: e.target.value }
-              }))}
-            />
-          </div>
-        </div>
-        <div className="flex gap-2 mt-4">
-          <Button onClick={() => extractData('csv')}>📊 Export CSV</Button>
-          <Button onClick={() => extractData('json')} variant="outline">📄 Export JSON</Button>
-          <Button 
-            onClick={() => setFilters({
-              dateRange: { start: '', end: '' },
-              department: '',
-              employeeStatus: '',
-              payPeriod: '',
-              jobTitle: '',
-              location: '',
-              payType: '',
-              salaryRange: { min: '', max: '' }
-            })}
-            variant="outline"
-          >
-            🔄 Clear Filters
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const currentData = getCurrentData();
+  const filteredData = Array.isArray(currentData) ? applyFilters(currentData) : currentData;
 
-  // Tab content renderers
-  const renderEmployeesTab = () => {
-    const filteredData = applyFilters(employeeData);
-    
-    return (
-      <div className="space-y-6">
-        <FilterPanel />
-        <Card>
-          <CardHeader>
-            <CardTitle>👥 Employee Directory ({filteredData.length} employees)</CardTitle>
-            <Input
-              placeholder="Search employees..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {filteredData.map((employee) => (
-                <div key={employee.employee_code} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
-                  <div>
-                    <div className="font-medium">{employee.employee_name}</div>
-                    <div className="text-sm text-gray-600">Code: {employee.employee_code}</div>
-                    <div className="text-sm text-gray-600">Position: {employee.position}</div>
-                    <div className="text-sm text-gray-600">Department: {employee.home_department}</div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={employee.employment_status === 'Active' ? 'default' : 'secondary'}>
-                      {employee.employment_status}
-                    </Badge>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {employee.employment_type} • {employee.work_location}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderChecksTab = () => {
-    const filteredData = applyFilters(checksData);
-    
-    return (
-      <div className="space-y-6">
-        <FilterPanel />
-        <Card>
-          <CardHeader>
-            <CardTitle>💰 Pay Statements ({filteredData.length} records)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {filteredData.map((check, index) => (
-                <div key={index} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
-                  <div>
-                    <div className="font-medium">{check.employee?.employee_name}</div>
-                    <div className="text-sm text-gray-600">Pay Date: {check.pay_date}</div>
-                    <div className="text-sm text-gray-600">Period: {check.pay_period_start} - {check.pay_period_end}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-green-600">${check.gross_pay}</div>
-                    <div className="text-sm text-gray-600">Net: ${check.net_pay}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderJobsTab = () => {
-    const filteredData = applyFilters(jobsData);
-    
-    return (
-      <div className="space-y-6">
-        <FilterPanel />
-        <Card>
-          <CardHeader>
-            <CardTitle>💼 Job Analysis ({filteredData.length} job categories)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {filteredData.map((job, index) => (
-                <div key={index} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
-                  <div>
-                    <div className="font-medium">{job.position}</div>
-                    <div className="text-sm text-gray-600">Department: {job.department}</div>
-                    <div className="text-sm text-gray-600">Type: {job.employment_type}</div>
-                  </div>
-                  <div className="text-right">
-                    <Badge>{job.count} employees</Badge>
-                    <div className="text-sm text-gray-600 mt-1">{job.location}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderSalaryTab = () => {
-    const filteredData = applyFilters(salaryData);
-    
-    return (
-      <div className="space-y-6">
-        <FilterPanel />
-        <Card>
-          <CardHeader>
-            <CardTitle>💵 Salary Analysis ({filteredData.length} employees)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {filteredData.map((employee) => (
-                <div key={employee.employee_code} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
-                  <div>
-                    <div className="font-medium">{employee.employee_name}</div>
-                    <div className="text-sm text-gray-600">Position: {employee.position}</div>
-                    <div className="text-sm text-gray-600">Department: {employee.home_department}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-green-600">
-                      ${employee.pay_period_salary || employee.hourly_rate}/
-                      {employee.pay_type === 'Salary' ? 'period' : 'hour'}
-                    </div>
-                    <Badge variant="outline">{employee.pay_type}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderTimecardsTab = () => {
-    const filteredData = applyFilters(timecardsData);
-    
-    return (
-      <div className="space-y-6">
-        <FilterPanel />
-        <Card>
-          <CardHeader>
-            <CardTitle>⏰ Timecard Records ({filteredData.length} records)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {filteredData.map((timecard, index) => (
-                <div key={index} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
-                  <div>
-                    <div className="font-medium">{timecard.employee?.employee_name}</div>
-                    <div className="text-sm text-gray-600">Date: {timecard.work_date}</div>
-                    <div className="text-sm text-gray-600">Hours: {timecard.hours_worked}</div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={timecard.status === 'Approved' ? 'default' : 'secondary'}>
-                      {timecard.status}
-                    </Badge>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {timecard.overtime_hours > 0 && `OT: ${timecard.overtime_hours}h`}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderAllReportsTab = () => (
-    <div className="space-y-6">
-      <FilterPanel />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>📊 Available Reports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                { name: 'Employee Headcount Report', count: reportingData.headcount?.length || 0 },
-                { name: 'Status Summary Report', count: reportingData.status?.length || 0 },
-                { name: 'Termination Analysis Report', count: reportingData.terminations?.length || 0 },
-                { name: 'Retention Analysis Report', count: reportingData.retention?.length || 0 }
-              ].map((report, index) => (
-                <div key={index} className="flex justify-between items-center p-3 border rounded">
-                  <span className="font-medium">{report.name}</span>
-                  <Badge>{report.count} records</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>📈 Quick Stats</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span>Total Employees</span>
-                <span className="font-bold">{employeeData.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pay Statements</span>
-                <span className="font-bold">{checksData.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Job Categories</span>
-                <span className="font-bold">{jobsData.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Timecard Records</span>
-                <span className="font-bold">{timecardsData.length}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-
-  // Load data when tab changes
-  useEffect(() => {
-    if (selectedTenant?.id) {
-      loadTabData(activeTab);
-    }
-  }, [activeTab, selectedTenant?.id]);
-
-  if (!selectedTenant) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg text-gray-600">Please select a tenant to view reports.</div>
-      </div>
-    );
-  }
+  // Tab configuration
+  const tabs = [
+    { id: 'employees', label: 'Employees', icon: '👥' },
+    { id: 'checks', label: 'Checks', icon: '💰' },
+    { id: 'jobs', label: 'Jobs', icon: '💼' },
+    { id: 'salary', label: 'Salary', icon: '💵' },
+    { id: 'timecards', label: 'Timecards', icon: '⏰' },
+    { id: 'all-reports', label: 'All Reports', icon: '📊' }
+  ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left Navigation */}
-      <div className="w-64 bg-white shadow-sm border-r border-gray-200">
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Comprehensive Reporting System</h1>
+        <p className="text-gray-600">Generate detailed reports and extract data across all categories</p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Filters Section */}
+      <Card className="mb-6">
         <div className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Operations</h2>
-        </div>
-        <nav className="mt-6">
-          <div className="px-3">
-            <div className="space-y-1">
-              <a href="/work-requests" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                📋 Work Requests
-              </a>
-              <a href="/project-management" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                📊 Project Management
-              </a>
-              <a href="/jobs" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                💼 Job Management
-              </a>
-              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                👥 Employee Data Processing
-              </div>
-            </div>
-          </div>
+          <h3 className="text-lg font-semibold mb-4">Data Extraction Filters</h3>
           
-          <div className="mt-8 px-3">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Library</h3>
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                📈 ETL Dashboard
-              </div>
-              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                📊 HR Analytics Dashboard
-              </div>
-              <a href="/reporting" className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
-                📋 Reporting
-              </a>
-              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                📊 Data Analytics
-              </div>
-              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                🔍 Audit Trail
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 px-3">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Management</h3>
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                ⚙️ Configuration
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 px-3">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Administration</h3>
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
-                🏢 Administration
-              </div>
-            </div>
-          </div>
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <div className="flex justify-between items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            {/* Search */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">HR/Payroll Reporting</h1>
-              <p className="text-gray-600 mt-1">
-                Enterprise reporting by pay period, benefit group, and department for {selectedTenant?.name}
-              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <Input
+                type="text"
+                placeholder="Search records..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline">🔽 Filter</Button>
-              <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading}>
-                {loading ? 'Refreshing...' : '🔄 Refresh'}
-              </Button>
-              <Button onClick={() => extractData('csv')}>📤 Export</Button>
+
+            {/* Date Range */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+              <Input
+                type="date"
+                value={filters.dateRange.start}
+                onChange={(e) => setFilters(prev => ({
+                  ...prev,
+                  dateRange: { ...prev.dateRange, start: e.target.value }
+                }))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+              <Input
+                type="date"
+                value={filters.dateRange.end}
+                onChange={(e) => setFilters(prev => ({
+                  ...prev,
+                  dateRange: { ...prev.dateRange, end: e.target.value }
+                }))}
+              />
+            </div>
+
+            {/* Department */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <Input
+                type="text"
+                placeholder="Department"
+                value={filters.department}
+                onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+              />
+            </div>
+
+            {/* Employee Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Employee Status</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={filters.employeeStatus}
+                onChange={(e) => setFilters(prev => ({ ...prev, employeeStatus: e.target.value }))}
+              >
+                <option value="">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Terminated">Terminated</option>
+                <option value="On Leave">On Leave</option>
+              </select>
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <Input
+                type="text"
+                placeholder="Work Location"
+                value={filters.location}
+                onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+              />
+            </div>
+
+            {/* Job Title */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+              <Input
+                type="text"
+                placeholder="Position"
+                value={filters.jobTitle}
+                onChange={(e) => setFilters(prev => ({ ...prev, jobTitle: e.target.value }))}
+              />
+            </div>
+
+            {/* Pay Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Pay Type</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={filters.payType}
+                onChange={(e) => setFilters(prev => ({ ...prev, payType: e.target.value }))}
+              >
+                <option value="">All Types</option>
+                <option value="salary">Salary</option>
+                <option value="hourly">Hourly</option>
+              </select>
             </div>
           </div>
 
-          {/* Error Display */}
-          {error && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="pt-6">
-                <div className="text-red-800">{error}</div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Salary Range */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Salary</label>
+              <Input
+                type="number"
+                placeholder="Minimum salary"
+                value={filters.salaryRange.min}
+                onChange={(e) => setFilters(prev => ({
+                  ...prev,
+                  salaryRange: { ...prev.salaryRange, min: e.target.value }
+                }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Salary</label>
+              <Input
+                type="number"
+                placeholder="Maximum salary"
+                value={filters.salaryRange.max}
+                onChange={(e) => setFilters(prev => ({
+                  ...prev,
+                  salaryRange: { ...prev.salaryRange, max: e.target.value }
+                }))}
+              />
+            </div>
+          </div>
 
-          {/* Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              {[
-                { id: 'employees', label: '👥 Employees', icon: '👥' },
-                { id: 'checks', label: '💰 Checks', icon: '💰' },
-                { id: 'jobs', label: '💼 Jobs', icon: '💼' },
-                { id: 'salary', label: '💵 Salary', icon: '💵' },
-                { id: 'timecards', label: '⏰ Timecards', icon: '⏰' },
-                { id: 'all-reports', label: '📊 All Reports', icon: '📊' }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => setFilters({
+                dateRange: { start: '', end: '' },
+                department: '',
+                employeeStatus: '',
+                location: '',
+                jobTitle: '',
+                payType: '',
+                salaryRange: { min: '', max: '' }
+              })}
+              variant="outline"
+            >
+              Clear Filters
+            </Button>
+            
+            {Array.isArray(filteredData) && filteredData.length > 0 && (
+              <>
+                <Button
+                  onClick={() => downloadCSV(filteredData, `${activeTab}_report.csv`)}
+                  variant="outline"
                 >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
+                  Export CSV
+                </Button>
+                <Button
+                  onClick={() => downloadJSON(filteredData, `${activeTab}_report.json`)}
+                  variant="outline"
+                >
+                  Export JSON
+                </Button>
+              </>
+            )}
           </div>
-
-          {/* Tab Content */}
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-lg text-gray-600">Loading {activeTab} data...</div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {activeTab === 'employees' && renderEmployeesTab()}
-              {activeTab === 'checks' && renderChecksTab()}
-              {activeTab === 'jobs' && renderJobsTab()}
-              {activeTab === 'salary' && renderSalaryTab()}
-              {activeTab === 'timecards' && renderTimecardsTab()}
-              {activeTab === 'all-reports' && renderAllReportsTab()}
-            </div>
-          )}
         </div>
-      </div>
+      </Card>
+
+      {/* Error Display */}
+      {error && (
+        <Card className="mb-6">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-red-400">⚠️</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error Loading Data</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <Card className="mb-6">
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading {activeTab} data...</p>
+          </div>
+        </Card>
+      )}
+
+      {/* Data Display */}
+      {!loading && !error && (
+        <Card>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                {tabs.find(tab => tab.id === activeTab)?.label} Report
+              </h3>
+              <Badge variant="secondary">
+                {Array.isArray(filteredData) ? filteredData.length : 'Multiple'} records
+              </Badge>
+            </div>
+
+            {/* Data Table */}
+            {Array.isArray(filteredData) && filteredData.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {Object.keys(filteredData[0]).map((key) => (
+                        <th
+                          key={key}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {key.replace(/_/g, ' ')}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredData.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        {Object.values(item).map((value: any, cellIndex) => (
+                          <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {value?.toString() || '-'}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : activeTab === 'all-reports' && typeof filteredData === 'object' ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-900">Employees</h4>
+                    <p className="text-2xl font-bold text-blue-600">{(filteredData as any).employees?.length || 0}</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-green-900">Pay Statements</h4>
+                    <p className="text-2xl font-bold text-green-600">{(filteredData as any).checks?.length || 0}</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-purple-900">Job Categories</h4>
+                    <p className="text-2xl font-bold text-purple-600">{(filteredData as any).jobs?.length || 0}</p>
+                  </div>
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-yellow-900">Salary Records</h4>
+                    <p className="text-2xl font-bold text-yellow-600">{(filteredData as any).salary?.length || 0}</p>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-red-900">Timecards</h4>
+                    <p className="text-2xl font-bold text-red-600">{(filteredData as any).timecards?.length || 0}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No data available for the selected filters.</p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
     </div>
   );
-};
-
-export default HRPayrollReporting;
+}
 
