@@ -138,7 +138,7 @@ interface Statistics {
 
 export default function ProjectManagementPage() {
   const { user } = useAuth()
-  const { currentTenant } = useTenant()
+  const { tenant } = useTenant()
   
   // State management
   const [activeTab, setActiveTab] = useState('projects')
@@ -173,13 +173,13 @@ export default function ProjectManagementPage() {
 
   // Load data on component mount
   useEffect(() => {
-    if (currentTenant?.id) {
+    if (tenant?.id) {
       loadData()
     }
-  }, [currentTenant?.id])
+  }, [tenant?.id])
 
   const loadData = async () => {
-    if (!currentTenant?.id) return
+    if (!tenant?.id) return
     
     setLoading(true)
     setError(null)
@@ -190,7 +190,7 @@ export default function ProjectManagementPage() {
         const { data: projectsData, error: projectsError } = await supabase
           .from('project_charters')
           .select('*')
-          .eq('tenant_id', currentTenant.id)
+          .eq('tenant_id', tenant.id)
           .order('created_at', { ascending: false })
         
         if (projectsError) {
@@ -209,7 +209,7 @@ export default function ProjectManagementPage() {
         const { data: workRequestsData, error: workRequestsError } = await supabase
           .from('work_requests')
           .select('*')
-          .eq('tenant_id', currentTenant.id)
+          .eq('tenant_id', tenant.id)
           .order('created_at', { ascending: false })
         
         if (workRequestsError) {
@@ -228,7 +228,7 @@ export default function ProjectManagementPage() {
         const { data: risksData, error: risksError } = await supabase
           .from('risk_register')
           .select('*')
-          .eq('tenant_id', currentTenant.id)
+          .eq('tenant_id', tenant.id)
           .order('created_at', { ascending: false })
         
         if (risksError) {
@@ -293,8 +293,7 @@ export default function ProjectManagementPage() {
     try {
       const newProject = {
         ...projectData,
-        tenant_id: currentTenant.id,
-        created_at: new Date().toISOString(),
+        tenant_id: tenant?.id,        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
 
