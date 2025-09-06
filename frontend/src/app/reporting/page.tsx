@@ -46,6 +46,16 @@ interface JobSummary {
   count: number;
 }
 
+interface SalaryData {
+  employee_name: string;
+  employee_code: string;
+  position: string;
+  pay_period_salary: number;
+  hourly_rate: number;
+  pay_type: string;
+  home_department: string;
+}
+
 interface Timecard {
   id: string;
   customer_id: string;
@@ -70,7 +80,7 @@ export default function ReportingPage() {
   const [employeeData, setEmployeeData] = useState<Employee[]>([]);
   const [checksData, setChecksData] = useState<PayStatement[]>([]);
   const [jobsData, setJobsData] = useState<JobSummary[]>([]);
-  const [salaryData, setSalaryData] = useState<Employee[]>([]);
+  const [salaryData, setSalaryData] = useState<SalaryData[]>([]);
   const [timecardsData, setTimecardsData] = useState<Timecard[]>([]);
 
   // Filter states
