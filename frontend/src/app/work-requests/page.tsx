@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar } from 'lucide-react'
+import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -22,6 +23,13 @@ interface WorkRequest {
   customer_id?: string
   created_at: string
   updated_at: string
+  business_justification?: string
+  estimated_budget?: number
+  requested_completion_date?: string
+  approval_workflow?: string
+  converted_to_project?: boolean
+  project_id?: string
+  impact_assessment?: string
   customer?: {
     first_name?: string
     last_name?: string
@@ -67,6 +75,10 @@ export default function WorkRequestsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null)
   const [stats, setStats] = useState<WorkRequestStats>({
     total: 0,
     submitted: 0,
@@ -93,7 +105,7 @@ export default function WorkRequestsPage() {
       
       console.log('Loading work requests for tenant:', selectedTenant.id, selectedTenant.name)
 
-      // Query work requests WITHOUT customer data to avoid foreign key issues
+      // Query work requests with error handling
       const { data, error: queryError } = await supabase
         .from('work_requests')
         .select('*')
@@ -102,9 +114,9 @@ export default function WorkRequestsPage() {
 
       if (queryError) {
         console.error('Database query error:', queryError)
-        console.error('Error details:', JSON.stringify(queryError, null, 2))
-        console.error('Query was for tenant_id:', selectedTenant.id)
-        setError(`Failed to load work requests: ${queryError.message || queryError.details || 'Unknown error'}`)
+        setError(`Failed to load work requests: ${queryError.message || 'Unknown error'}`)
+        setWorkRequests([])
+        setFilteredRequests([])
         return
       }
 
@@ -126,8 +138,96 @@ export default function WorkRequestsPage() {
     } catch (err) {
       console.error('Error loading work requests:', err)
       setError('Failed to load work requests')
+      setWorkRequests([])
+      setFilteredRequests([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Create new work request
+  const handleCreateRequest = async (requestData: Partial<WorkRequest>) => {
+    if (!selectedTenant?.id || !user?.id) return
+
+    try {
+      const newRequest = {
+        ...requestData,
+        tenant_id: selectedTenant.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      const { data, error } = await supabase
+        .from('work_requests')
+        .insert([newRequest])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error creating work request:', error)
+        setError('Failed to create work request. Please try again.')
+        return
+      }
+
+      setWorkRequests(prev => [data, ...prev])
+      setIsCreateModalOpen(false)
+      loadWorkRequests() // Reload to update stats
+    } catch (error) {
+      console.error('Error creating work request:', error)
+      setError('Failed to create work request. Please try again.')
+    }
+  }
+
+  // Update work request
+  const handleUpdateRequest = async (requestId: string, updates: Partial<WorkRequest>) => {
+    try {
+      const { data, error } = await supabase
+        .from('work_requests')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error updating work request:', error)
+        setError('Failed to update work request. Please try again.')
+        return
+      }
+
+      setWorkRequests(prev => prev.map(r => r.id === requestId ? data : r))
+      setIsEditModalOpen(false)
+      setSelectedRequest(null)
+      loadWorkRequests() // Reload to update stats
+    } catch (error) {
+      console.error('Error updating work request:', error)
+      setError('Failed to update work request. Please try again.')
+    }
+  }
+
+  // Delete work request
+  const handleDeleteRequest = async (requestId: string) => {
+    if (!confirm('Are you sure you want to delete this work request?')) return
+
+    try {
+      const { error } = await supabase
+        .from('work_requests')
+        .delete()
+        .eq('id', requestId)
+
+      if (error) {
+        console.error('Error deleting work request:', error)
+        setError('Failed to delete work request. Please try again.')
+        return
+      }
+
+      setWorkRequests(prev => prev.filter(r => r.id !== requestId))
+      loadWorkRequests() // Reload to update stats
+    } catch (error) {
+      console.error('Error deleting work request:', error)
+      setError('Failed to delete work request. Please try again.')
     }
   }
 
@@ -137,9 +237,9 @@ export default function WorkRequestsPage() {
 
     if (searchTerm) {
       filtered = filtered.filter(request =>
-        request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.customer?.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.business_justification?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -163,10 +263,8 @@ export default function WorkRequestsPage() {
     return new Date(dateString).toLocaleDateString()
   }
 
-  const getCustomerName = (request: WorkRequest) => {
-    // Customer data not loaded due to foreign key issues
-    // Show customer_id instead for now
-    return request.customer_id ? `Customer ID: ${request.customer_id}` : 'No Customer'
+  const getRequestName = (request: WorkRequest) => {
+    return request.title || `Request ${request.id?.slice(0, 8)}`
   }
 
   if (!selectedTenant) {
@@ -182,54 +280,57 @@ export default function WorkRequestsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* REAL DATA INDICATOR */}
-        <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-green-700">
-                <strong>✅ REAL DATABASE DATA</strong> - This page now shows actual work requests from your Supabase database, not mock data.
-                {workRequests.length > 0 && (
-                  <span className="ml-2">Found {workRequests.length} real work requests in tenant: {selectedTenant?.name}</span>
-                )}
-              </p>
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <XCircle className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-red-700 underline text-sm mt-1"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-green-900">🔥 REAL Work Requests (Database Connected)</h1>
-            <p className="text-green-700">Manage and track your work requests - NOW WITH REAL DATA!</p>
+            <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
+            <p className="text-gray-600">Manage and track your work requests</p>
           </div>
-          <Button onClick={() => console.log('Create new request')} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="h-4 w-4 mr-2" />
             New Request
           </Button>
         </div>
 
-        {/* Stats Cards - REAL DATA */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-          <Card className="border-green-200 bg-green-50">
+          <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-green-700">Total (REAL)</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.total}</p>
+                  <p className="text-sm font-medium text-gray-600">Total</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                 </div>
-                <Clock className="h-8 w-8 text-green-500" />
+                <Clock className="h-8 w-8 text-gray-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-blue-200 bg-blue-50">
+          <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-blue-700">Submitted (DB)</p>
+                  <p className="text-sm font-medium text-blue-600">Submitted</p>
                   <p className="text-2xl font-bold text-blue-900">{stats.submitted}</p>
                 </div>
                 <Clock className="h-8 w-8 text-blue-500" />
@@ -237,11 +338,11 @@ export default function WorkRequestsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-yellow-200 bg-yellow-50">
+          <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-yellow-700">Under Review (DB)</p>
+                  <p className="text-sm font-medium text-yellow-600">Under Review</p>
                   <p className="text-2xl font-bold text-yellow-900">{stats.under_review}</p>
                 </div>
                 <AlertCircle className="h-8 w-8 text-yellow-500" />
@@ -249,11 +350,11 @@ export default function WorkRequestsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-green-200 bg-green-50">
+          <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-green-700">Approved (DB)</p>
+                  <p className="text-sm font-medium text-green-600">Approved</p>
                   <p className="text-2xl font-bold text-green-900">{stats.approved}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
@@ -261,11 +362,11 @@ export default function WorkRequestsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-indigo-200 bg-indigo-50">
+          <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-indigo-700">In Progress (DB)</p>
+                  <p className="text-sm font-medium text-indigo-600">In Progress</p>
                   <p className="text-2xl font-bold text-indigo-900">{stats.in_progress}</p>
                 </div>
                 <Clock className="h-8 w-8 text-indigo-500" />
@@ -273,11 +374,11 @@ export default function WorkRequestsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-green-200 bg-green-50">
+          <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-green-700">Completed (DB)</p>
+                  <p className="text-sm font-medium text-green-600">Completed</p>
                   <p className="text-2xl font-bold text-green-900">{stats.completed}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
@@ -286,10 +387,10 @@ export default function WorkRequestsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
+        {/* Filters and View Toggle */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -324,16 +425,36 @@ export default function WorkRequestsPage() {
                 <option value="high">High</option>
                 <option value="critical">Critical</option>
               </select>
+              
+              {/* View Toggle */}
+              <div className="flex border border-gray-300 rounded-md">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-r-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="rounded-l-none"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Work Requests List - REAL DATABASE DATA */}
-        <Card className="border-green-200">
-          <CardHeader className="bg-green-50">
-            <CardTitle className="text-green-900">🔥 REAL Work Requests from Database</CardTitle>
-            <CardDescription className="text-green-700">
-              {filteredRequests.length} of {workRequests.length} requests from Supabase database
+        {/* Work Requests List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Work Requests ({filteredRequests.length})</CardTitle>
+            <CardDescription>
+              {filteredRequests.length} of {workRequests.length} requests
               {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
             </CardDescription>
           </CardHeader>
@@ -342,13 +463,6 @@ export default function WorkRequestsPage() {
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="text-gray-600 mt-2">Loading work requests...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <p className="text-red-600 mb-4">{error}</p>
-                <Button onClick={loadWorkRequests}>
-                  Try Again
-                </Button>
               </div>
             ) : filteredRequests.length === 0 ? (
               <div className="text-center py-12">
@@ -360,59 +474,167 @@ export default function WorkRequestsPage() {
                   }
                 </p>
                 {workRequests.length === 0 && (
-                  <Button onClick={() => console.log('Create first request')}>
+                  <Button onClick={() => setIsCreateModalOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Request
                   </Button>
                 )}
               </div>
+            ) : viewMode === 'list' ? (
+              /* List View */
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Request
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Priority
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Budget
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredRequests.map((request) => {
+                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
+                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
+
+                      return (
+                        <tr key={request.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{getRequestName(request)}</div>
+                              <div className="text-sm text-gray-500">{request.description?.slice(0, 100)}...</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant={request.status === 'approved' ? 'default' : 'secondary'}>
+                              <StatusIcon className="w-3 h-3 mr-1" />
+                              {statusStyle.label}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
+                              {request.priority || 'medium'}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${(request.estimated_budget || 0).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDate(request.created_at)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center space-x-2">
+                              <Button variant="ghost" size="sm">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedRequest(request)
+                                  setIsEditModalOpen(true)
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDeleteRequest(request.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             ) : (
-              <div className="space-y-4">
+              /* Grid View */
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map((request) => {
                   const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
                   const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
-                  const priorityStyle = priorityConfig[request.priority as keyof typeof priorityConfig] || priorityConfig.medium
 
                   return (
-                    <div key={request.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">{request.title}</h3>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.color}`}>
+                    <Card key={request.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">{getRequestName(request)}</CardTitle>
+                            <CardDescription>{request.description?.slice(0, 100)}...</CardDescription>
+                          </div>
+                          <div className="flex space-x-1">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRequest(request)
+                                setIsEditModalOpen(true)
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Status:</span>
+                            <Badge variant={request.status === 'approved' ? 'default' : 'secondary'}>
                               <StatusIcon className="w-3 h-3 mr-1" />
                               {statusStyle.label}
-                            </span>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityStyle.bg} ${priorityStyle.color}`}>
-                              {priorityStyle.label}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Priority:</span>
+                            <Badge variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
+                              {request.priority || 'medium'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Budget:</span>
+                            <span className="text-sm font-medium">
+                              ${(request.estimated_budget || 0).toLocaleString()}
                             </span>
                           </div>
-                          <p className="text-gray-600 mb-3">{request.description}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>Customer: {getCustomerName(request)}</span>
-                            <span>Created: {formatDate(request.created_at)}</span>
-                            {request.category && <span>Category: {request.category}</span>}
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Created:</span>
+                            <span className="text-sm text-gray-500">{formatDate(request.created_at)}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
-                          <Button variant="outline" size="sm" onClick={() => console.log('View', request.id)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => console.log('Edit', request.id)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => console.log('Delete', request.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   )
                 })}
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Create/Edit Modals would go here */}
+        {/* TODO: Implement WorkRequestModal component */}
       </div>
     </DashboardLayout>
   )
