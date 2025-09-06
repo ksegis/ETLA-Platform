@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List } from 'lucide-react'
+import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -65,6 +65,234 @@ const priorityConfig = {
   medium: { color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Medium' },
   high: { color: 'text-orange-600', bg: 'bg-orange-100', label: 'High' },
   critical: { color: 'text-red-600', bg: 'bg-red-100', label: 'Critical' }
+}
+
+// Work Request Modal Component
+const WorkRequestModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  request = null, 
+  title = "Create New Work Request" 
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (data: Partial<WorkRequest>) => void
+  request?: WorkRequest | null
+  title?: string
+}) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: '',
+    priority: 'medium',
+    status: 'submitted',
+    business_justification: '',
+    estimated_budget: '',
+    requested_completion_date: '',
+    impact_assessment: ''
+  })
+
+  useEffect(() => {
+    if (request) {
+      setFormData({
+        title: request.title || '',
+        description: request.description || '',
+        category: request.category || '',
+        priority: request.priority || 'medium',
+        status: request.status || 'submitted',
+        business_justification: request.business_justification || '',
+        estimated_budget: request.estimated_budget?.toString() || '',
+        requested_completion_date: request.requested_completion_date || '',
+        impact_assessment: request.impact_assessment || ''
+      })
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        category: '',
+        priority: 'medium',
+        status: 'submitted',
+        business_justification: '',
+        estimated_budget: '',
+        requested_completion_date: '',
+        impact_assessment: ''
+      })
+    }
+  }, [request, isOpen])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const submitData = {
+      ...formData,
+      estimated_budget: formData.estimated_budget ? parseFloat(formData.estimated_budget) : undefined
+    }
+    
+    onSave(submitData)
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title *
+              </label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter work request title"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Category</option>
+                <option value="development">Development</option>
+                <option value="infrastructure">Infrastructure</option>
+                <option value="security">Security</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="enhancement">Enhancement</option>
+                <option value="support">Support</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Priority *
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="draft">Draft</option>
+                <option value="submitted">Submitted</option>
+                <option value="under_review">Under Review</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estimated Budget
+              </label>
+              <Input
+                type="number"
+                value={formData.estimated_budget}
+                onChange={(e) => setFormData(prev => ({ ...prev, estimated_budget: e.target.value }))}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Requested Completion Date
+              </label>
+              <Input
+                type="date"
+                value={formData.requested_completion_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, requested_completion_date: e.target.value }))}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description *
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Describe the work request in detail"
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Business Justification
+            </label>
+            <textarea
+              value={formData.business_justification}
+              onChange={(e) => setFormData(prev => ({ ...prev, business_justification: e.target.value }))}
+              placeholder="Explain the business need and expected benefits"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Impact Assessment
+            </label>
+            <textarea
+              value={formData.impact_assessment}
+              onChange={(e) => setFormData(prev => ({ ...prev, impact_assessment: e.target.value }))}
+              placeholder="Describe the potential impact if this request is not fulfilled"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+              {request ? 'Update Request' : 'Create Request'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
 
 export default function WorkRequestsPage() {
@@ -147,15 +375,21 @@ export default function WorkRequestsPage() {
 
   // Create new work request
   const handleCreateRequest = async (requestData: Partial<WorkRequest>) => {
-    if (!selectedTenant?.id || !user?.id) return
+    if (!selectedTenant?.id || !user?.id) {
+      setError('Missing tenant or user information')
+      return
+    }
 
     try {
       const newRequest = {
         ...requestData,
         tenant_id: selectedTenant.id,
+        customer_id: selectedTenant.id, // Using tenant_id as customer_id for now
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
+
+      console.log('Creating work request:', newRequest)
 
       const { data, error } = await supabase
         .from('work_requests')
@@ -165,13 +399,15 @@ export default function WorkRequestsPage() {
 
       if (error) {
         console.error('Error creating work request:', error)
-        setError('Failed to create work request. Please try again.')
+        setError(`Failed to create work request: ${error.message}`)
         return
       }
 
+      console.log('Created work request:', data)
       setWorkRequests(prev => [data, ...prev])
       setIsCreateModalOpen(false)
       loadWorkRequests() // Reload to update stats
+      setError(null)
     } catch (error) {
       console.error('Error creating work request:', error)
       setError('Failed to create work request. Please try again.')
@@ -193,7 +429,7 @@ export default function WorkRequestsPage() {
 
       if (error) {
         console.error('Error updating work request:', error)
-        setError('Failed to update work request. Please try again.')
+        setError(`Failed to update work request: ${error.message}`)
         return
       }
 
@@ -201,6 +437,7 @@ export default function WorkRequestsPage() {
       setIsEditModalOpen(false)
       setSelectedRequest(null)
       loadWorkRequests() // Reload to update stats
+      setError(null)
     } catch (error) {
       console.error('Error updating work request:', error)
       setError('Failed to update work request. Please try again.')
@@ -219,12 +456,13 @@ export default function WorkRequestsPage() {
 
       if (error) {
         console.error('Error deleting work request:', error)
-        setError('Failed to delete work request. Please try again.')
+        setError(`Failed to delete work request: ${error.message}`)
         return
       }
 
       setWorkRequests(prev => prev.filter(r => r.id !== requestId))
       loadWorkRequests() // Reload to update stats
+      setError(null)
     } catch (error) {
       console.error('Error deleting work request:', error)
       setError('Failed to delete work request. Please try again.')
@@ -633,8 +871,25 @@ export default function WorkRequestsPage() {
           </CardContent>
         </Card>
 
-        {/* Create/Edit Modals would go here */}
-        {/* TODO: Implement WorkRequestModal component */}
+        {/* Create Modal */}
+        <WorkRequestModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleCreateRequest}
+          title="Create New Work Request"
+        />
+
+        {/* Edit Modal */}
+        <WorkRequestModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            setSelectedRequest(null)
+          }}
+          onSave={(data) => selectedRequest && handleUpdateRequest(selectedRequest.id, data)}
+          request={selectedRequest}
+          title="Edit Work Request"
+        />
       </div>
     </DashboardLayout>
   )
