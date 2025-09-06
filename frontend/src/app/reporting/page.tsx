@@ -10,861 +10,774 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import ReactECharts from 'echarts-for-react';
 
-// Types for our reporting data
-interface HeadcountData {
-  period: string;
-  tenant_id: string;
-  total_headcount: number;
-}
-
-interface StatusDistribution {
-  period: string;
-  tenant_id: string;
-  status: string;
-  employee_count: number;
-}
-
-interface TerminationAnalysis {
-  tenant_id: string;
-  termination_type: string;
-  termination_reason: string;
-  termination_count: number;
-}
-
-interface RetentionData {
-  period: string;
-  tenant_id: string;
-  active_employees: number;
-  terminated_employees: number;
-  turnover_rate_pct: number;
-}
-
-interface CurrentSnapshot {
-  tenant_id: string;
-  employee_code: string;
-  employee_name: string;
-  status: string;
-  last_status_date: string;
-  termination_type?: string;
-  termination_reason?: string;
-}
-
-interface MonthlyChanges {
-  period: string;
-  tenant_id: string;
-  new_hires: number;
-  terminations: number;
-  status_updates: number;
-}
-
-const EmployeeReporting: React.FC = () => {
+const HRPayrollReporting = () => {
   const { user } = useAuth();
   const { selectedTenant } = useTenant();
-  
-  // State for different report data
-  const [headcountData, setHeadcountData] = useState<HeadcountData[]>([]);
-  const [statusData, setStatusData] = useState<StatusDistribution[]>([]);
-  const [terminationData, setTerminationData] = useState<TerminationAnalysis[]>([]);
-  const [retentionData, setRetentionData] = useState<RetentionData[]>([]);
-  const [currentSnapshot, setCurrentSnapshot] = useState<CurrentSnapshot[]>([]);
-  const [monthlyChanges, setMonthlyChanges] = useState<MonthlyChanges[]>([]);
-  
-  // UI state
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('employees');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load all reporting data
-  const loadReportingData = async () => {
-    if (!selectedTenant?.id) {
-      setError('Please select a tenant to view reports');
-      return;
-    }
+  // Filter states for data extraction
+  const [filters, setFilters] = useState({
+    dateRange: { start: '', end: '' },
+    department: '',
+    employeeStatus: '',
+    payPeriod: '',
+    jobTitle: '',
+    location: '',
+    payType: '',
+    salaryRange: { min: '', max: '' }
+  });
 
+  // Data states
+  const [employeeData, setEmployeeData] = useState([]);
+  const [checksData, setChecksData] = useState([]);
+  const [jobsData, setJobsData] = useState([]);
+  const [salaryData, setSalaryData] = useState([]);
+  const [timecardsData, setTimecardsData] = useState([]);
+  const [reportingData, setReportingData] = useState({});
+
+  // Load data based on active tab
+  const loadTabData = async (tabId) => {
+    if (!selectedTenant?.id) return;
+    
     setLoading(true);
     setError(null);
-
+    
     try {
-      console.log('Loading employee reporting data for tenant:', selectedTenant.id);
-
-      // Load headcount trend data
-      const { data: headcount, error: headcountError } = await supabase
-        .from('employee_headcount_trend')
-        .select('*')
-        .eq('tenant_id', selectedTenant.id)
-        .order('period');
-
-      if (headcountError) {
-        console.error('Headcount error:', headcountError);
-        throw headcountError;
+      switch (tabId) {
+        case 'employees':
+          await loadEmployeeData();
+          break;
+        case 'checks':
+          await loadChecksData();
+          break;
+        case 'jobs':
+          await loadJobsData();
+          break;
+        case 'salary':
+          await loadSalaryData();
+          break;
+        case 'timecards':
+          await loadTimecardsData();
+          break;
+        case 'all-reports':
+          await loadAllReportsData();
+          break;
       }
-
-      // Load status distribution data
-      const { data: status, error: statusError } = await supabase
-        .from('employee_status_distribution')
-        .select('*')
-        .eq('tenant_id', selectedTenant.id)
-        .order('period');
-
-      if (statusError) {
-        console.error('Status error:', statusError);
-        throw statusError;
-      }
-
-      // Load termination analysis data
-      const { data: termination, error: terminationError } = await supabase
-        .from('termination_reasons_analysis')
-        .select('*')
-        .eq('tenant_id', selectedTenant.id)
-        .order('count', { ascending: false });
-
-      if (terminationError) {
-        console.error('Termination error:', terminationError);
-        // Don't throw - this view might not have data
-      }
-
-      // Load retention data
-      const { data: retention, error: retentionError } = await supabase
-        .from('employee_retention_basic')
-        .select('*')
-        .eq('tenant_id', selectedTenant.id)
-        .order('period');
-
-      if (retentionError) {
-        console.error('Retention error:', retentionError);
-        // Don't throw - this view might not have data
-      }
-
-      // Load current employee snapshot
-      const { data: snapshot, error: snapshotError } = await supabase
-        .from('current_employee_snapshot')
-        .select('*')
-        .eq('tenant_id', selectedTenant.id)
-        .order('employee_name');
-
-      if (snapshotError) {
-        console.error('Snapshot error:', snapshotError);
-        throw snapshotError;
-      }
-
-      // Load monthly changes data
-      const { data: changes, error: changesError } = await supabase
-        .from('monthly_employee_changes')
-        .select('*')
-        .eq('tenant_id', selectedTenant.id)
-        .order('period');
-
-      if (changesError) {
-        console.error('Changes error:', changesError);
-        // Don't throw - this view might not have data
-      }
-
-      // Update state
-      setHeadcountData(headcount || []);
-      setStatusData(status || []);
-      setTerminationData(termination || []);
-      setRetentionData(retention || []);
-      setCurrentSnapshot(snapshot || []);
-      setMonthlyChanges(changes || []);
-
-      console.log('Loaded reporting data:', {
-        headcount: headcount?.length,
-        status: status?.length,
-        termination: termination?.length,
-        retention: retention?.length,
-        snapshot: snapshot?.length,
-        changes: changes?.length
-      });
-
     } catch (err) {
-      console.error('Error loading reporting data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load reporting data');
+      console.error(`Error loading ${tabId} data:`, err);
+      setError(`Failed to load ${tabId} data: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadReportingData();
-  }, [selectedTenant?.id]);
-
-  // Chart configurations
-  const getHeadcountChartOption = () => {
-    if (!headcountData.length) {
-      return {
-        title: { text: 'Employee Headcount Trend', left: 'center' },
-        graphic: {
-          type: 'text',
-          left: 'center',
-          top: 'middle',
-          style: { text: 'No data available', fontSize: 16, fill: '#999' }
-        }
-      };
-    }
-
-    const periods = headcountData.map(d => new Date(d.period).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }));
-    const counts = headcountData.map(d => d.total_headcount);
-
-    return {
-      title: {
-        text: 'Employee Headcount Trend',
-        left: 'center'
-      },
-      tooltip: {
-        trigger: 'axis',
-        formatter: '{b}: {c} employees'
-      },
-      xAxis: {
-        type: 'category',
-        data: periods,
-        axisLabel: {
-          rotate: 45
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: 'Headcount'
-      },
-      series: [{
-        data: counts,
-        type: 'line',
-        smooth: true,
-        itemStyle: {
-          color: '#3b82f6'
-        },
-        areaStyle: {
-          color: 'rgba(59, 130, 246, 0.1)'
-        }
-      }]
-    };
-  };
-
-  const getStatusDistributionChartOption = () => {
-    if (!statusData.length) {
-      return {
-        title: { text: 'Employee Status Distribution', left: 'center' },
-        graphic: {
-          type: 'text',
-          left: 'center',
-          top: 'middle',
-          style: { text: 'No data available', fontSize: 16, fill: '#999' }
-        }
-      };
-    }
-
-    // Get latest period data
-    const latestPeriod = statusData.reduce((latest, current) => 
-      current.period > latest ? current.period : latest, '');
+  // Employee data loading
+  const loadEmployeeData = async () => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*')
+      .eq('customer_id', selectedTenant.id)
+      .order('created_at', { ascending: false });
     
-    const latestData = statusData.filter(d => d.period === latestPeriod);
+    if (error) throw error;
+    setEmployeeData(data || []);
+  };
+
+  // Checks data loading (pay statements)
+  const loadChecksData = async () => {
+    const { data, error } = await supabase
+      .from('pay_statements')
+      .select(`
+        *,
+        employee:employees(employee_name, employee_code)
+      `)
+      .eq('customer_id', selectedTenant.id)
+      .order('pay_date', { ascending: false });
     
-    const pieData = latestData.map(d => ({
-      name: d.status,
-      value: d.employee_count
-    }));
-
-    return {
-      title: {
-        text: 'Current Employee Status Distribution',
-        left: 'center'
-      },
-      tooltip: {
-        trigger: 'item',
-        formatter: '{a} <br/>{b}: {c} ({d}%)'
-      },
-      legend: {
-        orient: 'vertical',
-        left: 'left'
-      },
-      series: [{
-        name: 'Employee Status',
-        type: 'pie',
-        radius: '50%',
-        data: pieData,
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }]
-    };
+    if (error) throw error;
+    setChecksData(data || []);
   };
 
-  const getTerminationReasonsChartOption = () => {
-    if (!terminationData.length) {
-      return {
-        title: { text: 'Termination Reasons (Last 12 Months)', left: 'center' },
-        graphic: {
-          type: 'text',
-          left: 'center',
-          top: 'middle',
-          style: { text: 'No termination data available', fontSize: 16, fill: '#999' }
-        }
-      };
+  // Jobs data loading
+  const loadJobsData = async () => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('position, home_department, employment_type, work_location, customer_id')
+      .eq('customer_id', selectedTenant.id)
+      .not('position', 'is', null);
+    
+    if (error) throw error;
+    
+    // Group by job characteristics
+    const jobSummary = data.reduce((acc, emp) => {
+      const key = `${emp.position}-${emp.home_department}`;
+      if (!acc[key]) {
+        acc[key] = {
+          position: emp.position,
+          department: emp.home_department,
+          employment_type: emp.employment_type,
+          location: emp.work_location,
+          count: 0
+        };
+      }
+      acc[key].count++;
+      return acc;
+    }, {});
+    
+    setJobsData(Object.values(jobSummary));
+  };
+
+  // Salary data loading
+  const loadSalaryData = async () => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('employee_name, employee_code, position, pay_period_salary, hourly_rate, pay_type, home_department')
+      .eq('customer_id', selectedTenant.id)
+      .not('pay_period_salary', 'is', null);
+    
+    if (error) throw error;
+    setSalaryData(data || []);
+  };
+
+  // Timecards data loading
+  const loadTimecardsData = async () => {
+    const { data, error } = await supabase
+      .from('timecards')
+      .select(`
+        *,
+        employee:employees(employee_name, employee_code)
+      `)
+      .eq('customer_id', selectedTenant.id)
+      .order('work_date', { ascending: false });
+    
+    if (error) throw error;
+    setTimecardsData(data || []);
+  };
+
+  // All reports data loading
+  const loadAllReportsData = async () => {
+    const reports = await Promise.all([
+      supabase.from('employee_headcount_monthly').select('*').eq('customer_id', selectedTenant.id),
+      supabase.from('employee_status_summary').select('*').eq('customer_id', selectedTenant.id),
+      supabase.from('termination_analysis').select('*').eq('customer_id', selectedTenant.id),
+      supabase.from('retention_analysis').select('*').eq('customer_id', selectedTenant.id)
+    ]);
+    
+    setReportingData({
+      headcount: reports[0].data || [],
+      status: reports[1].data || [],
+      terminations: reports[2].data || [],
+      retention: reports[3].data || []
+    });
+  };
+
+  // Data extraction function
+  const extractData = async (format = 'csv') => {
+    const currentData = getCurrentTabData();
+    const filteredData = applyFilters(currentData);
+    
+    if (format === 'csv') {
+      downloadCSV(filteredData, `${activeTab}_report_${new Date().toISOString().split('T')[0]}.csv`);
+    } else if (format === 'json') {
+      downloadJSON(filteredData, `${activeTab}_report_${new Date().toISOString().split('T')[0]}.json`);
     }
-
-    const reasons = terminationData.map(d => d.termination_reason || 'Unspecified');
-    const counts = terminationData.map(d => d.termination_count);
-
-    return {
-      title: {
-        text: 'Termination Reasons (Last 12 Months)',
-        left: 'center'
-      },
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'shadow'
-        }
-      },
-      xAxis: {
-        type: 'category',
-        data: reasons,
-        axisLabel: {
-          rotate: 45,
-          interval: 0
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: 'Count'
-      },
-      series: [{
-        data: counts,
-        type: 'bar',
-        itemStyle: {
-          color: '#ef4444'
-        }
-      }]
-    };
   };
 
-  const getTurnoverRateChartOption = () => {
-    if (!retentionData.length) {
-      return {
-        title: { text: 'Monthly Turnover Rate', left: 'center' },
-        graphic: {
-          type: 'text',
-          left: 'center',
-          top: 'middle',
-          style: { text: 'No retention data available', fontSize: 16, fill: '#999' }
-        }
-      };
+  // Get current tab data
+  const getCurrentTabData = () => {
+    switch (activeTab) {
+      case 'employees': return employeeData;
+      case 'checks': return checksData;
+      case 'jobs': return jobsData;
+      case 'salary': return salaryData;
+      case 'timecards': return timecardsData;
+      case 'all-reports': return reportingData;
+      default: return [];
     }
-
-    const periods = retentionData.map(d => new Date(d.period).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }));
-    const rates = retentionData.map(d => d.turnover_rate_pct);
-
-    return {
-      title: {
-        text: 'Monthly Turnover Rate',
-        left: 'center'
-      },
-      tooltip: {
-        trigger: 'axis',
-        formatter: '{b}: {c}%'
-      },
-      xAxis: {
-        type: 'category',
-        data: periods,
-        axisLabel: {
-          rotate: 45
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: 'Turnover Rate (%)',
-        max: 'dataMax'
-      },
-      series: [{
-        data: rates,
-        type: 'line',
-        smooth: true,
-        itemStyle: {
-          color: '#f59e0b'
-        },
-        lineStyle: {
-          width: 3
-        }
-      }]
-    };
   };
 
-  const getHiresVsTerminationsChartOption = () => {
-    if (!monthlyChanges.length) {
-      return {
-        title: { text: 'Monthly Hires vs Terminations', left: 'center' },
-        graphic: {
-          type: 'text',
-          left: 'center',
-          top: 'middle',
-          style: { text: 'No monthly changes data available', fontSize: 16, fill: '#999' }
-        }
-      };
-    }
-
-    const periods = monthlyChanges.map(d => new Date(d.period).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }));
-    const hires = monthlyChanges.map(d => d.new_hires);
-    const terminations = monthlyChanges.map(d => d.terminations);
-
-    return {
-      title: {
-        text: 'Monthly Hires vs Terminations',
-        left: 'center'
-      },
-      tooltip: {
-        trigger: 'axis'
-      },
-      legend: {
-        data: ['New Hires', 'Terminations'],
-        top: 30
-      },
-      xAxis: {
-        type: 'category',
-        data: periods,
-        axisLabel: {
-          rotate: 45
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: 'Count'
-      },
-      series: [
-        {
-          name: 'New Hires',
-          type: 'bar',
-          data: hires,
-          itemStyle: {
-            color: '#10b981'
-          }
-        },
-        {
-          name: 'Terminations',
-          type: 'bar',
-          data: terminations,
-          itemStyle: {
-            color: '#ef4444'
-          }
-        }
-      ]
-    };
+  // Apply filters to data
+  const applyFilters = (data) => {
+    if (!Array.isArray(data)) return [];
+    
+    return data.filter(item => {
+      // Date range filter
+      if (filters.dateRange.start && item.created_at) {
+        if (new Date(item.created_at) < new Date(filters.dateRange.start)) return false;
+      }
+      if (filters.dateRange.end && item.created_at) {
+        if (new Date(item.created_at) > new Date(filters.dateRange.end)) return false;
+      }
+      
+      // Department filter
+      if (filters.department && item.home_department !== filters.department) return false;
+      
+      // Employee status filter
+      if (filters.employeeStatus && item.employment_status !== filters.employeeStatus) return false;
+      
+      // Job title filter
+      if (filters.jobTitle && !item.position?.toLowerCase().includes(filters.jobTitle.toLowerCase())) return false;
+      
+      // Location filter
+      if (filters.location && item.work_location !== filters.location) return false;
+      
+      // Pay type filter
+      if (filters.payType && item.pay_type !== filters.payType) return false;
+      
+      // Salary range filter
+      if (filters.salaryRange.min && item.pay_period_salary < parseFloat(filters.salaryRange.min)) return false;
+      if (filters.salaryRange.max && item.pay_period_salary > parseFloat(filters.salaryRange.max)) return false;
+      
+      // Search term filter
+      if (searchTerm) {
+        const searchFields = ['employee_name', 'employee_code', 'position', 'home_department'];
+        const matchesSearch = searchFields.some(field => 
+          item[field]?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        if (!matchesSearch) return false;
+      }
+      
+      return true;
+    });
   };
 
-  // Filter current snapshot based on search
-  const filteredSnapshot = currentSnapshot.filter(emp =>
-    emp.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.employee_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.status.toLowerCase().includes(searchTerm.toLowerCase())
+  // Download CSV
+  const downloadCSV = (data, filename) => {
+    if (!data.length) return;
+    
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Download JSON
+  const downloadJSON = (data, filename) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Filter panel component
+  const FilterPanel = () => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>🔍 Data Extraction Filters</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Start Date</label>
+            <Input
+              type="date"
+              value={filters.dateRange.start}
+              onChange={(e) => setFilters(prev => ({
+                ...prev,
+                dateRange: { ...prev.dateRange, start: e.target.value }
+              }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">End Date</label>
+            <Input
+              type="date"
+              value={filters.dateRange.end}
+              onChange={(e) => setFilters(prev => ({
+                ...prev,
+                dateRange: { ...prev.dateRange, end: e.target.value }
+              }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Department</label>
+            <Input
+              placeholder="Enter department"
+              value={filters.department}
+              onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Employee Status</label>
+            <select
+              className="w-full p-2 border rounded"
+              value={filters.employeeStatus}
+              onChange={(e) => setFilters(prev => ({ ...prev, employeeStatus: e.target.value }))}
+            >
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Terminated">Terminated</option>
+              <option value="On Leave">On Leave</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Job Title</label>
+            <Input
+              placeholder="Enter job title"
+              value={filters.jobTitle}
+              onChange={(e) => setFilters(prev => ({ ...prev, jobTitle: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Location</label>
+            <Input
+              placeholder="Enter location"
+              value={filters.location}
+              onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Min Salary</label>
+            <Input
+              type="number"
+              placeholder="0"
+              value={filters.salaryRange.min}
+              onChange={(e) => setFilters(prev => ({
+                ...prev,
+                salaryRange: { ...prev.salaryRange, min: e.target.value }
+              }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Max Salary</label>
+            <Input
+              type="number"
+              placeholder="999999"
+              value={filters.salaryRange.max}
+              onChange={(e) => setFilters(prev => ({
+                ...prev,
+                salaryRange: { ...prev.salaryRange, max: e.target.value }
+              }))}
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <Button onClick={() => extractData('csv')}>📊 Export CSV</Button>
+          <Button onClick={() => extractData('json')} variant="outline">📄 Export JSON</Button>
+          <Button 
+            onClick={() => setFilters({
+              dateRange: { start: '', end: '' },
+              department: '',
+              employeeStatus: '',
+              payPeriod: '',
+              jobTitle: '',
+              location: '',
+              payType: '',
+              salaryRange: { min: '', max: '' }
+            })}
+            variant="outline"
+          >
+            🔄 Clear Filters
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 
-  // Calculate summary statistics
-  const totalEmployees = currentSnapshot.length;
-  const activeEmployees = currentSnapshot.filter(emp => emp.status === 'Active').length;
-  const terminatedEmployees = currentSnapshot.filter(emp => emp.status === 'Terminated').length;
-  const otherStatusEmployees = totalEmployees - activeEmployees - terminatedEmployees;
-  const currentTurnoverRate = totalEmployees > 0 ? (terminatedEmployees / totalEmployees * 100).toFixed(1) : '0';
+  // Tab content renderers
+  const renderEmployeesTab = () => {
+    const filteredData = applyFilters(employeeData);
+    
+    return (
+      <div className="space-y-6">
+        <FilterPanel />
+        <Card>
+          <CardHeader>
+            <CardTitle>👥 Employee Directory ({filteredData.length} employees)</CardTitle>
+            <Input
+              placeholder="Search employees..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {filteredData.map((employee) => (
+                <div key={employee.employee_code} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+                  <div>
+                    <div className="font-medium">{employee.employee_name}</div>
+                    <div className="text-sm text-gray-600">Code: {employee.employee_code}</div>
+                    <div className="text-sm text-gray-600">Position: {employee.position}</div>
+                    <div className="text-sm text-gray-600">Department: {employee.home_department}</div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={employee.employment_status === 'Active' ? 'default' : 'secondary'}>
+                      {employee.employment_status}
+                    </Badge>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {employee.employment_type} • {employee.work_location}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderChecksTab = () => {
+    const filteredData = applyFilters(checksData);
+    
+    return (
+      <div className="space-y-6">
+        <FilterPanel />
+        <Card>
+          <CardHeader>
+            <CardTitle>💰 Pay Statements ({filteredData.length} records)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {filteredData.map((check, index) => (
+                <div key={index} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+                  <div>
+                    <div className="font-medium">{check.employee?.employee_name}</div>
+                    <div className="text-sm text-gray-600">Pay Date: {check.pay_date}</div>
+                    <div className="text-sm text-gray-600">Period: {check.pay_period_start} - {check.pay_period_end}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">${check.gross_pay}</div>
+                    <div className="text-sm text-gray-600">Net: ${check.net_pay}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderJobsTab = () => {
+    const filteredData = applyFilters(jobsData);
+    
+    return (
+      <div className="space-y-6">
+        <FilterPanel />
+        <Card>
+          <CardHeader>
+            <CardTitle>💼 Job Analysis ({filteredData.length} job categories)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {filteredData.map((job, index) => (
+                <div key={index} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+                  <div>
+                    <div className="font-medium">{job.position}</div>
+                    <div className="text-sm text-gray-600">Department: {job.department}</div>
+                    <div className="text-sm text-gray-600">Type: {job.employment_type}</div>
+                  </div>
+                  <div className="text-right">
+                    <Badge>{job.count} employees</Badge>
+                    <div className="text-sm text-gray-600 mt-1">{job.location}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderSalaryTab = () => {
+    const filteredData = applyFilters(salaryData);
+    
+    return (
+      <div className="space-y-6">
+        <FilterPanel />
+        <Card>
+          <CardHeader>
+            <CardTitle>💵 Salary Analysis ({filteredData.length} employees)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {filteredData.map((employee) => (
+                <div key={employee.employee_code} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+                  <div>
+                    <div className="font-medium">{employee.employee_name}</div>
+                    <div className="text-sm text-gray-600">Position: {employee.position}</div>
+                    <div className="text-sm text-gray-600">Department: {employee.home_department}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">
+                      ${employee.pay_period_salary || employee.hourly_rate}/
+                      {employee.pay_type === 'Salary' ? 'period' : 'hour'}
+                    </div>
+                    <Badge variant="outline">{employee.pay_type}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderTimecardsTab = () => {
+    const filteredData = applyFilters(timecardsData);
+    
+    return (
+      <div className="space-y-6">
+        <FilterPanel />
+        <Card>
+          <CardHeader>
+            <CardTitle>⏰ Timecard Records ({filteredData.length} records)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {filteredData.map((timecard, index) => (
+                <div key={index} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+                  <div>
+                    <div className="font-medium">{timecard.employee?.employee_name}</div>
+                    <div className="text-sm text-gray-600">Date: {timecard.work_date}</div>
+                    <div className="text-sm text-gray-600">Hours: {timecard.hours_worked}</div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={timecard.status === 'Approved' ? 'default' : 'secondary'}>
+                      {timecard.status}
+                    </Badge>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {timecard.overtime_hours > 0 && `OT: ${timecard.overtime_hours}h`}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderAllReportsTab = () => (
+    <div className="space-y-6">
+      <FilterPanel />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>📊 Available Reports</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                { name: 'Employee Headcount Report', count: reportingData.headcount?.length || 0 },
+                { name: 'Status Summary Report', count: reportingData.status?.length || 0 },
+                { name: 'Termination Analysis Report', count: reportingData.terminations?.length || 0 },
+                { name: 'Retention Analysis Report', count: reportingData.retention?.length || 0 }
+              ].map((report, index) => (
+                <div key={index} className="flex justify-between items-center p-3 border rounded">
+                  <span className="font-medium">{report.name}</span>
+                  <Badge>{report.count} records</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>📈 Quick Stats</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span>Total Employees</span>
+                <span className="font-bold">{employeeData.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Pay Statements</span>
+                <span className="font-bold">{checksData.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Job Categories</span>
+                <span className="font-bold">{jobsData.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Timecard Records</span>
+                <span className="font-bold">{timecardsData.length}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  // Load data when tab changes
+  useEffect(() => {
+    if (selectedTenant?.id) {
+      loadTabData(activeTab);
+    }
+  }, [activeTab, selectedTenant?.id]);
 
   if (!selectedTenant) {
     return (
-      <div className="p-6">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold text-gray-600">Please select a tenant to view employee reports</h2>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg text-gray-600">Please select a tenant to view reports.</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">📊 Employee Reporting</h1>
-          <p className="text-gray-600 mt-1">
-            Comprehensive employee analytics and insights for {selectedTenant.name}
-          </p>
+    <div className="flex h-screen bg-gray-50">
+      {/* Left Navigation */}
+      <div className="w-64 bg-white shadow-sm border-r border-gray-200">
+        <div className="p-6">
+          <h2 className="text-lg font-semibold text-gray-900">Operations</h2>
         </div>
-        <Button onClick={loadReportingData} disabled={loading}>
-          {loading ? 'Refreshing...' : 'Refresh Data'}
-        </Button>
-      </div>
+        <nav className="mt-6">
+          <div className="px-3">
+            <div className="space-y-1">
+              <a href="/work-requests" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                📋 Work Requests
+              </a>
+              <a href="/project-management" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                📊 Project Management
+              </a>
+              <a href="/jobs" className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                💼 Job Management
+              </a>
+              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                👥 Employee Data Processing
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 px-3">
+            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Library</h3>
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                📈 ETL Dashboard
+              </div>
+              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                📊 HR Analytics Dashboard
+              </div>
+              <a href="/reporting" className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                📋 Reporting
+              </a>
+              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                📊 Data Analytics
+              </div>
+              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                🔍 Audit Trail
+              </div>
+            </div>
+          </div>
 
-      {/* Error Display */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <p className="text-red-600">⚠️ {error}</p>
-          </CardContent>
-        </Card>
-      )}
+          <div className="mt-8 px-3">
+            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data Management</h3>
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                ⚙️ Configuration
+              </div>
+            </div>
+          </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">Total Employees</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{totalEmployees}</div>
-            <p className="text-xs text-blue-600 mt-1">All employee records</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">Active Employees</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
-            <p className="text-xs text-green-600 mt-1">Currently employed</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-700">Terminated</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{terminatedEmployees}</div>
-            <p className="text-xs text-red-600 mt-1">No longer employed</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">Turnover Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{currentTurnoverRate}%</div>
-            <p className="text-xs text-orange-600 mt-1">Historical rate</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {[
-            { id: 'overview', label: '📈 Overview', icon: '📈' },
-            { id: 'trends', label: '📊 Trends', icon: '📊' },
-            { id: 'terminations', label: '🚪 Terminations', icon: '🚪' },
-            { id: 'employees', label: '👥 Employee List', icon: '👥' },
-            { id: 'analytics', label: '🔍 Analytics', icon: '🔍' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          <div className="mt-8 px-3">
+            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Administration</h3>
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50">
+                🏢 Administration
+              </div>
+            </div>
+          </div>
         </nav>
       </div>
 
-      {/* Tab Content */}
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="text-lg text-gray-600">Loading employee data...</div>
-          <div className="text-sm text-gray-500 mt-2">Fetching reports from database...</div>
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-6 space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">HR/Payroll Reporting</h1>
+              <p className="text-gray-600 mt-1">
+                Enterprise reporting by pay period, benefit group, and department for {selectedTenant?.name}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline">🔽 Filter</Button>
+              <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading}>
+                {loading ? 'Refreshing...' : '🔄 Refresh'}
+              </Button>
+              <Button onClick={() => extractData('csv')}>📤 Export</Button>
+            </div>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <div className="text-red-800">{error}</div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {[
+                { id: 'employees', label: '👥 Employees', icon: '👥' },
+                { id: 'checks', label: '💰 Checks', icon: '💰' },
+                { id: 'jobs', label: '💼 Jobs', icon: '💼' },
+                { id: 'salary', label: '💵 Salary', icon: '💵' },
+                { id: 'timecards', label: '⏰ Timecards', icon: '⏰' },
+                { id: 'all-reports', label: '📊 All Reports', icon: '📊' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-lg text-gray-600">Loading {activeTab} data...</div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {activeTab === 'employees' && renderEmployeesTab()}
+              {activeTab === 'checks' && renderChecksTab()}
+              {activeTab === 'jobs' && renderJobsTab()}
+              {activeTab === 'salary' && renderSalaryTab()}
+              {activeTab === 'timecards' && renderTimecardsTab()}
+              {activeTab === 'all-reports' && renderAllReportsTab()}
+            </div>
+          )}
         </div>
-      ) : (
-        <>
-          {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>📈 Headcount Trend</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getHeadcountChartOption()} 
-                    style={{ height: '300px' }}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>🥧 Employee Status Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getStatusDistributionChartOption()} 
-                    style={{ height: '300px' }}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>📊 Monthly Hires vs Terminations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getHiresVsTerminationsChartOption()} 
-                    style={{ height: '300px' }}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>📉 Turnover Rate Trend</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getTurnoverRateChartOption()} 
-                    style={{ height: '300px' }}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Trends Tab */}
-          {activeTab === 'trends' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>📈 Employee Headcount Over Time</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getHeadcountChartOption()} 
-                    style={{ height: '400px' }}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>📊 Monthly Employee Changes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getHiresVsTerminationsChartOption()} 
-                    style={{ height: '400px' }}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>📉 Monthly Turnover Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getTurnoverRateChartOption()} 
-                    style={{ height: '400px' }}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Terminations Tab */}
-          {activeTab === 'terminations' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>🚪 Termination Reasons Analysis</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReactECharts 
-                    option={getTerminationReasonsChartOption()} 
-                    style={{ height: '400px' }}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>📋 Termination Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {terminationData.length > 0 ? (
-                      terminationData.map((term, index) => (
-                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                          <div>
-                            <div className="font-medium">{term.termination_reason || 'Unspecified'}</div>
-                            <div className="text-sm text-gray-600">Type: {term.termination_type || 'N/A'}</div>
-                          </div>
-                          <Badge variant="secondary">{term.termination_count} employees</Badge>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-8">No termination data available</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Employee List Tab */}
-          {activeTab === 'employees' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>👥 Employee Directory</CardTitle>
-                  <div className="flex gap-4">
-                    <Input
-                      placeholder="Search employees..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="max-w-sm"
-                    />
-                    <Badge variant="outline">{filteredSnapshot.length} employees</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {filteredSnapshot.length > 0 ? (
-                      filteredSnapshot.map((employee) => (
-                        <div key={employee.employee_code} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
-                          <div>
-                            <div className="font-medium">{employee.employee_name}</div>
-                            <div className="text-sm text-gray-600">Code: {employee.employee_code}</div>
-                            <div className="text-sm text-gray-600">Last Updated: {new Date(employee.last_status_date).toLocaleDateString()}</div>
-                          </div>
-                          <div className="text-right">
-                            <Badge 
-                              variant={employee.status === 'Active' ? 'default' : 'secondary'}
-                              className={employee.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
-                            >
-                              {employee.status}
-                            </Badge>
-                            {employee.termination_reason && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                Reason: {employee.termination_reason}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-8">
-                        {searchTerm ? 'No employees found matching your search' : 'No employee data available'}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Analytics Tab */}
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>📊 Status Breakdown</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>Active</span>
-                        <span className="font-bold text-green-600">{activeEmployees}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Terminated</span>
-                        <span className="font-bold text-red-600">{terminatedEmployees}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Other Status</span>
-                        <span className="font-bold text-gray-600">{otherStatusEmployees}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>📈 Growth Metrics</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>Total Hires</span>
-                        <span className="font-bold text-blue-600">
-                          {monthlyChanges.reduce((sum, m) => sum + m.new_hires, 0)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Total Terms</span>
-                        <span className="font-bold text-red-600">
-                          {monthlyChanges.reduce((sum, m) => sum + m.terminations, 0)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Net Growth</span>
-                        <span className="font-bold text-green-600">
-                          {monthlyChanges.reduce((sum, m) => sum + m.new_hires - m.terminations, 0)}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>🎯 Key Insights</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-sm">
-                      <div>• {activeEmployees} active employees</div>
-                      <div>• {currentTurnoverRate}% turnover rate</div>
-                      <div>• {terminationData.length} termination reasons tracked</div>
-                      <div>• {headcountData.length} months of data</div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>📋 Data Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div className="p-4 bg-blue-50 rounded">
-                      <div className="text-2xl font-bold text-blue-600">{headcountData.length}</div>
-                      <div className="text-sm text-blue-600">Months of Headcount Data</div>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded">
-                      <div className="text-2xl font-bold text-green-600">{statusData.length}</div>
-                      <div className="text-sm text-green-600">Status Records</div>
-                    </div>
-                    <div className="p-4 bg-red-50 rounded">
-                      <div className="text-2xl font-bold text-red-600">{terminationData.length}</div>
-                      <div className="text-sm text-red-600">Termination Categories</div>
-                    </div>
-                    <div className="p-4 bg-orange-50 rounded">
-                      <div className="text-2xl font-bold text-orange-600">{retentionData.length}</div>
-                      <div className="text-sm text-orange-600">Retention Periods</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </>
-      )}
+      </div>
     </div>
   );
 };
 
-export default EmployeeReporting;
+export default HRPayrollReporting;
 
