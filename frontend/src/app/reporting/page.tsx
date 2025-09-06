@@ -15,7 +15,7 @@ const HRPayrollReporting = () => {
   const { selectedTenant } = useTenant();
   const [activeTab, setActiveTab] = useState('employees');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filter states for data extraction
@@ -31,15 +31,15 @@ const HRPayrollReporting = () => {
   });
 
   // Data states
-  const [employeeData, setEmployeeData] = useState([]);
-  const [checksData, setChecksData] = useState([]);
-  const [jobsData, setJobsData] = useState([]);
-  const [salaryData, setSalaryData] = useState([]);
-  const [timecardsData, setTimecardsData] = useState([]);
-  const [reportingData, setReportingData] = useState({});
+  const [employeeData, setEmployeeData] = useState<any[]>([]);
+  const [checksData, setChecksData] = useState<any[]>([]);
+  const [jobsData, setJobsData] = useState<any[]>([]);
+  const [salaryData, setSalaryData] = useState<any[]>([]);
+  const [timecardsData, setTimecardsData] = useState<any[]>([]);
+  const [reportingData, setReportingData] = useState<any>({});
 
   // Load data based on active tab
-  const loadTabData = async (tabId) => {
+  const loadTabData = async (tabId: string) => {
     if (!selectedTenant?.id) return;
     
     setLoading(true);
@@ -68,7 +68,7 @@ const HRPayrollReporting = () => {
       }
     } catch (err) {
       console.error(`Error loading ${tabId} data:`, err);
-      setError(`Failed to load ${tabId} data: ${err.message}`);
+      setError(`Failed to load ${tabId} data: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -76,6 +76,8 @@ const HRPayrollReporting = () => {
 
   // Employee data loading
   const loadEmployeeData = async () => {
+    if (!selectedTenant?.id) return;
+    
     const { data, error } = await supabase
       .from('employees')
       .select('*')
@@ -88,6 +90,8 @@ const HRPayrollReporting = () => {
 
   // Checks data loading (pay statements)
   const loadChecksData = async () => {
+    if (!selectedTenant?.id) return;
+    
     const { data, error } = await supabase
       .from('pay_statements')
       .select(`
@@ -103,6 +107,8 @@ const HRPayrollReporting = () => {
 
   // Jobs data loading
   const loadJobsData = async () => {
+    if (!selectedTenant?.id) return;
+    
     const { data, error } = await supabase
       .from('employees')
       .select('position, home_department, employment_type, work_location, customer_id')
@@ -112,7 +118,7 @@ const HRPayrollReporting = () => {
     if (error) throw error;
     
     // Group by job characteristics
-    const jobSummary = data.reduce((acc, emp) => {
+    const jobSummary = data.reduce((acc: any, emp: any) => {
       const key = `${emp.position}-${emp.home_department}`;
       if (!acc[key]) {
         acc[key] = {
@@ -125,13 +131,15 @@ const HRPayrollReporting = () => {
       }
       acc[key].count++;
       return acc;
-    }, {});
+    }, {} as any);
     
     setJobsData(Object.values(jobSummary));
   };
 
   // Salary data loading
   const loadSalaryData = async () => {
+    if (!selectedTenant?.id) return;
+    
     const { data, error } = await supabase
       .from('employees')
       .select('employee_name, employee_code, position, pay_period_salary, hourly_rate, pay_type, home_department')
@@ -144,6 +152,8 @@ const HRPayrollReporting = () => {
 
   // Timecards data loading
   const loadTimecardsData = async () => {
+    if (!selectedTenant?.id) return;
+    
     const { data, error } = await supabase
       .from('timecards')
       .select(`
@@ -159,6 +169,8 @@ const HRPayrollReporting = () => {
 
   // All reports data loading
   const loadAllReportsData = async () => {
+    if (!selectedTenant?.id) return;
+    
     const reports = await Promise.all([
       supabase.from('employee_headcount_monthly').select('*').eq('customer_id', selectedTenant.id),
       supabase.from('employee_status_summary').select('*').eq('customer_id', selectedTenant.id),
@@ -200,7 +212,7 @@ const HRPayrollReporting = () => {
   };
 
   // Apply filters to data
-  const applyFilters = (data) => {
+  const applyFilters = (data: any[]) => {
     if (!Array.isArray(data)) return [];
     
     return data.filter(item => {
@@ -245,7 +257,7 @@ const HRPayrollReporting = () => {
   };
 
   // Download CSV
-  const downloadCSV = (data, filename) => {
+  const downloadCSV = (data: any[], filename: string) => {
     if (!data.length) return;
     
     const headers = Object.keys(data[0]);
@@ -264,7 +276,7 @@ const HRPayrollReporting = () => {
   };
 
   // Download JSON
-  const downloadJSON = (data, filename) => {
+  const downloadJSON = (data: any[], filename: string) => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
