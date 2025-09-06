@@ -189,88 +189,105 @@ export default function WorkRequestsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* REAL DATA INDICATOR */}
+        <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <CheckCircle className="h-5 w-5 text-green-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-green-700">
+                <strong>✅ REAL DATABASE DATA</strong> - This page now shows actual work requests from your Supabase database, not mock data.
+                {workRequests.length > 0 && (
+                  <span className="ml-2">Found {workRequests.length} real work requests in tenant: {selectedTenant?.name}</span>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
-            <p className="text-gray-600">Manage and track your work requests</p>
+            <h1 className="text-2xl font-bold text-green-900">🔥 REAL Work Requests (Database Connected)</h1>
+            <p className="text-green-700">Manage and track your work requests - NOW WITH REAL DATA!</p>
           </div>
-          <Button onClick={() => console.log('Create new request')}>
+          <Button onClick={() => console.log('Create new request')} className="bg-green-600 hover:bg-green-700">
             <Plus className="h-4 w-4 mr-2" />
             New Request
           </Button>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - REAL DATA */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-          <Card>
+          <Card className="border-green-200 bg-green-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                  <p className="text-sm font-medium text-green-700">Total (REAL)</p>
+                  <p className="text-2xl font-bold text-green-900">{stats.total}</p>
                 </div>
-                <Clock className="h-8 w-8 text-gray-400" />
+                <Clock className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Submitted</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.submitted}</p>
+                  <p className="text-sm font-medium text-blue-700">Submitted (DB)</p>
+                  <p className="text-2xl font-bold text-blue-900">{stats.submitted}</p>
                 </div>
-                <Clock className="h-8 w-8 text-blue-400" />
+                <Clock className="h-8 w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Under Review</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.under_review}</p>
+                  <p className="text-sm font-medium text-yellow-700">Under Review (DB)</p>
+                  <p className="text-2xl font-bold text-yellow-900">{stats.under_review}</p>
                 </div>
-                <AlertCircle className="h-8 w-8 text-yellow-400" />
+                <AlertCircle className="h-8 w-8 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-green-200 bg-green-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Approved</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+                  <p className="text-sm font-medium text-green-700">Approved (DB)</p>
+                  <p className="text-2xl font-bold text-green-900">{stats.approved}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-400" />
+                <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-indigo-200 bg-indigo-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">In Progress</p>
-                  <p className="text-2xl font-bold text-indigo-600">{stats.in_progress}</p>
+                  <p className="text-sm font-medium text-indigo-700">In Progress (DB)</p>
+                  <p className="text-2xl font-bold text-indigo-900">{stats.in_progress}</p>
                 </div>
-                <Clock className="h-8 w-8 text-indigo-400" />
+                <Clock className="h-8 w-8 text-indigo-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-green-200 bg-green-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+                  <p className="text-sm font-medium text-green-700">Completed (DB)</p>
+                  <p className="text-2xl font-bold text-green-900">{stats.completed}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-400" />
+                <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
@@ -318,12 +335,13 @@ export default function WorkRequestsPage() {
           </CardContent>
         </Card>
 
-        {/* Work Requests List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Work Requests</CardTitle>
-            <CardDescription>
-              {filteredRequests.length} of {workRequests.length} requests
+        {/* Work Requests List - REAL DATABASE DATA */}
+        <Card className="border-green-200">
+          <CardHeader className="bg-green-50">
+            <CardTitle className="text-green-900">🔥 REAL Work Requests from Database</CardTitle>
+            <CardDescription className="text-green-700">
+              {filteredRequests.length} of {workRequests.length} requests from Supabase database
+              {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
