@@ -172,7 +172,7 @@ export default function EnhancedProjectManagementPage() {
   const { user } = useAuth()
   const { selectedTenant } = useTenant()
 
-  // Enhanced load data function with better error handling
+  // Load projects, work requests, and risks from database
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
@@ -186,88 +186,55 @@ export default function EnhancedProjectManagementPage() {
       
       console.log('Loading project data for tenant:', selectedTenant.id, selectedTenant.name)
 
-      // Load projects with enhanced error handling
-      try {
-        const { data: projectData, error: projectError } = await supabase
-          .from('project_charters')
-          .select('*')
-          .eq('tenant_id', selectedTenant.id)
-          .order('created_at', { ascending: false })
+      // Load projects
+      const { data: projectData, error: projectError } = await supabase
+        .from('project_charters')
+        .select('*')
+        .eq('tenant_id', selectedTenant.id)
+        .order('created_at', { ascending: false })
 
-        if (projectError) {
-          console.error('Project query error:', projectError)
-          // Check if table doesn't exist
-          if (projectError.message.includes('relation "project_charters" does not exist')) {
-            console.log('Project charters table does not exist, using empty array')
-            setProjects([])
-          } else {
-            throw projectError
-          }
-        } else {
-          console.log('Loaded projects:', projectData)
-          setProjects(projectData || [])
-        }
-      } catch (projectErr) {
-        console.error('Error loading projects:', projectErr)
-        setProjects([])
+      if (projectError) {
+        console.error('Project query error:', projectError)
+        setError(`Failed to load projects: ${projectError.message}`)
+        return
       }
 
-      // Load work requests with enhanced error handling
-      try {
-        const { data: workRequestData, error: workRequestError } = await supabase
-          .from('work_requests')
-          .select('*')
-          .eq('tenant_id', selectedTenant.id)
-          .order('created_at', { ascending: false })
+      // Load work requests
+      const { data: workRequestData, error: workRequestError } = await supabase
+        .from('work_requests')
+        .select('*')
+        .eq('tenant_id', selectedTenant.id)
+        .order('created_at', { ascending: false })
 
-        if (workRequestError) {
-          console.error('Work request query error:', workRequestError)
-          // Check if table doesn't exist
-          if (workRequestError.message.includes('relation "work_requests" does not exist')) {
-            console.log('Work requests table does not exist, using empty array')
-            setWorkRequests([])
-          } else {
-            throw workRequestError
-          }
-        } else {
-          console.log('Loaded work requests:', workRequestData)
-          setWorkRequests(workRequestData || [])
-        }
-      } catch (workRequestErr) {
-        console.error('Error loading work requests:', workRequestErr)
-        setWorkRequests([])
+      if (workRequestError) {
+        console.error('Work request query error:', workRequestError)
+        setError(`Failed to load work requests: ${workRequestError.message}`)
+        return
       }
 
-      // Load risks with enhanced error handling
-      try {
-        const { data: riskData, error: riskError } = await supabase
-          .from('risks')
-          .select('*')
-          .eq('tenant_id', selectedTenant.id)
-          .order('created_at', { ascending: false })
+      // Load risks
+      const { data: riskData, error: riskError } = await supabase
+        .from('risks')
+        .select('*')
+        .eq('tenant_id', selectedTenant.id)
+        .order('created_at', { ascending: false })
 
-        if (riskError) {
-          console.error('Risk query error:', riskError)
-          // Check if table doesn't exist
-          if (riskError.message.includes('relation "risks" does not exist')) {
-            console.log('Risks table does not exist, using empty array')
-            setRisks([])
-          } else {
-            console.log('Risk query failed, continuing without risks:', riskError.message)
-            setRisks([])
-          }
-        } else {
-          console.log('Loaded risks:', riskData)
-          setRisks(riskData || [])
-        }
-      } catch (riskErr) {
-        console.error('Error loading risks:', riskErr)
-        setRisks([])
+      if (riskError) {
+        console.error('Risk query error:', riskError)
+        // Don't fail completely if risks table doesn't exist
+        console.log('Risks table may not exist, continuing without risks')
       }
 
+      console.log('Loaded projects:', projectData)
+      console.log('Loaded work requests:', workRequestData)
+      console.log('Loaded risks:', riskData)
+      
+      setProjects(projectData || [])
+      setWorkRequests(workRequestData || [])
+      setRisks(riskData || [])
     } catch (err) {
       console.error('Unexpected error loading data:', err)
-      setError('Failed to load project management data. Some features may not be available.')
+      setError('Unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -329,7 +296,6 @@ export default function EnhancedProjectManagementPage() {
 
   // Helper functions
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Not set'
     return new Date(dateString).toLocaleDateString()
   }
 
@@ -387,15 +353,11 @@ export default function EnhancedProjectManagementPage() {
     }
   }
 
-  // Enhanced create new project with better error handling
+  // Create new project
   const handleCreateProject = async () => {
-    if (!selectedTenant?.id || !newProject.title) {
-      setError('Please provide a project title and ensure a tenant is selected.')
-      return
-    }
+    if (!selectedTenant?.id || !newProject.title) return
 
     try {
-      setError(null)
       const projectData = {
         ...newProject,
         tenant_id: selectedTenant.id,
@@ -410,11 +372,7 @@ export default function EnhancedProjectManagementPage() {
 
       if (error) {
         console.error('Error creating project:', error)
-        if (error.message.includes('relation "project_charters" does not exist')) {
-          setError('Project management tables are not set up. Please contact your administrator.')
-        } else {
-          setError(`Failed to create project: ${error.message}`)
-        }
+        setError(`Failed to create project: ${error.message}`)
         return
       }
 
@@ -424,7 +382,7 @@ export default function EnhancedProjectManagementPage() {
       resetNewProject()
     } catch (err) {
       console.error('Unexpected error creating project:', err)
-      setError('Failed to create project due to an unexpected error.')
+      setError('Failed to create project')
     }
   }
 
@@ -457,15 +415,11 @@ export default function EnhancedProjectManagementPage() {
     })
   }
 
-  // Enhanced update project with better error handling
+  // Update project
   const handleUpdateProject = async () => {
-    if (!selectedProject?.id) {
-      setError('No project selected for update.')
-      return
-    }
+    if (!selectedProject?.id) return
 
     try {
-      setError(null)
       const { data, error } = await supabase
         .from('project_charters')
         .update({
@@ -477,11 +431,7 @@ export default function EnhancedProjectManagementPage() {
 
       if (error) {
         console.error('Error updating project:', error)
-        if (error.message.includes('relation "project_charters" does not exist')) {
-          setError('Project management tables are not set up. Please contact your administrator.')
-        } else {
-          setError(`Failed to update project: ${error.message}`)
-        }
+        setError(`Failed to update project: ${error.message}`)
         return
       }
 
@@ -491,16 +441,15 @@ export default function EnhancedProjectManagementPage() {
       setSelectedProject(null)
     } catch (err) {
       console.error('Unexpected error updating project:', err)
-      setError('Failed to update project due to an unexpected error.')
+      setError('Failed to update project')
     }
   }
 
-  // Enhanced delete project with better error handling
+  // Delete project
   const handleDeleteProject = async (projectId: string) => {
     if (!confirm('Are you sure you want to delete this project?')) return
 
     try {
-      setError(null)
       const { error } = await supabase
         .from('project_charters')
         .delete()
@@ -508,18 +457,14 @@ export default function EnhancedProjectManagementPage() {
 
       if (error) {
         console.error('Error deleting project:', error)
-        if (error.message.includes('relation "project_charters" does not exist')) {
-          setError('Project management tables are not set up. Please contact your administrator.')
-        } else {
-          setError(`Failed to delete project: ${error.message}`)
-        }
+        setError(`Failed to delete project: ${error.message}`)
         return
       }
 
       setProjects(prev => prev.filter(p => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
-      setError('Failed to delete project due to an unexpected error.')
+      setError('Failed to delete project')
     }
   }
 
@@ -553,10 +498,9 @@ export default function EnhancedProjectManagementPage() {
     setShowCreateModal(true)
   }
 
-  // Enhanced work request action with better error handling
+  // Approve/Decline work request
   const handleWorkRequestAction = async (workRequestId: string, action: 'approve' | 'decline', comments?: string) => {
     try {
-      setError(null)
       const newStatus = action === 'approve' ? 'approved' : 'declined'
       
       const { data, error } = await supabase
@@ -570,18 +514,14 @@ export default function EnhancedProjectManagementPage() {
 
       if (error) {
         console.error('Error updating work request:', error)
-        if (error.message.includes('relation "work_requests" does not exist')) {
-          setError('Work request tables are not set up. Please contact your administrator.')
-        } else {
-          setError(`Failed to ${action} work request: ${error.message}`)
-        }
+        setError(`Failed to ${action} work request: ${error.message}`)
         return
       }
 
       setWorkRequests(prev => prev.map(wr => wr.id === workRequestId ? data[0] : wr))
     } catch (err) {
       console.error(`Unexpected error ${action}ing work request:`, err)
-      setError(`Failed to ${action} work request due to an unexpected error.`)
+      setError(`Failed to ${action} work request`)
     }
   }
 
@@ -917,6 +857,17 @@ export default function EnhancedProjectManagementPage() {
     )
   }
 
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <AlertCircle className="h-8 w-8 text-red-500 mr-2" />
+          <p className="text-red-600">{error}</p>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -936,24 +887,6 @@ export default function EnhancedProjectManagementPage() {
             </Button>
           </div>
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-red-700">{error}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-auto"
-                onClick={() => setError(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-9 gap-4">
