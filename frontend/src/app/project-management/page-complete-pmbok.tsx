@@ -18,7 +18,7 @@ import {
   Edit,
   Trash2,
   Eye,
-  Grid3X3,
+  LayoutGrid,
   List,
   Building,
   User,
@@ -659,7 +659,7 @@ export default function ProjectManagementPage() {
                     onClick={() => setViewMode('grid')}
                     className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
                   >
-                    <Grid3X3 className="h-4 w-4" />
+                    <LayoutGrid className="h-4 w-4" />
                   </button>
                 </div>
                 <Button variant="outline" size="sm">
