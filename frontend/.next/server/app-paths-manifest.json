@@ -1,4 +1,4 @@
 {
-  "/reporting/page": "app/reporting/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/hr-analytics/page": "app/hr-analytics/page.js"
 }

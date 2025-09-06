@@ -57,33 +57,37 @@ export default function HRAnalyticsDashboard() {
 
   // Load HR Analytics data
   useEffect(() => {
-    if (selectedTenant?.id) {
-      loadHRAnalyticsData();
-    }
-  }, [selectedTenant?.id, timeframe]);
+    loadHRAnalyticsData();
+  }, [timeframe]);
 
   const loadHRAnalyticsData = async () => {
-    if (!selectedTenant?.id) return;
-    
     setLoading(true);
     setError(null);
     
     try {
-      // Load employee metrics
-      const { data: employees, error: empError } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('customer_id', selectedTenant.id);
+      // Load employee metrics - try with tenant first, fallback to all data
+      let employeesQuery = supabase.from('employees').select('*');
+      if (selectedTenant?.id) {
+        employeesQuery = employeesQuery.eq('customer_id', selectedTenant.id);
+      }
+      
+      const { data: employees, error: empError } = await employeesQuery;
+      if (empError) {
+        console.error('Employee query error:', empError);
+        throw empError;
+      }
 
-      if (empError) throw empError;
-
-      // Load payroll data
-      const { data: payroll, error: payError } = await supabase
-        .from('pay_statements')
-        .select('*')
-        .eq('customer_id', selectedTenant.id);
-
-      if (payError) throw payError;
+      // Load payroll data - try with tenant first, fallback to all data
+      let payrollQuery = supabase.from('pay_statements').select('*');
+      if (selectedTenant?.id) {
+        payrollQuery = payrollQuery.eq('customer_id', selectedTenant.id);
+      }
+      
+      const { data: payroll, error: payError } = await payrollQuery;
+      if (payError) {
+        console.error('Payroll query error:', payError);
+        throw payError;
+      }
 
       // Calculate metrics
       const activeEmployees = employees?.filter(emp => emp.status === 'active').length || 0;
