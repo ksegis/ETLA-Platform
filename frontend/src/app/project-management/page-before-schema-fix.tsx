@@ -45,23 +45,21 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import { supabase } from '@/lib/supabase'
 
-// Schema-compatible interfaces that work with existing database structure
+// Enhanced interfaces for comprehensive project management
 interface ProjectCharter {
   id: string
-  name?: string // Use 'name' if 'title' doesn't exist
-  title?: string // Keep title as optional
-  description?: string
-  status?: string
-  priority?: string
-  start_date?: string
-  end_date?: string
-  budget?: number
-  assigned_team_lead?: string
-  team_lead?: string // Alternative field name
+  title: string
+  description: string
+  status: string
+  priority: string
+  start_date: string
+  end_date: string
+  budget: number
+  assigned_team_lead: string
   tenant_id: string
   created_at: string
   updated_at: string
-  // PMBOK Framework fields (all optional for compatibility)
+  // PMBOK Framework fields
   project_scope?: string
   success_criteria?: string
   stakeholders?: string[]
@@ -82,12 +80,11 @@ interface ProjectCharter {
 
 interface WorkRequest {
   id: string
-  name?: string // Use 'name' if 'title' doesn't exist
-  title?: string
-  description?: string
-  status?: string
-  priority?: string
-  customer_id?: string
+  title: string
+  description: string
+  status: string
+  priority: string
+  customer_id: string
   tenant_id: string
   created_at: string
   updated_at: string
@@ -103,14 +100,10 @@ interface WorkRequest {
 
 interface Risk {
   id: string
-  name?: string // Use 'name' if 'risk_title' doesn't exist
-  risk_title?: string
-  title?: string
-  risk_description?: string
-  description?: string
-  risk_level?: string
-  level?: string
-  status?: string
+  risk_title: string
+  risk_description: string
+  risk_level: string
+  status: string
   project_id?: string
   tenant_id: string
   created_at: string
@@ -139,7 +132,6 @@ export default function EnhancedProjectManagementPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState<ProjectCharter | null>(null)
   const [activeTab, setActiveTab] = useState<'projects' | 'work-requests' | 'risks' | 'charter' | 'wbs' | 'schedule' | 'evm' | 'stakeholders' | 'compliance'>('projects')
-  const [availableTables, setAvailableTables] = useState<string[]>([])
 
   // Enhanced filters
   const [filters, setFilters] = useState<ProjectFilters>({
@@ -153,7 +145,6 @@ export default function EnhancedProjectManagementPage() {
   // New project form state
   const [newProject, setNewProject] = useState<Partial<ProjectCharter>>({
     title: '',
-    name: '',
     description: '',
     status: 'planning',
     priority: 'medium',
@@ -161,7 +152,6 @@ export default function EnhancedProjectManagementPage() {
     end_date: '',
     budget: 0,
     assigned_team_lead: '',
-    team_lead: '',
     project_scope: '',
     success_criteria: '',
     stakeholders: [],
@@ -182,47 +172,7 @@ export default function EnhancedProjectManagementPage() {
   const { user } = useAuth()
   const { selectedTenant } = useTenant()
 
-  // Helper function to get display title from project
-  const getProjectTitle = (project: ProjectCharter): string => {
-    return project.title || project.name || 'Untitled Project'
-  }
-
-  // Helper function to get display name from work request
-  const getWorkRequestTitle = (workRequest: WorkRequest): string => {
-    return workRequest.title || workRequest.name || 'Untitled Request'
-  }
-
-  // Helper function to get display name from risk
-  const getRiskTitle = (risk: Risk): string => {
-    return risk.risk_title || risk.title || risk.name || 'Untitled Risk'
-  }
-
-  // Helper function to get team lead
-  const getTeamLead = (project: ProjectCharter): string => {
-    return project.assigned_team_lead || project.team_lead || ''
-  }
-
-  // Check available tables in database
-  const checkAvailableTables = async () => {
-    try {
-      // Try to query information_schema to see what tables exist
-      const { data, error } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
-        .eq('table_type', 'BASE TABLE')
-
-      if (!error && data) {
-        const tableNames = data.map(row => row.table_name)
-        setAvailableTables(tableNames)
-        console.log('Available tables:', tableNames)
-      }
-    } catch (err) {
-      console.log('Could not check available tables, will try direct queries')
-    }
-  }
-
-  // Enhanced load data function with schema compatibility
+  // Enhanced load data function with better error handling
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
@@ -236,98 +186,88 @@ export default function EnhancedProjectManagementPage() {
       
       console.log('Loading project data for tenant:', selectedTenant.id, selectedTenant.name)
 
-      // Check available tables first
-      await checkAvailableTables()
+      // Load projects with enhanced error handling
+      try {
+        const { data: projectData, error: projectError } = await supabase
+          .from('project_charters')
+          .select('*')
+          .eq('tenant_id', selectedTenant.id)
+          .order('created_at', { ascending: false })
 
-      // Try multiple table names for projects
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let projectData: any[] = []
-      
-      for (const tableName of projectTableNames) {
-        try {
-          console.log(`Trying to load from table: ${tableName}`)
-          const { data, error } = await supabase
-            .from(tableName)
-            .select('*')
-            .eq('tenant_id', selectedTenant.id)
-            .order('created_at', { ascending: false })
-
-          if (!error && data) {
-            console.log(`Successfully loaded ${data.length} projects from ${tableName}`)
-            projectData = data
-            break
-          } else if (error) {
-            console.log(`Table ${tableName} query failed:`, error.message)
+        if (projectError) {
+          console.error('Project query error:', projectError)
+          // Check if table doesn't exist
+          if (projectError.message.includes('relation "project_charters" does not exist')) {
+            console.log('Project charters table does not exist, using empty array')
+            setProjects([])
+          } else {
+            throw projectError
           }
-        } catch (err) {
-          console.log(`Error querying ${tableName}:`, err)
+        } else {
+          console.log('Loaded projects:', projectData)
+          setProjects(projectData || [])
         }
+      } catch (projectErr) {
+        console.error('Error loading projects:', projectErr)
+        setProjects([])
       }
-      
-      setProjects(projectData || [])
 
-      // Try multiple table names for work requests
-      const workRequestTableNames = ['work_requests', 'workrequests', 'requests']
-      let workRequestData: any[] = []
-      
-      for (const tableName of workRequestTableNames) {
-        try {
-          console.log(`Trying to load from table: ${tableName}`)
-          const { data, error } = await supabase
-            .from(tableName)
-            .select('*')
-            .eq('tenant_id', selectedTenant.id)
-            .order('created_at', { ascending: false })
+      // Load work requests with enhanced error handling
+      try {
+        const { data: workRequestData, error: workRequestError } = await supabase
+          .from('work_requests')
+          .select('*')
+          .eq('tenant_id', selectedTenant.id)
+          .order('created_at', { ascending: false })
 
-          if (!error && data) {
-            console.log(`Successfully loaded ${data.length} work requests from ${tableName}`)
-            workRequestData = data
-            break
-          } else if (error) {
-            console.log(`Table ${tableName} query failed:`, error.message)
+        if (workRequestError) {
+          console.error('Work request query error:', workRequestError)
+          // Check if table doesn't exist
+          if (workRequestError.message.includes('relation "work_requests" does not exist')) {
+            console.log('Work requests table does not exist, using empty array')
+            setWorkRequests([])
+          } else {
+            throw workRequestError
           }
-        } catch (err) {
-          console.log(`Error querying ${tableName}:`, err)
+        } else {
+          console.log('Loaded work requests:', workRequestData)
+          setWorkRequests(workRequestData || [])
         }
+      } catch (workRequestErr) {
+        console.error('Error loading work requests:', workRequestErr)
+        setWorkRequests([])
       }
-      
-      setWorkRequests(workRequestData || [])
 
-      // Try multiple table names for risks
-      const riskTableNames = ['risks', 'risk', 'project_risks']
-      let riskData: any[] = []
-      
-      for (const tableName of riskTableNames) {
-        try {
-          console.log(`Trying to load from table: ${tableName}`)
-          const { data, error } = await supabase
-            .from(tableName)
-            .select('*')
-            .eq('tenant_id', selectedTenant.id)
-            .order('created_at', { ascending: false })
+      // Load risks with enhanced error handling
+      try {
+        const { data: riskData, error: riskError } = await supabase
+          .from('risks')
+          .select('*')
+          .eq('tenant_id', selectedTenant.id)
+          .order('created_at', { ascending: false })
 
-          if (!error && data) {
-            console.log(`Successfully loaded ${data.length} risks from ${tableName}`)
-            riskData = data
-            break
-          } else if (error) {
-            console.log(`Table ${tableName} query failed:`, error.message)
+        if (riskError) {
+          console.error('Risk query error:', riskError)
+          // Check if table doesn't exist
+          if (riskError.message.includes('relation "risks" does not exist')) {
+            console.log('Risks table does not exist, using empty array')
+            setRisks([])
+          } else {
+            console.log('Risk query failed, continuing without risks:', riskError.message)
+            setRisks([])
           }
-        } catch (err) {
-          console.log(`Error querying ${tableName}:`, err)
+        } else {
+          console.log('Loaded risks:', riskData)
+          setRisks(riskData || [])
         }
-      }
-      
-      setRisks(riskData || [])
-
-      // Show informational message about available data
-      if (projectData.length === 0 && workRequestData.length === 0 && riskData.length === 0) {
-        setError('No project management tables found or they contain no data. You may need to set up the database schema.')
+      } catch (riskErr) {
+        console.error('Error loading risks:', riskErr)
+        setRisks([])
       }
 
     } catch (err) {
       console.error('Unexpected error loading data:', err)
-      setError('Failed to load project management data. The database schema may need to be set up.')
+      setError('Failed to load project management data. Some features may not be available.')
     } finally {
       setLoading(false)
     }
@@ -349,52 +289,40 @@ export default function EnhancedProjectManagementPage() {
     approvedWorkRequests: workRequests.filter(wr => wr.status === 'approved').length,
     totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
     totalRisks: risks.length,
-    highRisks: risks.filter(r => (r.risk_level || r.level) === 'high').length,
+    highRisks: risks.filter(r => r.risk_level === 'high').length,
     mitigatedRisks: risks.filter(r => r.status === 'resolved').length
   }
 
-  // Filter projects with schema compatibility
+  // Filter projects
   const filteredProjects = projects.filter(project => {
-    const title = getProjectTitle(project)
-    const description = project.description || ''
-    const teamLead = getTeamLead(project)
-    const projectCode = project.project_code || ''
-    
-    const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         description.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         teamLead.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         projectCode.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    const matchesSearch = (project.title || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         (project.description || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         (project.assigned_team_lead || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         (project.project_code || '').toLowerCase().includes(filters.searchTerm.toLowerCase())
     const matchesStatus = filters.status === 'all' || project.status === filters.status
     const matchesPriority = filters.priority === 'all' || project.priority === filters.priority
-    const matchesTeamLead = filters.teamLead === 'all' || teamLead === filters.teamLead
+    const matchesTeamLead = filters.teamLead === 'all' || project.assigned_team_lead === filters.teamLead
     
     return matchesSearch && matchesStatus && matchesPriority && matchesTeamLead
   })
 
-  // Filter work requests with schema compatibility
+  // Filter work requests
   const filteredWorkRequests = workRequests.filter(wr => {
-    const title = getWorkRequestTitle(wr)
-    const description = wr.description || ''
-    const customerName = wr.customer_name || ''
-    
-    const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         description.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         customerName.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    const matchesSearch = (wr.title || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         (wr.description || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         (wr.customer_name || '').toLowerCase().includes(filters.searchTerm.toLowerCase())
     const matchesStatus = filters.status === 'all' || wr.status === filters.status
     const matchesPriority = filters.priority === 'all' || wr.priority === filters.priority
     
     return matchesSearch && matchesStatus && matchesPriority
   })
 
-  // Filter risks with schema compatibility
+  // Filter risks
   const filteredRisks = risks.filter(risk => {
-    const title = getRiskTitle(risk)
-    const description = risk.risk_description || risk.description || ''
-    
-    const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         description.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    const matchesSearch = (risk.risk_title || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         (risk.risk_description || '').toLowerCase().includes(filters.searchTerm.toLowerCase())
     const matchesStatus = filters.status === 'all' || risk.status === filters.status
-    const matchesPriority = filters.priority === 'all' || (risk.risk_level || risk.level) === filters.priority
+    const matchesPriority = filters.priority === 'all' || risk.risk_level === filters.priority
     
     return matchesSearch && matchesStatus && matchesPriority
   })
@@ -459,53 +387,41 @@ export default function EnhancedProjectManagementPage() {
     }
   }
 
-  // Schema-compatible create project function
+  // Enhanced create new project with better error handling
   const handleCreateProject = async () => {
-    if (!selectedTenant?.id || (!newProject.title && !newProject.name)) {
+    if (!selectedTenant?.id || !newProject.title) {
       setError('Please provide a project title and ensure a tenant is selected.')
       return
     }
 
     try {
       setError(null)
-      
-      // Prepare data with both title and name fields for compatibility
       const projectData = {
         ...newProject,
-        title: newProject.title || newProject.name,
-        name: newProject.name || newProject.title,
         tenant_id: selectedTenant.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
 
-      // Try different table names
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let success = false
-      
-      for (const tableName of projectTableNames) {
-        try {
-          const { data, error } = await supabase
-            .from(tableName)
-            .insert([projectData])
-            .select()
+      const { data, error } = await supabase
+        .from('project_charters')
+        .insert([projectData])
+        .select()
 
-          if (!error && data) {
-            console.log(`Project created in ${tableName}:`, data)
-            setProjects(prev => [data[0], ...prev])
-            setShowCreateModal(false)
-            resetNewProject()
-            success = true
-            break
-          }
-        } catch (err) {
-          console.log(`Failed to create in ${tableName}:`, err)
+      if (error) {
+        console.error('Error creating project:', error)
+        if (error.message.includes('relation "project_charters" does not exist')) {
+          setError('Project management tables are not set up. Please contact your administrator.')
+        } else {
+          setError(`Failed to create project: ${error.message}`)
         }
+        return
       }
-      
-      if (!success) {
-        setError('Could not create project. The database tables may not be set up correctly.')
-      }
+
+      console.log('Project created:', data)
+      setProjects(prev => [data[0], ...prev])
+      setShowCreateModal(false)
+      resetNewProject()
     } catch (err) {
       console.error('Unexpected error creating project:', err)
       setError('Failed to create project due to an unexpected error.')
@@ -516,7 +432,6 @@ export default function EnhancedProjectManagementPage() {
   const resetNewProject = () => {
     setNewProject({
       title: '',
-      name: '',
       description: '',
       status: 'planning',
       priority: 'medium',
@@ -524,7 +439,6 @@ export default function EnhancedProjectManagementPage() {
       end_date: '',
       budget: 0,
       assigned_team_lead: '',
-      team_lead: '',
       project_scope: '',
       success_criteria: '',
       stakeholders: [],
@@ -543,7 +457,7 @@ export default function EnhancedProjectManagementPage() {
     })
   }
 
-  // Schema-compatible update project function
+  // Enhanced update project with better error handling
   const handleUpdateProject = async () => {
     if (!selectedProject?.id) {
       setError('No project selected for update.')
@@ -552,81 +466,57 @@ export default function EnhancedProjectManagementPage() {
 
     try {
       setError(null)
-      
-      // Prepare data with both title and name fields for compatibility
-      const updateData = {
-        ...selectedProject,
-        title: selectedProject.title || selectedProject.name,
-        name: selectedProject.name || selectedProject.title,
-        updated_at: new Date().toISOString()
-      }
+      const { data, error } = await supabase
+        .from('project_charters')
+        .update({
+          ...selectedProject,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedProject.id)
+        .select()
 
-      // Try different table names
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let success = false
-      
-      for (const tableName of projectTableNames) {
-        try {
-          const { data, error } = await supabase
-            .from(tableName)
-            .update(updateData)
-            .eq('id', selectedProject.id)
-            .select()
-
-          if (!error && data) {
-            console.log(`Project updated in ${tableName}:`, data)
-            setProjects(prev => prev.map(p => p.id === selectedProject.id ? data[0] : p))
-            setShowEditModal(false)
-            setSelectedProject(null)
-            success = true
-            break
-          }
-        } catch (err) {
-          console.log(`Failed to update in ${tableName}:`, err)
+      if (error) {
+        console.error('Error updating project:', error)
+        if (error.message.includes('relation "project_charters" does not exist')) {
+          setError('Project management tables are not set up. Please contact your administrator.')
+        } else {
+          setError(`Failed to update project: ${error.message}`)
         }
+        return
       }
-      
-      if (!success) {
-        setError('Could not update project. The database tables may not be set up correctly.')
-      }
+
+      console.log('Project updated:', data)
+      setProjects(prev => prev.map(p => p.id === selectedProject.id ? data[0] : p))
+      setShowEditModal(false)
+      setSelectedProject(null)
     } catch (err) {
       console.error('Unexpected error updating project:', err)
       setError('Failed to update project due to an unexpected error.')
     }
   }
 
-  // Schema-compatible delete project function
+  // Enhanced delete project with better error handling
   const handleDeleteProject = async (projectId: string) => {
     if (!confirm('Are you sure you want to delete this project?')) return
 
     try {
       setError(null)
-      
-      // Try different table names
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let success = false
-      
-      for (const tableName of projectTableNames) {
-        try {
-          const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq('id', projectId)
+      const { error } = await supabase
+        .from('project_charters')
+        .delete()
+        .eq('id', projectId)
 
-          if (!error) {
-            console.log(`Project deleted from ${tableName}`)
-            setProjects(prev => prev.filter(p => p.id !== projectId))
-            success = true
-            break
-          }
-        } catch (err) {
-          console.log(`Failed to delete from ${tableName}:`, err)
+      if (error) {
+        console.error('Error deleting project:', error)
+        if (error.message.includes('relation "project_charters" does not exist')) {
+          setError('Project management tables are not set up. Please contact your administrator.')
+        } else {
+          setError(`Failed to delete project: ${error.message}`)
         }
+        return
       }
-      
-      if (!success) {
-        setError('Could not delete project. The database tables may not be set up correctly.')
-      }
+
+      setProjects(prev => prev.filter(p => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')
@@ -635,10 +525,8 @@ export default function EnhancedProjectManagementPage() {
 
   // Create project from work request
   const createProjectFromWorkRequest = (workRequest: WorkRequest) => {
-    const title = getWorkRequestTitle(workRequest)
     setNewProject({
-      title: title,
-      name: title,
+      title: workRequest.title,
       description: workRequest.description,
       status: 'planning',
       priority: workRequest.priority,
@@ -646,7 +534,6 @@ export default function EnhancedProjectManagementPage() {
       end_date: workRequest.requested_completion_date || '',
       budget: workRequest.estimated_budget || 0,
       assigned_team_lead: '',
-      team_lead: '',
       project_scope: workRequest.description,
       success_criteria: '',
       stakeholders: [workRequest.requestor_name || workRequest.customer_name || ''],
@@ -666,41 +553,32 @@ export default function EnhancedProjectManagementPage() {
     setShowCreateModal(true)
   }
 
-  // Schema-compatible work request action
+  // Enhanced work request action with better error handling
   const handleWorkRequestAction = async (workRequestId: string, action: 'approve' | 'decline', comments?: string) => {
     try {
       setError(null)
       const newStatus = action === 'approve' ? 'approved' : 'declined'
       
-      // Try different table names
-      const workRequestTableNames = ['work_requests', 'workrequests', 'requests']
-      let success = false
-      
-      for (const tableName of workRequestTableNames) {
-        try {
-          const { data, error } = await supabase
-            .from(tableName)
-            .update({
-              status: newStatus,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', workRequestId)
-            .select()
+      const { data, error } = await supabase
+        .from('work_requests')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', workRequestId)
+        .select()
 
-          if (!error && data) {
-            console.log(`Work request updated in ${tableName}:`, data)
-            setWorkRequests(prev => prev.map(wr => wr.id === workRequestId ? data[0] : wr))
-            success = true
-            break
-          }
-        } catch (err) {
-          console.log(`Failed to update work request in ${tableName}:`, err)
+      if (error) {
+        console.error('Error updating work request:', error)
+        if (error.message.includes('relation "work_requests" does not exist')) {
+          setError('Work request tables are not set up. Please contact your administrator.')
+        } else {
+          setError(`Failed to ${action} work request: ${error.message}`)
         }
+        return
       }
-      
-      if (!success) {
-        setError(`Could not ${action} work request. The database tables may not be set up correctly.`)
-      }
+
+      setWorkRequests(prev => prev.map(wr => wr.id === workRequestId ? data[0] : wr))
     } catch (err) {
       console.error(`Unexpected error ${action}ing work request:`, err)
       setError(`Failed to ${action} work request due to an unexpected error.`)
@@ -729,7 +607,7 @@ export default function EnhancedProjectManagementPage() {
     </div>
   )
 
-  // Render project list view with schema compatibility
+  // Render project list view
   const renderProjectListView = () => (
     <div className="space-y-4">
       {filteredProjects.map((project) => (
@@ -737,28 +615,28 @@ export default function EnhancedProjectManagementPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{getProjectTitle(project)}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
                 {project.project_code && (
                   <Badge variant="outline" className="text-xs">
                     {project.project_code}
                   </Badge>
                 )}
                 <Badge className={getStatusColor(project.status)}>
-                  {project.status || 'Unknown'}
+                  {project.status}
                 </Badge>
                 <Badge className={getPriorityColor(project.priority)}>
-                  {project.priority || 'Unknown'}
+                  {project.priority}
                 </Badge>
               </div>
-              <p className="text-gray-600 mb-3">{project.description || 'No description'}</p>
+              <p className="text-gray-600 mb-3">{project.description}</p>
               <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>Start: {formatDate(project.start_date || '')}</span>
+                  <span>Start: {formatDate(project.start_date)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>End: {formatDate(project.end_date || '')}</span>
+                  <span>End: {formatDate(project.end_date)}</span>
                 </div>
                 {project.budget && (
                   <div className="flex items-center gap-1">
@@ -766,10 +644,10 @@ export default function EnhancedProjectManagementPage() {
                     <span>Budget: {formatCurrency(project.budget)}</span>
                   </div>
                 )}
-                {getTeamLead(project) && (
+                {project.assigned_team_lead && (
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
-                    <span>Lead: {getTeamLead(project)}</span>
+                    <span>Lead: {project.assigned_team_lead}</span>
                   </div>
                 )}
               </div>
@@ -802,7 +680,7 @@ export default function EnhancedProjectManagementPage() {
     </div>
   )
 
-  // Render project grid view with schema compatibility
+  // Render project grid view
   const renderProjectGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredProjects.map((project) => (
@@ -810,27 +688,27 @@ export default function EnhancedProjectManagementPage() {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-lg mb-2">{getProjectTitle(project)}</CardTitle>
+                <CardTitle className="text-lg mb-2">{project.title}</CardTitle>
                 {project.project_code && (
                   <p className="text-sm text-gray-500 mb-2">{project.project_code}</p>
                 )}
                 <div className="flex gap-2 mb-2">
                   <Badge className={getStatusColor(project.status)}>
-                    {project.status || 'Unknown'}
+                    {project.status}
                   </Badge>
                   <Badge className={getPriorityColor(project.priority)}>
-                    {project.priority || 'Unknown'}
+                    {project.priority}
                   </Badge>
                 </div>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-3">{project.description || 'No description'}</p>
+            <p className="text-gray-600 text-sm mb-4 line-clamp-3">{project.description}</p>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                <span>{formatDate(project.start_date || '')} - {formatDate(project.end_date || '')}</span>
+                <span>{formatDate(project.start_date)} - {formatDate(project.end_date)}</span>
               </div>
               {project.budget && (
                 <div className="flex items-center gap-2">
@@ -838,10 +716,10 @@ export default function EnhancedProjectManagementPage() {
                   <span>{formatCurrency(project.budget)}</span>
                 </div>
               )}
-              {getTeamLead(project) && (
+              {project.assigned_team_lead && (
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-gray-400" />
-                  <span>{getTeamLead(project)}</span>
+                  <span>{project.assigned_team_lead}</span>
                 </div>
               )}
             </div>
@@ -867,7 +745,7 @@ export default function EnhancedProjectManagementPage() {
     </div>
   )
 
-  // Render work requests with schema compatibility
+  // Render work requests
   const renderWorkRequests = () => (
     <div className="space-y-4">
       {filteredWorkRequests.map((workRequest) => (
@@ -875,12 +753,12 @@ export default function EnhancedProjectManagementPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{getWorkRequestTitle(workRequest)}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{workRequest.title}</h3>
                 <Badge className={getStatusColor(workRequest.status)}>
-                  {workRequest.status || 'Unknown'}
+                  {workRequest.status}
                 </Badge>
                 <Badge className={getPriorityColor(workRequest.priority)}>
-                  {workRequest.priority || 'Unknown'}
+                  {workRequest.priority}
                 </Badge>
                 {workRequest.category && (
                   <Badge variant="outline" className="text-xs">
@@ -888,7 +766,7 @@ export default function EnhancedProjectManagementPage() {
                   </Badge>
                 )}
               </div>
-              <p className="text-gray-600 mb-3">{workRequest.description || 'No description'}</p>
+              <p className="text-gray-600 mb-3">{workRequest.description}</p>
               <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
@@ -955,7 +833,7 @@ export default function EnhancedProjectManagementPage() {
     </div>
   )
 
-  // Render risks with schema compatibility
+  // Render risks
   const renderRisks = () => (
     <div className="space-y-4">
       {filteredRisks.map((risk) => (
@@ -963,15 +841,15 @@ export default function EnhancedProjectManagementPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{getRiskTitle(risk)}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{risk.risk_title}</h3>
                 <Badge className={getStatusColor(risk.status)}>
-                  {risk.status || 'Unknown'}
+                  {risk.status}
                 </Badge>
-                <Badge className={getPriorityColor(risk.risk_level || risk.level)}>
-                  {(risk.risk_level || risk.level || 'Unknown')} Risk
+                <Badge className={getPriorityColor(risk.risk_level)}>
+                  {risk.risk_level} Risk
                 </Badge>
               </div>
-              <p className="text-gray-600 mb-3">{risk.risk_description || risk.description || 'No description'}</p>
+              <p className="text-gray-600 mb-3">{risk.risk_description}</p>
               {risk.mitigation_plan && (
                 <div className="mb-3">
                   <p className="text-sm font-medium text-gray-700">Mitigation Plan:</p>
@@ -1061,10 +939,10 @@ export default function EnhancedProjectManagementPage() {
 
         {/* Error Display */}
         {error && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-yellow-500 mr-2" />
-              <p className="text-yellow-700">{error}</p>
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+              <p className="text-red-700">{error}</p>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -1073,20 +951,6 @@ export default function EnhancedProjectManagementPage() {
               >
                 <X className="h-4 w-4" />
               </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Database Schema Info */}
-        {availableTables.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <Building className="h-5 w-5 text-blue-500 mr-2" />
-              <p className="text-blue-700">
-                Available database tables: {availableTables.filter(t => 
-                  t.includes('project') || t.includes('work') || t.includes('risk')
-                ).join(', ') || 'None found'}
-              </p>
             </div>
           </div>
         )}
@@ -1318,7 +1182,7 @@ export default function EnhancedProjectManagementPage() {
                   <p className="text-gray-600 mb-2">No projects found</p>
                   <p className="text-sm text-gray-500">
                     {projects.length === 0 
-                      ? 'Create your first project to get started or set up the database schema.' 
+                      ? 'Create your first project to get started.' 
                       : 'Try adjusting your search or filter criteria.'
                     }
                   </p>
@@ -1340,7 +1204,7 @@ export default function EnhancedProjectManagementPage() {
                   <p className="text-gray-600 mb-2">No work requests found</p>
                   <p className="text-sm text-gray-500">
                     {workRequests.length === 0 
-                      ? 'No work requests exist yet or the database schema needs to be set up.' 
+                      ? 'No work requests exist yet.' 
                       : 'Try adjusting your search or filter criteria.'
                     }
                   </p>
@@ -1355,7 +1219,7 @@ export default function EnhancedProjectManagementPage() {
                   <p className="text-gray-600 mb-2">No risks found</p>
                   <p className="text-sm text-gray-500">
                     {risks.length === 0 
-                      ? 'No risks identified yet or the database schema needs to be set up.' 
+                      ? 'No risks identified yet.' 
                       : 'Try adjusting your search or filter criteria.'
                     }
                   </p>
@@ -1403,11 +1267,7 @@ export default function EnhancedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.title || ''}
-                        onChange={(e) => setNewProject(prev => ({ 
-                          ...prev, 
-                          title: e.target.value,
-                          name: e.target.value // Keep both fields in sync
-                        }))}
+                        onChange={(e) => setNewProject(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="Enter project title"
                       />
                     </div>
@@ -1513,11 +1373,7 @@ export default function EnhancedProjectManagementPage() {
                         </label>
                         <Input
                           value={newProject.assigned_team_lead || ''}
-                          onChange={(e) => setNewProject(prev => ({ 
-                            ...prev, 
-                            assigned_team_lead: e.target.value,
-                            team_lead: e.target.value // Keep both fields in sync
-                          }))}
+                          onChange={(e) => setNewProject(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
                           placeholder="Enter team lead name"
                         />
                       </div>
@@ -1535,7 +1391,7 @@ export default function EnhancedProjectManagementPage() {
                       >
                         <option value="">Select a work request</option>
                         {workRequests.filter(wr => wr.status === 'approved').map(wr => (
-                          <option key={wr.id} value={wr.id}>{getWorkRequestTitle(wr)}</option>
+                          <option key={wr.id} value={wr.id}>{wr.title}</option>
                         ))}
                       </select>
                     </div>
@@ -1652,7 +1508,7 @@ export default function EnhancedProjectManagementPage() {
                 </div>
 
                 <div className="flex gap-2 mt-6 pt-6 border-t">
-                  <Button onClick={handleCreateProject} disabled={!newProject.title && !newProject.name}>
+                  <Button onClick={handleCreateProject} disabled={!newProject.title}>
                     <Save className="h-4 w-4 mr-2" />
                     Create Project
                   </Button>
@@ -1700,12 +1556,8 @@ export default function EnhancedProjectManagementPage() {
                         Project Title *
                       </label>
                       <Input
-                        value={getProjectTitle(selectedProject)}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ 
-                          ...prev, 
-                          title: e.target.value,
-                          name: e.target.value
-                        }) : null)}
+                        value={selectedProject.title || ''}
+                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
                         placeholder="Enter project title"
                       />
                     </div>
@@ -1812,12 +1664,8 @@ export default function EnhancedProjectManagementPage() {
                           Team Lead
                         </label>
                         <Input
-                          value={getTeamLead(selectedProject)}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ 
-                            ...prev, 
-                            assigned_team_lead: e.target.value,
-                            team_lead: e.target.value
-                          }) : null)}
+                          value={selectedProject.assigned_team_lead || ''}
+                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, assigned_team_lead: e.target.value }) : null)}
                           placeholder="Enter team lead name"
                         />
                       </div>
@@ -1935,7 +1783,7 @@ export default function EnhancedProjectManagementPage() {
                 </div>
 
                 <div className="flex gap-2 mt-6 pt-6 border-t">
-                  <Button onClick={handleUpdateProject} disabled={!getProjectTitle(selectedProject)}>
+                  <Button onClick={handleUpdateProject} disabled={!selectedProject.title}>
                     <Save className="h-4 w-4 mr-2" />
                     Update Project
                   </Button>
