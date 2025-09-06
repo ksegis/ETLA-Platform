@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       textColor: 'text-green-900',
       items: [
         { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3 },
-        { name: 'HR Analytics Dashboard', href: '/historical-dashboard', icon: PieChart, isNew: true },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true },
         { name: 'Reporting', href: '/reporting', icon: TrendingUp },
         { name: 'Data Analytics', href: '/analytics', icon: Database },
         { name: 'Audit Trail', href: '/audit', icon: Eye }
