@@ -82,6 +82,7 @@ export default function WorkRequestsPage() {
   // Load work requests from database
   const loadWorkRequests = async () => {
     if (!selectedTenant?.id) {
+      console.log('No tenant selected, skipping load')
       setLoading(false)
       return
     }
@@ -89,6 +90,8 @@ export default function WorkRequestsPage() {
     try {
       setLoading(true)
       setError(null)
+      
+      console.log('Loading work requests for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Query work requests with customer data
       const { data, error: queryError } = await supabase
@@ -102,7 +105,9 @@ export default function WorkRequestsPage() {
 
       if (queryError) {
         console.error('Database query error:', queryError)
-        setError(`Failed to load work requests: ${queryError.message}`)
+        console.error('Error details:', JSON.stringify(queryError, null, 2))
+        console.error('Query was for tenant_id:', selectedTenant.id)
+        setError(`Failed to load work requests: ${queryError.message || queryError.details || 'Unknown error'}`)
         return
       }
 
