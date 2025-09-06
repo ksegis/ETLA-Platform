@@ -9,7 +9,7 @@ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboar
 import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
-import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle } from 'lucide-react';
+import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3 } from 'lucide-react';
 
 // Enhanced interfaces for the new database schema
 interface EnhancedEmployee {
@@ -256,7 +256,6 @@ const EnhancedReportingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('employees');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [showSearchHelp, setShowSearchHelp] = useState<boolean>(false);
 
   // Enhanced data states
   const [employeeData, setEmployeeData] = useState<EnhancedEmployee[]>([]);
@@ -302,35 +301,6 @@ const EnhancedReportingPage: React.FC = () => {
     complianceType: '',
     searchTerm: ''
   });
-
-  // Helper function to get searchable fields for each tab
-  const getSearchableFields = (tabId: string): string[] => {
-    switch (tabId) {
-      case 'employees':
-        return ['Employee Name', 'Employee Code', 'Position', 'Department', 'Division', 'Cost Center', 'Manager'];
-      case 'pay-statements':
-        return ['Employee Name', 'Employee Code', 'Check Number', 'Pay Date'];
-      case 'timecards':
-        return ['Employee Name', 'Employee Code', 'Department', 'Supervisor', 'Work Date'];
-      case 'jobs':
-        return ['Job Title', 'Job Code', 'Department', 'Division', 'Job Family', 'Job Level'];
-      case 'tax-records':
-        return ['Employee Name', 'Tax Record ID', 'Form Type', 'Tax Year'];
-      case 'benefits-deductions':
-        return ['Employee Name', 'Deduction Type', 'Deduction Code', 'Benefit ID'];
-      case 'compliance':
-        return ['Employee Name', 'Compliance Type', 'Compliance ID', 'Reporting Period'];
-      default:
-        return ['Employee Name', 'Employee Code'];
-    }
-  };
-
-  // Helper function to get search placeholder text
-  const getSearchPlaceholder = (tabId: string): string => {
-    const fields = getSearchableFields(tabId);
-    const examples = fields.slice(0, 2).join(', ');
-    return `Search ${examples}...`;
-  };
 
   // Helper function to set view mode for specific tab
   const setViewMode = (tabId: string, mode: 'list' | 'grid') => {
@@ -674,66 +644,16 @@ const EnhancedReportingPage: React.FC = () => {
     loadTabData(activeTab);
   }, [activeTab, selectedTenant]);
 
-  // Enhanced filter panel with searchable column indicators
+  // Enhanced filter panel (keeping existing implementation)
   const renderEnhancedFilters = () => (
     <Card className="p-6 mb-6">
       <h3 className="text-lg font-semibold mb-4">Enhanced Filters & Search</h3>
-      
-      {/* Search Help Section */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-800">Searchable Fields for {activeTab.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSearchHelp(!showSearchHelp)}
-              className="p-1 h-auto"
-            >
-              <HelpCircle className="w-4 h-4 text-blue-600" />
-            </Button>
-          </div>
-        </div>
-        
-        {showSearchHelp && (
-          <div className="mt-2 text-sm text-blue-700">
-            <p className="mb-1">You can search the following fields:</p>
-            <div className="flex flex-wrap gap-1">
-              {getSearchableFields(activeTab).map((field, index) => (
-                <Badge key={index} variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
-                  {field}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        <div className="mt-2 text-xs text-blue-600">
-          💡 Tip: Search is case-insensitive and matches partial text across all searchable fields
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {/* Enhanced Search Field with Indicator */}
-        <div className="relative">
-          <Input
-            placeholder={getSearchPlaceholder(activeTab)}
-            value={filters.searchTerm}
-            onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-            className="pr-8"
-          />
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-            <div className="group relative">
-              <Info className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help" />
-              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-50">
-                <div className="bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                  Click the help icon above for searchable fields
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Input
+          placeholder="Search..."
+          value={filters.searchTerm}
+          onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+        />
         
         <Input
           type="date"
@@ -833,14 +753,6 @@ const EnhancedReportingPage: React.FC = () => {
         >
           Clear Filters
         </Button>
-        <Button 
-          onClick={() => setShowSearchHelp(!showSearchHelp)}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <HelpCircle className="w-4 h-4" />
-          {showSearchHelp ? 'Hide' : 'Show'} Search Help
-        </Button>
       </div>
     </Card>
   );
@@ -867,7 +779,7 @@ const EnhancedReportingPage: React.FC = () => {
     </div>
   );
 
-  // Enhanced data display functions with consistent list/grid views (keeping existing implementation)
+  // Enhanced data display functions with consistent list/grid views
   const renderEmployeeData = () => {
     const filteredData = applyFilters(employeeData, 'employees');
     const currentViewMode = getViewMode('employees');
@@ -1043,7 +955,6 @@ const EnhancedReportingPage: React.FC = () => {
     );
   };
 
-  // Continue with other render functions (keeping existing implementation)...
   const renderTimecardData = () => {
     const filteredData = applyFilters(timecardData, 'timecards');
     const currentViewMode = getViewMode('timecards');
