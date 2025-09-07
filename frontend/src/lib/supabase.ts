@@ -343,6 +343,48 @@ export const userManagement = {
     }
   },
 
+  // Deactivate user
+  deactivateUser: async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to deactivate user' }
+    }
+  },
+
+  // Activate user
+  activateUser: async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to activate user' }
+    }
+  },
+
   // Reset user password
   resetUserPassword: async (email: string, newPassword?: string) => {
     try {
