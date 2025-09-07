@@ -86,7 +86,7 @@ export class RBACAdminService {
 
       if (error) throw error
 
-      const users = data?.map(item => ({
+      const users = data?.map((item: any) => ({
         userId: item.user_id,
         email: item.profiles?.email || 'unknown@example.com',
         display_name: item.profiles?.first_name && item.profiles?.last_name 
