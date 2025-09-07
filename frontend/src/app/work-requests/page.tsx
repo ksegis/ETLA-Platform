@@ -7,35 +7,48 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import WorkRequestForm from '@/components/work-requests/WorkRequestForm'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 
-// Types
+// Types matching the database schema exactly
 interface WorkRequest {
   id: string
+  tenant_id: string
   title: string
   description: string
-  status: string
-  priority: string
-  category?: string
-  tenant_id: string
-  customer_id?: string
+  category: string
+  priority: 'low' | 'medium' | 'high' | 'critical'  // priority_level enum
+  urgency: 'low' | 'medium' | 'high' | 'urgent'    // urgency_level enum
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'  // request_status enum
+  customer_id: string
+  assigned_to?: string
+  estimated_hours?: number
+  actual_hours?: number
+  budget?: number
+  estimated_budget?: number
+  required_completion_date?: string
+  requested_completion_date?: string
+  scheduled_start_date?: string
+  scheduled_end_date?: string
+  actual_start_date?: string
+  actual_completion_date?: string
+  rejection_reason?: string
+  internal_notes?: string
+  customer_notes?: string
+  tags?: string[]
+  attachments?: any
   created_at: string
   updated_at: string
-  business_justification?: string
-  estimated_budget?: number
-  requested_completion_date?: string
-  approval_workflow?: string
-  converted_to_project?: boolean
+  request_id?: string
+  approval_status?: string
+  decline_reason?: string
+  approved_by?: string
+  approved_at?: string
   project_id?: string
+  business_justification?: string
   impact_assessment?: string
-  customer?: {
-    first_name?: string
-    last_name?: string
-    email?: string
-    company_name?: string
-  }
 }
 
 interface WorkRequestStats {
@@ -47,252 +60,24 @@ interface WorkRequestStats {
   completed: number
 }
 
-// Status configuration
+// Status configuration - FIXED to match database enum values
 const statusConfig = {
-  draft: { icon: Clock, color: 'text-gray-600', bg: 'bg-gray-100', label: 'Draft' },
   submitted: { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Submitted' },
   under_review: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Under Review' },
   approved: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', label: 'Approved' },
-  declined: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100', label: 'Declined' },
+  rejected: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100', label: 'Rejected' },
+  scheduled: { icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-100', label: 'Scheduled' },
   in_progress: { icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-100', label: 'In Progress' },
   completed: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', label: 'Completed' },
   cancelled: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-100', label: 'Cancelled' }
 }
 
-// Priority configuration
+// Priority configuration - FIXED to match database enum values
 const priorityConfig = {
   low: { color: 'text-gray-600', bg: 'bg-gray-100', label: 'Low' },
   medium: { color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Medium' },
   high: { color: 'text-orange-600', bg: 'bg-orange-100', label: 'High' },
   critical: { color: 'text-red-600', bg: 'bg-red-100', label: 'Critical' }
-}
-
-// Work Request Modal Component
-const WorkRequestModal = ({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  request = null, 
-  title = "Create New Work Request" 
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onSave: (data: Partial<WorkRequest>) => void
-  request?: WorkRequest | null
-  title?: string
-}) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    priority: 'medium',
-    status: 'submitted',
-    business_justification: '',
-    estimated_budget: '',
-    requested_completion_date: '',
-    impact_assessment: ''
-  })
-
-  useEffect(() => {
-    if (request) {
-      setFormData({
-        title: request.title || '',
-        description: request.description || '',
-        category: request.category || '',
-        priority: request.priority || 'medium',
-        status: request.status || 'submitted',
-        business_justification: request.business_justification || '',
-        estimated_budget: request.estimated_budget?.toString() || '',
-        requested_completion_date: request.requested_completion_date || '',
-        impact_assessment: request.impact_assessment || ''
-      })
-    } else {
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        priority: 'medium',
-        status: 'submitted',
-        business_justification: '',
-        estimated_budget: '',
-        requested_completion_date: '',
-        impact_assessment: ''
-      })
-    }
-  }, [request, isOpen])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    const submitData = {
-      ...formData,
-      estimated_budget: formData.estimated_budget ? parseFloat(formData.estimated_budget) : undefined
-    }
-    
-    onSave(submitData)
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Title *
-              </label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter work request title"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Category</option>
-                <option value="development">Development</option>
-                <option value="infrastructure">Infrastructure</option>
-                <option value="security">Security</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="enhancement">Enhancement</option>
-                <option value="support">Support</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Priority *
-              </label>
-              <select
-                value={formData.priority}
-                onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="draft">Draft</option>
-                <option value="submitted">Submitted</option>
-                <option value="under_review">Under Review</option>
-                <option value="approved">Approved</option>
-                <option value="declined">Declined</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estimated Budget
-              </label>
-              <Input
-                type="number"
-                value={formData.estimated_budget}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimated_budget: e.target.value }))}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Requested Completion Date
-              </label>
-              <Input
-                type="date"
-                value={formData.requested_completion_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, requested_completion_date: e.target.value }))}
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description *
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe the work request in detail"
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Business Justification
-            </label>
-            <textarea
-              value={formData.business_justification}
-              onChange={(e) => setFormData(prev => ({ ...prev, business_justification: e.target.value }))}
-              placeholder="Explain the business need and expected benefits"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Impact Assessment
-            </label>
-            <textarea
-              value={formData.impact_assessment}
-              onChange={(e) => setFormData(prev => ({ ...prev, impact_assessment: e.target.value }))}
-              placeholder="Describe the potential impact if this request is not fulfilled"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-              {request ? 'Update Request' : 'Create Request'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
 }
 
 export default function WorkRequestsPage() {
@@ -352,7 +137,7 @@ export default function WorkRequestsPage() {
       setWorkRequests(data || [])
       setFilteredRequests(data || [])
 
-      // Calculate stats
+      // Calculate stats - FIXED to use correct enum values
       const requestStats = {
         total: data?.length || 0,
         submitted: data?.filter(r => r.status === 'submitted').length || 0,
@@ -373,7 +158,7 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Create new work request
+  // Create new work request - FIXED with proper field mapping and NULL handling
   const handleCreateRequest = async (requestData: Partial<WorkRequest>) => {
     if (!selectedTenant?.id || !user?.id) {
       setError('Missing tenant or user information')
@@ -381,15 +166,50 @@ export default function WorkRequestsPage() {
     }
 
     try {
+      // FIXED: Map to correct database fields with proper NULL handling
       const newRequest = {
-        ...requestData,
+        // Required fields (NOT NULL in database)
         tenant_id: selectedTenant.id,
-        customer_id: selectedTenant.id, // Using tenant_id as customer_id for now
+        title: requestData.title,
+        description: requestData.description,
+        category: requestData.category,
+        priority: requestData.priority,
+        urgency: requestData.urgency || 'medium',
+        customer_id: selectedTenant.id, // Required field - using tenant_id as customer_id
+        
+        // Optional fields (nullable in database) - use NULL instead of empty strings
+        status: requestData.status || 'submitted',
+        assigned_to: null,
+        estimated_hours: requestData.estimated_hours || null,
+        actual_hours: 0, // Default value as per schema
+        budget: requestData.budget || null,
+        estimated_budget: requestData.estimated_budget || null,
+        required_completion_date: requestData.required_completion_date || null,
+        requested_completion_date: requestData.requested_completion_date || null,
+        scheduled_start_date: null,
+        scheduled_end_date: null,
+        actual_start_date: null,
+        actual_completion_date: null,
+        rejection_reason: null,
+        internal_notes: null,
+        customer_notes: null,
+        tags: null,
+        attachments: [],
+        request_id: null,
+        approval_status: 'submitted',
+        decline_reason: null,
+        approved_by: null,
+        approved_at: null,
+        project_id: null,
+        business_justification: requestData.business_justification || null,
+        impact_assessment: requestData.impact_assessment || null,
+        
+        // Timestamps
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
 
-      console.log('Creating work request:', newRequest)
+      console.log('Creating work request with proper mapping:', newRequest)
 
       const { data, error } = await supabase
         .from('work_requests')
@@ -414,16 +234,38 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Update work request
-  const handleUpdateRequest = async (requestId: string, updates: Partial<WorkRequest>) => {
+  // Update work request - FIXED with proper field mapping
+  const handleUpdateRequest = async (requestData: Partial<WorkRequest>) => {
+    if (!selectedRequest?.id) {
+      setError('No request selected for update')
+      return
+    }
+
     try {
+      // FIXED: Map to correct database fields with proper NULL handling
+      const updateData = {
+        title: requestData.title,
+        description: requestData.description,
+        category: requestData.category,
+        priority: requestData.priority,
+        urgency: requestData.urgency,
+        status: requestData.status,
+        budget: requestData.budget || null,
+        estimated_budget: requestData.estimated_budget || null,
+        estimated_hours: requestData.estimated_hours || null,
+        required_completion_date: requestData.required_completion_date || null,
+        requested_completion_date: requestData.requested_completion_date || null,
+        business_justification: requestData.business_justification || null,
+        impact_assessment: requestData.impact_assessment || null,
+        updated_at: new Date().toISOString()
+      }
+
+      console.log('Updating work request with proper mapping:', updateData)
+
       const { data, error } = await supabase
         .from('work_requests')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId)
+        .update(updateData)
+        .eq('id', selectedRequest.id)
         .select()
         .single()
 
@@ -433,13 +275,14 @@ export default function WorkRequestsPage() {
         return
       }
 
-      setWorkRequests(prev => prev.map(r => r.id === requestId ? data : r))
+      console.log('Updated work request:', data)
+      setWorkRequests(prev => prev.map(req => req.id === selectedRequest.id ? data : req))
       setIsEditModalOpen(false)
       setSelectedRequest(null)
-      loadWorkRequests() // Reload to update stats
       setError(null)
-    } catch (error) {
-      console.error('Error updating work request:', error)
+
+    } catch (err) {
+      console.error('Error updating work request:', err)
       setError('Failed to update work request. Please try again.')
     }
   }
@@ -505,6 +348,14 @@ export default function WorkRequestsPage() {
     return request.title || `Request ${request.id?.slice(0, 8)}`
   }
 
+  const getBudgetAmount = (request: WorkRequest) => {
+    return request.budget || request.estimated_budget || 0
+  }
+
+  const getCompletionDate = (request: WorkRequest) => {
+    return request.required_completion_date || request.requested_completion_date
+  }
+
   if (!selectedTenant) {
     return (
       <DashboardLayout>
@@ -550,7 +401,7 @@ export default function WorkRequestsPage() {
           </Button>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - FIXED mapping */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -649,6 +500,7 @@ export default function WorkRequestsPage() {
                 <option value="submitted">Submitted</option>
                 <option value="under_review">Under Review</option>
                 <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
               </select>
@@ -769,7 +621,7 @@ export default function WorkRequestsPage() {
                             </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${(request.estimated_budget || 0).toLocaleString()}
+                            ${getBudgetAmount(request).toLocaleString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {formatDate(request.created_at)}
@@ -854,7 +706,7 @@ export default function WorkRequestsPage() {
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Budget:</span>
                             <span className="text-sm font-medium">
-                              ${(request.estimated_budget || 0).toLocaleString()}
+                              ${getBudgetAmount(request).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -871,22 +723,21 @@ export default function WorkRequestsPage() {
           </CardContent>
         </Card>
 
-        {/* Create Modal */}
-        <WorkRequestModal
+        {/* Modals */}
+        <WorkRequestForm
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onSave={handleCreateRequest}
           title="Create New Work Request"
         />
 
-        {/* Edit Modal */}
-        <WorkRequestModal
+        <WorkRequestForm
           isOpen={isEditModalOpen}
           onClose={() => {
             setIsEditModalOpen(false)
             setSelectedRequest(null)
           }}
-          onSave={(data) => selectedRequest && handleUpdateRequest(selectedRequest.id, data)}
+          onSave={handleUpdateRequest}
           request={selectedRequest}
           title="Edit Work Request"
         />
