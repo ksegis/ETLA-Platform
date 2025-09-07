@@ -124,7 +124,7 @@ export default function WorkRequestsPage() {
     completed: 0
   })
 
-  const { user } = useAuth()
+  const { user, tenantUser } = useAuth()
   const { selectedTenant } = useTenant()
 
   // Load work requests from database
