@@ -195,10 +195,17 @@ export default function WorkRequestsPage() {
       if (tenantUser?.role === 'host_admin') {
         // Host admins can create work requests for any selected customer/tenant
         if (!selectedCustomerId) {
-          setError('Please select a customer/tenant for this work request')
-          return
+          // Fallback for demo environment - use the selected tenant ID
+          if (selectedTenant?.id) {
+            customerId = selectedTenant.id
+            console.log('Using fallback customer_id for demo host_admin:', customerId)
+          } else {
+            setError('Please select a customer/tenant for this work request')
+            return
+          }
+        } else {
+          customerId = selectedCustomerId
         }
-        customerId = selectedCustomerId
       } else if (tenantUser?.role === 'client_admin' || tenantUser?.role === 'primary_customer_admin') {
         // Client/customer admins can create work requests for their tenant
         customerId = tenantUser.tenant_id
@@ -206,6 +213,8 @@ export default function WorkRequestsPage() {
         // Regular users create work requests for themselves within their tenant
         customerId = user.id
       }
+
+      console.log('Determined customer_id:', customerId, 'for user role:', tenantUser?.role)
 
       // FIXED: Map to correct database fields with proper NULL handling
       const newRequest = {
@@ -260,6 +269,13 @@ export default function WorkRequestsPage() {
 
       if (error) {
         console.error('Error creating work request:', error)
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        console.error('Request data that failed:', newRequest)
         setError(`Failed to create work request: ${error.message}`)
         return
       }
