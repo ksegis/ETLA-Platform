@@ -88,8 +88,10 @@ export class RBACAdminService {
 
       const users = data?.map(item => ({
         userId: item.user_id,
-        email: item.profiles.email,
-        display_name: item.profiles.full_name,
+        email: item.profiles?.email || 'unknown@example.com',
+        display_name: item.profiles?.first_name && item.profiles?.last_name 
+          ? `${item.profiles.first_name} ${item.profiles.last_name}`
+          : item.profiles?.email || 'Unknown User',
         role: item.role,
         is_active: item.is_active
       })) || []
