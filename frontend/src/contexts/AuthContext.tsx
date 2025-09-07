@@ -89,8 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('❌ AuthProvider: Error getting session:', error)
           // Fall back to demo mode
           setUser({
-            id: 'demo-user-id',
-            email: 'demo@company.com',
+            id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
+            email: 'demo.hostmanager@democompany.com',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             app_metadata: {},
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser({
             id: 'demo-tenant-user-id',
             tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-            user_id: 'demo-user-id',
+            user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
             role: 'client_admin',
             is_active: true,
             created_at: new Date().toISOString(),
@@ -127,8 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('⚠️ AuthProvider: No existing session, using demo user')
           // Fallback to demo user for stability
           setUser({
-            id: 'demo-user-id',
-            email: 'demo@company.com',
+            id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
+            email: 'demo.hostmanager@democompany.com',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             app_metadata: {},
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser({
             id: 'demo-tenant-user-id',
             tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
-            user_id: 'demo-user-id',
+            user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
             role: 'host_admin', // Give demo user admin access to see all tenants
             is_active: true,
             created_at: new Date().toISOString(),
