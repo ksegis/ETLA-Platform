@@ -18,7 +18,7 @@ export default function ProfilePage() {
   }
 
   const demoProfile = {
-    id: 'demo-user-id',
+    id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
     email: 'demo@company.com',
     full_name: 'Demo User',
     phone: '+1 (555) 123-4567',

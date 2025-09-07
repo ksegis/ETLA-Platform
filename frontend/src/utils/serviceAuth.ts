@@ -172,7 +172,7 @@ export function getServiceAuthContext(): ServiceAuthContext {
 
   // Default context for demo mode
   return {
-    userId: 'demo-user-id',
+    userId: null, // Should be set by auth context
     tenantId: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
     userRole: 'client_admin',
     isAuthenticated: true,

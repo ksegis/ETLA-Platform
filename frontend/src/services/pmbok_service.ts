@@ -103,7 +103,6 @@ export interface Risk {
 
 class PMBOKService {
   private supabase
-  private currentUserId: string = 'demo-user-id'
   private currentTenantId: string = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
   private isInitialized: boolean = false
 
@@ -113,7 +112,23 @@ class PMBOKService {
     console.log('🔧 PMBOK Service: Created with default demo context')
   }
 
-  // Initialize with user context (called after auth is stable)
+  // Get current user ID from auth context
+  private getCurrentUserId(): string | null {
+    if (typeof window !== 'undefined') {
+      try {
+        const authData = localStorage.getItem('etla-auth-context')
+        if (authData) {
+          const context = JSON.parse(authData)
+          return context.userId
+        }
+      } catch (error) {
+        console.warn('Failed to get user ID from auth context:', error)
+      }
+    }
+    return null
+  }
+
+  async initialize(userId?: string, tenantId?: string) {stable)
   async initialize(userId?: string, tenantId?: string) {
     if (userId && tenantId) {
       this.currentUserId = userId

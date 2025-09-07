@@ -34,7 +34,7 @@ export function useAuthStable() {
     ...auth,
     // Additional stability indicators
     isReady: auth.isStable && !auth.loading,
-    currentUserId: auth.user?.id || 'demo-user-id',
+    currentUserId: auth.user?.id || null, // Don't use hardcoded fallback
     currentTenantId: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Default tenant ID
   }
 }
@@ -61,7 +61,7 @@ export function useAuthForData() {
   const auth = useAuth()
   // const tenant = useTenant() // TenantContext not available
   
-  const userId = auth.user?.id || 'demo-user-id'
+  const userId = auth.user?.id || null // Don't use hardcoded fallback
   const tenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Default tenant ID
   
   return {
