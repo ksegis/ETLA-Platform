@@ -132,10 +132,10 @@ const WorkRequestModal = ({
       category: formData.category.trim() || 'general', // Default category if empty
       priority: formData.priority,
       status: formData.status,
-      business_justification: formData.business_justification.trim() || null,
-      impact_assessment: formData.impact_assessment.trim() || null,
-      budget: formData.budget ? parseFloat(formData.budget) : null,
-      required_completion_date: formData.required_completion_date || null // NULL instead of empty string
+      business_justification: formData.business_justification.trim() || undefined,
+      impact_assessment: formData.impact_assessment.trim() || undefined,
+      budget: formData.budget ? parseFloat(formData.budget) : undefined,
+      required_completion_date: formData.required_completion_date || undefined // undefined instead of empty string
     }
     
     onSave(submitData)
