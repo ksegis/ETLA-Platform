@@ -143,7 +143,39 @@ const DEFAULT_ROLE_PERMISSIONS: Record<string, RolePermissions> = {
       { feature: FEATURES.BENEFITS_MANAGEMENT, permission: PERMISSIONS.VIEW },
       
       // File upload for own requests
-      { feature: FEATURES.FILE_UPLOAD, permission: PERMISSIONS.CREATE }
+      { feature: FEATURES.FILE_UPLOAD, permission: PERMISSIONS.CREATE },
+      
+      // Demo: Grant access control access for demo user
+      { feature: FEATURES.ACCESS_CONTROL, permission: PERMISSIONS.VIEW },
+      { feature: FEATURES.USER_MANAGEMENT, permission: PERMISSIONS.VIEW }
+    ]
+  },
+
+  // Add support for 'user' role (maps to client_user)
+  user: {
+    role: 'user',
+    permissions: [
+      // Basic work request access
+      { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.CREATE },
+      { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.VIEW },
+      { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.UPDATE },
+      
+      // Limited project visibility
+      { feature: FEATURES.PROJECT_MANAGEMENT, permission: PERMISSIONS.VIEW },
+      
+      // Basic reporting
+      { feature: FEATURES.REPORTING, permission: PERMISSIONS.VIEW },
+      { feature: FEATURES.DASHBOARDS, permission: PERMISSIONS.VIEW },
+      
+      // Own benefits access
+      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: PERMISSIONS.VIEW },
+      
+      // File upload for own requests
+      { feature: FEATURES.FILE_UPLOAD, permission: PERMISSIONS.CREATE },
+      
+      // Demo: Grant access control access for demo user
+      { feature: FEATURES.ACCESS_CONTROL, permission: PERMISSIONS.VIEW },
+      { feature: FEATURES.USER_MANAGEMENT, permission: PERMISSIONS.VIEW }
     ]
   }
 }
