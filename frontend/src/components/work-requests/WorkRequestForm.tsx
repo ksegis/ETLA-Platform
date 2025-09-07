@@ -27,9 +27,9 @@ interface WorkRequest {
   title: string
   description: string
   category: string
-  priority: string
-  urgency?: string
-  status: string
+  priority: 'low' | 'medium' | 'high' | 'critical'  // priority_level enum
+  urgency: 'low' | 'medium' | 'high' | 'urgent'    // urgency_level enum
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'  // request_status enum
   business_justification?: string
   impact_assessment?: string
   budget?: number
