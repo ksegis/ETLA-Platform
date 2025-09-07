@@ -33,6 +33,8 @@ import {
   EyeOff
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import UserCreationModal from '@/components/UserCreationModal'
+import UserInviteModal from '@/components/UserInviteModal'
 
 interface User {
   id: string
@@ -278,171 +280,6 @@ export default function AccessControlPage() {
       console.error('Error loading notifications:', error)
       throw error
     }
-  }
-
-  const handleCreateUser = async (userData: any) => {
-    try {
-      setLoading(true)
-      
-      // Generate temporary password
-      const tempPassword = generateTempPassword()
-      
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: userData.email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
-          full_name: userData.full_name,
-          phone: userData.phone,
-          job_title: userData.job_title,
-          department: userData.department
-        }
-      })
-
-      if (authError) throw authError
-
-      // Update profile with additional info
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: userData.full_name,
-          phone: userData.phone,
-          job_title: userData.job_title,
-          department: userData.department,
-          status: 'active'
-        })
-        .eq('id', authData.user.id)
-
-      if (profileError) throw profileError
-
-      // Assign user to tenant using our database function
-      const { error: assignError } = await supabase.rpc('assign_user_to_tenant', {
-        p_user_id: authData.user.id,
-        p_tenant_id: userData.tenant_id,
-        p_role: userData.role,
-        p_role_level: userData.role_level,
-        p_is_primary: true,
-        p_permission_scope: userData.permission_scope || 'own',
-        p_can_invite_users: userData.can_invite_users || false,
-        p_can_manage_sub_clients: userData.can_manage_sub_clients || false,
-        p_requires_password_change: true
-      })
-
-      if (assignError) throw assignError
-
-      // Send welcome email with temporary password
-      await sendWelcomeEmail(userData.email, userData.full_name, tempPassword)
-
-      // Reload data
-      await loadData()
-      setShowCreateModal(false)
-      
-      alert('User created successfully! Welcome email sent with temporary password.')
-    } catch (error) {
-      console.error('Error creating user:', error)
-      alert('Failed to create user: ' + (error as Error).message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSendInvitation = async (inviteData: any) => {
-    try {
-      setLoading(true)
-      
-      // Generate invitation token and temporary password
-      const invitationToken = crypto.randomUUID()
-      const tempPassword = generateTempPassword()
-      
-      // Create invitation record
-      const { error: inviteError } = await supabase
-        .from('user_invitations')
-        .insert({
-          email: inviteData.email,
-          full_name: inviteData.full_name,
-          phone: inviteData.phone,
-          job_title: inviteData.job_title,
-          department: inviteData.department,
-          invited_by: user?.id,
-          tenant_id: inviteData.tenant_id,
-          role: inviteData.role,
-          role_level: inviteData.role_level,
-          permission_scope: inviteData.permission_scope || 'own',
-          can_invite_users: inviteData.can_invite_users || false,
-          can_manage_sub_clients: inviteData.can_manage_sub_clients || false,
-          temporary_password: tempPassword,
-          invitation_token: invitationToken
-        })
-
-      if (inviteError) throw inviteError
-
-      // Send invitation email
-      await sendInvitationEmail(
-        inviteData.email, 
-        inviteData.full_name, 
-        invitationToken, 
-        tempPassword
-      )
-
-      // Reload data
-      await loadData()
-      setShowInviteModal(false)
-      
-      alert('Invitation sent successfully!')
-    } catch (error) {
-      console.error('Error sending invitation:', error)
-      alert('Failed to send invitation: ' + (error as Error).message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const generateTempPassword = () => {
-    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%'
-    let password = ''
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return password
-  }
-
-  const sendWelcomeEmail = async (email: string, fullName: string, tempPassword: string) => {
-    // This would integrate with your email service (SendGrid, AWS SES, etc.)
-    // For now, we'll log the details
-    console.log('Welcome email would be sent to:', {
-      email,
-      fullName,
-      tempPassword,
-      loginUrl: `${window.location.origin}/login`
-    })
-    
-    // TODO: Implement actual email sending
-    // Example with fetch to your email API:
-    /*
-    await fetch('/api/send-welcome-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        fullName,
-        tempPassword,
-        loginUrl: `${window.location.origin}/login`
-      })
-    })
-    */
-  }
-
-  const sendInvitationEmail = async (email: string, fullName: string, token: string, tempPassword: string) => {
-    // This would integrate with your email service
-    console.log('Invitation email would be sent to:', {
-      email,
-      fullName,
-      invitationUrl: `${window.location.origin}/accept-invite?token=${token}`,
-      tempPassword
-    })
-    
-    // TODO: Implement actual email sending
   }
 
   // Filter users based on search and filters
@@ -954,9 +791,11 @@ export default function AccessControlPage() {
         <UserCreationModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreateUser}
+          onSuccess={() => {
+            loadData()
+            setShowCreateModal(false)
+          }}
           tenants={tenants}
-          loading={loading}
         />
       )}
 
@@ -964,9 +803,11 @@ export default function AccessControlPage() {
         <UserInviteModal
           isOpen={showInviteModal}
           onClose={() => setShowInviteModal(false)}
-          onSubmit={handleSendInvitation}
+          onSuccess={() => {
+            loadData()
+            setShowInviteModal(false)
+          }}
           tenants={tenants}
-          loading={loading}
         />
       )}
     </DashboardLayout>
