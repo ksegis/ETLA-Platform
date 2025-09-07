@@ -167,6 +167,14 @@ const NAVIGATION_ITEMS: NavItem[] = [
         adminOnly: true
       },
       {
+        id: 'rbac-matrix',
+        label: 'RBAC Matrix',
+        href: '/admin/access-control',
+        feature: FEATURES.ACCESS_CONTROL,
+        permission: PERMISSIONS.MANAGE,
+        adminOnly: true
+      },
+      {
         id: 'user-management',
         label: 'User Management',
         href: '/user-management',

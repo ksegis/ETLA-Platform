@@ -346,6 +346,77 @@ export interface RolePermissions {
   permissions: Permission[];
 }
 
+// RBAC Matrix Types
+export interface RBACPermissionCell {
+  permissionId: string;
+  resource: string;
+  action: string;
+  state: 'allow' | 'deny' | 'none';
+  origin: 'role' | 'override' | 'none';
+  roleNames?: string[];
+}
+
+export interface RBACMatrixRowUser {
+  userId: string;
+  email: string;
+  display_name?: string;
+  role: string;
+  is_active: boolean;
+  cells: RBACPermissionCell[];
+}
+
+export interface RBACMatrixRowRole {
+  roleId: string;
+  roleName: string;
+  description?: string;
+  userCount: number;
+  cells: RBACPermissionCell[];
+}
+
+export interface RBACPermissionCatalog {
+  resource: string;
+  action: string;
+  permissionId: string;
+  description?: string;
+}
+
+export interface RBACUserDetail {
+  profile: User;
+  membership: {
+    role: string;
+    is_active: boolean;
+    tenant_id: string;
+  };
+  overrides: Array<{
+    permissionId: string;
+    effect: 'allow' | 'deny';
+  }>;
+  roles?: string[];
+}
+
+export interface RBACChangeOperation {
+  op: 'assignRole' | 'removeRole' | 'setOverride' | 'clearOverride';
+  userId: string;
+  permissionId?: string;
+  effect?: 'allow' | 'deny';
+  roleId?: string;
+}
+
+export interface RBACApplyChangesRequest {
+  tenantId: string;
+  actorUserId: string;
+  roleAssignments?: Array<{
+    userId: string;
+    roleId: string;
+  }>;
+  userOverrides?: Array<{
+    userId: string;
+    permissionId: string;
+    effect: 'allow' | 'deny' | null; // null to clear override
+  }>;
+  auditNote?: string;
+}
+
 // ============================================================================
 // FORM DATA INTERFACES
 // ============================================================================
