@@ -190,31 +190,24 @@ export default function WorkRequestsPage() {
 
     try {
       // Determine customer_id based on user role and context
+      // customer_id must reference profiles table, not tenants
       let customerId: string
       
       if (tenantUser?.role === 'host_admin') {
         // Host admins can create work requests for any selected customer/tenant
-        if (!selectedCustomerId) {
-          // Fallback for demo environment - use the selected tenant ID
-          if (selectedTenant?.id) {
-            customerId = selectedTenant.id
-            console.log('Using fallback customer_id for demo host_admin:', customerId)
-          } else {
-            setError('Please select a customer/tenant for this work request')
-            return
-          }
-        } else {
-          customerId = selectedCustomerId
-        }
+        // But customer_id must be a profile ID, so use the authenticated user's ID
+        customerId = user.id
+        console.log('Using host_admin user ID as customer_id:', customerId)
       } else if (tenantUser?.role === 'client_admin' || tenantUser?.role === 'primary_customer_admin') {
         // Client/customer admins can create work requests for their tenant
-        customerId = tenantUser.tenant_id
+        // Use their own profile ID as customer
+        customerId = user.id
       } else {
         // Regular users create work requests for themselves within their tenant
         customerId = user.id
       }
 
-      console.log('Determined customer_id:', customerId, 'for user role:', tenantUser?.role)
+      console.log('Determined customer_id (profile ID):', customerId, 'for user role:', tenantUser?.role)
 
       // FIXED: Map to correct database fields with proper NULL handling
       const newRequest = {
