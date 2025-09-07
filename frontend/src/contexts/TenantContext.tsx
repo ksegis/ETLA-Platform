@@ -42,7 +42,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
     name: 'Demo Company',
     domain: 'demo.company.com',
     status: 'active',
-    subscription_plan: 'standard',
+    subscription_plan: 'professional', // Use valid SubscriptionPlan type
     subscription_start_date: new Date().toISOString(),
     max_users: 25,
     current_users: 5,
