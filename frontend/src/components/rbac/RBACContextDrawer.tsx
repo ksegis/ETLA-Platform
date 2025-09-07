@@ -63,7 +63,9 @@ export default function RBACContextDrawer({
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-900">
-                    {userDetail.profile.full_name || userDetail.profile.email}
+                    {userDetail.profile.first_name && userDetail.profile.last_name 
+                      ? `${userDetail.profile.first_name} ${userDetail.profile.last_name}`
+                      : userDetail.profile.email}
                   </h3>
                   <p className="text-xs text-gray-500">{userDetail.profile.email}</p>
                 </div>
