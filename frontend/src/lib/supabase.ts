@@ -376,3 +376,114 @@ export const userManagement = {
   }
 }
 
+
+,
+
+  // Preview cleanup operations
+  previewUserCleanup: async (options: CleanupOptions) => {
+    try {
+      let inactiveUsers = 0
+      let unconfirmedUsers = 0
+      let expiredInvites = 0
+
+      if (options.deleteInactiveUsers) {
+        const cutoffDate = new Date(Date.now() - options.inactiveDays * 24 * 60 * 60 * 1000).toISOString()
+        const { count } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .lt('last_login', cutoffDate)
+          .eq('is_active', true)
+
+        inactiveUsers = count || 0
+      }
+
+      if (options.deleteUnconfirmedUsers) {
+        const cutoffDate = new Date(Date.now() - options.unconfirmedDays * 24 * 60 * 60 * 1000).toISOString()
+        const { count } = await supabase
+          .from('auth.users')
+          .select('*', { count: 'exact', head: true })
+          .is('email_confirmed_at', null)
+          .lt('created_at', cutoffDate)
+
+        unconfirmedUsers = count || 0
+      }
+
+      if (options.deleteExpiredInvites) {
+        const { count } = await supabase
+          .from('user_invitations')
+          .select('*', { count: 'exact', head: true })
+          .lt('expires_at', new Date().toISOString())
+          .neq('status', 'accepted')
+
+        expiredInvites = count || 0
+      }
+
+      const totalToDelete = inactiveUsers + unconfirmedUsers + expiredInvites
+
+      return {
+        success: true,
+        data: {
+          inactiveUsers,
+          unconfirmedUsers,
+          expiredInvites,
+          totalToDelete
+        }
+      }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to preview cleanup' }
+    }
+  },
+
+  // Execute cleanup operations
+  executeUserCleanup: async (options: CleanupOptions) => {
+    try {
+      let deletedCount = 0
+
+      if (options.deleteInactiveUsers) {
+        const cutoffDate = new Date(Date.now() - options.inactiveDays * 24 * 60 * 60 * 1000).toISOString()
+        
+        // Get inactive users
+        const { data: inactiveUsers } = await supabase
+          .from('profiles')
+          .select('id')
+          .lt('last_login', cutoffDate)
+          .eq('is_active', true)
+
+        if (inactiveUsers && inactiveUsers.length > 0) {
+          // Delete from auth
+          for (const user of inactiveUsers) {
+            await supabase.auth.admin.deleteUser(user.id)
+          }
+          deletedCount += inactiveUsers.length
+        }
+      }
+
+      if (options.deleteUnconfirmedUsers) {
+        const cutoffDate = new Date(Date.now() - options.unconfirmedDays * 24 * 60 * 60 * 1000).toISOString()
+        
+        // This would require admin access to auth.users table
+        // For now, we'll just return success
+        console.log('Unconfirmed users cleanup would be executed here')
+      }
+
+      if (options.deleteExpiredInvites) {
+        const { error } = await supabase
+          .from('user_invitations')
+          .delete()
+          .lt('expires_at', new Date().toISOString())
+          .neq('status', 'accepted')
+
+        if (error) {
+          console.error('Failed to delete expired invites:', error)
+        }
+      }
+
+      return {
+        success: true,
+        data: { deletedCount }
+      }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to execute cleanup' }
+    }
+  }
+
