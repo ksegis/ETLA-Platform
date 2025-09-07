@@ -49,6 +49,10 @@ interface WorkRequestFormProps {
   onSave: (data: Partial<WorkRequest>) => void
   request?: WorkRequest | null
   title?: string
+  userRole?: string
+  availableTenants?: Array<{id: string, name: string}>
+  selectedCustomerId?: string
+  onCustomerChange?: (customerId: string) => void
 }
 
 const WorkRequestForm: React.FC<WorkRequestFormProps> = ({ 
@@ -56,7 +60,11 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   onClose, 
   onSave, 
   request = null, 
-  title = "Create New Work Request" 
+  title = "Create New Work Request",
+  userRole,
+  availableTenants = [],
+  selectedCustomerId,
+  onCustomerChange
 }) => {
   const [formData, setFormData] = useState<WorkRequestFormData>({
     title: '',
@@ -210,6 +218,27 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 />
                 {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
               </div>
+
+              {/* Customer/Tenant Selector for Host Admins and Primary Customer Admins */}
+              {(userRole === 'host_admin' || userRole === 'primary_customer_admin') && availableTenants.length > 0 && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Customer/Tenant *
+                  </label>
+                  <select
+                    value={selectedCustomerId || ''}
+                    onChange={(e) => onCustomerChange?.(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Customer/Tenant</option>
+                    {availableTenants.map((tenant) => (
+                      <option key={tenant.id} value={tenant.id}>
+                        {tenant.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

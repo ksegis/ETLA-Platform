@@ -92,6 +92,29 @@ export default function WorkRequestsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
+  const [availableTenants, setAvailableTenants] = useState<Array<{id: string, name: string}>>([])
+
+  // Load available tenants for customer selection (for host admins and primary customer admins)
+  const loadAvailableTenants = async () => {
+    if (tenantUser?.role === 'host_admin') {
+      try {
+        const { data, error } = await supabase
+          .from('tenants')
+          .select('id, name')
+          .order('name')
+
+        if (error) throw error
+        setAvailableTenants(data || [])
+      } catch (err) {
+        console.error('Error loading tenants:', err)
+      }
+    } else if (tenantUser?.role === 'primary_customer_admin' && selectedTenant) {
+      // Primary customer admins can see their own tenant
+      setAvailableTenants([{ id: selectedTenant.id, name: selectedTenant.name }])
+      setSelectedCustomerId(selectedTenant.id)
+    }
+  }
   const [stats, setStats] = useState<WorkRequestStats>({
     total: 0,
     submitted: 0,
@@ -166,6 +189,24 @@ export default function WorkRequestsPage() {
     }
 
     try {
+      // Determine customer_id based on user role and context
+      let customerId: string
+      
+      if (tenantUser?.role === 'host_admin') {
+        // Host admins can create work requests for any selected customer/tenant
+        if (!selectedCustomerId) {
+          setError('Please select a customer/tenant for this work request')
+          return
+        }
+        customerId = selectedCustomerId
+      } else if (tenantUser?.role === 'client_admin' || tenantUser?.role === 'primary_customer_admin') {
+        // Client/customer admins can create work requests for their tenant
+        customerId = tenantUser.tenant_id
+      } else {
+        // Regular users create work requests for themselves within their tenant
+        customerId = user.id
+      }
+
       // FIXED: Map to correct database fields with proper NULL handling
       const newRequest = {
         // Required fields (NOT NULL in database)
@@ -175,7 +216,7 @@ export default function WorkRequestsPage() {
         category: requestData.category,
         priority: requestData.priority,
         urgency: requestData.urgency || 'medium',
-        customer_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff', // Required field - using demo tenant ID for RLS policy
+        customer_id: customerId, // Dynamic based on user role and permissions
         
         // Optional fields (nullable in database) - use NULL instead of empty strings
         status: requestData.status || 'submitted',
@@ -338,7 +379,8 @@ export default function WorkRequestsPage() {
   // Load data when tenant changes
   useEffect(() => {
     loadWorkRequests()
-  }, [selectedTenant?.id])
+    loadAvailableTenants()
+  }, [selectedTenant?.id, tenantUser?.role])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
@@ -726,9 +768,16 @@ export default function WorkRequestsPage() {
         {/* Modals */}
         <WorkRequestForm
           isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => {
+            setIsCreateModalOpen(false)
+            setSelectedCustomerId('')
+          }}
           onSave={handleCreateRequest}
           title="Create New Work Request"
+          userRole={tenantUser?.role}
+          availableTenants={availableTenants}
+          selectedCustomerId={selectedCustomerId}
+          onCustomerChange={setSelectedCustomerId}
         />
 
         <WorkRequestForm
@@ -740,6 +789,10 @@ export default function WorkRequestsPage() {
           onSave={handleUpdateRequest}
           request={selectedRequest}
           title="Edit Work Request"
+          userRole={tenantUser?.role}
+          availableTenants={availableTenants}
+          selectedCustomerId={selectedCustomerId}
+          onCustomerChange={setSelectedCustomerId}
         />
       </div>
     </DashboardLayout>
