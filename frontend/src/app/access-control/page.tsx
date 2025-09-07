@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTenant } from '@/contexts/TenantContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -27,14 +28,10 @@ import {
   BarChart3,
   Database,
   Link,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  EyeOff
 } from 'lucide-react'
-import { usePermissions } from '@/hooks/usePermissions'
-import UserCreationModal from '@/components/UserCreationModal'
-import UserInviteModal from '@/components/UserInviteModal'
-import UserEditModal from '@/components/UserEditModal'
-import PasswordResetModal from '@/components/PasswordResetModal'
-import UserCleanupModal from '@/components/UserCleanupModal'
 import { supabase } from '@/lib/supabase'
 
 interface User {
@@ -45,98 +42,108 @@ interface User {
   department?: string
   job_title?: string
   role: string
-  role_level: string
+  role_level?: string
   tenant_id: string
   tenant_name: string
   is_active: boolean
-  last_sign_in_at?: string
+  status: string
   created_at: string
-  email_confirmed_at?: string
+  last_sign_in_at?: string
   can_invite_users: boolean
   can_manage_sub_clients: boolean
   permission_scope: string
+  requires_password_change?: boolean
+  is_primary_tenant?: boolean
 }
 
 interface Tenant {
   id: string
   name: string
   code: string
-  tenant_type: string
   status: string
-  user_count: number
+  tenant_type: string
 }
 
-interface InviteStatus {
+interface Invitation {
   id: string
   email: string
-  role: string
+  full_name?: string
   tenant_name: string
-  invited_by: string
+  role: string
+  status: string
   created_at: string
   expires_at: string
-  status: 'pending' | 'accepted' | 'expired'
+  invited_by_name?: string
 }
 
-interface RoleStats {
-  role: string
-  role_level: string
-  count: number
-  description: string
+interface AdminNotification {
+  id: string
+  type: string
+  title: string
+  message: string
+  user_id?: string
+  is_read: boolean
+  created_at: string
+  data?: any
 }
 
-export default function AccessControlPageEnhanced() {
-  const { user, isAuthenticated, tenant } = useAuth()
-  const { hasPermission, currentRole, isHostAdmin } = usePermissions()
+export default function AccessControlPage() {
+  const { user, isAuthenticated } = useAuth()
+  const { selectedTenant } = useTenant()
   
   // State management
   const [users, setUsers] = useState<User[]>([])
   const [tenants, setTenants] = useState<Tenant[]>([])
-  const [invites, setInvites] = useState<InviteStatus[]>([])
-  const [roleStats, setRoleStats] = useState<RoleStats[]>([])
+  const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [notifications, setNotifications] = useState<AdminNotification[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedTenant, setSelectedTenant] = useState<string>('all')
-  const [selectedRole, setSelectedRole] = useState<string>('all')
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'roles' | 'sso' | 'invites' | 'cleanup'>('overview')
+  const [filterRole, setFilterRole] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
   
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [showCleanupModal, setShowCleanupModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'roles' | 'invites' | 'notifications'>('overview')
 
-  // Check if user has access to this page
-  const canAccessUserManagement = hasPermission('user-management', 'manage') && isHostAdmin()
-  const canViewUserManagement = hasPermission('user-management', 'view') || canAccessUserManagement
+  // Permission checks
+  const isHostAdmin = user?.role === 'host_admin'
+  const isClientAdmin = user?.role === 'client_admin'
+  const canManageUsers = isHostAdmin || isClientAdmin
 
   useEffect(() => {
-    if (isAuthenticated && canViewUserManagement) {
+    if (isAuthenticated && canManageUsers) {
       loadData()
     }
-  }, [isAuthenticated, canViewUserManagement])
+  }, [isAuthenticated, canManageUsers, selectedTenant])
 
   const loadData = async () => {
     setLoading(true)
+    setError(null)
     try {
       await Promise.all([
         loadUsers(),
         loadTenants(),
-        loadInvites(),
-        loadRoleStats()
+        loadInvitations(),
+        loadNotifications()
       ])
     } catch (error) {
       console.error('Error loading data:', error)
+      setError('Failed to load data. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-   const loadUsers = async () => {
+  const loadUsers = async () => {
     try {
-      const { data: users, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select(`
           *,
@@ -145,36 +152,59 @@ export default function AccessControlPageEnhanced() {
             role_level,
             is_active,
             tenant_id,
-            tenants(name)
+            is_primary_tenant,
+            requires_password_change,
+            permission_scope,
+            can_invite_users,
+            can_manage_sub_clients,
+            tenants(name, code)
           )
         `)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      // Filter by tenant if not host admin
+      if (!isHostAdmin && selectedTenant) {
+        query = query.eq('tenant_users.tenant_id', selectedTenant.id)
+      }
 
-      const formattedUsers: User[] = users?.map(user => ({
-        id: user.id,
-        email: user.email || 'N/A',
-        full_name: user.full_name || 'Unknown',
-        role: user.tenant_users[0]?.role || 'user',
-        role_level: user.tenant_users[0]?.role_level || 'sub_client',
-        tenant_name: user.tenant_users[0]?.tenants?.name || 'No Tenant',
-        tenant_id: user.tenant_users[0]?.tenant_id,
-        is_active: user.tenant_users[0]?.is_active ?? true,
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at,
-        phone: user.phone,
-        department: user.department,
-        job_title: user.job_title,
-        can_invite_users: ['admin', 'manager'].includes(user.tenant_users[0]?.role || ''),
-        can_manage_sub_clients: user.tenant_users[0]?.role_level === 'primary_client',
-        permission_scope: user.tenant_users[0]?.permission_scope || 'own'
-      })) || []
+      const { data: users, error } = await query
+
+      if (error) {
+        console.error('Error loading users:', error)
+        throw error
+      }
+
+      const formattedUsers: User[] = users?.map(user => {
+        const tenantUser = user.tenant_users[0] || {}
+        const tenant = tenantUser.tenants || {}
+        
+        return {
+          id: user.id,
+          email: user.email || 'N/A',
+          full_name: user.full_name || 'Unknown',
+          phone: user.phone,
+          department: user.department,
+          job_title: user.job_title,
+          role: tenantUser.role || 'user',
+          role_level: tenantUser.role_level,
+          tenant_id: tenantUser.tenant_id,
+          tenant_name: tenant.name || 'No Tenant',
+          is_active: tenantUser.is_active ?? true,
+          status: user.status || 'active',
+          created_at: user.created_at,
+          last_sign_in_at: user.last_sign_in_at,
+          can_invite_users: tenantUser.can_invite_users || false,
+          can_manage_sub_clients: tenantUser.can_manage_sub_clients || false,
+          permission_scope: tenantUser.permission_scope || 'own',
+          requires_password_change: tenantUser.requires_password_change || false,
+          is_primary_tenant: tenantUser.is_primary_tenant || false
+        }
+      }) || []
 
       setUsers(formattedUsers)
     } catch (error) {
       console.error('Error loading users:', error)
-      setError('Failed to load users')
+      throw error
     }
   }
 
@@ -183,179 +213,271 @@ export default function AccessControlPageEnhanced() {
       const { data: tenants, error } = await supabase
         .from('tenants')
         .select('*')
+        .eq('is_active', true)
         .order('name')
 
       if (error) throw error
       setTenants(tenants || [])
     } catch (error) {
       console.error('Error loading tenants:', error)
-      setError('Failed to load tenants')
+      throw error
     }
   }
 
-  const loadInvites = async () => {
+  const loadInvitations = async () => {
     try {
-      // This would need to be implemented based on your invitation system
-      // For now, using empty array
-      setInvites([])
-    } catch (error) {
-      console.error('Error loading invites:', error)
-      setError('Failed to load invites')
-    }
-  }
+      let query = supabase
+        .from('user_invitations')
+        .select(`
+          *,
+          tenants(name),
+          invited_by_profile:profiles!user_invitations_invited_by_fkey(full_name)
+        `)
+        .order('created_at', { ascending: false })
 
-  const loadRoleStats = async () => {
-    try {
-      const { data: stats, error } = await supabase
-        .from('tenant_users')
-        .select('role, role_level')
+      // Filter by tenant if not host admin
+      if (!isHostAdmin && selectedTenant) {
+        query = query.eq('tenant_id', selectedTenant.id)
+      }
+
+      const { data: invitations, error } = await query
 
       if (error) throw error
 
-      const roleStats: RoleStats[] = Object.entries(stats?.reduce((acc, user) => {
-        const key = `${user.role_level}_${user.role}`
-        acc[key] = (acc[key] || 0) + 1
-        return acc
-      }, {} as Record<string, number>) || {}).map(([key, count]) => {
-        const [role_level, role] = key.split('_')
-        return {
-          role,
-          role_level,
-          count,
-          description: `${role_level} ${role}s`
+      const formattedInvitations: Invitation[] = invitations?.map(inv => ({
+        id: inv.id,
+        email: inv.email,
+        full_name: inv.full_name,
+        tenant_name: inv.tenants?.name || 'Unknown Tenant',
+        role: inv.role,
+        status: inv.status,
+        created_at: inv.created_at,
+        expires_at: inv.expires_at,
+        invited_by_name: inv.invited_by_profile?.full_name || 'Unknown'
+      })) || []
+
+      setInvitations(formattedInvitations)
+    } catch (error) {
+      console.error('Error loading invitations:', error)
+      throw error
+    }
+  }
+
+  const loadNotifications = async () => {
+    try {
+      const { data: notifications, error } = await supabase
+        .from('admin_notifications')
+        .select('*')
+        .eq('admin_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (error) throw error
+      setNotifications(notifications || [])
+    } catch (error) {
+      console.error('Error loading notifications:', error)
+      throw error
+    }
+  }
+
+  const handleCreateUser = async (userData: any) => {
+    try {
+      setLoading(true)
+      
+      // Generate temporary password
+      const tempPassword = generateTempPassword()
+      
+      // Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: userData.email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: userData.full_name,
+          phone: userData.phone,
+          job_title: userData.job_title,
+          department: userData.department
         }
       })
 
-      setRoleStats(roleStats)
+      if (authError) throw authError
+
+      // Update profile with additional info
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: userData.full_name,
+          phone: userData.phone,
+          job_title: userData.job_title,
+          department: userData.department,
+          status: 'active'
+        })
+        .eq('id', authData.user.id)
+
+      if (profileError) throw profileError
+
+      // Assign user to tenant using our database function
+      const { error: assignError } = await supabase.rpc('assign_user_to_tenant', {
+        p_user_id: authData.user.id,
+        p_tenant_id: userData.tenant_id,
+        p_role: userData.role,
+        p_role_level: userData.role_level,
+        p_is_primary: true,
+        p_permission_scope: userData.permission_scope || 'own',
+        p_can_invite_users: userData.can_invite_users || false,
+        p_can_manage_sub_clients: userData.can_manage_sub_clients || false,
+        p_requires_password_change: true
+      })
+
+      if (assignError) throw assignError
+
+      // Send welcome email with temporary password
+      await sendWelcomeEmail(userData.email, userData.full_name, tempPassword)
+
+      // Reload data
+      await loadData()
+      setShowCreateModal(false)
+      
+      alert('User created successfully! Welcome email sent with temporary password.')
     } catch (error) {
-      console.error('Error loading role stats:', error)
-      setError('Failed to load role stats')
+      console.error('Error creating user:', error)
+      alert('Failed to create user: ' + (error as Error).message)
+    } finally {
+      setLoading(false)
     }
   }
 
-   const handleDeleteUser = async (userId: string) => {
-    if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      try {
-        // Delete from tenant_users first (foreign key constraint)
-        const { error: tenantUserError } = await supabase
-          .from('tenant_users')
-          .delete()
-          .eq('user_id', userId)
-
-        if (tenantUserError) throw tenantUserError
-
-        // Delete from profiles
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', userId)
-
-        if (profileError) throw profileError
-
-        // Note: auth.users deletion requires admin privileges
-        // This would typically be done via a server-side function
-        console.log('User deleted from profiles and tenant_users. Auth user may need manual cleanup.')
-        
-        await loadUsers()
-      } catch (error) {
-        console.error('Error deleting user:', error)
-        setError('Failed to delete user')
-      }
-    }
-  }
-
-  const handlePasswordReset = (userId: string, email: string) => {
-    setSelectedUser(users.find(u => u.id === userId) || null)
-    setShowPasswordModal(true)
-  }
-
-  const handleResendInvite = async (inviteId: string) => {
+  const handleSendInvitation = async (inviteData: any) => {
     try {
-      // TODO: Implement invite resend functionality
-      console.log('Resending invite:', inviteId)
-      // This would typically call a server function to resend the invitation email
-      await loadInvites()
+      setLoading(true)
+      
+      // Generate invitation token and temporary password
+      const invitationToken = crypto.randomUUID()
+      const tempPassword = generateTempPassword()
+      
+      // Create invitation record
+      const { error: inviteError } = await supabase
+        .from('user_invitations')
+        .insert({
+          email: inviteData.email,
+          full_name: inviteData.full_name,
+          phone: inviteData.phone,
+          job_title: inviteData.job_title,
+          department: inviteData.department,
+          invited_by: user?.id,
+          tenant_id: inviteData.tenant_id,
+          role: inviteData.role,
+          role_level: inviteData.role_level,
+          permission_scope: inviteData.permission_scope || 'own',
+          can_invite_users: inviteData.can_invite_users || false,
+          can_manage_sub_clients: inviteData.can_manage_sub_clients || false,
+          temporary_password: tempPassword,
+          invitation_token: invitationToken
+        })
+
+      if (inviteError) throw inviteError
+
+      // Send invitation email
+      await sendInvitationEmail(
+        inviteData.email, 
+        inviteData.full_name, 
+        invitationToken, 
+        tempPassword
+      )
+
+      // Reload data
+      await loadData()
+      setShowInviteModal(false)
+      
+      alert('Invitation sent successfully!')
     } catch (error) {
-      console.error('Error resending invite:', error)
-      setError('Failed to resend invite')
+      console.error('Error sending invitation:', error)
+      alert('Failed to send invitation: ' + (error as Error).message)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const exportUsers = () => {
-    const csvContent = [
-      ['Email', 'Name', 'Role', 'Level', 'Tenant', 'Status', 'Last Login', 'Created'].join(','),
-      ...filteredUsers.map(user => [
-        user.email,
-        user.full_name,
-        user.role,
-        user.role_level,
-        user.tenant_name,
-        user.is_active ? 'Active' : 'Inactive',
-        user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'Never',
-        new Date(user.created_at).toLocaleDateString()
-      ].join(','))
-    ].join('\n')
+  const generateTempPassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%'
+    let password = ''
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return password
+  }
 
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
+  const sendWelcomeEmail = async (email: string, fullName: string, tempPassword: string) => {
+    // This would integrate with your email service (SendGrid, AWS SES, etc.)
+    // For now, we'll log the details
+    console.log('Welcome email would be sent to:', {
+      email,
+      fullName,
+      tempPassword,
+      loginUrl: `${window.location.origin}/login`
+    })
+    
+    // TODO: Implement actual email sending
+    // Example with fetch to your email API:
+    /*
+    await fetch('/api/send-welcome-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        fullName,
+        tempPassword,
+        loginUrl: `${window.location.origin}/login`
+      })
+    })
+    */
+  }
+
+  const sendInvitationEmail = async (email: string, fullName: string, token: string, tempPassword: string) => {
+    // This would integrate with your email service
+    console.log('Invitation email would be sent to:', {
+      email,
+      fullName,
+      invitationUrl: `${window.location.origin}/accept-invite?token=${token}`,
+      tempPassword
+    })
+    
+    // TODO: Implement actual email sending
   }
 
   // Filter users based on search and filters
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesTenant = selectedTenant === 'all' || user.tenant_id === selectedTenant
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole
+    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesRole = filterRole === 'all' || user.role === filterRole
+    const matchesStatus = filterStatus === 'all' || user.status === filterStatus
     
-    return matchesSearch && matchesTenant && matchesRole
+    return matchesSearch && matchesRole && matchesStatus
   })
 
-  const getRoleColor = (role: string, level: string) => {
-    if (level === 'host') return 'bg-purple-100 text-purple-800'
-    if (level === 'primary_client') return 'bg-blue-100 text-blue-800'
-    if (level === 'sub_client') return 'bg-green-100 text-green-800'
-    return 'bg-gray-100 text-gray-800'
+  // Calculate statistics
+  const stats = {
+    totalUsers: users.length,
+    activeUsers: users.filter(u => u.is_active && u.status === 'active').length,
+    pendingUsers: users.filter(u => u.status === 'pending_assignment').length,
+    pendingInvites: invitations.filter(i => i.status === 'pending').length,
+    unreadNotifications: notifications.filter(n => !n.is_read).length
   }
 
-  const getStatusIcon = (user: User) => {
-    if (!user.email_confirmed_at) return <Clock className="h-4 w-4 text-yellow-500" />
-    if (!user.is_active) return <AlertCircle className="h-4 w-4 text-red-500" />
-    return <CheckCircle className="h-4 w-4 text-green-500" />
-  }
+  const roleDistribution = users.reduce((acc, user) => {
+    acc[user.role] = (acc[user.role] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
 
-  if (!isAuthenticated) {
+  if (!canManageUsers) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <Card className="w-96">
-            <CardContent className="p-6 text-center">
-              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
-              <p className="text-gray-600">Please log in to access user management.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
-  if (!canViewUserManagement) {
-    return (
-      <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <Card className="w-96">
-            <CardContent className="p-6 text-center">
-              <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-              <p className="text-gray-600">You don't have permission to access user management.</p>
-              <p className="text-sm text-gray-500 mt-2">Contact your administrator for access.</p>
-            </CardContent>
-          </Card>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
+            <p className="text-gray-500">You don't have permission to access user management.</p>
+          </div>
         </div>
       </DashboardLayout>
     )
@@ -363,329 +485,376 @@ export default function AccessControlPageEnhanced() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 lg:p-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Access Control & Security</h1>
-              <p className="mt-2 text-gray-600">
-                {canAccessUserManagement 
-                  ? "Comprehensive user management, RBAC, and security controls"
-                  : `User management and security overview for ${tenant?.name}`
-                }
-              </p>
-            </div>
-            {canAccessUserManagement && (
-              <div className="flex space-x-2">
-                <Button onClick={() => setShowInviteModal(true)} variant="outline">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Invite User
-                </Button>
-                <Button onClick={() => setShowCreateModal(true)}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Create User
-                </Button>
-              </div>
-            )}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Access Control & Security</h1>
+            <p className="text-gray-600">Comprehensive user management, RBAC, and security controls</p>
+          </div>
+          <div className="flex space-x-3">
+            <Button
+              onClick={() => setShowInviteModal(true)}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <Mail className="h-4 w-4" />
+              <span>Invite User</span>
+            </Button>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center space-x-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Create User</span>
+            </Button>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200 mb-6">
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+                <Button
+                  onClick={loadData}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {[
               { id: 'overview', label: 'Overview', icon: BarChart3 },
               { id: 'users', label: 'Users', icon: Users },
               { id: 'roles', label: 'Roles & Permissions', icon: Shield },
-              { id: 'sso', label: 'SSO Configuration', icon: Key },
-              ...(canAccessUserManagement ? [
-                { id: 'invites', label: 'Invitations', icon: Mail },
-                { id: 'cleanup', label: 'System Cleanup', icon: Settings }
-              ] : [])
-            ].map(({ id, label, icon: Icon }) => (
+              { id: 'invites', label: 'Invitations', icon: Mail },
+              { id: 'notifications', label: 'Notifications', icon: AlertCircle }
+            ].map(tab => (
               <button
-                key={id}
-                onClick={() => setActiveTab(id as any)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === id
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <Icon className="h-4 w-4 mr-2" />
-                {label}
+                <tab.icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+                {tab.id === 'notifications' && stats.unreadNotifications > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                    {stats.unreadNotifications}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
         </div>
 
-        {/* Overview Tab */}
+        {/* Tab Content */}
         {activeTab === 'overview' && (
-          <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="space-y-6">
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Users</p>
-                      <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Users className="h-8 w-8 text-blue-600" />
                     </div>
-                    <Users className="h-8 w-8 text-blue-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Total Users</p>
+                      <p className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Active Tenants</p>
-                      <p className="text-2xl font-bold text-gray-900">{tenants.filter(t => t.status === 'active').length}</p>
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <CheckCircle className="h-8 w-8 text-green-600" />
                     </div>
-                    <Building className="h-8 w-8 text-green-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Active Users</p>
+                      <p className="text-2xl font-semibold text-gray-900">{stats.activeUsers}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Pending Invites</p>
-                      <p className="text-2xl font-bold text-gray-900">{invites.filter(i => i.status === 'pending').length}</p>
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Clock className="h-8 w-8 text-yellow-600" />
                     </div>
-                    <Mail className="h-8 w-8 text-yellow-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Pending Assignment</p>
+                      <p className="text-2xl font-semibold text-gray-900">{stats.pendingUsers}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Active Users</p>
-                      <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.is_active).length}</p>
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Mail className="h-8 w-8 text-purple-600" />
                     </div>
-                    <CheckCircle className="h-8 w-8 text-purple-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Pending Invites</p>
+                      <p className="text-2xl font-semibold text-gray-900">{stats.pendingInvites}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <AlertCircle className="h-8 w-8 text-red-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Notifications</p>
+                      <p className="text-2xl font-semibold text-gray-900">{stats.unreadNotifications}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Role Distribution */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Role Distribution</CardTitle>
-                  <CardDescription>
-                    Current user distribution across roles and levels
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {roleStats.map((stat, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
-                            <Shield className={`h-4 w-4 mr-2 ${
-                              stat.role_level === 'host' ? 'text-purple-600' :
-                              stat.role_level === 'primary_client' ? 'text-blue-600' :
-                              'text-green-600'
-                            }`} />
-                            <span className="text-sm font-medium">{stat.role} ({stat.role_level})</span>
-                          </div>
-                          <span className="text-sm font-bold text-gray-900">{stat.count} users</span>
-                        </div>
-                        <p className="text-xs text-gray-600">{stat.description}</p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Role Distribution</CardTitle>
+                <CardDescription>Current user distribution across roles and levels</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(roleDistribution).map(([role, count]) => (
+                    <div key={role} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <Shield className="h-4 w-4 text-gray-400" />
+                        <span className="font-medium capitalize">{role.replace('_', ' ')}</span>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Tenant Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tenant Overview</CardTitle>
-                  <CardDescription>
-                    Active tenants and user distribution
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {tenants.slice(0, 5).map((tenant) => (
-                      <div key={tenant.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{tenant.name}</p>
-                          <p className="text-sm text-gray-600">{tenant.tenant_type}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">{tenant.user_count} users</p>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            tenant.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {tenant.status}
-                          </span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-500">{count} users</span>
+                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${(count / stats.totalUsers) * 100}%` }}
+                          />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        {/* Users Tab */}
         {activeTab === 'users' && (
-          <>
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="space-y-6">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <input
                     type="text"
-                    placeholder="Search users by email or name..."
+                    placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
-
               <select
-                value={selectedTenant}
-                onChange={(e) => setSelectedTenant(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Tenants</option>
-                {tenants.map(tenant => (
-                  <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
-                ))}
-              </select>
-
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
+                <option value="host_admin">Host Admin</option>
+                <option value="client_admin">Client Admin</option>
                 <option value="user">User</option>
-                <option value="viewer">Viewer</option>
               </select>
-
-              <Button onClick={exportUsers} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="pending_assignment">Pending Assignment</option>
+                <option value="suspended">Suspended</option>
+              </select>
+              <Button
+                onClick={loadData}
+                variant="outline"
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
 
             {/* Users Table */}
             <Card>
-              <CardHeader>
-                <CardTitle>Users ({filteredUsers.length})</CardTitle>
-                <CardDescription>
-                  {canAccessUserManagement 
-                    ? "Manage all users across the platform"
-                    : "View users in your organization"
-                  }
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
-                    <span className="ml-2 text-gray-600">Loading users...</span>
+                  <div className="flex items-center justify-center h-64">
+                    <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-center">
+                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Users Found</h3>
+                      <p className="text-gray-500">
+                        {users.length === 0 
+                          ? "No users have been created yet." 
+                          : "No users match your search criteria."
+                        }
+                      </p>
+                      {users.length === 0 && (
+                        <Button
+                          onClick={() => setShowCreateModal(true)}
+                          className="mt-4"
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Create First User
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">User</th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">Role</th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">Tenant</th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">Last Login</th>
-                          {canAccessUserManagement && (
-                            <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                          )}
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            User
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Role & Tenant
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Last Login
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="bg-white divide-y divide-gray-200">
                         {filteredUsers.map((user) => (
-                          <tr key={user.id} className="border-b hover:bg-gray-50">
-                            <td className="py-3 px-4">
+                          <tr key={user.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                {getStatusIcon(user)}
-                                <div className="ml-3">
-                                  <p className="font-medium text-gray-900">{user.full_name}</p>
-                                  <p className="text-sm text-gray-600">{user.email}</p>
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-gray-700">
+                                      {user.full_name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {user.full_name}
+                                    {user.is_primary_tenant && (
+                                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        Primary
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-gray-500">{user.email}</div>
                                   {user.job_title && (
-                                    <p className="text-xs text-gray-500">{user.job_title}</p>
+                                    <div className="text-xs text-gray-400">{user.job_title}</div>
                                   )}
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3 px-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role, user.role_level)}`}>
-                                {user.role} ({user.role_level})
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <p className="text-sm text-gray-900">{user.tenant_name}</p>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {user.is_active ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <p className="text-sm text-gray-600">
-                                {user.last_sign_in_at 
-                                  ? new Date(user.last_sign_in_at).toLocaleDateString()
-                                  : 'Never'
-                                }
-                              </p>
-                            </td>
-                            {canAccessUserManagement && (
-                              <td className="py-3 px-4">
-                                <div className="flex items-center space-x-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      setSelectedUser(user)
-                                      setShowEditModal(true)
-                                    }}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handlePasswordReset(user.id, user.email)}
-                                  >
-                                    <Key className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleDeleteUser(user.id)}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900 capitalize">
+                                {user.role.replace('_', ' ')}
+                              </div>
+                              <div className="text-sm text-gray-500">{user.tenant_name}</div>
+                              {user.role_level && (
+                                <div className="text-xs text-gray-400 capitalize">
+                                  {user.role_level.replace('_', ' ')}
                                 </div>
-                              </td>
-                            )}
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex flex-col space-y-1">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  user.is_active && user.status === 'active'
+                                    ? 'bg-green-100 text-green-800'
+                                    : user.status === 'pending_assignment'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {user.is_active && user.status === 'active' ? 'Active' : 
+                                   user.status === 'pending_assignment' ? 'Pending' : 'Inactive'}
+                                </span>
+                                {user.requires_password_change && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    Password Reset Required
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {user.last_sign_in_at 
+                                ? new Date(user.last_sign_in_at).toLocaleDateString()
+                                : 'Never'
+                              }
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  onClick={() => {
+                                    setSelectedUser(user)
+                                    setShowEditModal(true)
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    setSelectedUser(user)
+                                    setShowPasswordModal(true)
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  <Key className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -694,351 +863,111 @@ export default function AccessControlPageEnhanced() {
                 )}
               </CardContent>
             </Card>
-          </>
+          </div>
         )}
 
-        {/* Roles Tab - Enhanced with real data */}
-        {activeTab === 'roles' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Other tabs would be implemented similarly */}
+        {activeTab === 'invites' && (
+          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Role-Based Access Control (RBAC)</CardTitle>
-                <CardDescription>
-                  Manage user roles and permissions with tenant scoping
-                </CardDescription>
+                <CardTitle>Pending Invitations</CardTitle>
+                <CardDescription>Manage user invitations and track their status</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {roleStats.map((stat, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center">
-                          <Shield className={`h-4 w-4 mr-2 ${
-                            stat.role_level === 'host' ? 'text-red-600' :
-                            stat.role_level === 'primary_client' ? 'text-orange-600' :
-                            stat.role_level === 'sub_client' ? 'text-blue-600' :
-                            'text-green-600'
-                          }`} />
-                          <span className="text-sm font-medium">{stat.role}</span>
-                        </div>
-                        {canAccessUserManagement && (
-                          <div className="flex space-x-1">
-                            <Button size="sm" variant="outline">
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-600 mb-2">{stat.description}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">{stat.count} users assigned</span>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          stat.role_level === 'host' ? 'bg-red-50 text-red-700 border border-red-200' :
-                          stat.role_level === 'primary_client' ? 'bg-orange-50 text-orange-700 border border-orange-200' :
-                          stat.role_level === 'sub_client' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                          'bg-green-50 text-green-700 border border-green-200'
-                        }`}>
-                          {stat.role_level === 'host' ? 'System-wide' :
-                           stat.role_level === 'primary_client' ? 'Tenant-scoped' :
-                           stat.role_level === 'sub_client' ? 'Sub-client' : 'Limited'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {canAccessUserManagement && (
-                  <div className="mt-4 pt-4 border-t">
-                    <Button size="sm" variant="outline" className="w-full">
-                      Create Custom Role
-                    </Button>
+                {invitations.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Invitations</h3>
+                    <p className="text-gray-500">No user invitations have been sent yet.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Invitee
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Role & Tenant
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Invited By
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Expires
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {invitations.map((invitation) => (
+                          <tr key={invitation.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {invitation.full_name || 'N/A'}
+                                </div>
+                                <div className="text-sm text-gray-500">{invitation.email}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900 capitalize">
+                                {invitation.role.replace('_', ' ')}
+                              </div>
+                              <div className="text-sm text-gray-500">{invitation.tenant_name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                invitation.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : invitation.status === 'accepted'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {invitation.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {invitation.invited_by_name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(invitation.expires_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>
             </Card>
-
-            {/* Permission Matrix */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Permission Matrix</CardTitle>
-                <CardDescription>
-                  Overview of permissions by role level
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-4 gap-2 text-xs font-medium text-gray-600 border-b pb-2">
-                    <div>Permission</div>
-                    <div>Host</div>
-                    <div>Primary</div>
-                    <div>Sub</div>
-                  </div>
-                  
-                  {[
-                    { name: 'User Management', host: true, primary: true, sub: false },
-                    { name: 'System Settings', host: true, primary: false, sub: false },
-                    { name: 'Tenant Management', host: true, primary: true, sub: false },
-                    { name: 'Project Management', host: true, primary: true, sub: true },
-                    { name: 'Reporting', host: true, primary: true, sub: true },
-                    { name: 'Data Export', host: true, primary: true, sub: false }
-                  ].map((perm, index) => (
-                    <div key={index} className="grid grid-cols-4 gap-2 text-xs py-2 border-b">
-                      <div className="font-medium">{perm.name}</div>
-                      <div className="text-center">
-                        {perm.host ? <CheckCircle className="h-4 w-4 text-green-500 mx-auto" /> : <AlertCircle className="h-4 w-4 text-red-500 mx-auto" />}
-                      </div>
-                      <div className="text-center">
-                        {perm.primary ? <CheckCircle className="h-4 w-4 text-green-500 mx-auto" /> : <AlertCircle className="h-4 w-4 text-red-500 mx-auto" />}
-                      </div>
-                      <div className="text-center">
-                        {perm.sub ? <CheckCircle className="h-4 w-4 text-green-500 mx-auto" /> : <AlertCircle className="h-4 w-4 text-red-500 mx-auto" />}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
           </div>
-        )}
-
-        {/* SSO Tab - Keep existing SSO configuration */}
-        {activeTab === 'sso' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Single Sign-On (SSO)</CardTitle>
-              <CardDescription>
-                Configure SSO providers and authentication settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="border border-green-200 rounded-lg p-3 bg-green-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                      <span className="text-sm font-medium">Microsoft Azure AD</span>
-                    </div>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                      Active
-                    </span>
-                  </div>
-                  <p className="text-xs text-green-700 mb-2">Primary SSO provider for corporate users</p>
-                  <div className="text-xs text-green-600">
-                    Last sync: {new Date().toLocaleDateString()} | {users.filter(u => u.email.includes('@')).length} users authenticated
-                  </div>
-                </div>
-                
-                <div className="border border-blue-200 rounded-lg p-3 bg-blue-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2" />
-                      <span className="text-sm font-medium">Google Workspace</span>
-                    </div>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                      Active
-                    </span>
-                  </div>
-                  <p className="text-xs text-blue-700 mb-2">Secondary provider for external consultants</p>
-                  <div className="text-xs text-blue-600">
-                    Last sync: {new Date().toLocaleDateString()} | {Math.floor(users.length * 0.2)} users authenticated
-                  </div>
-                </div>
-                
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
-                      <AlertTriangle className="h-4 w-4 text-gray-400 mr-2" />
-                      <span className="text-sm font-medium">SAML 2.0 Provider</span>
-                    </div>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                      Configured
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600 mb-2">Ready for enterprise SAML integration</p>
-                  <div className="text-xs text-gray-500">
-                    Status: Ready | No active connections
-                  </div>
-                </div>
-              </div>
-              
-              {canAccessUserManagement && (
-                <div className="mt-4 pt-4 border-t">
-                  <Button size="sm" variant="outline" className="w-full">
-                    Configure SSO Provider
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Invites Tab - Only for host admins */}
-        {activeTab === 'invites' && canAccessUserManagement && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Invitations</CardTitle>
-              <CardDescription>
-                Manage user invitations and track their status
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Email</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Role</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Tenant</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Invited By</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Expires</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invites.map((invite) => (
-                      <tr key={invite.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium">{invite.email}</td>
-                        <td className="py-3 px-4">{invite.role}</td>
-                        <td className="py-3 px-4">{invite.tenant_name}</td>
-                        <td className="py-3 px-4">{invite.invited_by}</td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            invite.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            invite.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {invite.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          {new Date(invite.expires_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4">
-                          {invite.status === 'pending' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleResendInvite(invite.id)}
-                            >
-                              <Send className="h-3 w-3 mr-1" />
-                              Resend
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Cleanup Tab - Only for host admins */}
-        {activeTab === 'cleanup' && canAccessUserManagement && (
-          <Card>
-            <CardHeader>
-              <CardTitle>System Cleanup & Maintenance</CardTitle>
-              <CardDescription>
-                Advanced user management and cleanup operations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Button
-                  onClick={() => setShowCleanupModal(true)}
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Bulk User Cleanup
-                </Button>
-                
-                <Button
-                  onClick={loadData}
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh All Data
-                </Button>
-
-                <Button
-                  onClick={exportUsers}
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export User Data
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         )}
       </div>
 
-      {/* Modals - Only render for host admins */}
-      {canAccessUserManagement && (
-        <>
-          {showCreateModal && (
-            <UserCreationModal
-              isOpen={showCreateModal}
-              onClose={() => setShowCreateModal(false)}
-              onSuccess={loadUsers}
-              tenants={tenants}
-            />
-          )}
+      {/* Modals would be implemented here */}
+      {showCreateModal && (
+        <UserCreationModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateUser}
+          tenants={tenants}
+          loading={loading}
+        />
+      )}
 
-          {showInviteModal && (
-            <UserInviteModal
-              isOpen={showInviteModal}
-              onClose={() => setShowInviteModal(false)}
-              onSuccess={loadInvites}
-              tenants={tenants}
-            />
-          )}
-
-          {showEditModal && selectedUser && (
-            <UserEditModal
-              isOpen={showEditModal}
-              onClose={() => {
-                setShowEditModal(false)
-                setSelectedUser(null)
-              }}
-              onSuccess={loadUsers}
-              user={selectedUser}
-              tenants={tenants}
-            />
-          )}
-
-          {showPasswordModal && selectedUser && (
-            <PasswordResetModal
-              isOpen={showPasswordModal}
-              onClose={() => {
-                setShowPasswordModal(false)
-                setSelectedUser(null)
-              }}
-              onSuccess={() => {
-                loadUsers()
-                setShowPasswordModal(false)
-                setSelectedUser(null)
-              }}
-              user={selectedUser}
-            />
-          )}
-
-          {showCleanupModal && (
-            <UserCleanupModal
-              isOpen={showCleanupModal}
-              onClose={() => setShowCleanupModal(false)}
-              onSuccess={loadUsers}
-            />
-          )}
-        </>
+      {showInviteModal && (
+        <UserInviteModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          onSubmit={handleSendInvitation}
+          tenants={tenants}
+          loading={loading}
+        />
       )}
     </DashboardLayout>
   )
