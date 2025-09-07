@@ -373,11 +373,7 @@ export const userManagement = {
     } catch (error: any) {
       return { success: false, error: error.message || 'Failed to reset password' }
     }
-  }
-}
-
-
-,
+  },
 
   // Preview cleanup operations
   previewUserCleanup: async (options: CleanupOptions) => {
@@ -486,4 +482,5 @@ export const userManagement = {
       return { success: false, error: error.message || 'Failed to execute cleanup' }
     }
   }
+}
 
