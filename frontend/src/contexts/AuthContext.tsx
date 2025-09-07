@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTenantUser({
           id: 'demo-tenant-user-id',
           tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-          user_id: 'demo-user-id',
+          user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
           role: 'client_admin',
           is_active: true,
           created_at: new Date().toISOString(),
@@ -199,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('⚠️ AuthProvider: User signed out, falling back to demo user')
           // Fallback to demo user for stability
           setUser({
-            id: 'demo-user-id',
+            id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
             email: 'demo@company.com',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -214,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser({
             id: 'demo-tenant-user-id',
             tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
-            user_id: 'demo-user-id',
+            user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
             role: 'host_admin', // Give demo user admin access to see all tenants
             is_active: true,
             created_at: new Date().toISOString(),
@@ -270,7 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTenantUser({
         id: 'demo-tenant-user-id',
         tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
-        user_id: 'demo-user-id',
+        user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
         role: 'host_admin', // Give demo user admin access
         is_active: true,
         created_at: new Date().toISOString(),
