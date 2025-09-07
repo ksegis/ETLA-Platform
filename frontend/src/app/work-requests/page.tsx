@@ -175,7 +175,7 @@ export default function WorkRequestsPage() {
         category: requestData.category,
         priority: requestData.priority,
         urgency: requestData.urgency || 'medium',
-        customer_id: selectedTenant.id, // Required field - using tenant_id as customer_id
+        customer_id: user.id, // Required field - using authenticated user's ID
         
         // Optional fields (nullable in database) - use NULL instead of empty strings
         status: requestData.status || 'submitted',
