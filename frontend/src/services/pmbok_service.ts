@@ -128,7 +128,6 @@ class PMBOKService {
     return null
   }
 
-  async initialize(userId?: string, tenantId?: string) {stable)
   async initialize(userId?: string, tenantId?: string) {
     if (userId && tenantId) {
       this.currentUserId = userId
