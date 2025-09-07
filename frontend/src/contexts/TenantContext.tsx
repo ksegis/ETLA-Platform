@@ -79,9 +79,8 @@ export function TenantProvider({ children }: TenantProviderProps) {
         if (error) throw error
         setAvailableTenants(data || [])
         
-        // Set first tenant as default for host admin
-        const defaultTenant = data?.[0] || null
-        setSelectedTenant(defaultTenant)
+        // Host admin should see ALL users across ALL tenants, so no selectedTenant
+        setSelectedTenant(null)
       } 
       // For other roles, get tenants they have access to
       else {
