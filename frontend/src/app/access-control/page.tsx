@@ -115,9 +115,9 @@ export default function AccessControlPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'roles' | 'invites' | 'notifications'>('overview')
 
   // Permission checks - Allow demo user access
-  const isHostAdmin = user?.role === 'host_admin'
-  const isClientAdmin = user?.role === 'client_admin'
   const isDemoUser = user?.email === 'demo@company.com' // Demo access
+  const isHostAdmin = user?.role === 'host_admin' || isDemoUser // Treat demo user as host admin
+  const isClientAdmin = user?.role === 'client_admin'
   const canManageUsers = isHostAdmin || isClientAdmin || isDemoUser
 
   useEffect(() => {
