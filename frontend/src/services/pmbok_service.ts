@@ -103,6 +103,7 @@ export interface Risk {
 
 class PMBOKService {
   private supabase
+  private currentUserId: string | null = null
   private currentTenantId: string = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
   private isInitialized: boolean = false
 
@@ -114,6 +115,12 @@ class PMBOKService {
 
   // Get current user ID from auth context
   private getCurrentUserId(): string | null {
+    // First check if we have a cached user ID
+    if (this.currentUserId) {
+      return this.currentUserId
+    }
+    
+    // Otherwise get from auth context
     if (typeof window !== 'undefined') {
       try {
         const authData = localStorage.getItem('etla-auth-context')
@@ -205,8 +212,9 @@ class PMBOKService {
   async getWorkRequests(): Promise<WorkRequest[]> {
     try {
       console.log('🔍 Loading work requests from database...')
+      const currentUserId = this.getCurrentUserId()
       console.log('🏢 Current context:', { 
-        userId: this.currentUserId, 
+        userId: currentUserId, 
         tenantId: this.currentTenantId,
         initialized: this.isInitialized 
       })
@@ -297,7 +305,7 @@ class PMBOKService {
         .from('work_requests')
         .update({
           approval_status: 'converted_to_project',
-          approved_by: this.currentUserId,
+          approved_by: this.getCurrentUserId(),
           approved_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -327,7 +335,7 @@ class PMBOKService {
         .update({
           approval_status: 'declined',
           decline_reason: reason,
-          reviewed_by: this.currentUserId,
+          reviewed_by: this.getCurrentUserId(),
           reviewed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -356,7 +364,7 @@ class PMBOKService {
         .from('work_requests')
         .update({
           approval_status: 'under_review',
-          reviewed_by: this.currentUserId,
+          reviewed_by: this.getCurrentUserId(),
           reviewed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
