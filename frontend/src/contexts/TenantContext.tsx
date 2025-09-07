@@ -38,16 +38,16 @@ export function TenantProvider({ children }: TenantProviderProps) {
 
   // Demo tenant for demo mode - will be replaced with real tenant data when authenticated
   const demoTenant: Tenant = {
-    id: 'demo-tenant-id',
+    id: '99883779-9517-4ca9-a3f8-7fdc59051f0e', // Use actual Demo Company tenant ID
     name: 'Demo Company',
     domain: 'demo.company.com',
     status: 'active',
-    subscription_plan: 'professional',
+    subscription_plan: 'standard',
     subscription_start_date: new Date().toISOString(),
-    max_users: 100,
+    max_users: 25,
     current_users: 5,
     settings: {},
-    tenant_id: 'demo-tenant-id',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }
@@ -166,7 +166,7 @@ export function useCurrentTenantId(): string | null {
   const { selectedTenant, isDemoMode } = useTenant()
   
   if (isDemoMode) {
-    return 'demo-tenant-id'
+    return '99883779-9517-4ca9-a3f8-7fdc59051f0e' // Use actual Demo Company tenant ID
   }
   
   return selectedTenant?.id || null
