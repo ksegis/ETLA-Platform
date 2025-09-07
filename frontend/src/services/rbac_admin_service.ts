@@ -70,11 +70,14 @@ export class RBACAdminService {
 
       // Add search filter if provided
       if (search) {
-        query = query.or(`profiles.email.ilike.%${search}%,profiles.full_name.ilike.%${search}%`)
+        query = query.or(`profiles.email.ilike.%${search}%,profiles.first_name.ilike.%${search}%,profiles.last_name.ilike.%${search}%`)
       }
 
       // Get total count
-      const { count } = await query.select('*', { count: 'exact', head: true })
+      const { count } = await supabase
+        .from('tenant_users')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
 
       // Get paginated results
       const { data, error } = await query
