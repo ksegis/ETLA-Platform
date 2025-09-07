@@ -167,13 +167,13 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       priority: formData.priority,
       urgency: formData.urgency,
       status: formData.status,
-      business_justification: formData.business_justification.trim() || null,
-      impact_assessment: formData.impact_assessment.trim() || null,
-      budget: formData.budget ? parseFloat(formData.budget) : null,
-      estimated_budget: formData.estimated_budget ? parseFloat(formData.estimated_budget) : null,
-      required_completion_date: formData.required_completion_date || null,
-      requested_completion_date: formData.requested_completion_date || null,
-      estimated_hours: formData.estimated_hours ? parseInt(formData.estimated_hours) : null
+      business_justification: formData.business_justification.trim() || undefined,
+      impact_assessment: formData.impact_assessment.trim() || undefined,
+      budget: formData.budget ? parseFloat(formData.budget) : undefined,
+      estimated_budget: formData.estimated_budget ? parseFloat(formData.estimated_budget) : undefined,
+      required_completion_date: formData.required_completion_date || undefined,
+      requested_completion_date: formData.requested_completion_date || undefined,
+      estimated_hours: formData.estimated_hours ? parseInt(formData.estimated_hours) : undefined
     }
     
     onSave(submitData)
