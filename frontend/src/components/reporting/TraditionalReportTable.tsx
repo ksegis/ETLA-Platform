@@ -113,20 +113,7 @@ export default function TraditionalReportTable({
             </p>
           </div>
           <div className="flex items-center space-x-3">
-            <button
-              onClick={onExportCSV}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </button>
-            <button
-              onClick={onExportJSON}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export JSON
-            </button>
+            {/* Export buttons removed - handled by parent component */}
           </div>
         </div>
 

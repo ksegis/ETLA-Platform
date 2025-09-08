@@ -1151,6 +1151,15 @@ const EnhancedReportingPage: React.FC = () => {
         <Badge variant={statement.check_status === 'processed' ? 'default' : 'secondary'}>
           {statement.check_status}
         </Badge>
+      )},
+      { key: 'actions', label: 'Actions', sortable: false, render: (statement: EnhancedPayStatement) => (
+        <Button 
+          size="sm" 
+          onClick={() => setSelectedPayStatement(statement)}
+          variant="outline"
+        >
+          View Details
+        </Button>
       )}
     ];
     
@@ -1252,6 +1261,15 @@ const EnhancedReportingPage: React.FC = () => {
         <Badge variant={timecard.approval_status === 'approved' ? 'default' : 'secondary'}>
           {timecard.approval_status}
         </Badge>
+      )},
+      { key: 'actions', label: 'Actions', sortable: false, render: (timecard: EnhancedTimecard) => (
+        <Button 
+          size="sm" 
+          onClick={() => setSelectedTimecard(timecard)}
+          variant="outline"
+        >
+          View Details
+        </Button>
       )}
     ];
     
@@ -1424,6 +1442,15 @@ const EnhancedReportingPage: React.FC = () => {
         <Badge variant={tax.document_status === 'issued' ? 'default' : 'secondary'}>
           {tax.document_status}
         </Badge>
+      )},
+      { key: 'actions', label: 'Actions', sortable: false, render: (tax: TaxRecord) => (
+        <Button 
+          size="sm" 
+          onClick={() => setSelectedTaxRecord(tax)}
+          variant="outline"
+        >
+          View Details
+        </Button>
       )}
     ];
     
