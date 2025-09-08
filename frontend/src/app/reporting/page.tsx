@@ -815,7 +815,7 @@ const EnhancedReportingPage: React.FC = () => {
       'Employee': statement.employee_name,
       'Pay Date': statement.pay_date,
       'Regular Hours': statement.regular_hours,
-      'OT Hours': statement.ot_hours,
+      'OT Hours': statement.overtime_hours,
       'Gross Pay': `$${statement.gross_pay}`,
       'Net Pay': `$${statement.net_pay}`,
       'Federal Tax': `$${statement.federal_income_tax_withheld}`,
