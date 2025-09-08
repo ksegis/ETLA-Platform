@@ -173,7 +173,7 @@ export default function ProjectSchedulePage() {
             {dayProjects.slice(0, 3).map((project: any) => (
               <div
                 key={`${project.id}-${day}`}
-                className={`text-xs p-1 rounded border-l-2 ${statusColors[project.status]} ${priorityColors[project.priority]} cursor-pointer hover:opacity-80`}
+                className={`text-xs p-1 rounded border-l-2 ${statusColors[project.status as keyof typeof statusColors]} ${priorityColors[project.priority as keyof typeof priorityColors]} cursor-pointer hover:opacity-80`}
                 title={`${project.title} - ${project.assignedTo}`}
               >
                 <div className="font-medium truncate">{project.title}</div>
@@ -421,7 +421,7 @@ export default function ProjectSchedulePage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-medium text-gray-900">{project.title}</h3>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[project.status]}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[project.status as keyof typeof statusColors]}`}>
                         {project.status.replace('_', ' ').toUpperCase()}
                       </span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
