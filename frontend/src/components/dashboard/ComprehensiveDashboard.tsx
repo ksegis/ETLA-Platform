@@ -118,7 +118,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         active: employees.filter((e: any) => e.employment_status === 'active').length,
         terminated: employees.filter((e: any) => e.employment_status === 'terminated').length,
         onLeave: employees.filter((e: any) => e.employment_status === 'on_leave').length,
-        byDepartment: employees.reduce((acc, e: any) => {
+        byDepartment: employees.reduce((acc: any, e: any) => {
           const dept = e.home_department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
