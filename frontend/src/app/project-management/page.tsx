@@ -318,6 +318,13 @@ export default function ProjectManagementPage() {
     { id: '4', requirement: 'Environmental Impact Assessment', description: 'Assess and mitigate environmental impact of project activities', category: 'environmental', status: 'pending_review', priority: 'medium', due_date: '2025-04-01', owner: 'Sustainability Manager' }
   ])
 
+  const [evmHistory] = useState([
+    { period: 'Q1 2024', budgetAtCompletion: 500000, earnedValue: 125000, actualCost: 130000, plannedValue: 125000, costPerformanceIndex: 0.96, schedulePerformanceIndex: 1.0 },
+    { period: 'Q2 2024', budgetAtCompletion: 500000, earnedValue: 250000, actualCost: 260000, plannedValue: 250000, costPerformanceIndex: 0.96, schedulePerformanceIndex: 1.0 },
+    { period: 'Q3 2024', budgetAtCompletion: 500000, earnedValue: 375000, actualCost: 390000, plannedValue: 375000, costPerformanceIndex: 0.96, schedulePerformanceIndex: 1.0 },
+    { period: 'Q4 2024', budgetAtCompletion: 500000, earnedValue: 500000, actualCost: 520000, plannedValue: 500000, costPerformanceIndex: 0.96, schedulePerformanceIndex: 1.0 }
+  ])
+
   const [complianceAuditTrail] = useState([
     { action: 'Compliance Review Completed', description: 'GDPR compliance review completed with no issues found', timestamp: '2025-01-15 10:30', user: 'Privacy Officer' },
     { action: 'SOX Controls Updated', description: 'Financial controls updated to meet SOX requirements', timestamp: '2025-01-10 14:15', user: 'Finance Director' },
@@ -2102,7 +2109,7 @@ export default function ProjectManagementPage() {
                       {filteredScheduleItems.map((item) => (
                         <div key={item.id} className="flex items-center py-2 border-b border-gray-100">
                           <div className="w-64">
-                            <div className="text-sm font-medium text-gray-900">{item.name || item.title}</div>
+                            <div className="text-sm font-medium text-gray-900">{item.name}</div>
                             <div className="text-xs text-gray-500">{item.assignee || 'Unassigned'}</div>
                           </div>
                           <div className="flex-1 grid grid-cols-12 gap-1 h-8">
@@ -2169,7 +2176,7 @@ export default function ProjectManagementPage() {
                           <td className="px-6 py-4">
                             <div>
                               <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                              <div className="text-sm text-gray-500 truncate max-w-xs">WBS Item Level {item.level}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-xs">{item.type} Task</div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -2329,9 +2336,9 @@ export default function ProjectManagementPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Cost Performance Index (CPI)</span>
                     <span className={`text-lg font-bold ${
-                      evmData.cpi >= 1 ? 'text-green-600' : 'text-red-600'
+                      evmData.costPerformanceIndex >= 1 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {evmData.cpi?.toFixed(2) || '0.00'}
+                      {evmData.costPerformanceIndex?.toFixed(2) || '0.00'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -2345,9 +2352,9 @@ export default function ProjectManagementPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Cost Variance %</span>
                     <span className={`text-lg font-bold ${
-                      evmData.costVariancePercent >= 0 ? 'text-green-600' : 'text-red-600'
+                      evmData.costVariance >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {evmData.costVariancePercent?.toFixed(1) || '0.0'}%
+                      {((evmData.costVariance / evmData.budgetAtCompletion) * 100)?.toFixed(1) || '0.0'}%
                     </span>
                   </div>
                 </div>
@@ -2359,9 +2366,9 @@ export default function ProjectManagementPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Schedule Performance Index (SPI)</span>
                     <span className={`text-lg font-bold ${
-                      evmData.spi >= 1 ? 'text-green-600' : 'text-red-600'
+                      evmData.schedulePerformanceIndex >= 1 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {evmData.spi?.toFixed(2) || '0.00'}
+                      {evmData.schedulePerformanceIndex?.toFixed(2) || '0.00'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -2375,9 +2382,9 @@ export default function ProjectManagementPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Schedule Variance %</span>
                     <span className={`text-lg font-bold ${
-                      evmData.scheduleVariancePercent >= 0 ? 'text-green-600' : 'text-red-600'
+                      evmData.scheduleVariance >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {evmData.scheduleVariancePercent?.toFixed(1) || '0.0'}%
+                      {((evmData.scheduleVariance / evmData.budgetAtCompletion) * 100)?.toFixed(1) || '0.0'}%
                     </span>
                   </div>
                 </div>
@@ -2442,7 +2449,7 @@ export default function ProjectManagementPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {evmHistory.map((period, index) => (
+                      {evmHistory.map((period: any, index: number) => (
                         <tr key={index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">
                             {period.period || `Period ${index + 1}`}
@@ -2512,7 +2519,7 @@ export default function ProjectManagementPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setStakeholderViewMode(stakeholderViewMode === 'grid' ? 'list' : 'grid')} className="flex items-center gap-2">
-                  {stakeholderViewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
+                  {stakeholderViewMode === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
                   {stakeholderViewMode === 'grid' ? 'List View' : 'Grid View'}
                 </Button>
                 <Button onClick={() => setIsCreateStakeholderModalOpen(true)} className="flex items-center gap-2">
