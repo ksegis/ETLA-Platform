@@ -165,7 +165,7 @@ export default function TeamResourcesPage() {
 
   const filteredMembers = mockTeamMembers.filter((member: any) => {
     const matchesAvailability = filterAvailability === 'all' || member.availability === filterAvailability
-    const matchesSkill = filterSkill === 'all' || member.skills.some(skill => 
+    const matchesSkill = filterSkill === 'all' || member.skills.some((skill: any) => 
       skill.toLowerCase().includes(filterSkill.toLowerCase())
     )
     return matchesAvailability && matchesSkill
