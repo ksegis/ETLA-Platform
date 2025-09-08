@@ -114,9 +114,9 @@ export default function AccessControlPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'roles' | 'invites' | 'notifications'>('overview')
 
-  // Permission checks - Allow demo user access
-  const isHostAdmin = user?.role === 'host_admin'
-  const isClientAdmin = user?.role === 'client_admin'
+  // Permission checks - Use tenantUser.role for proper role detection
+  const isHostAdmin = tenantUser?.role === 'host_admin'
+  const isClientAdmin = tenantUser?.role === 'client_admin'
   const isDemoUser = user?.email === 'demo@company.com' // Demo access
   const canManageUsers = isHostAdmin || isClientAdmin || isDemoUser
 
@@ -169,8 +169,12 @@ export default function AccessControlPage() {
       // Host admin should see ALL users regardless of selectedTenant
       console.log('🔍 Access Control Debug:', {
         isHostAdmin,
+        isClientAdmin,
+        isDemoUser,
+        canManageUsers,
         selectedTenant: selectedTenant?.name,
         userRole: user?.role,
+        tenantUserRole: tenantUser?.role,
         userEmail: user?.email,
         willFilter: !isHostAdmin && selectedTenant
       })
