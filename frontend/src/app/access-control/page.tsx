@@ -90,7 +90,7 @@ interface AdminNotification {
 }
 
 export default function AccessControlPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isDemoMode, tenantUser } = useAuth()
   const { selectedTenant } = useTenant()
   
   // State management
@@ -114,17 +114,35 @@ export default function AccessControlPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'roles' | 'invites' | 'notifications'>('overview')
 
-  // Permission checks - Allow demo user access
-  const isHostAdmin = user?.role === 'host_admin'
-  const isClientAdmin = user?.role === 'client_admin'
-  const isDemoUser = user?.email === 'demo@company.com' // Demo access
+  // Permission checks - Use tenantUser role and allow demo mode
+  const userRole = tenantUser?.role || user?.role
+  const isHostAdmin = userRole === 'host_admin'
+  const isClientAdmin = userRole === 'client_admin'
+  const isDemoUser = user?.email === 'demo@company.com' || isDemoMode
   const canManageUsers = isHostAdmin || isClientAdmin || isDemoUser
+  
+  // Debug logging
+  console.log('🔍 Access Control Permission Debug:', {
+    user: user?.email,
+    userRole,
+    tenantUserRole: tenantUser?.role,
+    isAuthenticated,
+    isDemoMode,
+    canManageUsers,
+    isHostAdmin,
+    isClientAdmin,
+    isDemoUser
+  })
 
   useEffect(() => {
-    if (isAuthenticated && canManageUsers) {
+    // Allow access in demo mode or when authenticated with proper permissions
+    if ((isAuthenticated || isDemoMode) && canManageUsers) {
+      console.log('✅ Loading Access Control data')
       loadData()
+    } else {
+      console.log('❌ Access denied - not loading data')
     }
-  }, [isAuthenticated, canManageUsers, selectedTenant])
+  }, [isAuthenticated, isDemoMode, canManageUsers, selectedTenant])
 
   const loadData = async () => {
     setLoading(true)
@@ -324,7 +342,21 @@ export default function AccessControlPage() {
     return acc
   }, {} as Record<string, number>)
 
+  // Debug logging before access check
+  console.log('🔍 Final Access Check:', {
+    canManageUsers,
+    isHostAdmin,
+    isClientAdmin,
+    isDemoUser,
+    userEmail: user?.email,
+    userRole,
+    tenantUserRole: tenantUser?.role,
+    isAuthenticated,
+    isDemoMode
+  })
+
   if (!canManageUsers) {
+    console.log('❌ Access denied - canManageUsers is false')
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -337,6 +369,8 @@ export default function AccessControlPage() {
       </DashboardLayout>
     )
   }
+
+  console.log('✅ Access granted - rendering Access Control page')
 
   return (
     <DashboardLayout>

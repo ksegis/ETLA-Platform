@@ -3,7 +3,222 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Check if we're in demo mode (invalid/placeholder credentials)
+const isDemoMode = !supabaseUrl || 
+                   supabaseUrl === 'https://demo.supabase.co' ||
+                   supabaseUrl.includes('placeholder') ||
+                   supabaseUrl.includes('your-project') ||
+                   supabaseUrl === 'https://your-project.supabase.co'
+
+// Mock data for demo mode
+const mockUsers = [
+  {
+    id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
+    email: 'demo@company.com',
+    full_name: 'Demo Host Admin',
+    phone: '+1-555-0101',
+    department: 'IT Administration',
+    job_title: 'System Administrator',
+    status: 'active',
+    created_at: '2024-01-01T00:00:00Z',
+    last_sign_in_at: '2024-12-01T10:00:00Z',
+    tenant_users: [{
+      role: 'host_admin',
+      role_level: 'senior',
+      is_active: true,
+      tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+      is_primary_tenant: true,
+      requires_password_change: false,
+      permission_scope: 'all',
+      can_invite_users: true,
+      can_manage_sub_clients: true,
+      tenants: { name: 'Demo Company', code: 'DEMO' }
+    }]
+  },
+  {
+    id: 'user2-id',
+    email: 'client.admin@company.com',
+    full_name: 'Client Admin User',
+    phone: '+1-555-0102',
+    department: 'Operations',
+    job_title: 'Operations Manager',
+    status: 'active',
+    created_at: '2024-01-02T00:00:00Z',
+    last_sign_in_at: '2024-11-30T15:30:00Z',
+    tenant_users: [{
+      role: 'client_admin',
+      role_level: 'standard',
+      is_active: true,
+      tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+      is_primary_tenant: true,
+      requires_password_change: false,
+      permission_scope: 'tenant',
+      can_invite_users: true,
+      can_manage_sub_clients: false,
+      tenants: { name: 'Demo Company', code: 'DEMO' }
+    }]
+  },
+  {
+    id: 'user3-id',
+    email: 'user@company.com',
+    full_name: 'Regular User',
+    phone: '+1-555-0103',
+    department: 'Finance',
+    job_title: 'Financial Analyst',
+    status: 'active',
+    created_at: '2024-01-03T00:00:00Z',
+    last_sign_in_at: '2024-11-29T09:15:00Z',
+    tenant_users: [{
+      role: 'user',
+      role_level: 'standard',
+      is_active: true,
+      tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+      is_primary_tenant: true,
+      requires_password_change: false,
+      permission_scope: 'own',
+      can_invite_users: false,
+      can_manage_sub_clients: false,
+      tenants: { name: 'Demo Company', code: 'DEMO' }
+    }]
+  },
+  {
+    id: 'user4-id',
+    email: 'manager@company.com',
+    full_name: 'Project Manager',
+    phone: '+1-555-0104',
+    department: 'Project Management',
+    job_title: 'Senior Project Manager',
+    status: 'active',
+    created_at: '2024-01-04T00:00:00Z',
+    last_sign_in_at: '2024-12-01T08:45:00Z',
+    tenant_users: [{
+      role: 'project_manager',
+      role_level: 'senior',
+      is_active: true,
+      tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+      is_primary_tenant: true,
+      requires_password_change: false,
+      permission_scope: 'department',
+      can_invite_users: true,
+      can_manage_sub_clients: false,
+      tenants: { name: 'Demo Company', code: 'DEMO' }
+    }]
+  },
+  {
+    id: 'user5-id',
+    email: 'analyst@company.com',
+    full_name: 'Data Analyst',
+    phone: '+1-555-0105',
+    department: 'Analytics',
+    job_title: 'Senior Data Analyst',
+    status: 'active',
+    created_at: '2024-01-05T00:00:00Z',
+    last_sign_in_at: '2024-11-28T14:20:00Z',
+    tenant_users: [{
+      role: 'analyst',
+      role_level: 'senior',
+      is_active: true,
+      tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+      is_primary_tenant: true,
+      requires_password_change: false,
+      permission_scope: 'department',
+      can_invite_users: false,
+      can_manage_sub_clients: false,
+      tenants: { name: 'Demo Company', code: 'DEMO' }
+    }]
+  }
+]
+
+const mockTenants = [
+  {
+    id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    name: 'Demo Company',
+    code: 'DEMO',
+    status: 'active',
+    tenant_type: 'enterprise',
+    is_active: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  }
+]
+
+const mockInvitations = [
+  {
+    id: 'invite1-id',
+    email: 'newuser@company.com',
+    full_name: 'New User',
+    role: 'user',
+    status: 'pending',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    created_at: '2024-11-25T00:00:00Z',
+    expires_at: '2024-12-25T00:00:00Z',
+    invited_by: 'b224935f-732f-4b09-a4a0-16492c5ae563',
+    tenants: { name: 'Demo Company' },
+    invited_by_profile: { full_name: 'Demo Host Admin' }
+  }
+]
+
+const mockNotifications = [
+  {
+    id: 'notif1-id',
+    type: 'user_invitation',
+    title: 'New User Invitation',
+    message: 'A new user invitation has been sent to newuser@company.com',
+    user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
+    is_read: false,
+    created_at: '2024-11-25T00:00:00Z',
+    data: { email: 'newuser@company.com' }
+  }
+]
+
+// Create mock Supabase client for demo mode
+const createMockSupabaseClient = () => {
+  return {
+    from: (table: string) => ({
+      select: (columns?: string) => ({
+        eq: (column: string, value: any) => ({
+          order: (column: string, options?: any) => ({
+            limit: (limit: number) => Promise.resolve({ data: getMockData(table), error: null }),
+            then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+          }),
+          then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+        }),
+        order: (column: string, options?: any) => ({
+          then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+        }),
+        then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+      }),
+      insert: (data: any) => Promise.resolve({ data, error: null }),
+      update: (data: any) => ({
+        eq: (column: string, value: any) => Promise.resolve({ data, error: null })
+      }),
+      delete: () => ({
+        eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
+      })
+    }),
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+    }
+  }
+}
+
+const getMockData = (table: string) => {
+  switch (table) {
+    case 'profiles':
+      return mockUsers
+    case 'tenants':
+      return mockTenants
+    case 'user_invitations':
+      return mockInvitations
+    case 'admin_notifications':
+      return mockNotifications
+    default:
+      return []
+  }
+}
+
+export const supabase = isDemoMode ? createMockSupabaseClient() as any : createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
 export interface WorkRequest {

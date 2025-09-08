@@ -60,7 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
                      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
                      process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project')
+                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') ||
+                     process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://your-project.supabase.co'
   const isAuthenticated = !!user || !!session || isDemoMode
   const currentUserId = user?.id || tenantUser?.user_id || null
   const currentTenantId = tenant?.id || null
