@@ -367,7 +367,7 @@ export function ReportingRouteGuard({ children }: { children: React.ReactNode })
 }
 
 // Utility function to check if a route is accessible
-export function isRouteAccessible(pathname: string, permissions): boolean {
+export function isRouteAccessible(pathname: string, permissions: any): boolean {
   const routePermission = ROUTE_PERMISSIONS[pathname]
   
   if (!routePermission) {
