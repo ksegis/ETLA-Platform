@@ -17,9 +17,14 @@ export default function SplashPage() {
   }, [])
 
   useEffect(() => {
-    // Redirect authenticated users to dashboard
+    // Redirect authenticated users to dashboard after showing splash page
     if (!loading && user) {
-      router.push('/dashboard')
+      // Show splash page for 3 seconds before redirecting
+      const redirectTimer = setTimeout(() => {
+        router.push('/dashboard')
+      }, 3000)
+      
+      return () => clearTimeout(redirectTimer)
     }
   }, [user, loading, router])
 

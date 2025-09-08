@@ -248,7 +248,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center">
               <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">ETLA</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">HelixBridge</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}

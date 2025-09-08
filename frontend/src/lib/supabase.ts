@@ -171,6 +171,299 @@ const mockNotifications = [
   }
 ]
 
+// Mock data for comprehensive reports
+const mockEmployeeReports = [
+  {
+    id: 'emp1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    first_name: 'John',
+    last_name: 'Smith',
+    email: 'john.smith@company.com',
+    employment_status: 'active',
+    home_department: 'Engineering',
+    flsa_status: 'exempt',
+    union_status: 'non_union',
+    eeo_categories: 'Professional',
+    job_title: 'Senior Software Engineer',
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 'emp2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    first_name: 'Sarah',
+    last_name: 'Johnson',
+    email: 'sarah.johnson@company.com',
+    employment_status: 'active',
+    home_department: 'Marketing',
+    flsa_status: 'non-exempt',
+    union_status: 'non_union',
+    eeo_categories: 'Professional',
+    job_title: 'Marketing Manager',
+    created_at: '2024-01-15T00:00:00Z'
+  },
+  {
+    id: 'emp3',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    first_name: 'Mike',
+    last_name: 'Davis',
+    email: 'mike.davis@company.com',
+    employment_status: 'active',
+    home_department: 'Sales',
+    flsa_status: 'exempt',
+    union_status: 'non_union',
+    eeo_categories: 'Sales',
+    job_title: 'Sales Director',
+    created_at: '2024-02-01T00:00:00Z'
+  }
+]
+
+const mockPayStatements = [
+  {
+    id: 'pay1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    user_id: 'emp1',
+    pay_date: '2024-11-30',
+    gross_pay: 8500,
+    net_pay: 6200,
+    federal_tax_withheld: 1200,
+    state_tax_withheld: 400,
+    department: 'Engineering',
+    regular_hours: 80,
+    overtime_hours: 5
+  },
+  {
+    id: 'pay2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    user_id: 'emp2',
+    pay_date: '2024-11-30',
+    gross_pay: 6500,
+    net_pay: 4800,
+    federal_tax_withheld: 900,
+    state_tax_withheld: 300,
+    department: 'Marketing',
+    regular_hours: 80,
+    overtime_hours: 2
+  },
+  {
+    id: 'pay3',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    user_id: 'emp3',
+    pay_date: '2024-11-30',
+    gross_pay: 9500,
+    net_pay: 6900,
+    federal_tax_withheld: 1400,
+    state_tax_withheld: 500,
+    department: 'Sales',
+    regular_hours: 80,
+    overtime_hours: 8
+  }
+]
+
+const mockTimecards = [
+  {
+    id: 'time1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    user_id: 'emp1',
+    total_hours: 85,
+    regular_hours: 80,
+    overtime_hours: 5,
+    holiday_hours: 0,
+    approval_status: 'approved',
+    department: 'Engineering',
+    week_ending: '2024-11-30'
+  },
+  {
+    id: 'time2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    user_id: 'emp2',
+    total_hours: 82,
+    regular_hours: 80,
+    overtime_hours: 2,
+    holiday_hours: 0,
+    approval_status: 'approved',
+    department: 'Marketing',
+    week_ending: '2024-11-30'
+  },
+  {
+    id: 'time3',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    user_id: 'emp3',
+    total_hours: 88,
+    regular_hours: 80,
+    overtime_hours: 8,
+    holiday_hours: 0,
+    approval_status: 'pending',
+    department: 'Sales',
+    week_ending: '2024-11-30'
+  }
+]
+
+const mockJobs = [
+  {
+    id: 'job1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    title: 'Senior Software Engineer',
+    department: 'Engineering',
+    flsa_classification: 'exempt',
+    pay_range_min: 120000,
+    pay_range_max: 160000,
+    employee_count: 5
+  },
+  {
+    id: 'job2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    title: 'Marketing Manager',
+    department: 'Marketing',
+    flsa_classification: 'non-exempt',
+    pay_range_min: 70000,
+    pay_range_max: 90000,
+    employee_count: 3
+  },
+  {
+    id: 'job3',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    title: 'Sales Director',
+    department: 'Sales',
+    flsa_classification: 'exempt',
+    pay_range_min: 100000,
+    pay_range_max: 140000,
+    employee_count: 2
+  }
+]
+
+const mockTaxRecords = [
+  {
+    id: 'tax1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    form_type: 'W-2',
+    tax_year: '2024',
+    status: 'completed',
+    total_wages: 85000,
+    total_taxes_withheld: 15300
+  },
+  {
+    id: 'tax2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    form_type: '1099',
+    tax_year: '2024',
+    status: 'pending',
+    total_wages: 25000,
+    total_taxes_withheld: 3750
+  }
+]
+
+const mockBenefits = [
+  {
+    id: 'ben1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    deduction_type: 'Health Insurance',
+    employee_contribution: 150,
+    employer_contribution: 400,
+    frequency: 'monthly',
+    is_garnishment: false
+  },
+  {
+    id: 'ben2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    deduction_type: '401k',
+    employee_contribution: 500,
+    employer_contribution: 250,
+    frequency: 'monthly',
+    is_garnishment: false
+  }
+]
+
+const mockCompliance = [
+  {
+    id: 'comp1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    compliance_type: 'OSHA',
+    status: 'current',
+    due_date: '2024-12-31',
+    is_overdue: false
+  },
+  {
+    id: 'comp2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    compliance_type: 'EEO-1',
+    status: 'pending',
+    due_date: '2024-12-15',
+    is_overdue: false
+  }
+]
+
+const mockWorkRequests = [
+  {
+    id: 'wr1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    title: 'Website Redesign Project',
+    description: 'Complete redesign of company website with modern UI/UX',
+    category: 'Web Development',
+    priority: 'high',
+    urgency: 'medium',
+    status: 'in_progress',
+    customer_id: 'cust1',
+    assigned_to: 'emp1',
+    estimated_hours: 120,
+    actual_hours: 45,
+    budget: 15000,
+    created_at: '2024-11-01T00:00:00Z'
+  },
+  {
+    id: 'wr2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    title: 'Marketing Campaign Analysis',
+    description: 'Analyze Q4 marketing campaign performance and ROI',
+    category: 'Marketing',
+    priority: 'medium',
+    urgency: 'low',
+    status: 'completed',
+    customer_id: 'cust2',
+    assigned_to: 'emp2',
+    estimated_hours: 40,
+    actual_hours: 38,
+    budget: 5000,
+    created_at: '2024-10-15T00:00:00Z'
+  }
+]
+
+const mockProjects = [
+  {
+    id: 'proj1',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    work_request_id: 'wr1',
+    title: 'Website Redesign Implementation',
+    description: 'Implementation phase of the website redesign project',
+    status: 'in_progress',
+    priority: 'high',
+    assigned_team_lead: 'emp1',
+    estimated_hours: 120,
+    actual_hours: 45,
+    budget: 15000,
+    start_date: '2024-11-01',
+    end_date: '2024-12-31',
+    completion_percentage: 40,
+    created_at: '2024-11-01T00:00:00Z'
+  },
+  {
+    id: 'proj2',
+    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
+    work_request_id: 'wr2',
+    title: 'Q4 Marketing Analysis',
+    description: 'Complete analysis of Q4 marketing campaigns',
+    status: 'completed',
+    priority: 'medium',
+    assigned_team_lead: 'emp2',
+    estimated_hours: 40,
+    actual_hours: 38,
+    budget: 5000,
+    start_date: '2024-10-15',
+    end_date: '2024-11-15',
+    completion_percentage: 100,
+    created_at: '2024-10-15T00:00:00Z'
+  }
+]
+
 // Create mock Supabase client for demo mode
 const createMockSupabaseClient = () => {
   return {
@@ -213,6 +506,24 @@ const getMockData = (table: string) => {
       return mockInvitations
     case 'admin_notifications':
       return mockNotifications
+    case 'employee_comprehensive_report':
+      return mockEmployeeReports
+    case 'pay_statements_comprehensive_report':
+      return mockPayStatements
+    case 'timecards_comprehensive_report':
+      return mockTimecards
+    case 'jobs_comprehensive_report':
+      return mockJobs
+    case 'tax_records_comprehensive_report':
+      return mockTaxRecords
+    case 'benefits_deductions_comprehensive_report':
+      return mockBenefits
+    case 'compliance_records_comprehensive_report':
+      return mockCompliance
+    case 'work_requests':
+      return mockWorkRequests
+    case 'projects':
+      return mockProjects
     default:
       return []
   }
