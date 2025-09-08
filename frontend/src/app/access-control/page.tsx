@@ -90,7 +90,7 @@ interface AdminNotification {
 }
 
 export default function AccessControlPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, tenantUser, isAuthenticated } = useAuth()
   const { selectedTenant } = useTenant()
   
   // State management
