@@ -217,7 +217,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
         // TRY TO LOAD REAL DATA FIRST
         try {
           const workRequests = await pmbok.getWorkRequests()
-          const foundRequest = workRequests.find(wr => wr.id === requestId)
+          const foundRequest = workRequests.find((wr: any) => wr.id === requestId)
 
           if (foundRequest) {
             // MERGE REAL DATA WITH MOCK DATA STRUCTURE TO PRESERVE FUNCTIONALITY
@@ -292,11 +292,11 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
   }
 
   const formatStatus = (status: string) => {
-    return status.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return status.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatCategory = (category: string) => {
-    return category.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return category.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatFileSize = (bytes: number) => {
@@ -484,7 +484,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                   <div>
                     <h3 className="text-sm font-medium text-gray-900 mb-2">Tags</h3>
                     <div className="flex flex-wrap gap-2">
-                      {request.tags.map((tag, index) => (
+                      {request.tags.map((tag, index: any) => (
                         <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           <Tag className="w-3 h-3 mr-1" />
                           {tag}
@@ -632,7 +632,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {request.attachments.map((attachment) => (
+                    {request.attachments.map((attachment: any) => (
                       <div key={attachment.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0">
@@ -667,7 +667,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {request.comments.map((comment) => (
+                  {request.comments.map((comment: any) => (
                     <div key={comment.id} className="flex space-x-4">
                       <div className="flex-shrink-0">
                         <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
@@ -698,7 +698,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                   <div className="space-y-4">
                     <textarea
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      onChange={(e: any) => setNewComment(e.target.value)}
                       placeholder="Add a comment..."
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={3}

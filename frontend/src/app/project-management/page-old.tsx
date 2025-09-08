@@ -153,7 +153,7 @@ export default function ProjectManagementPage() {
 
   // Filter functions
   const getFilteredWorkRequests = () => {
-    return dashboardData.workRequests.filter((request: any) => {
+    return dashboardData.workRequests.filter((request: any: any) => {
       const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            request.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -165,7 +165,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredProjects = () => {
-    return dashboardData.projects.filter((project: any) => {
+    return dashboardData.projects.filter((project: any: any) => {
       const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase())
       
       if (statusFilter === 'all') return matchesSearch
@@ -174,7 +174,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredRisks = () => {
-    return dashboardData.risks.filter((risk: any) => {
+    return dashboardData.risks.filter((risk: any: any) => {
       const matchesSearch = risk.title.toLowerCase().includes(searchTerm.toLowerCase())
       
       if (statusFilter === 'all') return matchesSearch
@@ -188,15 +188,15 @@ export default function ProjectManagementPage() {
     
     return {
       total: workRequests.length,
-      pending: workRequests.filter((r: any) => {
+      pending: workRequests.filter((r: any: any) => {
         const status = r.approval_status || r.status
         return status === 'submitted' || status === 'under_review'
       }).length,
-      active: workRequests.filter((r: any) => {
+      active: workRequests.filter((r: any: any) => {
         const status = r.approval_status || r.status
         return status === 'approved' || status === 'in_progress' || status === 'converted_to_project'
       }).length,
-      completed: workRequests.filter((r: any) => {
+      completed: workRequests.filter((r: any: any) => {
         const status = r.approval_status || r.status
         return status === 'completed'
       }).length
@@ -328,7 +328,7 @@ export default function ProjectManagementPage() {
               { id: 'risks', label: 'Risks', icon: AlertTriangle },
               { id: 'stakeholders', label: 'Stakeholders', icon: Users },
               { id: 'compliance', label: 'Compliance', icon: CheckCircle }
-            ].map((tab: any) => {
+            ].map((tab: any: any) => {
               const Icon = tab.icon
               return (
                 <button
@@ -356,7 +356,7 @@ export default function ProjectManagementPage() {
               type="text"
               placeholder="Search..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: any) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -365,7 +365,7 @@ export default function ProjectManagementPage() {
             <Filter className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e: any) => setStatusFilter(e.target.value)}
               className="pl-10 pr-8 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
@@ -401,7 +401,7 @@ export default function ProjectManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {getFilteredWorkRequests().map((request) => {
+                    {getFilteredWorkRequests().map((request: any) => {
                       console.log(`🔍 RENDERING ACTIONS for request: ${request.id} ${request.title}`)
                       const effectiveStatus = request.approval_status || request.status
                       const isMissingCustomer = request.customer_name === 'Missing Customer'
@@ -516,7 +516,7 @@ export default function ProjectManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {getFilteredProjects().map((project) => (
+                    {getFilteredProjects().map((project: any) => (
                       <tr key={project.id} className="border-b hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div className="font-medium">{project.title}</div>
@@ -579,7 +579,7 @@ export default function ProjectManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {getFilteredRisks().map((risk) => (
+                    {getFilteredRisks().map((risk: any) => (
                       <tr key={risk.id} className="border-b hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div className="font-medium">{risk.title}</div>

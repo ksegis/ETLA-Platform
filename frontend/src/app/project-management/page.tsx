@@ -253,23 +253,23 @@ export default function ProjectManagementPage() {
   // Calculate statistics
   useEffect(() => {
     const totalProjects = projects.length
-    const activeProjects = projects.filter((p: any) => 
+    const activeProjects = projects.filter((p: any: any) => 
       p.charter_status !== 'completed' && p.charter_status !== 'cancelled'
     ).length
-    const completedProjects = projects.filter((p: any) => p.charter_status === 'completed').length
-    const onHoldProjects = projects.filter((p: any) => p.charter_status === 'on_hold').length
+    const completedProjects = projects.filter((p: any: any) => p.charter_status === 'completed').length
+    const onHoldProjects = projects.filter((p: any: any) => p.charter_status === 'on_hold').length
     
     const totalWorkRequests = workRequests.length
-    const pendingWorkRequests = workRequests.filter((wr: any) => wr.status === 'pending').length
-    const approvedWorkRequests = workRequests.filter((wr: any) => wr.status === 'approved').length
+    const pendingWorkRequests = workRequests.filter((wr: any: any) => wr.status === 'pending').length
+    const approvedWorkRequests = workRequests.filter((wr: any: any) => wr.status === 'approved').length
     
-    const highRisks = risks.filter((r: any) => 
+    const highRisks = risks.filter((r: any: any) => 
       r.risk_level === 'high' || r.level === 'high' || r.severity === 'high'
     ).length
     
-    const totalBudget = projects.reduce((sum, p) => sum + (p.budget || p.estimated_budget || 0), 0)
+    const totalBudget = projects.reduce((sum: any, p: any) => sum + (p.budget || p.estimated_budget || 0), 0)
     const averageCompletion = projects.length > 0 
-      ? projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length 
+      ? projects.reduce((sum: any, p: any) => sum + (p.completion_percentage || 0), 0) / projects.length 
       : 0
 
     setStatistics({
@@ -337,7 +337,7 @@ export default function ProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.map((p: any) => p.id === projectId ? data : p))
+      setProjects(prev => prev.map((p: any: any) => p.id === projectId ? data : p))
       setIsEditModalOpen(false)
       setSelectedProject(null)
     } catch (error) {
@@ -362,7 +362,7 @@ export default function ProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any: any) => p.id !== projectId))
     } catch (error) {
       console.error('Error deleting project:', error)
       setError('Failed to delete project. Please try again.')
@@ -370,7 +370,7 @@ export default function ProjectManagementPage() {
   }
 
   // Filter projects
-  const filteredProjects = projects.filter((project: any) => {
+  const filteredProjects = projects.filter((project: any: any) => {
     const matchesSearch = !searchTerm || 
       (project.title || project.project_name || project.project_title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (project.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -530,7 +530,7 @@ export default function ProjectManagementPage() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-4">
-          {statisticsCards.map((stat, index) => (
+          {statisticsCards.map((stat, index: any) => (
             <Card key={index} className={`${stat.bgColor} border-0`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -548,7 +548,7 @@ export default function ProjectManagementPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => (
+            {tabs.map((tab: any) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -587,14 +587,14 @@ export default function ProjectManagementPage() {
                     <Input
                       placeholder="Search projects..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e: any) => setSearchTerm(e.target.value)}
                       className="pl-10"
                     />
                   </div>
                 </div>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e: any) => setStatusFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Statuses</option>
@@ -606,7 +606,7 @@ export default function ProjectManagementPage() {
                 </select>
                 <select
                   value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  onChange={(e: any) => setPriorityFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Priorities</option>
@@ -617,7 +617,7 @@ export default function ProjectManagementPage() {
                 </select>
                 <select
                   value={departmentFilter}
-                  onChange={(e) => setDepartmentFilter(e.target.value)}
+                  onChange={(e: any) => setDepartmentFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Departments</option>
@@ -690,7 +690,7 @@ export default function ProjectManagementPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredProjects.map((project) => (
+                      {filteredProjects.map((project: any) => (
                         <tr key={project.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
@@ -762,7 +762,7 @@ export default function ProjectManagementPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project) => (
+                {filteredProjects.map((project: any) => (
                   <Card key={project.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -918,7 +918,7 @@ export default function ProjectManagementPage() {
             setIsEditModalOpen(false)
             setSelectedProject(null)
           }}
-          onSubmit={(updates) => handleUpdateProject(selectedProject.id, updates)}
+          onSubmit={(updates: any) => handleUpdateProject(selectedProject.id, updates)}
           project={selectedProject}
           workRequests={workRequests}
         />
@@ -977,7 +977,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
                 <Input
                   value={formData.title || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter project title"
                   required
                 />
@@ -987,7 +987,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
                 <Input
                   value={formData.project_code || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, project_code: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, project_code: e.target.value }))}
                   placeholder="e.g., PROJ-2024-001"
                 />
               </div>
@@ -996,7 +996,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   value={formData.description || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Project description"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1008,7 +1008,7 @@ function CreateProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                   <select
                     value={formData.priority || 'medium'}
-                    onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="low">Low</option>
@@ -1022,7 +1022,7 @@ function CreateProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Project Type</label>
                   <select
                     value={formData.project_type || 'internal'}
-                    onChange={(e) => setFormData(prev => ({ ...prev, project_type: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, project_type: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="internal">Internal</option>
@@ -1042,7 +1042,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Team Lead</label>
                 <Input
                   value={formData.assigned_team_lead || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
                   placeholder="Assigned team lead"
                 />
               </div>
@@ -1051,7 +1051,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sponsor</label>
                 <Input
                   value={formData.sponsor || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sponsor: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, sponsor: e.target.value }))}
                   placeholder="Project sponsor"
                 />
               </div>
@@ -1061,7 +1061,7 @@ function CreateProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   <select
                     value={formData.department || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, department: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Department</option>
@@ -1077,7 +1077,7 @@ function CreateProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
                   <Input
                     value={formData.division || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, division: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, division: e.target.value }))}
                     placeholder="Division"
                   />
                 </div>
@@ -1087,11 +1087,11 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Work Request Reference</label>
                 <select
                   value={formData.work_request_id || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, work_request_id: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, work_request_id: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Create without work request</option>
-                  {workRequests.filter((wr: any) => wr.status === 'approved').map((wr: any) => (
+                  {workRequests.filter((wr: any: any) => wr.status === 'approved').map((wr: any: any) => (
                     <option key={wr.id} value={wr.id}>
                       {wr.title || `Work Request ${wr.id.slice(0, 8)}`}
                     </option>
@@ -1110,7 +1110,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Scope</label>
                 <textarea
                   value={formData.project_scope || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, project_scope: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, project_scope: e.target.value }))}
                   placeholder="Define project scope and boundaries"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1121,7 +1121,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Success Criteria</label>
                 <textarea
                   value={formData.success_criteria || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, success_criteria: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, success_criteria: e.target.value }))}
                   placeholder="Define success criteria and acceptance criteria"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1132,7 +1132,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Business Case</label>
                 <textarea
                   value={formData.business_case || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, business_case: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, business_case: e.target.value }))}
                   placeholder="Business justification for the project"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1149,7 +1149,7 @@ function CreateProjectModal({
                   <Input
                     type="date"
                     value={formData.start_date || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                   />
                 </div>
 
@@ -1158,7 +1158,7 @@ function CreateProjectModal({
                   <Input
                     type="date"
                     value={formData.end_date || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                   />
                 </div>
               </div>
@@ -1168,7 +1168,7 @@ function CreateProjectModal({
                 <Input
                   type="number"
                   value={formData.budget || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
                   placeholder="0.00"
                   step="0.01"
                 />
@@ -1178,7 +1178,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Risk Assessment</label>
                 <textarea
                   value={formData.risk_assessment || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, risk_assessment: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, risk_assessment: e.target.value }))}
                   placeholder="Initial risk assessment and mitigation strategies"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1189,7 +1189,7 @@ function CreateProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Quality Metrics</label>
                 <textarea
                   value={formData.quality_metrics || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, quality_metrics: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, quality_metrics: e.target.value }))}
                   placeholder="Quality standards and metrics"
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1259,7 +1259,7 @@ function EditProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
                 <Input
                   value={formData.title || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter project title"
                   required
                 />
@@ -1269,7 +1269,7 @@ function EditProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
                 <Input
                   value={formData.project_code || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, project_code: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, project_code: e.target.value }))}
                   placeholder="e.g., PROJ-2024-001"
                 />
               </div>
@@ -1278,7 +1278,7 @@ function EditProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   value={formData.description || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Project description"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1290,7 +1290,7 @@ function EditProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={formData.charter_status || 'draft'}
-                    onChange={(e) => setFormData(prev => ({ ...prev, charter_status: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, charter_status: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="draft">Draft</option>
@@ -1305,7 +1305,7 @@ function EditProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                   <select
                     value={formData.priority || 'medium'}
-                    onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="low">Low</option>
@@ -1323,7 +1323,7 @@ function EditProjectModal({
                   min="0"
                   max="100"
                   value={formData.completion_percentage || 0}
-                  onChange={(e) => setFormData(prev => ({ ...prev, completion_percentage: parseInt(e.target.value) || 0 }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, completion_percentage: parseInt(e.target.value) || 0 }))}
                 />
               </div>
             </div>
@@ -1336,7 +1336,7 @@ function EditProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Team Lead</label>
                 <Input
                   value={formData.assigned_team_lead || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
                   placeholder="Assigned team lead"
                 />
               </div>
@@ -1345,7 +1345,7 @@ function EditProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sponsor</label>
                 <Input
                   value={formData.sponsor || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sponsor: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, sponsor: e.target.value }))}
                   placeholder="Project sponsor"
                 />
               </div>
@@ -1355,7 +1355,7 @@ function EditProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   <select
                     value={formData.department || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, department: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Department</option>
@@ -1371,7 +1371,7 @@ function EditProjectModal({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
                   <Input
                     value={formData.division || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, division: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, division: e.target.value }))}
                     placeholder="Division"
                   />
                 </div>
@@ -1383,7 +1383,7 @@ function EditProjectModal({
                   <Input
                     type="date"
                     value={formData.start_date || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                   />
                 </div>
 
@@ -1392,7 +1392,7 @@ function EditProjectModal({
                   <Input
                     type="date"
                     value={formData.end_date || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                   />
                 </div>
               </div>
@@ -1402,7 +1402,7 @@ function EditProjectModal({
                 <Input
                   type="number"
                   value={formData.budget || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
                   placeholder="0.00"
                   step="0.01"
                 />

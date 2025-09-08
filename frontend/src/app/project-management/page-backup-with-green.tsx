@@ -131,15 +131,15 @@ export default function ProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => (p.status || '') === 'active' || (p.status || '') === 'in_progress').length,
-    completedProjects: projects.filter((p: any) => (p.status || '') === 'completed').length,
+    activeProjects: projects.filter((p: any: any) => (p.status || '') === 'active' || (p.status || '') === 'in_progress').length,
+    completedProjects: projects.filter((p: any: any) => (p.status || '') === 'completed').length,
     totalWorkRequests: workRequests.length,
-    pendingWorkRequests: workRequests.filter((wr: any) => (wr.status || '') === 'submitted' || (wr.status || '') === 'under_review').length,
-    approvedWorkRequests: workRequests.filter((wr: any) => (wr.status || '') === 'approved').length
+    pendingWorkRequests: workRequests.filter((wr: any: any) => (wr.status || '') === 'submitted' || (wr.status || '') === 'under_review').length,
+    approvedWorkRequests: workRequests.filter((wr: any: any) => (wr.status || '') === 'approved').length
   }
 
   // Filter projects
-  const filteredProjects = projects.filter((project: any) => {
+  const filteredProjects = projects.filter((project: any: any) => {
     const matchesSearch = (project.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (project.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || (project.status || '') === statusFilter
@@ -339,7 +339,7 @@ export default function ProjectManagementPage() {
                   <Input
                     placeholder="Search projects..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: any) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
@@ -347,7 +347,7 @@ export default function ProjectManagementPage() {
               <div className="flex gap-2">
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e: any) => setStatusFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Status</option>
@@ -390,7 +390,7 @@ export default function ProjectManagementPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredProjects.map((project) => (
+                {filteredProjects.map((project: any) => (
                   <div key={project.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

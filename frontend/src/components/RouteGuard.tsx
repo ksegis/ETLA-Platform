@@ -379,7 +379,7 @@ export function isRouteAccessible(pathname: string, permissions: any): boolean {
 
 // Get accessible routes for navigation
 export function getAccessibleRoutes(permissions: any): string[] {
-  return Object.keys(ROUTE_PERMISSIONS).filter((route: any) => 
+  return Object.keys(ROUTE_PERMISSIONS).filter((route: any: any) => 
     isRouteAccessible(route, permissions)
   )
 }

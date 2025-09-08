@@ -86,7 +86,7 @@ export class RBACAdminService {
 
       if (error) throw error
 
-      const users = data?.map((item: any) => ({
+      const users = data?.map((item: any: any) => ({
         userId: item.user_id,
         email: item.profiles?.email || 'unknown@example.com',
         display_name: item.profiles?.first_name && item.profiles?.last_name 
@@ -113,8 +113,8 @@ export class RBACAdminService {
     // Build permission catalog from FEATURES and PERMISSIONS constants
     const catalog: RBACPermissionCatalog[] = []
 
-    Object.values(FEATURES).forEach(feature => {
-      Object.values(PERMISSIONS).forEach(permission => {
+    Object.values(FEATURES).forEach((feature: any) => {
+      Object.values(PERMISSIONS).forEach((permission: any) => {
         catalog.push({
           resource: feature,
           action: permission,
@@ -197,7 +197,7 @@ export class RBACAdminService {
           .eq('user_id', userId)
           .eq('tenant_id', tenantId)
 
-        overrides = overrideData?.map((item: any) => ({
+        overrides = overrideData?.map((item: any: any) => ({
           permissionId: item.permission_id,
           effect: item.effect
         })) || []
@@ -234,7 +234,7 @@ export class RBACAdminService {
     action: string
   ): Promise<RBACPermissionCell> {
     // Check for user override first
-    const override = userDetail.overrides.find(o => o.permissionId === permissionId)
+    const override = userDetail.overrides.find((o: any) => o.permissionId === permissionId)
     if (override) {
       return {
         permissionId,

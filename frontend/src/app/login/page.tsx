@@ -282,7 +282,7 @@ function LoginForm() {
                       id="email"
                       type="email"
                       value={state.email}
-                      onChange={(e) => setState(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e: any) => setState(prev => ({ ...prev, email: e.target.value }))}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter your email"
@@ -298,7 +298,7 @@ function LoginForm() {
                       id="password"
                       type="password"
                       value={state.password}
-                      onChange={(e) => setState(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e: any) => setState(prev => ({ ...prev, password: e.target.value }))}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter your password"
@@ -401,7 +401,7 @@ function LoginForm() {
                         id="resetEmail"
                         type="email"
                         value={state.resetEmail}
-                        onChange={(e) => setState(prev => ({ ...prev, resetEmail: e.target.value }))}
+                        onChange={(e: any) => setState(prev => ({ ...prev, resetEmail: e.target.value }))}
                         required
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter your email address"

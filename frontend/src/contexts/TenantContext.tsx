@@ -95,7 +95,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
         if (accessError) throw accessError
         
         if (accessData && accessData.length > 0) {
-          const tenantIds = accessData.map((item: any) => item.tenant_id)
+          const tenantIds = accessData.map((item: any: any) => item.tenant_id)
           
           // Then get the actual tenant records
           const { data: tenantsData, error: tenantsError } = await supabase
@@ -109,7 +109,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
           setAvailableTenants(tenantsData || [])
           
           // Set user's primary tenant or first available
-          const primaryTenant = tenantsData?.find(t => t.id === tenantUser?.tenant_id) || tenantsData?.[0] || null
+          const primaryTenant = tenantsData?.find((t: any) => t.id === tenantUser?.tenant_id) || tenantsData?.[0] || null
           setSelectedTenant(primaryTenant)
         } else {
           setAvailableTenants([])

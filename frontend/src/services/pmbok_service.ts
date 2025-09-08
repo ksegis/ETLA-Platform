@@ -161,11 +161,11 @@ class PMBOKService {
 
   // Helper function to handle missing customers gracefully
   private async handleMissingCustomers(workRequests: any[]): Promise<WorkRequest[]> {
-    const customerIds = Array.from(new Set(workRequests.map((wr: any) => wr.customer_id).filter(Boolean)))
+    const customerIds = Array.from(new Set(workRequests.map((wr: any: any) => wr.customer_id).filter(Boolean)))
     
     if (customerIds.length === 0) {
       console.log('⚠️ No customer IDs found in work requests')
-      return workRequests.map((wr: any) => ({
+      return workRequests.map((wr: any: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
       }))
@@ -180,7 +180,7 @@ class PMBOKService {
 
       if (error) {
         console.error('❌ Error fetching customer profiles:', error)
-        return workRequests.map((wr: any) => ({
+        return workRequests.map((wr: any: any) => ({
           ...wr,
           customer_name: 'Unknown Customer'
         }))
@@ -190,19 +190,19 @@ class PMBOKService {
       
       // Create customer lookup map
       const customerMap = new Map()
-      profiles?.forEach(profile => {
+      profiles?.forEach((profile: any) => {
         customerMap.set(profile.id, profile.name || profile.email || 'Unknown Customer')
       })
 
       // Transform work requests with customer names
-      return workRequests.map((wr: any) => ({
+      return workRequests.map((wr: any: any) => ({
         ...wr,
         customer_name: customerMap.get(wr.customer_id) || 'Missing Customer'
       }))
 
     } catch (error) {
       console.error('❌ Exception during customer lookup:', error)
-      return workRequests.map((wr: any) => ({
+      return workRequests.map((wr: any: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
       }))
@@ -479,15 +479,15 @@ class PMBOKService {
       
       return {
         total: workRequests.length,
-        pending: workRequests.filter((r: any) => 
+        pending: workRequests.filter((r: any: any) => 
           r.approval_status === 'submitted' || 
           r.approval_status === 'under_review' ||
           r.status === 'submitted' ||
           r.status === 'under_review'
         ).length,
-        approved: workRequests.filter((r: any) => r.approval_status === 'approved').length,
-        declined: workRequests.filter((r: any) => r.approval_status === 'declined').length,
-        converted: workRequests.filter((r: any) => r.approval_status === 'converted_to_project').length
+        approved: workRequests.filter((r: any: any) => r.approval_status === 'approved').length,
+        declined: workRequests.filter((r: any: any) => r.approval_status === 'declined').length,
+        converted: workRequests.filter((r: any: any) => r.approval_status === 'converted_to_project').length
       }
     } catch (error) {
       console.error('❌ Error getting work request stats:', error)

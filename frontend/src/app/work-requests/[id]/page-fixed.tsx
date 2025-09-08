@@ -49,7 +49,7 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
 
       // Get all work requests and find the specific one
       const workRequests = await pmbok.getWorkRequests()
-      const foundRequest = workRequests.find(wr => wr.id === params.id)
+      const foundRequest = workRequests.find((wr: any) => wr.id === params.id)
 
       if (!foundRequest) {
         setError('Work request not found')
@@ -69,11 +69,11 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
   }
 
   const formatStatus = (status: string) => {
-    return status.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return status.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatCategory = (category: string) => {
-    return category.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return category.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatCurrency = (amount: number) => {
@@ -226,7 +226,7 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
                   <div className="border-t pt-4">
                     <textarea
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      onChange={(e: any) => setNewComment(e.target.value)}
                       placeholder="Add a comment or update..."
                       className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={3}

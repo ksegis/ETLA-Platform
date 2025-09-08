@@ -160,7 +160,7 @@ export default function UserSwitcher() {
 
   const getCurrentUser = () => {
     if (!user?.email) return null
-    return TEST_USERS.find(testUser => testUser.email === user.email)
+    return TEST_USERS.find((testUser: any) => testUser.email === user.email)
   }
 
   const currentUser = getCurrentUser()
@@ -212,7 +212,7 @@ export default function UserSwitcher() {
         <div className="space-y-4">
           <h3 className="font-medium text-gray-900">Available Test Users</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {TEST_USERS.map((testUser) => {
+            {TEST_USERS.map((testUser: any) => {
               const isCurrentUser = currentUser?.email === testUser.email
               const isLoadingThisUser = loadingUser === testUser.email
               

@@ -132,7 +132,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
   }
 
   const formatCategory = (category: string) => {
-    return category.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return category.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const handleApprove = async () => {
@@ -328,7 +328,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
                 <h3 className="text-lg font-semibold text-yellow-800">Risk Assessment</h3>
               </div>
               <ul className="space-y-1">
-                {risks.map((risk, index) => (
+                {risks.map((risk, index: any) => (
                   <li key={index} className="text-yellow-700 text-sm">• {risk}</li>
                 ))}
               </ul>
@@ -382,7 +382,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
                 Supporting Documents
               </h2>
               <div className="space-y-3">
-                {request.attachments.map((attachment: any) => (
+                {request.attachments.map((attachment: any: any) => (
                   <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">{attachment.filename}</p>
@@ -408,7 +408,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
             </h2>
             
             <div className="space-y-4">
-              {request.comments.map((comment: any) => (
+              {request.comments.map((comment: any: any) => (
                 <div key={comment.id} className="border-l-4 border-blue-200 pl-4 py-2">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="font-medium text-gray-900">{comment.authorName}</span>
@@ -438,7 +438,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
             </h2>
             
             <div className="space-y-3">
-              {teamMembers.map((member: any) => (
+              {teamMembers.map((member: any: any) => (
                 <div key={member.id} className="p-3 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-gray-900">{member.name}</span>
@@ -452,7 +452,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
                   </div>
                   <p className="text-sm text-gray-600 mb-1">{member.role}</p>
                   <div className="flex flex-wrap gap-1">
-                    {member.expertise.map((skill: any) => (
+                    {member.expertise.map((skill: any: any) => (
                       <span key={skill} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
                         {skill}
                       </span>
@@ -508,11 +508,11 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
                 </label>
                 <select
                   value={selectedAssignee}
-                  onChange={(e) => setSelectedAssignee(e.target.value)}
+                  onChange={(e: any) => setSelectedAssignee(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Select team member</option>
-                  {teamMembers.filter((m: any) => m.availability === 'Available').map((member: any) => (
+                  {teamMembers.filter((m: any: any) => m.availability === 'Available').map((member: any: any) => (
                     <option key={member.id} value={member.name}>{member.name}</option>
                   ))}
                 </select>
@@ -524,7 +524,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
                 </label>
                 <textarea
                   value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
+                  onChange={(e: any) => setReviewNotes(e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Add any notes about the approval..."
@@ -564,7 +564,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
                 </label>
                 <textarea
                   value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
+                  onChange={(e: any) => setReviewNotes(e.target.value)}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Please provide a clear reason for rejection..."

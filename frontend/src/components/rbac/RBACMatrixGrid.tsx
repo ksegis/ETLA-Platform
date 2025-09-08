@@ -53,14 +53,14 @@ export default function RBACMatrixGrid({
   const permissionGroups = useMemo(() => {
     const groups = new Map<string, RBACPermissionCatalog[]>()
     
-    permissionCatalog.forEach(permission => {
+    permissionCatalog.forEach((permission: any) => {
       if (!groups.has(permission.resource)) {
         groups.set(permission.resource, [])
       }
       groups.get(permission.resource)!.push(permission)
     })
 
-    return Array.from(groups.entries()).map(([resource, permissions]) => ({
+    return Array.from(groups.entries()).map(([resource, permissions]: any) => ({
       resource,
       permissions: permissions.sort((a, b) => a.action.localeCompare(b.action))
     }))
@@ -130,7 +130,7 @@ export default function RBACMatrixGrid({
     )
 
     // Permission group columns
-    permissionGroups.forEach(group => {
+    permissionGroups.forEach((group: any) => {
       const isExpanded = expandedGroups.has(group.resource)
       
       // Group header column
@@ -162,8 +162,8 @@ export default function RBACMatrixGrid({
                 resource={group.resource}
                 permissions={group.permissions}
                 userCells={row.original.cells}
-                onBulkChange={(effect) => {
-                  group.permissions.forEach(permission => {
+                onBulkChange={(effect: any) => {
+                  group.permissions.forEach((permission: any) => {
                     onCellClick(row.original.userId, permission.permissionId)
                   })
                 }}
@@ -175,7 +175,7 @@ export default function RBACMatrixGrid({
 
       // Individual permission columns (only if expanded)
       if (isExpanded) {
-        group.permissions.forEach(permission => {
+        group.permissions.forEach((permission: any) => {
           cols.push(
             columnHelper.display({
               id: permission.permissionId,
@@ -188,7 +188,7 @@ export default function RBACMatrixGrid({
               ),
               size: 80,
               cell: ({ row }) => {
-                const cell = row.original.cells.find(c => c.permissionId === permission.permissionId)
+                const cell = row.original.cells.find((c: any) => c.permissionId === permission.permissionId)
                 const draftKey = `${row.original.userId}:${permission.permissionId}`
                 const draftState = draftChanges.get(draftKey)
                 
@@ -235,9 +235,9 @@ export default function RBACMatrixGrid({
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup: any) => (
+            {table.getHeaderGroups().map((headerGroup: any: any) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header: any) => (
+                {headerGroup.headers.map((header: any: any) => (
                   <th
                     key={header.id}
                     className={`px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
@@ -255,9 +255,9 @@ export default function RBACMatrixGrid({
             ))}
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map((row: any) => (
+            {table.getRowModel().rows.map((row: any: any) => (
               <tr key={row.id} className="hover:bg-gray-50">
-                {row.getVisibleCells().map((cell: any) => (
+                {row.getVisibleCells().map((cell: any: any) => (
                   <td
                     key={cell.id}
                     className={`px-2 py-1 whitespace-nowrap text-sm text-gray-900 ${
@@ -363,12 +363,12 @@ function BulkPermissionCell({
   userCells, 
   onBulkChange 
 }: BulkPermissionCellProps) {
-  const resourceCells = userCells.filter((cell: any) => 
-    permissions.some(p => p.permissionId === cell.permissionId)
+  const resourceCells = userCells.filter((cell: any: any) => 
+    permissions.some((p: any) => p.permissionId === cell.permissionId)
   )
 
-  const allowCount = resourceCells.filter((c: any) => c.state === 'allow').length
-  const denyCount = resourceCells.filter((c: any) => c.state === 'deny').length
+  const allowCount = resourceCells.filter((c: any: any) => c.state === 'allow').length
+  const denyCount = resourceCells.filter((c: any: any) => c.state === 'deny').length
   const totalCount = resourceCells.length
 
   const getState = () => {

@@ -48,19 +48,19 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
 
     // Count emails when emails field changes
     if (field === 'emails') {
-      const emails = (value as string).split(/[,\n]/).filter((email: any) => email.trim().length > 0)
+      const emails = (value as string).split(/[,\n]/).filter((email: any: any) => email.trim().length > 0)
       setEmailCount(emails.length)
     }
   }
 
   const validateEmails = (emailString: string): string[] => {
-    const emails = emailString.split(/[,\n]/).map((email: any) => email.trim()).filter((email: any) => email.length > 0)
+    const emails = emailString.split(/[,\n]/).map((email: any: any) => email.trim()).filter((email: any: any) => email.length > 0)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     
     const validEmails: string[] = []
     const invalidEmails: string[] = []
     
-    emails.forEach(email => {
+    emails.forEach((email: any) => {
       if (emailRegex.test(email)) {
         validEmails.push(email)
       } else {
@@ -128,7 +128,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
   }
 
   const getDefaultMessage = () => {
-    const selectedTenant = tenants.find(t => t.id === formData.tenant_id)
+    const selectedTenant = tenants.find((t: any) => t.id === formData.tenant_id)
     return `You have been invited to join ${selectedTenant?.name || 'our organization'} on the ETLA Platform. Please click the link below to accept your invitation and set up your account.`
   }
 
@@ -175,7 +175,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   required
                   rows={4}
                   value={formData.emails}
-                  onChange={(e) => handleInputChange('emails', e.target.value)}
+                  onChange={(e: any) => handleInputChange('emails', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter email addresses separated by commas or new lines:&#10;user1@company.com&#10;user2@company.com, user3@company.com"
                 />
@@ -198,7 +198,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   <select
                     required
                     value={formData.role_level}
-                    onChange={(e) => handleInputChange('role_level', e.target.value)}
+                    onChange={(e: any) => handleInputChange('role_level', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="sub_client">Sub Client</option>
@@ -214,7 +214,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   <select
                     required
                     value={formData.role}
-                    onChange={(e) => handleInputChange('role', e.target.value)}
+                    onChange={(e: any) => handleInputChange('role', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="viewer">Viewer</option>
@@ -232,11 +232,11 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   <select
                     required
                     value={formData.tenant_id}
-                    onChange={(e) => handleInputChange('tenant_id', e.target.value)}
+                    onChange={(e: any) => handleInputChange('tenant_id', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map((tenant: any) => (
+                    {tenants.map((tenant: any: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name} ({tenant.tenant_type})
                       </option>
@@ -256,7 +256,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                 </label>
                 <select
                   value={formData.expires_in_days}
-                  onChange={(e) => handleInputChange('expires_in_days', parseInt(e.target.value))}
+                  onChange={(e: any) => handleInputChange('expires_in_days', parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value={1}>1 Day</option>
@@ -274,7 +274,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                 <textarea
                   rows={3}
                   value={formData.message}
-                  onChange={(e) => handleInputChange('message', e.target.value)}
+                  onChange={(e: any) => handleInputChange('message', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder={getDefaultMessage()}
                 />
@@ -292,7 +292,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   Invitation Preview
                 </h4>
                 <div className="text-sm text-blue-800">
-                  <p><strong>{emailCount}</strong> user{emailCount > 1 ? 's' : ''} will be invited as <strong>{formData.role}</strong> ({formData.role_level}) to <strong>{tenants.find(t => t.id === formData.tenant_id)?.name}</strong></p>
+                  <p><strong>{emailCount}</strong> user{emailCount > 1 ? 's' : ''} will be invited as <strong>{formData.role}</strong> ({formData.role_level}) to <strong>{tenants.find((t: any) => t.id === formData.tenant_id)?.name}</strong></p>
                   <p className="mt-1">Invitations will expire in <strong>{formData.expires_in_days} day{formData.expires_in_days > 1 ? 's' : ''}</strong></p>
                 </div>
               </div>

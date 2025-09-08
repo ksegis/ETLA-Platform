@@ -508,7 +508,7 @@ const EnhancedReportingPage: React.FC = () => {
 
   // Enhanced filtering function
   const applyFilters = (data: any[], dataType: string) => {
-    return data.filter((item: any) => {
+    return data.filter((item: any: any) => {
       // Search term filter
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
@@ -526,7 +526,7 @@ const EnhancedReportingPage: React.FC = () => {
           ? [item.employee_name, item.deduction_type, item.deduction_code]
           : [item.employee_name, item.compliance_type, item.compliance_id];
         
-        if (!searchableFields.some(field => 
+        if (!searchableFields.some((field: any) => 
           field?.toString().toLowerCase().includes(searchLower)
         )) {
           return false;
@@ -582,8 +582,8 @@ const EnhancedReportingPage: React.FC = () => {
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
-      ...data.map((row: any) => 
-        headers.map((header: any) => {
+      ...data.map((row: any: any) => 
+        headers.map((header: any: any) => {
           const value = row[header];
           return typeof value === 'string' && value.includes(',') 
             ? `"${value}"` 
@@ -632,27 +632,27 @@ const EnhancedReportingPage: React.FC = () => {
         <Input
           placeholder="Search..."
           value={filters.searchTerm}
-          onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
         />
         
         <Input
           type="date"
           placeholder="Start Date"
           value={filters.startDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
         />
         
         <Input
           type="date"
           placeholder="End Date"
           value={filters.endDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
         />
         
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.department}
-          onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, department: e.target.value }))}
         >
           <option value="">All Departments</option>
           <option value="Engineering">Engineering</option>
@@ -669,7 +669,7 @@ const EnhancedReportingPage: React.FC = () => {
             <select
               className="px-3 py-2 border border-gray-300 rounded-md"
               value={filters.taxYear}
-              onChange={(e) => setFilters(prev => ({ ...prev, taxYear: e.target.value }))}
+              onChange={(e: any) => setFilters(prev => ({ ...prev, taxYear: e.target.value }))}
             >
               <option value="">All Tax Years</option>
               <option value="2024">2024</option>
@@ -681,7 +681,7 @@ const EnhancedReportingPage: React.FC = () => {
             <select
               className="px-3 py-2 border border-gray-300 rounded-md"
               value={filters.formType}
-              onChange={(e) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
+              onChange={(e: any) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
             >
               <option value="">All Form Types</option>
               <option value="W-2">W-2</option>
@@ -695,7 +695,7 @@ const EnhancedReportingPage: React.FC = () => {
           <select
             className="px-3 py-2 border border-gray-300 rounded-md"
             value={filters.deductionType}
-            onChange={(e) => setFilters(prev => ({ ...prev, deductionType: e.target.value }))}
+            onChange={(e: any) => setFilters(prev => ({ ...prev, deductionType: e.target.value }))}
           >
             <option value="">All Deduction Types</option>
             <option value="Health Insurance">Health Insurance</option>
@@ -710,7 +710,7 @@ const EnhancedReportingPage: React.FC = () => {
           <select
             className="px-3 py-2 border border-gray-300 rounded-md"
             value={filters.complianceType}
-            onChange={(e) => setFilters(prev => ({ ...prev, complianceType: e.target.value }))}
+            onChange={(e: any) => setFilters(prev => ({ ...prev, complianceType: e.target.value }))}
           >
             <option value="">All Compliance Types</option>
             <option value="EEO-1">EEO-1</option>
@@ -800,11 +800,11 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={employeeColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
           />
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((employee) => (
+            {filteredData.map((employee: any) => (
               <Card key={employee.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
@@ -849,7 +849,7 @@ const EnhancedReportingPage: React.FC = () => {
         </div>
         
         <div className="grid gap-4">
-          {filteredData.map((statement) => (
+          {filteredData.map((statement: any) => (
             <Card key={statement.id} className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -918,7 +918,7 @@ const EnhancedReportingPage: React.FC = () => {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((record) => (
+            {filteredData.map((record: any) => (
               <Card key={record.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
@@ -976,7 +976,7 @@ const EnhancedReportingPage: React.FC = () => {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((benefit) => (
+            {filteredData.map((benefit: any) => (
               <Card key={benefit.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
@@ -1035,7 +1035,7 @@ const EnhancedReportingPage: React.FC = () => {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((record) => (
+            {filteredData.map((record: any) => (
               <Card key={record.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
@@ -1087,7 +1087,7 @@ const EnhancedReportingPage: React.FC = () => {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((timecard) => (
+            {filteredData.map((timecard: any) => (
               <Card key={timecard.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
@@ -1137,7 +1137,7 @@ const EnhancedReportingPage: React.FC = () => {
         </div>
         
         <div className="grid gap-4">
-          {filteredData.map((job) => (
+          {filteredData.map((job: any) => (
             <Card key={job.id} className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
@@ -1165,7 +1165,7 @@ const EnhancedReportingPage: React.FC = () => {
 
   const renderAllReports = () => (
     <div className="space-y-8">
-      <ComprehensiveDashboard onCategoryClick={(category) => setActiveTab(category)} />
+      <ComprehensiveDashboard onCategoryClick={(category: any) => setActiveTab(category)} />
     </div>
   );
 
@@ -1192,7 +1192,7 @@ const EnhancedReportingPage: React.FC = () => {
 
         {/* Enhanced Tab Navigation */}
         <div className="flex flex-wrap gap-2 mb-6 border-b">
-          {tabs.map((tab) => (
+          {tabs.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}

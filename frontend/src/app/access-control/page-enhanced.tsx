@@ -152,7 +152,7 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const formattedUsers: User[] = users?.map((user: any) => ({
+      const formattedUsers: User[] = users?.map((user: any: any) => ({
         id: user.id,
         email: user.email || 'N/A',
         full_name: user.full_name || 'Unknown',
@@ -212,11 +212,11 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const roleStats: RoleStats[] = (Object.entries(stats?.reduce((acc: Record<string, number>, user: any) => {
+      const roleStats: RoleStats[] = (Object.entries(stats?.reduce((acc: Record<string: any, number>, user: any: any: any) => {
         const key = `${user.role_level}_${user.role}`
         acc[key] = (acc[key] || 0) + 1
         return acc
-      }, {} as Record<string, number>) || {}) as [string, number][]).map(([key, count]) => {
+      }, {} as Record<string, number>) || {}) as [string, number][]).map(([key, count]: any) => {
         const [role_level, role] = key.split('_')
         return {
           role,
@@ -265,7 +265,7 @@ export default function AccessControlPageEnhanced() {
   }
 
   const handlePasswordReset = (userId: string, email: string) => {
-    setSelectedUser(users.find(u => u.id === userId) || null)
+    setSelectedUser(users.find((u: any) => u.id === userId) || null)
     setShowPasswordModal(true)
   }
 
@@ -284,7 +284,7 @@ export default function AccessControlPageEnhanced() {
   const exportUsers = () => {
     const csvContent = [
       ['Email', 'Name', 'Role', 'Level', 'Tenant', 'Status', 'Last Login', 'Created'].join(','),
-      ...filteredUsers.map((user: any) => [
+      ...filteredUsers.map((user: any: any) => [
         user.email,
         user.full_name,
         user.role,
@@ -306,7 +306,7 @@ export default function AccessControlPageEnhanced() {
   }
 
   // Filter users based on search and filters
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user: any) => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesTenant = selectedTenant === 'all' || user.tenant_id === selectedTenant
@@ -403,7 +403,7 @@ export default function AccessControlPageEnhanced() {
                 { id: 'invites', label: 'Invitations', icon: Mail },
                 { id: 'cleanup', label: 'System Cleanup', icon: Settings }
               ] : [])
-            ].map(({ id, label, icon: Icon }) => (
+            ].map(({ id, label, icon: Icon }: any) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id as any)}
@@ -442,7 +442,7 @@ export default function AccessControlPageEnhanced() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Active Tenants</p>
-                      <p className="text-2xl font-bold text-gray-900">{tenants.filter(t => t.status === 'active').length}</p>
+                      <p className="text-2xl font-bold text-gray-900">{tenants.filter((t: any) => t.status === 'active').length}</p>
                     </div>
                     <Building className="h-8 w-8 text-green-600" />
                   </div>
@@ -454,7 +454,7 @@ export default function AccessControlPageEnhanced() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Pending Invites</p>
-                      <p className="text-2xl font-bold text-gray-900">{invites.filter(i => i.status === 'pending').length}</p>
+                      <p className="text-2xl font-bold text-gray-900">{invites.filter((i: any) => i.status === 'pending').length}</p>
                     </div>
                     <Mail className="h-8 w-8 text-yellow-600" />
                   </div>
@@ -466,7 +466,7 @@ export default function AccessControlPageEnhanced() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Active Users</p>
-                      <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.is_active).length}</p>
+                      <p className="text-2xl font-bold text-gray-900">{users.filter((u: any) => u.is_active).length}</p>
                     </div>
                     <CheckCircle className="h-8 w-8 text-purple-600" />
                   </div>
@@ -485,7 +485,7 @@ export default function AccessControlPageEnhanced() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {roleStats.map((stat, index) => (
+                    {roleStats.map((stat, index: any) => (
                       <div key={index} className="border border-gray-200 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center">
@@ -515,7 +515,7 @@ export default function AccessControlPageEnhanced() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {tenants.slice(0, 5).map((tenant) => (
+                    {tenants.slice(0, 5).map((tenant: any) => (
                       <div key={tenant.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-900">{tenant.name}</p>
@@ -550,7 +550,7 @@ export default function AccessControlPageEnhanced() {
                     type="text"
                     placeholder="Search users by email or name..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: any) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -558,18 +558,18 @@ export default function AccessControlPageEnhanced() {
 
               <select
                 value={selectedTenant}
-                onChange={(e) => setSelectedTenant(e.target.value)}
+                onChange={(e: any) => setSelectedTenant(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Tenants</option>
-                {tenants.map(tenant => (
+                {tenants.map((tenant: any) => (
                   <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
                 ))}
               </select>
 
               <select
                 value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
+                onChange={(e: any) => setSelectedRole(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Roles</option>
@@ -618,7 +618,7 @@ export default function AccessControlPageEnhanced() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredUsers.map((user) => (
+                        {filteredUsers.map((user: any) => (
                           <tr key={user.id} className="border-b hover:bg-gray-50">
                             <td className="py-3 px-4">
                               <div className="flex items-center">
@@ -709,7 +709,7 @@ export default function AccessControlPageEnhanced() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {roleStats.map((stat, index) => (
+                  {roleStats.map((stat, index: any) => (
                     <div key={index} className="border border-gray-200 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
@@ -784,7 +784,7 @@ export default function AccessControlPageEnhanced() {
                     { name: 'Project Management', host: true, primary: true, sub: true },
                     { name: 'Reporting', host: true, primary: true, sub: true },
                     { name: 'Data Export', host: true, primary: true, sub: false }
-                  ].map((perm, index) => (
+                  ].map((perm, index: any) => (
                     <div key={index} className="grid grid-cols-4 gap-2 text-xs py-2 border-b">
                       <div className="font-medium">{perm.name}</div>
                       <div className="text-center">
@@ -827,7 +827,7 @@ export default function AccessControlPageEnhanced() {
                   </div>
                   <p className="text-xs text-green-700 mb-2">Primary SSO provider for corporate users</p>
                   <div className="text-xs text-green-600">
-                    Last sync: {new Date().toLocaleDateString()} | {users.filter(u => u.email.includes('@')).length} users authenticated
+                    Last sync: {new Date().toLocaleDateString()} | {users.filter((u: any) => u.email.includes('@')).length} users authenticated
                   </div>
                 </div>
                 
@@ -899,7 +899,7 @@ export default function AccessControlPageEnhanced() {
                     </tr>
                   </thead>
                   <tbody>
-                    {invites.map((invite) => (
+                    {invites.map((invite: any) => (
                       <tr key={invite.id} className="border-b hover:bg-gray-50">
                         <td className="py-3 px-4 font-medium">{invite.email}</td>
                         <td className="py-3 px-4">{invite.role}</td>

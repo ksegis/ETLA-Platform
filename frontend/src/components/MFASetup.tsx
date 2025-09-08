@@ -159,7 +159,7 @@ Generated: ${new Date().toLocaleString()}
 
 IMPORTANT: Store these codes in a safe place. Each code can only be used once.
 
-${state.backupCodes.map((code, index) => `${index + 1}. ${code}`).join('\n')}
+${state.backupCodes.map((code, index: any) => `${index + 1}. ${code}`).join('\n')}
 
 Instructions:
 - Use these codes if you lose access to your authenticator app
@@ -277,7 +277,7 @@ Instructions:
                   type="text"
                   placeholder="000000"
                   value={state.verificationCode}
-                  onChange={(e) => setState(prev => ({ 
+                  onChange={(e: any) => setState(prev => ({ 
                     ...prev, 
                     verificationCode: e.target.value.replace(/\D/g, '').slice(0, 6)
                   }))}
@@ -369,7 +369,7 @@ Instructions:
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2 p-4 bg-gray-50 border rounded-lg font-mono text-sm">
-                  {state.backupCodes.map((code, index) => (
+                  {state.backupCodes.map((code, index: any) => (
                     <div key={index} className="flex items-center gap-2">
                       <span className="text-gray-500">{index + 1}.</span>
                       <span>{code}</span>

@@ -314,20 +314,20 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
-    completedProjects: projects.filter((p: any) => p.status === 'completed').length,
-    onHoldProjects: projects.filter((p: any) => p.status === 'on_hold').length,
+    activeProjects: projects.filter((p: any: any) => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
+    completedProjects: projects.filter((p: any: any) => p.status === 'completed').length,
+    onHoldProjects: projects.filter((p: any: any) => p.status === 'on_hold').length,
     totalWorkRequests: workRequests.length,
-    pendingWorkRequests: workRequests.filter((wr: any) => ['submitted', 'under_review'].includes(wr.status || '')).length,
-    approvedWorkRequests: workRequests.filter((wr: any) => wr.status === 'approved').length,
-    totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
+    pendingWorkRequests: workRequests.filter((wr: any: any) => ['submitted', 'under_review'].includes(wr.status || '')).length,
+    approvedWorkRequests: workRequests.filter((wr: any: any) => wr.status === 'approved').length,
+    totalBudget: projects.reduce((sum: any, p: any) => sum + (p.budget || 0), 0),
     totalRisks: risks.length,
-    highRisks: risks.filter((r: any) => getRiskLevel(r) === 'high').length,
-    mitigatedRisks: risks.filter((r: any) => r.status === 'resolved').length
+    highRisks: risks.filter((r: any: any) => getRiskLevel(r) === 'high').length,
+    mitigatedRisks: risks.filter((r: any: any) => r.status === 'resolved').length
   }
 
   // Filter projects with database compatibility
-  const filteredProjects = projects.filter((project: any) => {
+  const filteredProjects = projects.filter((project: any: any) => {
     const title = getProjectTitle(project)
     const description = project.description || ''
     const teamLead = getTeamLead(project)
@@ -345,7 +345,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   })
 
   // Filter work requests with database compatibility
-  const filteredWorkRequests = workRequests.filter((wr: any) => {
+  const filteredWorkRequests = workRequests.filter((wr: any: any) => {
     const title = getWorkRequestTitle(wr)
     const description = wr.description || ''
     const customerName = wr.customer_name || ''
@@ -360,7 +360,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   })
 
   // Filter risks with database compatibility
-  const filteredRisks = risks.filter((risk: any) => {
+  const filteredRisks = risks.filter((risk: any: any) => {
     const title = getRiskTitle(risk)
     const description = risk.risk_description || risk.description || ''
     
@@ -604,7 +604,7 @@ export default function DatabaseAlignedProjectManagementPage() {
       }
 
       console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
+      setProjects(prev => prev.map((p: any: any) => p.id === selectedProject.id ? data[0] : p))
       setShowEditModal(false)
       setSelectedProject(null)
     } catch (err) {
@@ -631,7 +631,7 @@ export default function DatabaseAlignedProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any: any) => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')
@@ -691,7 +691,7 @@ export default function DatabaseAlignedProjectManagementPage() {
         return
       }
 
-      setWorkRequests(prev => prev.map((wr: any) => wr.id === workRequestId ? data[0] : wr))
+      setWorkRequests(prev => prev.map((wr: any: any) => wr.id === workRequestId ? data[0] : wr))
     } catch (err) {
       console.error(`Unexpected error ${action}ing work request:`, err)
       setError(`Failed to ${action} work request due to an unexpected error.`)
@@ -723,7 +723,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Render project list view with database compatibility
   const renderProjectListView = () => (
     <div className="space-y-4">
-      {filteredProjects.map((project) => (
+      {filteredProjects.map((project: any) => (
         <div key={project.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -796,7 +796,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Render project grid view with database compatibility
   const renderProjectGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredProjects.map((project) => (
+      {filteredProjects.map((project: any) => (
         <Card key={project.id} className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -861,7 +861,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Render work requests with database compatibility
   const renderWorkRequests = () => (
     <div className="space-y-4">
-      {filteredWorkRequests.map((workRequest) => (
+      {filteredWorkRequests.map((workRequest: any) => (
         <div key={workRequest.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -949,7 +949,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Render risks with database compatibility
   const renderRisks = () => (
     <div className="space-y-4">
-      {filteredRisks.map((risk) => (
+      {filteredRisks.map((risk: any) => (
         <div key={risk.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -1181,7 +1181,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
         {/* PMBOK Tab Navigation */}
         <div className="flex space-x-1 border-b overflow-x-auto">
-          {tabs.map((tab) => (
+          {tabs.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
@@ -1207,7 +1207,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                   <Input
                     placeholder={`Search ${activeTab === 'projects' ? 'projects' : activeTab === 'work-requests' ? 'work requests' : 'risks'}...`}
                     value={filters.searchTerm}
-                    onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+                    onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                     className="pl-10"
                   />
                 </div>
@@ -1215,7 +1215,7 @@ export default function DatabaseAlignedProjectManagementPage() {
               <div className="flex gap-2">
                 <select
                   value={filters.status}
-                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  onChange={(e: any) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Status</option>
@@ -1247,7 +1247,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                 </select>
                 <select
                   value={filters.priority}
-                  onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+                  onChange={(e: any) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Priority</option>
@@ -1380,7 +1380,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.title || ''}
-                        onChange={(e) => setNewProject(prev => ({ 
+                        onChange={(e: any) => setNewProject(prev => ({ 
                           ...prev, 
                           title: e.target.value,
                           name: e.target.value // Keep both fields in sync
@@ -1395,7 +1395,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.project_code || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, project_code: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, project_code: e.target.value }))}
                         placeholder="Enter project code (e.g., PRJ-2024-001)"
                       />
                     </div>
@@ -1406,7 +1406,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.description || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Enter project description"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1420,7 +1420,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <select
                           value={newProject.status || 'planning'}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, status: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, status: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="planning">Planning</option>
@@ -1436,7 +1436,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <select
                           value={newProject.priority || 'medium'}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, priority: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, priority: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="low">Low</option>
@@ -1455,7 +1455,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         <Input
                           type="date"
                           value={newProject.start_date || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, start_date: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, start_date: e.target.value }))}
                         />
                       </div>
 
@@ -1466,7 +1466,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         <Input
                           type="date"
                           value={newProject.end_date || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, end_date: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, end_date: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -1479,7 +1479,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         <Input
                           type="number"
                           value={newProject.budget || 0}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
                           placeholder="0.00"
                         />
                       </div>
@@ -1490,7 +1490,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <Input
                           value={newProject.assigned_team_lead || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
                           placeholder="Enter team lead name"
                         />
                       </div>
@@ -1503,11 +1503,11 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <select
                         value={newProject.work_request_id || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, work_request_id: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, work_request_id: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select a work request</option>
-                        {workRequests.filter((wr: any) => wr.status === 'approved').map((wr: any) => (
+                        {workRequests.filter((wr: any: any) => wr.status === 'approved').map((wr: any: any) => (
                           <option key={wr.id} value={wr.id}>{getWorkRequestTitle(wr)}</option>
                         ))}
                       </select>
@@ -1524,7 +1524,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.business_case || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, business_case: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, business_case: e.target.value }))}
                         placeholder="Define business justification and expected benefits"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1537,7 +1537,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.project_scope || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, project_scope: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, project_scope: e.target.value }))}
                         placeholder="Define project scope and boundaries"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1550,7 +1550,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.success_criteria || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, success_criteria: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, success_criteria: e.target.value }))}
                         placeholder="Define success criteria and acceptance criteria"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1563,7 +1563,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.risk_assessment || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, risk_assessment: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, risk_assessment: e.target.value }))}
                         placeholder="Identify potential risks and mitigation strategies"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1576,7 +1576,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.resource_requirements || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, resource_requirements: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, resource_requirements: e.target.value }))}
                         placeholder="Define required resources (human, material, equipment)"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1589,7 +1589,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.quality_metrics || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, quality_metrics: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, quality_metrics: e.target.value }))}
                         placeholder="Define quality standards and metrics"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1602,7 +1602,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.constraints || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, constraints: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, constraints: e.target.value }))}
                         placeholder="List project constraints (time, budget, scope, etc.)"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1615,7 +1615,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.assumptions || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, assumptions: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, assumptions: e.target.value }))}
                         placeholder="List project assumptions"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1674,7 +1674,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <Input
                         value={getProjectTitle(selectedProject)}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ 
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ 
                           ...prev, 
                           title: e.target.value,
                           name: e.target.value
@@ -1689,7 +1689,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <Input
                         value={selectedProject.project_code || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, project_code: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, project_code: e.target.value }) : null)}
                         placeholder="Enter project code"
                       />
                     </div>
@@ -1700,7 +1700,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.description || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
                         placeholder="Enter project description"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1714,7 +1714,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <select
                           value={selectedProject.status || 'planning'}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, status: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, status: e.target.value }) : null)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="planning">Planning</option>
@@ -1732,7 +1732,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <select
                           value={selectedProject.priority || 'medium'}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, priority: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, priority: e.target.value }) : null)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="low">Low</option>
@@ -1751,7 +1751,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         <Input
                           type="date"
                           value={selectedProject.start_date || ''}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, start_date: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, start_date: e.target.value }) : null)}
                         />
                       </div>
 
@@ -1762,7 +1762,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         <Input
                           type="date"
                           value={selectedProject.end_date || ''}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, end_date: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, end_date: e.target.value }) : null)}
                         />
                       </div>
                     </div>
@@ -1775,7 +1775,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         <Input
                           type="number"
                           value={selectedProject.budget || 0}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, budget: parseFloat(e.target.value) || 0 }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, budget: parseFloat(e.target.value) || 0 }) : null)}
                           placeholder="0.00"
                         />
                       </div>
@@ -1786,7 +1786,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         </label>
                         <Input
                           value={getTeamLead(selectedProject)}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, assigned_team_lead: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, assigned_team_lead: e.target.value }) : null)}
                           placeholder="Enter team lead name"
                         />
                       </div>
@@ -1803,7 +1803,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.business_case || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, business_case: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, business_case: e.target.value }) : null)}
                         placeholder="Define business justification and expected benefits"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1816,7 +1816,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.project_scope || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, project_scope: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, project_scope: e.target.value }) : null)}
                         placeholder="Define project scope and boundaries"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1829,7 +1829,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.success_criteria || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, success_criteria: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, success_criteria: e.target.value }) : null)}
                         placeholder="Define success criteria and acceptance criteria"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1842,7 +1842,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.risk_assessment || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, risk_assessment: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, risk_assessment: e.target.value }) : null)}
                         placeholder="Identify potential risks and mitigation strategies"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1855,7 +1855,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.resource_requirements || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, resource_requirements: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, resource_requirements: e.target.value }) : null)}
                         placeholder="Define required resources (human, material, equipment)"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1868,7 +1868,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.quality_metrics || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, quality_metrics: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, quality_metrics: e.target.value }) : null)}
                         placeholder="Define quality standards and metrics"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1881,7 +1881,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.constraints || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, constraints: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, constraints: e.target.value }) : null)}
                         placeholder="List project constraints (time, budget, scope, etc.)"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1894,7 +1894,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.assumptions || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, assumptions: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, assumptions: e.target.value }) : null)}
                         placeholder="List project assumptions"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}

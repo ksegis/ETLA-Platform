@@ -90,11 +90,11 @@ export default function HRAnalyticsDashboard() {
       }
 
       // Calculate metrics
-      const activeEmployees = employees?.filter((emp: any) => emp.status === 'active').length || 0;
-      const terminatedEmployees = employees?.filter((emp: any) => emp.status === 'terminated').length || 0;
-      const onLeaveEmployees = employees?.filter((emp: any) => emp.status === 'on_leave').length || 0;
+      const activeEmployees = employees?.filter((emp: any: any) => emp.status === 'active').length || 0;
+      const terminatedEmployees = employees?.filter((emp: any: any) => emp.status === 'terminated').length || 0;
+      const onLeaveEmployees = employees?.filter((emp: any: any) => emp.status === 'on_leave').length || 0;
       
-      const totalPayroll = payroll?.reduce((sum: number, pay: any) => sum + (parseFloat(pay.gross_pay) || 0), 0) || 0;
+      const totalPayroll = payroll?.reduce((sum: number: any, pay: any: any: any) => sum + (parseFloat(pay.gross_pay) || 0), 0) || 0;
       const averageSalary = activeEmployees > 0 ? totalPayroll / activeEmployees : 0;
 
       setHrMetrics({
@@ -139,7 +139,7 @@ export default function HRAnalyticsDashboard() {
         <Card className="p-6">
           <h4 className="text-lg font-semibold mb-4">Payroll Expense Trending</h4>
           <div className="space-y-3">
-            {payrollTrends.map((trend, index) => (
+            {payrollTrends.map((trend, index: any) => (
               <div key={index} className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">{trend.month}</span>
                 <span className="font-semibold">${trend.amount.toLocaleString()}</span>
@@ -493,7 +493,7 @@ export default function HRAnalyticsDashboard() {
           <div className="flex gap-4">
             <select 
               value={timeframe} 
-              onChange={(e) => setTimeframe(e.target.value)}
+              onChange={(e: any) => setTimeframe(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg"
             >
               <option value="current_year">Current Year</option>
@@ -535,7 +535,7 @@ export default function HRAnalyticsDashboard() {
         <Card className="p-6">
           <h3 className="text-xl font-bold mb-4">Compliance Status Overview</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {complianceItems.map((item, index) => (
+            {complianceItems.map((item, index: any) => (
               <div key={index} className="p-4 border rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">{item.type}</span>

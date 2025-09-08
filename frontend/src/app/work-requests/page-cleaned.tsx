@@ -127,11 +127,11 @@ export default function WorkRequestsPage() {
       // Calculate stats
       const requestStats = {
         total: data?.length || 0,
-        submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
-        under_review: data?.filter((r: any) => r.status === 'under_review').length || 0,
-        approved: data?.filter((r: any) => r.status === 'approved').length || 0,
-        in_progress: data?.filter((r: any) => r.status === 'in_progress').length || 0,
-        completed: data?.filter((r: any) => r.status === 'completed').length || 0
+        submitted: data?.filter((r: any: any) => r.status === 'submitted').length || 0,
+        under_review: data?.filter((r: any: any) => r.status === 'under_review').length || 0,
+        approved: data?.filter((r: any: any) => r.status === 'approved').length || 0,
+        in_progress: data?.filter((r: any: any) => r.status === 'in_progress').length || 0,
+        completed: data?.filter((r: any: any) => r.status === 'completed').length || 0
       }
       setStats(requestStats)
 
@@ -197,7 +197,7 @@ export default function WorkRequestsPage() {
         return
       }
 
-      setWorkRequests(prev => prev.map((r: any) => r.id === requestId ? data : r))
+      setWorkRequests(prev => prev.map((r: any: any) => r.id === requestId ? data : r))
       setIsEditModalOpen(false)
       setSelectedRequest(null)
       loadWorkRequests() // Reload to update stats
@@ -223,7 +223,7 @@ export default function WorkRequestsPage() {
         return
       }
 
-      setWorkRequests(prev => prev.filter((r: any) => r.id !== requestId))
+      setWorkRequests(prev => prev.filter((r: any: any) => r.id !== requestId))
       loadWorkRequests() // Reload to update stats
     } catch (error) {
       console.error('Error deleting work request:', error)
@@ -236,7 +236,7 @@ export default function WorkRequestsPage() {
     let filtered = workRequests
 
     if (searchTerm) {
-      filtered = filtered.filter((request: any) =>
+      filtered = filtered.filter((request: any: any) =>
         request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.business_justification?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -244,11 +244,11 @@ export default function WorkRequestsPage() {
     }
 
     if (statusFilter) {
-      filtered = filtered.filter((request: any) => request.status === statusFilter)
+      filtered = filtered.filter((request: any: any) => request.status === statusFilter)
     }
 
     if (priorityFilter) {
-      filtered = filtered.filter((request: any) => request.priority === priorityFilter)
+      filtered = filtered.filter((request: any: any) => request.priority === priorityFilter)
     }
 
     setFilteredRequests(filtered)
@@ -397,14 +397,14 @@ export default function WorkRequestsPage() {
                   <Input
                     placeholder="Search requests..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: any) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
               </div>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e: any) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Status</option>
@@ -416,7 +416,7 @@ export default function WorkRequestsPage() {
               </select>
               <select
                 value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
+                onChange={(e: any) => setPriorityFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Priority</option>
@@ -507,7 +507,7 @@ export default function WorkRequestsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredRequests.map((request) => {
+                    {filteredRequests.map((request: any) => {
                       const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
                       const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
 
@@ -569,7 +569,7 @@ export default function WorkRequestsPage() {
             ) : (
               /* Grid View */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRequests.map((request) => {
+                {filteredRequests.map((request: any) => {
                   const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
                   const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
 

@@ -172,7 +172,7 @@ export class PMBOKService {
 
       // Try to get customer names
       console.log('👥 Fetching customer information...')
-      const customerIds = data.map((r: any) => r.customer_id).filter(Boolean)
+      const customerIds = data.map((r: any: any) => r.customer_id).filter(Boolean)
       console.log('🔍 Customer IDs to lookup:', customerIds)
 
       let profileMap = new Map()
@@ -188,7 +188,7 @@ export class PMBOKService {
             console.warn('⚠️ Profile query failed:', profileError)
           } else {
             console.log('✅ Profile query succeeded, found:', profiles?.length || 0, 'profiles')
-            profileMap = new Map(profiles?.map((p: any) => [p.id, p.full_name]) || [])
+            profileMap = new Map(profiles?.map((p: any: any) => [p.id, p.full_name]) || [])
           }
         } catch (profileErr) {
           console.warn('⚠️ Profile lookup error:', profileErr)
@@ -196,7 +196,7 @@ export class PMBOKService {
       }
 
       // Transform data
-      const transformedData = data.map((request: any) => ({
+      const transformedData = data.map((request: any: any) => ({
         ...request,
         customer_name: profileMap.get(request.customer_id) || `Customer ${request.customer_id}`,
         customer_email: '',

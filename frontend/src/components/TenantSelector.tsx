@@ -50,7 +50,7 @@ export default function TenantSelector() {
           
           {/* Dropdown */}
           <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
-            {availableTenants.map((tenant) => (
+            {availableTenants.map((tenant: any) => (
               <button
                 key={tenant.id}
                 onClick={() => handleTenantSelect(tenant)}

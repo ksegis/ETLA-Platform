@@ -198,7 +198,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                             type="checkbox"
                             id="deleteInactiveUsers"
                             checked={cleanupOptions.deleteInactiveUsers}
-                            onChange={(e) => handleOptionChange('deleteInactiveUsers', e.target.checked)}
+                            onChange={(e: any) => handleOptionChange('deleteInactiveUsers', e.target.checked)}
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                           <label htmlFor="deleteInactiveUsers" className="ml-2 text-sm font-medium text-gray-900">
@@ -215,7 +215,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                           <label className="text-sm text-gray-700">Inactive for more than:</label>
                           <select
                             value={cleanupOptions.inactiveDays}
-                            onChange={(e) => handleOptionChange('inactiveDays', parseInt(e.target.value))}
+                            onChange={(e: any) => handleOptionChange('inactiveDays', parseInt(e.target.value))}
                             className="px-2 py-1 border border-gray-300 rounded text-sm"
                           >
                             <option value={30}>30 days</option>
@@ -236,7 +236,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                             type="checkbox"
                             id="deleteUnconfirmedUsers"
                             checked={cleanupOptions.deleteUnconfirmedUsers}
-                            onChange={(e) => handleOptionChange('deleteUnconfirmedUsers', e.target.checked)}
+                            onChange={(e: any) => handleOptionChange('deleteUnconfirmedUsers', e.target.checked)}
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                           <label htmlFor="deleteUnconfirmedUsers" className="ml-2 text-sm font-medium text-gray-900">
@@ -253,7 +253,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                           <label className="text-sm text-gray-700">Created more than:</label>
                           <select
                             value={cleanupOptions.unconfirmedDays}
-                            onChange={(e) => handleOptionChange('unconfirmedDays', parseInt(e.target.value))}
+                            onChange={(e: any) => handleOptionChange('unconfirmedDays', parseInt(e.target.value))}
                             className="px-2 py-1 border border-gray-300 rounded text-sm"
                           >
                             <option value={7}>7 days</option>
@@ -274,7 +274,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                             type="checkbox"
                             id="deleteExpiredInvites"
                             checked={cleanupOptions.deleteExpiredInvites}
-                            onChange={(e) => handleOptionChange('deleteExpiredInvites', e.target.checked)}
+                            onChange={(e: any) => handleOptionChange('deleteExpiredInvites', e.target.checked)}
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                           <label htmlFor="deleteExpiredInvites" className="ml-2 text-sm font-medium text-gray-900">

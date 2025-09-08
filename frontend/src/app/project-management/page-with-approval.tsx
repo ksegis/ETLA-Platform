@@ -66,13 +66,13 @@ export default function ProjectManagementPage() {
 
   // Calculate metrics from real data
   const totalRequests = dashboardData.workRequests.length
-  const pendingReview = dashboardData.workRequests.filter((req: any) => 
+  const pendingReview = dashboardData.workRequests.filter((req: any: any) => 
     req.approval_status === 'submitted' || req.approval_status === 'under_review'
   ).length
-  const activeProjects = dashboardData.workRequests.filter((req: any) => 
+  const activeProjects = dashboardData.workRequests.filter((req: any: any) => 
     req.approval_status === 'approved' || req.status === 'in_progress'
   ).length
-  const completed = dashboardData.workRequests.filter((req: any) => 
+  const completed = dashboardData.workRequests.filter((req: any: any) => 
     req.status === 'completed'
   ).length
 
@@ -153,7 +153,7 @@ export default function ProjectManagementPage() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6">
           <nav className="flex space-x-8">
-            {tabs.map((tab) => (
+            {tabs.map((tab: any) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -298,7 +298,7 @@ export default function ProjectManagementPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {dashboardData.workRequests.map((request) => (
+                    {dashboardData.workRequests.map((request: any) => (
                       <tr key={request.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
@@ -414,7 +414,7 @@ export default function ProjectManagementPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {dashboardData.projectCharters.map((project) => (
+                    {dashboardData.projectCharters.map((project: any) => (
                       <tr key={project.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
@@ -472,7 +472,7 @@ export default function ProjectManagementPage() {
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <div className="text-gray-400 text-6xl mb-4">🚧</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {tabs.find(tab => tab.id === activeTab)?.label} - Coming Soon
+              {tabs.find((tab: any) => tab.id === activeTab)?.label} - Coming Soon
             </h3>
             <p className="text-gray-600">This section is under development.</p>
           </div>

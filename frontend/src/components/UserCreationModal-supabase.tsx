@@ -216,7 +216,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                       required
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="user@company.com"
                     />
                   </div>
@@ -233,7 +233,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                       required
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.full_name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
                       placeholder="John Doe"
                     />
                   </div>
@@ -249,7 +249,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                       type="tel"
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.phone}
-                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
@@ -265,7 +265,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                       type="text"
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.department}
-                      onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, department: e.target.value }))}
                       placeholder="Engineering"
                     />
                   </div>
@@ -279,7 +279,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     type="text"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.job_title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, job_title: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, job_title: e.target.value }))}
                     placeholder="Software Engineer"
                   />
                 </div>
@@ -302,10 +302,10 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.tenant_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tenant_id: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, tenant_id: e.target.value }))}
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map((tenant: any) => (
+                    {tenants.map((tenant: any: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name}
                       </option>
@@ -320,9 +320,9 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.role_level}
-                    onChange={(e) => setFormData(prev => ({ ...prev, role_level: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, role_level: e.target.value }))}
                   >
-                    {roleLevels.map((level: any) => (
+                    {roleLevels.map((level: any: any) => (
                       <option key={level.value} value={level.value}>
                         {level.label}
                       </option>
@@ -337,9 +337,9 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.role}
-                    onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                   >
-                    {roles.map((role: any) => (
+                    {roles.map((role: any: any) => (
                       <option key={role.value} value={role.value}>
                         {role.label}
                       </option>
@@ -354,9 +354,9 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.permission_scope}
-                    onChange={(e) => setFormData(prev => ({ ...prev, permission_scope: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, permission_scope: e.target.value }))}
                   >
-                    {permissionScopes.map((scope: any) => (
+                    {permissionScopes.map((scope: any: any) => (
                       <option key={scope.value} value={scope.value}>
                         {scope.label}
                       </option>
@@ -383,7 +383,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                       type="text"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.temporary_password}
-                      onChange={(e) => setFormData(prev => ({ ...prev, temporary_password: e.target.value }))}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, temporary_password: e.target.value }))}
                       placeholder="Auto-generated password"
                     />
                     <Button type="button" variant="outline" onClick={generatePassword}>
@@ -400,7 +400,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     type="checkbox"
                     id="send_invite"
                     checked={formData.send_invite}
-                    onChange={(e) => setFormData(prev => ({ ...prev, send_invite: e.target.checked }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, send_invite: e.target.checked }))}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <label htmlFor="send_invite" className="text-sm">

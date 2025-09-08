@@ -99,7 +99,7 @@ export default function ProjectManagementPage() {
       })
 
       // Count missing customers
-      const missingCount = workRequests.filter((wr: any) => (wr as any).customer_missing || wr.customer_name === 'Missing Customer').length
+      const missingCount = workRequests.filter((wr: any: any) => (wr as any).customer_missing || wr.customer_name === 'Missing Customer').length
       setMissingCustomersCount(missingCount)
 
       if (missingCount > 0) {
@@ -242,18 +242,18 @@ export default function ProjectManagementPage() {
   // Calculate dashboard metrics from REAL data only - ENHANCED for approval statuses
   const workRequestMetrics = {
     total: dashboardData.workRequests.length,
-    pending: dashboardData.workRequests.filter((r: any) => 
+    pending: dashboardData.workRequests.filter((r: any: any) => 
       r.approval_status === 'submitted' || 
       r.approval_status === 'under_review' || 
       r.status === 'submitted' || 
       r.status === 'under_review'
     ).length,
-    active: dashboardData.workRequests.filter((r: any) => 
+    active: dashboardData.workRequests.filter((r: any: any) => 
       r.approval_status === 'approved' || 
       r.status === 'in_progress' || 
       r.status === 'approved'
     ).length,
-    completed: dashboardData.workRequests.filter((r: any) => 
+    completed: dashboardData.workRequests.filter((r: any: any) => 
       r.approval_status === 'converted_to_project' || 
       r.status === 'completed'
     ).length,
@@ -262,20 +262,20 @@ export default function ProjectManagementPage() {
 
   const projectMetrics = {
     total: dashboardData.projectCharters.length,
-    active: dashboardData.projectCharters.filter((p: any) => p.charter_status === 'active' || p.charter_status === 'approved').length,
-    totalBudget: dashboardData.projectCharters.reduce((sum, p) => sum + (p.estimated_budget || 0), 0),
+    active: dashboardData.projectCharters.filter((p: any: any) => p.charter_status === 'active' || p.charter_status === 'approved').length,
+    totalBudget: dashboardData.projectCharters.reduce((sum: any, p: any) => sum + (p.estimated_budget || 0), 0),
     compliance: dashboardData.projectCharters.length > 0 ? 85 : 0 // Calculate from actual data
   }
 
   const riskMetrics = {
     total: dashboardData.risks.length,
-    high: dashboardData.risks.filter((r: any) => r.risk_level === 'high').length,
-    medium: dashboardData.risks.filter((r: any) => r.risk_level === 'medium').length,
-    mitigated: dashboardData.risks.filter((r: any) => r.status === 'resolved').length
+    high: dashboardData.risks.filter((r: any: any) => r.risk_level === 'high').length,
+    medium: dashboardData.risks.filter((r: any: any) => r.risk_level === 'medium').length,
+    mitigated: dashboardData.risks.filter((r: any: any) => r.status === 'resolved').length
   }
 
   // Filter functions using REAL data - ENHANCED for approval statuses
-  const filteredWorkRequests = dashboardData.workRequests.filter((request: any) => {
+  const filteredWorkRequests = dashboardData.workRequests.filter((request: any: any) => {
     const matchesSearch = request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
     
@@ -287,12 +287,12 @@ export default function ProjectManagementPage() {
     return matchesSearch && matchesStatus && matchesPriority
   })
 
-  const filteredProjectCharters = dashboardData.projectCharters.filter((charter: any) => {
+  const filteredProjectCharters = dashboardData.projectCharters.filter((charter: any: any) => {
     return charter.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
            charter.project_code?.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  const filteredRisks = dashboardData.risks.filter((risk: any) => {
+  const filteredRisks = dashboardData.risks.filter((risk: any: any) => {
     return risk.risk_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
            risk.risk_description?.toLowerCase().includes(searchTerm.toLowerCase())
   })
@@ -424,13 +424,13 @@ export default function ProjectManagementPage() {
                 placeholder="Search requests..."
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: any) => setSearchTerm(e.target.value)}
               />
             </div>
             <select
               className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e: any) => setStatusFilter(e.target.value)}
             >
               <option value="all">All Status</option>
               <option value="submitted">Submitted</option>
@@ -444,7 +444,7 @@ export default function ProjectManagementPage() {
             <select
               className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
               value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
+              onChange={(e: any) => setPriorityFilter(e.target.value)}
             >
               <option value="all">All Priority</option>
               <option value="low">Low</option>
@@ -521,7 +521,7 @@ export default function ProjectManagementPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredWorkRequests.map((request) => {
+                    {filteredWorkRequests.map((request: any) => {
                       // DEBUG: Log each request being rendered
                       console.log('🔍 Rendering request row:', request.id, request.title)
                       
@@ -706,7 +706,7 @@ export default function ProjectManagementPage() {
         {/* PMBOK Navigation Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => {
+            {tabs.map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button
@@ -743,7 +743,7 @@ export default function ProjectManagementPage() {
 
         {/* Tab Content */}
         {activeTab === 'work-requests' && renderWorkRequestsTab()}
-        {activeTab !== 'work-requests' && renderPlaceholderTab(tabs.find(t => t.id === activeTab)?.label || 'Module')}
+        {activeTab !== 'work-requests' && renderPlaceholderTab(tabs.find((t: any) => t.id === activeTab)?.label || 'Module')}
 
         {/* Approval Modal */}
         {selectedWorkRequest && (

@@ -257,7 +257,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                     type="text"
                     required
                     value={formData.full_name}
-                    onChange={(e) => handleInputChange('full_name', e.target.value)}
+                    onChange={(e: any) => handleInputChange('full_name', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="John Doe"
                   />
@@ -271,7 +271,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(e: any) => handleInputChange('phone', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="+1 (555) 123-4567"
                   />
@@ -285,7 +285,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                   <input
                     type="text"
                     value={formData.job_title}
-                    onChange={(e) => handleInputChange('job_title', e.target.value)}
+                    onChange={(e: any) => handleInputChange('job_title', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Software Engineer"
                   />
@@ -299,7 +299,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                   <input
                     type="text"
                     value={formData.department}
-                    onChange={(e) => handleInputChange('department', e.target.value)}
+                    onChange={(e: any) => handleInputChange('department', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Engineering"
                   />
@@ -320,7 +320,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                   <select
                     required
                     value={formData.role_level}
-                    onChange={(e) => handleInputChange('role_level', e.target.value)}
+                    onChange={(e: any) => handleInputChange('role_level', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="sub_client">Sub Client</option>
@@ -336,7 +336,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                   <select
                     required
                     value={formData.role}
-                    onChange={(e) => handleInputChange('role', e.target.value)}
+                    onChange={(e: any) => handleInputChange('role', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="viewer">Viewer</option>
@@ -354,11 +354,11 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                   <select
                     required
                     value={formData.tenant_id}
-                    onChange={(e) => handleInputChange('tenant_id', e.target.value)}
+                    onChange={(e: any) => handleInputChange('tenant_id', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map((tenant: any) => (
+                    {tenants.map((tenant: any: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name} ({tenant.tenant_type})
                       </option>
@@ -372,7 +372,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                   </label>
                   <select
                     value={formData.permission_scope}
-                    onChange={(e) => handleInputChange('permission_scope', e.target.value)}
+                    onChange={(e: any) => handleInputChange('permission_scope', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="own">Own Data Only</option>
@@ -389,7 +389,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                     type="checkbox"
                     id="can_invite_users"
                     checked={formData.can_invite_users}
-                    onChange={(e) => handleInputChange('can_invite_users', e.target.checked)}
+                    onChange={(e: any) => handleInputChange('can_invite_users', e.target.checked)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="can_invite_users" className="ml-2 text-sm text-gray-700">
@@ -402,7 +402,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                     type="checkbox"
                     id="can_manage_sub_clients"
                     checked={formData.can_manage_sub_clients}
-                    onChange={(e) => handleInputChange('can_manage_sub_clients', e.target.checked)}
+                    onChange={(e: any) => handleInputChange('can_manage_sub_clients', e.target.checked)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="can_manage_sub_clients" className="ml-2 text-sm text-gray-700">
@@ -415,7 +415,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                     type="checkbox"
                     id="is_active"
                     checked={formData.is_active}
-                    onChange={(e) => handleInputChange('is_active', e.target.checked)}
+                    onChange={(e: any) => handleInputChange('is_active', e.target.checked)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">

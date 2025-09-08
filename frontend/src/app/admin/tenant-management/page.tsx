@@ -116,7 +116,7 @@ export default function TenantManagementPage() {
 
       // Get user emails for each tenant user
       const tenantUsersWithEmails = await Promise.all(
-        (data || []).map(async (tu: any) => {
+        (data || []).map(async (tu: any: any) => {
           const { data: userData } = await supabase
             .from('auth.users')
             .select('email')
@@ -226,7 +226,7 @@ export default function TenantManagementPage() {
     }
   }
 
-  const filteredTenants = tenants.filter(tenant =>
+  const filteredTenants = tenants.filter((tenant: any) =>
     tenant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tenant.code?.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -289,14 +289,14 @@ export default function TenantManagementPage() {
                 type="text"
                 placeholder="Search tenants..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: any) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredTenants.map((tenant) => (
+              {filteredTenants.map((tenant: any) => (
                 <div
                   key={tenant.id}
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
@@ -347,7 +347,7 @@ export default function TenantManagementPage() {
             </CardTitle>
             <CardDescription>
               {selectedTenantId
-                ? `Users assigned to ${tenants.find(t => t.id === selectedTenantId)?.name || 'selected tenant'}`
+                ? `Users assigned to ${tenants.find((t: any) => t.id === selectedTenantId)?.name || 'selected tenant'}`
                 : 'Select a tenant to view its users'
               }
             </CardDescription>
@@ -362,7 +362,7 @@ export default function TenantManagementPage() {
                     No users assigned to this tenant
                   </div>
                 ) : (
-                  users.map((user) => (
+                  users.map((user: any) => (
                     <div
                       key={user.id}
                       className="p-3 border border-gray-200 rounded-lg"
@@ -385,7 +385,7 @@ export default function TenantManagementPage() {
                           </span>
                           <select
                             value={user.role}
-                            onChange={(e) => updateUserRole(user.id, e.target.value)}
+                            onChange={(e: any) => updateUserRole(user.id, e.target.value)}
                             className="text-xs border border-gray-300 rounded px-2 py-1"
                           >
                             <option value="host_admin">Host Admin</option>
@@ -430,7 +430,7 @@ export default function TenantManagementPage() {
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                 >
                   <option value="">Choose a user...</option>
-                  {allUsers.map((user) => (
+                  {allUsers.map((user: any) => (
                     <option key={user.id} value={user.id}>
                       {user.email}
                     </option>

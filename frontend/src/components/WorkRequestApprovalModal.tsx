@@ -207,7 +207,7 @@ export default function WorkRequestApprovalModal({
                 <label className="block text-sm font-medium mb-2">Approver Comments (Optional)</label>
                 <textarea
                   value={approverComments}
-                  onChange={(e) => setApproverComments(e.target.value)}
+                  onChange={(e: any) => setApproverComments(e.target.value)}
                   placeholder="Add any comments about the approval..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
@@ -220,7 +220,7 @@ export default function WorkRequestApprovalModal({
                 <label className="block text-sm font-medium mb-2">Decline Reason *</label>
                 <textarea
                   value={declineReason}
-                  onChange={(e) => setDeclineReason(e.target.value)}
+                  onChange={(e: any) => setDeclineReason(e.target.value)}
                   placeholder="Please explain why this request is being declined..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}

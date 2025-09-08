@@ -78,7 +78,7 @@ export default function AccessControlPage() {
       // Auto-select first tenant or current tenant
       if (tenantList.length > 0) {
         const defaultTenant = currentTenantId 
-          ? tenantList.find(t => t.id === currentTenantId) || tenantList[0]
+          ? tenantList.find((t: any) => t.id === currentTenantId) || tenantList[0]
           : tenantList[0]
         setSelectedTenant(defaultTenant)
       }
@@ -98,11 +98,11 @@ export default function AccessControlPage() {
       })
 
       // Get effective permissions for all users
-      const userIds = userList.map(u => u.userId)
+      const userIds = userList.map((u: any) => u.userId)
       const effectivePermissions = await RBACAdminService.getEffectivePermissions(selectedTenant.id, userIds)
 
       // Build matrix rows
-      const matrixUsers: RBACMatrixRowUser[] = userList.map(user => ({
+      const matrixUsers: RBACMatrixRowUser[] = userList.map((user: any) => ({
         userId: user.userId,
         email: user.email,
         display_name: user.display_name,
@@ -137,7 +137,7 @@ export default function AccessControlPage() {
       setSelectedUserDetail(userDetail)
 
       // Get user's permissions from the matrix
-      const user = users.find(u => u.userId === selectedUserId)
+      const user = users.find((u: any) => u.userId === selectedUserId)
       setSelectedUserPermissions(user?.cells || [])
     } catch (error) {
       console.error('Error loading user detail:', error)
@@ -151,8 +151,8 @@ export default function AccessControlPage() {
     const currentDraft = draftChanges.get(draftKey)
     
     // Find current state from matrix
-    const user = users.find(u => u.userId === userId)
-    const cell = user?.cells.find(c => c.permissionId === permissionId)
+    const user = users.find((u: any) => u.userId === userId)
+    const cell = user?.cells.find((c: any) => c.permissionId === permissionId)
     const currentState = currentDraft || cell?.state || 'none'
     
     // Cycle through states: none -> allow -> deny -> none
@@ -191,7 +191,7 @@ export default function AccessControlPage() {
     
     setChangeQueue(prev => {
       // Remove any existing operation for this user/permission
-      const filtered = prev.filter(op => 
+      const filtered = prev.filter((op: any) => 
         !(op.userId === userId && op.permissionId === permissionId)
       )
       return [...filtered, operation]
@@ -224,7 +224,7 @@ export default function AccessControlPage() {
       }
       
       setChangeQueue(prev => {
-        const filtered = prev.filter(op => 
+        const filtered = prev.filter((op: any) => 
           !(op.userId === selectedUserId && op.permissionId === permissionId)
         )
         return [...filtered, operation]
@@ -242,8 +242,8 @@ export default function AccessControlPage() {
         tenantId: selectedTenant.id,
         actorUserId: currentUserId,
         userOverrides: changeQueue
-          .filter(op => op.op === 'setOverride' || op.op === 'clearOverride')
-          .map(op => ({
+          .filter((op: any) => op.op === 'setOverride' || op.op === 'clearOverride')
+          .map((op: any) => ({
             userId: op.userId,
             permissionId: op.permissionId!,
             effect: op.effect || null

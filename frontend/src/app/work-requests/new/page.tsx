@@ -81,7 +81,7 @@ export default function NewWorkRequestPage() {
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter((tag: any) => tag !== tagToRemove)
+      tags: prev.tags.filter((tag: any: any) => tag !== tagToRemove)
     }))
   }
 
@@ -96,7 +96,7 @@ export default function NewWorkRequestPage() {
   const removeFile = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
+      attachments: prev.attachments.filter((_, i: any) => i !== index)
     }))
   }
 
@@ -168,7 +168,7 @@ export default function NewWorkRequestPage() {
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
+                onChange={(e: any) => handleInputChange('title', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.title ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -183,7 +183,7 @@ export default function NewWorkRequestPage() {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e: any) => handleInputChange('description', e.target.value)}
                 rows={4}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.description ? 'border-red-300' : 'border-gray-300'
@@ -199,13 +199,13 @@ export default function NewWorkRequestPage() {
               </label>
               <select
                 value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
+                onChange={(e: any) => handleInputChange('category', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.category ? 'border-red-300' : 'border-gray-300'
                 }`}
               >
                 <option value="">Select a category</option>
-                {categories.map((cat: any) => (
+                {categories.map((cat: any: any) => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
               </select>
@@ -224,14 +224,14 @@ export default function NewWorkRequestPage() {
                 Priority Level *
               </label>
               <div className="space-y-2">
-                {priorities.map((priority: any) => (
+                {priorities.map((priority: any: any) => (
                   <label key={priority.value} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="priority"
                       value={priority.value}
                       checked={formData.priority === priority.value}
-                      onChange={(e) => handleInputChange('priority', e.target.value)}
+                      onChange={(e: any) => handleInputChange('priority', e.target.value)}
                       className="mt-1"
                     />
                     <div>
@@ -249,14 +249,14 @@ export default function NewWorkRequestPage() {
                 Urgency *
               </label>
               <div className="space-y-2">
-                {urgencies.map((urgency: any) => (
+                {urgencies.map((urgency: any: any) => (
                   <label key={urgency.value} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="urgency"
                       value={urgency.value}
                       checked={formData.urgency === urgency.value}
-                      onChange={(e) => handleInputChange('urgency', e.target.value)}
+                      onChange={(e: any) => handleInputChange('urgency', e.target.value)}
                       className="mt-1"
                     />
                     <div>
@@ -284,7 +284,7 @@ export default function NewWorkRequestPage() {
               <input
                 type="number"
                 value={formData.estimatedHours}
-                onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
+                onChange={(e: any) => handleInputChange('estimatedHours', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., 40"
                 min="0"
@@ -299,7 +299,7 @@ export default function NewWorkRequestPage() {
               <input
                 type="number"
                 value={formData.budget}
-                onChange={(e) => handleInputChange('budget', e.target.value)}
+                onChange={(e: any) => handleInputChange('budget', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., 5000"
                 min="0"
@@ -314,7 +314,7 @@ export default function NewWorkRequestPage() {
               <input
                 type="date"
                 value={formData.requiredCompletionDate}
-                onChange={(e) => handleInputChange('requiredCompletionDate', e.target.value)}
+                onChange={(e: any) => handleInputChange('requiredCompletionDate', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -329,8 +329,8 @@ export default function NewWorkRequestPage() {
               <input
                 type="text"
                 value={currentTag}
-                onChange={(e) => setCurrentTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                onChange={(e: any) => setCurrentTag(e.target.value)}
+                onKeyPress={(e: any) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add tags to help categorize your request"
               />
@@ -339,7 +339,7 @@ export default function NewWorkRequestPage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag: any) => (
+              {formData.tags.map((tag: any: any) => (
                 <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
                   {tag}
                   <button
@@ -382,7 +382,7 @@ export default function NewWorkRequestPage() {
             
             {formData.attachments.length > 0 && (
               <div className="mt-4 space-y-2">
-                {formData.attachments.map((file, index) => (
+                {formData.attachments.map((file, index: any) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">{file.name}</p>

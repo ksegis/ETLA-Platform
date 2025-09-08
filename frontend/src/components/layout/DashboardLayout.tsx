@@ -204,7 +204,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => 
       prev.includes(groupId) 
-        ? prev.filter((id: any) => id !== groupId)
+        ? prev.filter((id: any: any) => id !== groupId)
         : [...prev, groupId]
     )
   }
@@ -215,7 +215,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const getActiveGroup = () => {
     for (const group of navigationGroups) {
-      if (group.items.some(item => item.href === pathname)) {
+      if (group.items.some((item: any) => item.href === pathname)) {
         return group.id
       }
     }
@@ -272,7 +272,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-3 overflow-y-auto">
-            {navigationGroups.map((group) => {
+            {navigationGroups.map((group: any) => {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
               
@@ -301,7 +301,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                   }`}>
                     <div className="ml-4 pl-4 border-l-2 border-gray-100 space-y-1 pt-2">
-                      {group.items.map((item) => {
+                      {group.items.map((item: any) => {
                         const ItemIcon = item.icon
                         const isActive = isActiveItem(item.href)
                         

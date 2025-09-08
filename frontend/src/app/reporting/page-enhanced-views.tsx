@@ -528,7 +528,7 @@ const EnhancedReportingPage: React.FC = () => {
 
   // Enhanced filtering function (keeping existing implementation)
   const applyFilters = (data: any[], dataType: string) => {
-    return data.filter((item: any) => {
+    return data.filter((item: any: any) => {
       // Search term filter
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
@@ -546,7 +546,7 @@ const EnhancedReportingPage: React.FC = () => {
           ? [item.employee_name, item.deduction_type, item.deduction_code]
           : [item.employee_name, item.compliance_type, item.compliance_id];
         
-        if (!searchableFields.some(field => 
+        if (!searchableFields.some((field: any) => 
           field?.toString().toLowerCase().includes(searchLower)
         )) {
           return false;
@@ -602,8 +602,8 @@ const EnhancedReportingPage: React.FC = () => {
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
-      ...data.map((row: any) => 
-        headers.map((header: any) => {
+      ...data.map((row: any: any) => 
+        headers.map((header: any: any) => {
           const value = row[header];
           return typeof value === 'string' && value.includes(',') 
             ? `"${value}"` 
@@ -652,27 +652,27 @@ const EnhancedReportingPage: React.FC = () => {
         <Input
           placeholder="Search..."
           value={filters.searchTerm}
-          onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
         />
         
         <Input
           type="date"
           placeholder="Start Date"
           value={filters.startDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
         />
         
         <Input
           type="date"
           placeholder="End Date"
           value={filters.endDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
         />
         
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.department}
-          onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, department: e.target.value }))}
         >
           <option value="">All Departments</option>
           <option value="Engineering">Engineering</option>
@@ -689,7 +689,7 @@ const EnhancedReportingPage: React.FC = () => {
             <select
               className="px-3 py-2 border border-gray-300 rounded-md"
               value={filters.taxYear}
-              onChange={(e) => setFilters(prev => ({ ...prev, taxYear: e.target.value }))}
+              onChange={(e: any) => setFilters(prev => ({ ...prev, taxYear: e.target.value }))}
             >
               <option value="">All Tax Years</option>
               <option value="2024">2024</option>
@@ -701,7 +701,7 @@ const EnhancedReportingPage: React.FC = () => {
             <select
               className="px-3 py-2 border border-gray-300 rounded-md"
               value={filters.formType}
-              onChange={(e) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
+              onChange={(e: any) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
             >
               <option value="">All Form Types</option>
               <option value="W-2">W-2</option>
@@ -715,7 +715,7 @@ const EnhancedReportingPage: React.FC = () => {
           <select
             className="px-3 py-2 border border-gray-300 rounded-md"
             value={filters.deductionType}
-            onChange={(e) => setFilters(prev => ({ ...prev, deductionType: e.target.value }))}
+            onChange={(e: any) => setFilters(prev => ({ ...prev, deductionType: e.target.value }))}
           >
             <option value="">All Deduction Types</option>
             <option value="Health Insurance">Health Insurance</option>
@@ -730,7 +730,7 @@ const EnhancedReportingPage: React.FC = () => {
           <select
             className="px-3 py-2 border border-gray-300 rounded-md"
             value={filters.complianceType}
-            onChange={(e) => setFilters(prev => ({ ...prev, complianceType: e.target.value }))}
+            onChange={(e: any) => setFilters(prev => ({ ...prev, complianceType: e.target.value }))}
           >
             <option value="">All Compliance Types</option>
             <option value="EEO-1">EEO-1</option>
@@ -825,14 +825,14 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={employeeColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Employee Directory"
             onExportCSV={() => downloadCSV(filteredData, 'enhanced_employees')}
             onExportJSON={() => downloadJSON(filteredData, 'enhanced_employees')}
           />
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((employee) => (
+            {filteredData.map((employee: any) => (
               <Card key={employee.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
@@ -901,14 +901,14 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={payStatementColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Pay Statements"
             onExportCSV={() => downloadCSV(filteredData, 'enhanced_pay_statements')}
             onExportJSON={() => downloadJSON(filteredData, 'enhanced_pay_statements')}
           />
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((statement) => (
+            {filteredData.map((statement: any) => (
               <Card key={statement.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
@@ -997,7 +997,7 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={timecardColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Timecards"
             onExportCSV={() => downloadCSV(filteredData, 'enhanced_timecards')}
             onExportJSON={() => downloadJSON(filteredData, 'enhanced_timecards')}
@@ -1009,7 +1009,7 @@ const EnhancedReportingPage: React.FC = () => {
                 <p className="text-gray-500">No timecard records found. The timecards table is ready for data entry.</p>
               </Card>
             ) : (
-              filteredData.map((timecard) => (
+              filteredData.map((timecard: any) => (
                 <Card key={timecard.id} className="p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
@@ -1084,14 +1084,14 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={jobColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Job Catalog"
             onExportCSV={() => downloadCSV(filteredData, 'job_catalog')}
             onExportJSON={() => downloadJSON(filteredData, 'job_catalog')}
           />
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((job) => (
+            {filteredData.map((job: any) => (
               <Card key={job.id} className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
@@ -1158,7 +1158,7 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={taxColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Tax Records"
             onExportCSV={() => downloadCSV(filteredData, 'tax_records')}
             onExportJSON={() => downloadJSON(filteredData, 'tax_records')}
@@ -1170,7 +1170,7 @@ const EnhancedReportingPage: React.FC = () => {
                 <p className="text-gray-500">No tax records found. The tax records table is ready for W-2 and 1099 document tracking.</p>
               </Card>
             ) : (
-              filteredData.map((record) => (
+              filteredData.map((record: any) => (
                 <Card key={record.id} className="p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
@@ -1242,7 +1242,7 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={benefitColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Benefits & Deductions"
             onExportCSV={() => downloadCSV(filteredData, 'benefits_deductions')}
             onExportJSON={() => downloadJSON(filteredData, 'benefits_deductions')}
@@ -1254,7 +1254,7 @@ const EnhancedReportingPage: React.FC = () => {
                 <p className="text-gray-500">No benefit/deduction records found. The benefits table is ready for health insurance, 401k, and garnishment tracking.</p>
               </Card>
             ) : (
-              filteredData.map((record) => (
+              filteredData.map((record: any) => (
                 <Card key={record.id} className="p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
@@ -1324,7 +1324,7 @@ const EnhancedReportingPage: React.FC = () => {
             data={filteredData}
             columns={complianceColumns}
             searchTerm={filters.searchTerm}
-            onSearch={(term) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Compliance Reports"
             onExportCSV={() => downloadCSV(filteredData, 'compliance_reports')}
             onExportJSON={() => downloadJSON(filteredData, 'compliance_reports')}
@@ -1336,7 +1336,7 @@ const EnhancedReportingPage: React.FC = () => {
                 <p className="text-gray-500">No compliance records found. The compliance table is ready for EEO-1, ACA, FMLA, and audit trail tracking.</p>
               </Card>
             ) : (
-              filteredData.map((record) => (
+              filteredData.map((record: any) => (
                 <Card key={record.id} className="p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
@@ -1368,7 +1368,7 @@ const EnhancedReportingPage: React.FC = () => {
 
   const renderAllReports = () => (
     <div className="space-y-8">
-      <ComprehensiveDashboard onCategoryClick={(category) => setActiveTab(category)} />
+      <ComprehensiveDashboard onCategoryClick={(category: any) => setActiveTab(category)} />
     </div>
   );
 
@@ -1395,7 +1395,7 @@ const EnhancedReportingPage: React.FC = () => {
 
         {/* Enhanced Tab Navigation */}
         <div className="flex flex-wrap gap-2 mb-6 border-b">
-          {tabs.map((tab) => (
+          {tabs.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}

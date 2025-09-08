@@ -250,7 +250,7 @@ function NavigationItem({ item, level = 0, isCollapsed = false }: NavigationItem
   const hasChildren = item.children && item.children.length > 0
   
   // Filter visible children
-  const visibleChildren = item.children?.filter((child: any) => {
+  const visibleChildren = item.children?.filter((child: any: any) => {
     if (child.adminOnly && !isAdmin()) return false
     if (child.hostAdminOnly && !isHostAdmin()) return false
     if (child.feature) {
@@ -299,7 +299,7 @@ function NavigationItem({ item, level = 0, isCollapsed = false }: NavigationItem
       {/* Render children if expanded and has visible children */}
       {!isCollapsed && hasChildren && visibleChildren.length > 0 && isActive && (
         <div className="mt-1 space-y-1">
-          {visibleChildren.map((child) => (
+          {visibleChildren.map((child: any) => (
             <NavigationItem
               key={child.id}
               item={child}
@@ -325,7 +325,7 @@ export function NavigationRBAC({ isCollapsed = false, className = '' }: Navigati
     return (
       <nav className={`space-y-1 ${className}`}>
         <div className="animate-pulse">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5].map((i: any) => (
             <div key={i} className="h-10 bg-gray-200 rounded-md mb-2"></div>
           ))}
         </div>
@@ -357,7 +357,7 @@ export function NavigationRBAC({ isCollapsed = false, className = '' }: Navigati
       )}
       
       {/* Navigation items */}
-      {NAVIGATION_ITEMS.map((item) => (
+      {NAVIGATION_ITEMS.map((item: any) => (
         <NavigationItem
           key={item.id}
           item={item}
@@ -398,7 +398,7 @@ export function BreadcrumbRBAC({ items, className = '' }: BreadcrumbRBACProps) {
   return (
     <nav className={`flex ${className}`} aria-label="Breadcrumb">
       <ol className="flex items-center space-x-2">
-        {items.map((item, index) => {
+        {items.map((item, index: any) => {
           const isLast = index === items.length - 1
           const isAccessible = isItemAccessible(item)
           
@@ -472,7 +472,7 @@ const QUICK_ACTIONS: QuickAction[] = [
 export function QuickActionsRBAC({ className = '' }: { className?: string }) {
   const { hasPermission } = usePermissions()
   
-  const accessibleActions = QUICK_ACTIONS.filter((action: any) =>
+  const accessibleActions = QUICK_ACTIONS.filter((action: any: any) =>
     hasPermission(action.feature, action.permission)
   )
   
@@ -482,7 +482,7 @@ export function QuickActionsRBAC({ className = '' }: { className?: string }) {
   
   return (
     <div className={`flex space-x-2 ${className}`}>
-      {accessibleActions.map((action) => (
+      {accessibleActions.map((action: any) => (
         <Link
           key={action.id}
           href={action.href}

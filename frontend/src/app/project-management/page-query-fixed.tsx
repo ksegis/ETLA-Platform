@@ -314,25 +314,25 @@ export default function QueryFixedProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => 
+    activeProjects: projects.filter((p: any: any) => 
       p.charter_status === 'active' || 
       p.charter_status === 'approved' || 
       p.charter_status === 'in_progress'
     ).length,
-    completedProjects: projects.filter((p: any) => 
+    completedProjects: projects.filter((p: any: any) => 
       p.completion_percentage === 100 || 
       p.charter_status === 'completed'
     ).length,
-    totalBudget: projects.reduce((sum, p) => sum + (p.budget || p.estimated_budget || 0), 0),
+    totalBudget: projects.reduce((sum: any, p: any) => sum + (p.budget || p.estimated_budget || 0), 0),
     totalWorkRequests: workRequests.length,
     totalRisks: risks.length,
     averageCompletion: projects.length > 0 
-      ? Math.round(projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length)
+      ? Math.round(projects.reduce((sum: any, p: any) => sum + (p.completion_percentage || 0), 0) / projects.length)
       : 0
   }
 
   // Filter projects
-  const filteredProjects = projects.filter((project: any) => {
+  const filteredProjects = projects.filter((project: any: any) => {
     const title = project.title || project.project_name || ''
     const description = project.description || project.business_case || ''
     const projectCode = project.project_code || ''
@@ -352,7 +352,7 @@ export default function QueryFixedProjectManagementPage() {
   })
 
   // Filter work requests and risks
-  const filteredWorkRequests = workRequests.filter((wr: any) => {
+  const filteredWorkRequests = workRequests.filter((wr: any: any) => {
     const name = wr.name || wr.title || ''
     const description = wr.description || ''
     
@@ -363,7 +363,7 @@ export default function QueryFixedProjectManagementPage() {
     return matchesSearch && matchesStatus
   })
 
-  const filteredRisks = risks.filter((risk: any) => {
+  const filteredRisks = risks.filter((risk: any: any) => {
     const name = risk.name || risk.title || ''
     const description = risk.description || ''
     
@@ -558,7 +558,7 @@ export default function QueryFixedProjectManagementPage() {
       }
 
       console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
+      setProjects(prev => prev.map((p: any: any) => p.id === selectedProject.id ? data[0] : p))
       setShowEditModal(false)
       setSelectedProject(null)
     } catch (err) {
@@ -585,7 +585,7 @@ export default function QueryFixedProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any: any) => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')
@@ -617,7 +617,7 @@ export default function QueryFixedProjectManagementPage() {
   // Enhanced project list view
   const renderProjectListView = () => (
     <div className="space-y-4">
-      {filteredProjects.map((project) => (
+      {filteredProjects.map((project: any) => (
         <div key={project.id} className="border border-gray-200 rounded-lg p-6 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -744,7 +744,7 @@ export default function QueryFixedProjectManagementPage() {
   // Enhanced project grid view
   const renderProjectGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredProjects.map((project) => (
+      {filteredProjects.map((project: any) => (
         <Card key={project.id} className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -840,7 +840,7 @@ export default function QueryFixedProjectManagementPage() {
   // Render work requests (unchanged)
   const renderWorkRequests = () => (
     <div className="space-y-4">
-      {filteredWorkRequests.map((workRequest) => (
+      {filteredWorkRequests.map((workRequest: any) => (
         <div key={workRequest.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -877,7 +877,7 @@ export default function QueryFixedProjectManagementPage() {
   // Render risks (unchanged)
   const renderRisks = () => (
     <div className="space-y-4">
-      {filteredRisks.map((risk) => (
+      {filteredRisks.map((risk: any) => (
         <div key={risk.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -1029,7 +1029,7 @@ export default function QueryFixedProjectManagementPage() {
 
         {/* Tab Navigation */}
         <div className="flex space-x-1 border-b overflow-x-auto">
-          {tabs.map((tab) => (
+          {tabs.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
@@ -1055,7 +1055,7 @@ export default function QueryFixedProjectManagementPage() {
                   <Input
                     placeholder={`Search ${activeTab}...`}
                     value={filters.searchTerm}
-                    onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+                    onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                     className="pl-10"
                   />
                 </div>
@@ -1063,7 +1063,7 @@ export default function QueryFixedProjectManagementPage() {
               <div className="flex gap-2 flex-wrap">
                 <select
                   value={filters.status}
-                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  onChange={(e: any) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Status</option>
@@ -1081,7 +1081,7 @@ export default function QueryFixedProjectManagementPage() {
                   <>
                     <select
                       value={filters.priority}
-                      onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+                      onChange={(e: any) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
                       className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="all">All Priority</option>
@@ -1093,7 +1093,7 @@ export default function QueryFixedProjectManagementPage() {
                     
                     <select
                       value={filters.projectType}
-                      onChange={(e) => setFilters(prev => ({ ...prev, projectType: e.target.value }))}
+                      onChange={(e: any) => setFilters(prev => ({ ...prev, projectType: e.target.value }))}
                       className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="all">All Types</option>
@@ -1209,7 +1209,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.title || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, title: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="Enter project title"
                       />
                     </div>
@@ -1220,7 +1220,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.project_code || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, project_code: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, project_code: e.target.value }))}
                         placeholder="Enter project code"
                       />
                     </div>
@@ -1231,7 +1231,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.description || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Enter project description"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1245,7 +1245,7 @@ export default function QueryFixedProjectManagementPage() {
                         </label>
                         <select
                           value={newProject.priority || 'medium'}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, priority: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, priority: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="low">Low</option>
@@ -1261,7 +1261,7 @@ export default function QueryFixedProjectManagementPage() {
                         </label>
                         <select
                           value={newProject.project_type || 'internal'}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, project_type: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, project_type: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="internal">Internal</option>
@@ -1281,7 +1281,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="date"
                           value={newProject.start_date || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, start_date: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, start_date: e.target.value }))}
                         />
                       </div>
 
@@ -1292,7 +1292,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="date"
                           value={newProject.end_date || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, end_date: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, end_date: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -1303,7 +1303,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.business_case || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, business_case: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, business_case: e.target.value }))}
                         placeholder="Enter business case and justification"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1316,7 +1316,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.project_scope || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, project_scope: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, project_scope: e.target.value }))}
                         placeholder="Define project scope and boundaries"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1329,7 +1329,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.success_criteria || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, success_criteria: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, success_criteria: e.target.value }))}
                         placeholder="Define success criteria and acceptance criteria"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1347,7 +1347,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.assigned_team_lead || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
                         placeholder="Enter team lead name"
                       />
                     </div>
@@ -1358,7 +1358,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.sponsor || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, sponsor: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, sponsor: e.target.value }))}
                         placeholder="Enter project sponsor"
                       />
                     </div>
@@ -1369,7 +1369,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={newProject.department || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, department: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, department: e.target.value }))}
                         placeholder="Enter department"
                       />
                     </div>
@@ -1382,7 +1382,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="number"
                           value={newProject.budget || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
                           placeholder="0.00"
                         />
                       </div>
@@ -1394,7 +1394,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="number"
                           value={newProject.estimated_budget || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, estimated_budget: parseFloat(e.target.value) || 0 }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, estimated_budget: parseFloat(e.target.value) || 0 }))}
                           placeholder="0.00"
                         />
                       </div>
@@ -1407,7 +1407,7 @@ export default function QueryFixedProjectManagementPage() {
                         </label>
                         <select
                           value={newProject.charter_status || 'draft'}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, charter_status: e.target.value }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, charter_status: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="draft">Draft</option>
@@ -1426,7 +1426,7 @@ export default function QueryFixedProjectManagementPage() {
                           min="0"
                           max="100"
                           value={newProject.completion_percentage || ''}
-                          onChange={(e) => setNewProject(prev => ({ ...prev, completion_percentage: parseInt(e.target.value) || 0 }))}
+                          onChange={(e: any) => setNewProject(prev => ({ ...prev, completion_percentage: parseInt(e.target.value) || 0 }))}
                           placeholder="0"
                         />
                       </div>
@@ -1440,7 +1440,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.risk_assessment || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, risk_assessment: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, risk_assessment: e.target.value }))}
                         placeholder="Identify key risks and mitigation strategies"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1453,7 +1453,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.quality_metrics || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, quality_metrics: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, quality_metrics: e.target.value }))}
                         placeholder="Define quality standards and metrics"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1466,7 +1466,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.communication_plan || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, communication_plan: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, communication_plan: e.target.value }))}
                         placeholder="Define communication strategy and stakeholder engagement"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1479,7 +1479,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.constraints || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, constraints: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, constraints: e.target.value }))}
                         placeholder="List project constraints and limitations"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1492,7 +1492,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={newProject.assumptions || ''}
-                        onChange={(e) => setNewProject(prev => ({ ...prev, assumptions: e.target.value }))}
+                        onChange={(e: any) => setNewProject(prev => ({ ...prev, assumptions: e.target.value }))}
                         placeholder="List key project assumptions"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1551,7 +1551,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={selectedProject.title || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
                         placeholder="Enter project title"
                       />
                     </div>
@@ -1562,7 +1562,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={selectedProject.project_code || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, project_code: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, project_code: e.target.value }) : null)}
                         placeholder="Enter project code"
                       />
                     </div>
@@ -1573,7 +1573,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.description || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
                         placeholder="Enter project description"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1587,7 +1587,7 @@ export default function QueryFixedProjectManagementPage() {
                         </label>
                         <select
                           value={selectedProject.priority || 'medium'}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, priority: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, priority: e.target.value }) : null)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="low">Low</option>
@@ -1603,7 +1603,7 @@ export default function QueryFixedProjectManagementPage() {
                         </label>
                         <select
                           value={selectedProject.project_type || 'internal'}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, project_type: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, project_type: e.target.value }) : null)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="internal">Internal</option>
@@ -1623,7 +1623,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="date"
                           value={selectedProject.start_date || ''}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, start_date: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, start_date: e.target.value }) : null)}
                         />
                       </div>
 
@@ -1634,7 +1634,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="date"
                           value={selectedProject.end_date || ''}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, end_date: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, end_date: e.target.value }) : null)}
                         />
                       </div>
                     </div>
@@ -1645,7 +1645,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.business_case || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, business_case: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, business_case: e.target.value }) : null)}
                         placeholder="Enter business case and justification"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1658,7 +1658,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.project_scope || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, project_scope: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, project_scope: e.target.value }) : null)}
                         placeholder="Define project scope and boundaries"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1671,7 +1671,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.success_criteria || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, success_criteria: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, success_criteria: e.target.value }) : null)}
                         placeholder="Define success criteria and acceptance criteria"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1689,7 +1689,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={selectedProject.assigned_team_lead || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, assigned_team_lead: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, assigned_team_lead: e.target.value }) : null)}
                         placeholder="Enter team lead name"
                       />
                     </div>
@@ -1700,7 +1700,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={selectedProject.sponsor || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, sponsor: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, sponsor: e.target.value }) : null)}
                         placeholder="Enter project sponsor"
                       />
                     </div>
@@ -1711,7 +1711,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <Input
                         value={selectedProject.department || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, department: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, department: e.target.value }) : null)}
                         placeholder="Enter department"
                       />
                     </div>
@@ -1724,7 +1724,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="number"
                           value={selectedProject.budget || ''}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, budget: parseFloat(e.target.value) || 0 }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, budget: parseFloat(e.target.value) || 0 }) : null)}
                           placeholder="0.00"
                         />
                       </div>
@@ -1736,7 +1736,7 @@ export default function QueryFixedProjectManagementPage() {
                         <Input
                           type="number"
                           value={selectedProject.estimated_budget || ''}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, estimated_budget: parseFloat(e.target.value) || 0 }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, estimated_budget: parseFloat(e.target.value) || 0 }) : null)}
                           placeholder="0.00"
                         />
                       </div>
@@ -1749,7 +1749,7 @@ export default function QueryFixedProjectManagementPage() {
                         </label>
                         <select
                           value={selectedProject.charter_status || 'draft'}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, charter_status: e.target.value }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, charter_status: e.target.value }) : null)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="draft">Draft</option>
@@ -1772,7 +1772,7 @@ export default function QueryFixedProjectManagementPage() {
                           min="0"
                           max="100"
                           value={selectedProject.completion_percentage || ''}
-                          onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, completion_percentage: parseInt(e.target.value) || 0 }) : null)}
+                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, completion_percentage: parseInt(e.target.value) || 0 }) : null)}
                           placeholder="0"
                         />
                       </div>
@@ -1786,7 +1786,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.risk_assessment || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, risk_assessment: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, risk_assessment: e.target.value }) : null)}
                         placeholder="Identify key risks and mitigation strategies"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
@@ -1799,7 +1799,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.quality_metrics || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, quality_metrics: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, quality_metrics: e.target.value }) : null)}
                         placeholder="Define quality standards and metrics"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1812,7 +1812,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.communication_plan || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, communication_plan: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, communication_plan: e.target.value }) : null)}
                         placeholder="Define communication strategy and stakeholder engagement"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1825,7 +1825,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.constraints || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, constraints: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, constraints: e.target.value }) : null)}
                         placeholder="List project constraints and limitations"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}
@@ -1838,7 +1838,7 @@ export default function QueryFixedProjectManagementPage() {
                       </label>
                       <textarea
                         value={selectedProject.assumptions || ''}
-                        onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, assumptions: e.target.value }) : null)}
+                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, assumptions: e.target.value }) : null)}
                         placeholder="List key project assumptions"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={2}

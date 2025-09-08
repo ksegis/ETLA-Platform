@@ -139,7 +139,7 @@ export default function TraditionalReportTable({
                 type="text"
                 placeholder="Search records..."
                 value={searchTerm}
-                onChange={(e) => onSearch?.(e.target.value)}
+                onChange={(e: any) => onSearch?.(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -158,7 +158,7 @@ export default function TraditionalReportTable({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {columns.map((column) => (
+              {columns.map((column: any) => (
                 <th
                   key={column.key}
                   className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
@@ -179,9 +179,9 @@ export default function TraditionalReportTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedData.map((row, index) => (
+            {paginatedData.map((row, index: any) => (
               <tr key={index} className="hover:bg-gray-50">
-                {columns.map((column) => (
+                {columns.map((column: any) => (
                   <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {column.render ? column.render(row) : (row[column.key as keyof typeof row] || '-')}
                   </td>
@@ -199,7 +199,7 @@ export default function TraditionalReportTable({
             <span className="text-sm text-gray-700">Show</span>
             <select
               value={itemsPerPage}
-              onChange={(e) => {
+              onChange={(e: any) => {
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}

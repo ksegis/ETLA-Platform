@@ -374,7 +374,7 @@ const EnhancedReportingPage: React.FC = () => {
 
   // Enhanced filtering function
   const applyFilters = (data: any[], dataType: string) => {
-    return data.filter((item: any) => {
+    return data.filter((item: any: any) => {
       // Search term filter
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
@@ -388,7 +388,7 @@ const EnhancedReportingPage: React.FC = () => {
           ? [item.job_title, item.department, item.job_code]
           : [item.employee_id, item.form_type, item.tax_record_id];
         
-        if (!searchableFields.some(field => 
+        if (!searchableFields.some((field: any) => 
           field?.toString().toLowerCase().includes(searchLower)
         )) {
           return false;
@@ -488,8 +488,8 @@ const EnhancedReportingPage: React.FC = () => {
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
-      ...data.map((row: any) => 
-        headers.map((header: any) => {
+      ...data.map((row: any: any) => 
+        headers.map((header: any: any) => {
           const value = row[header];
           return typeof value === 'string' && value.includes(',') 
             ? `"${value}"` 
@@ -531,27 +531,27 @@ const EnhancedReportingPage: React.FC = () => {
         <Input
           placeholder="Search..."
           value={filters.searchTerm}
-          onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
         />
         
         <Input
           type="date"
           placeholder="Start Date"
           value={filters.startDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
         />
         
         <Input
           type="date"
           placeholder="End Date"
           value={filters.endDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
         />
         
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.department}
-          onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, department: e.target.value }))}
         >
           <option value="">All Departments</option>
           <option value="Engineering">Engineering</option>
@@ -565,7 +565,7 @@ const EnhancedReportingPage: React.FC = () => {
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.employeeStatus}
-          onChange={(e) => setFilters(prev => ({ ...prev, employeeStatus: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, employeeStatus: e.target.value }))}
         >
           <option value="">All Statuses</option>
           <option value="Active">Active</option>
@@ -577,27 +577,27 @@ const EnhancedReportingPage: React.FC = () => {
         <Input
           placeholder="Job Title"
           value={filters.jobTitle}
-          onChange={(e) => setFilters(prev => ({ ...prev, jobTitle: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, jobTitle: e.target.value }))}
         />
         
         <Input
           type="number"
           placeholder="Min Salary"
           value={filters.salaryMin}
-          onChange={(e) => setFilters(prev => ({ ...prev, salaryMin: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, salaryMin: e.target.value }))}
         />
         
         <Input
           type="number"
           placeholder="Max Salary"
           value={filters.salaryMax}
-          onChange={(e) => setFilters(prev => ({ ...prev, salaryMax: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, salaryMax: e.target.value }))}
         />
         
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.payType}
-          onChange={(e) => setFilters(prev => ({ ...prev, payType: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, payType: e.target.value }))}
         >
           <option value="">All Pay Types</option>
           <option value="salary">Salary</option>
@@ -607,7 +607,7 @@ const EnhancedReportingPage: React.FC = () => {
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.flsaStatus}
-          onChange={(e) => setFilters(prev => ({ ...prev, flsaStatus: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, flsaStatus: e.target.value }))}
         >
           <option value="">All FLSA Status</option>
           <option value="exempt">Exempt</option>
@@ -617,7 +617,7 @@ const EnhancedReportingPage: React.FC = () => {
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.division}
-          onChange={(e) => setFilters(prev => ({ ...prev, division: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, division: e.target.value }))}
         >
           <option value="">All Divisions</option>
           <option value="Technology">Technology</option>
@@ -628,7 +628,7 @@ const EnhancedReportingPage: React.FC = () => {
         <select
           className="px-3 py-2 border border-gray-300 rounded-md"
           value={filters.unionStatus}
-          onChange={(e) => setFilters(prev => ({ ...prev, unionStatus: e.target.value }))}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, unionStatus: e.target.value }))}
         >
           <option value="">All Union Status</option>
           <option value="union_member">Union Member</option>
@@ -671,7 +671,7 @@ const EnhancedReportingPage: React.FC = () => {
         </div>
         
         <div className="grid gap-4">
-          {filteredData.map((employee) => (
+          {filteredData.map((employee: any) => (
             <Card key={employee.id} className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
@@ -715,7 +715,7 @@ const EnhancedReportingPage: React.FC = () => {
         </div>
         
         <div className="grid gap-4">
-          {filteredData.map((statement) => (
+          {filteredData.map((statement: any) => (
             <Card key={statement.id} className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -764,7 +764,7 @@ const EnhancedReportingPage: React.FC = () => {
         </div>
         
         <div className="grid gap-4">
-          {filteredData.map((timecard) => (
+          {filteredData.map((timecard: any) => (
             <Card key={timecard.id} className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -813,7 +813,7 @@ const EnhancedReportingPage: React.FC = () => {
         </div>
         
         <div className="grid gap-4">
-          {filteredData.map((job) => (
+          {filteredData.map((job: any) => (
             <Card key={job.id} className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
@@ -857,7 +857,7 @@ const EnhancedReportingPage: React.FC = () => {
         </div>
         
         <div className="grid gap-4">
-          {filteredData.map((record) => (
+          {filteredData.map((record: any) => (
             <Card key={record.id} className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -941,7 +941,7 @@ const EnhancedReportingPage: React.FC = () => {
 
         {/* Enhanced Tab Navigation */}
         <div className="flex flex-wrap gap-2 mb-6 border-b">
-          {tabs.map((tab) => (
+          {tabs.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}

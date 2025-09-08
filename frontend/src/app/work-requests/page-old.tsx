@@ -94,7 +94,7 @@ function WorkRequestsContent() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
 
-  const filteredRequests = requests.filter((request: any) => {
+  const filteredRequests = requests.filter((request: any: any) => {
     const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.description.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter
@@ -104,11 +104,11 @@ function WorkRequestsContent() {
   })
 
   const formatStatus = (status: string) => {
-    return status.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return status.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatCategory = (category: string) => {
-    return category.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return category.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   return (
@@ -147,7 +147,7 @@ function WorkRequestsContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Under Review</p>
               <p className="text-2xl font-bold text-gray-900">
-                {requests.filter((r: any) => r.status === 'under_review').length}
+                {requests.filter((r: any: any) => r.status === 'under_review').length}
               </p>
             </div>
           </div>
@@ -161,7 +161,7 @@ function WorkRequestsContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">In Progress</p>
               <p className="text-2xl font-bold text-gray-900">
-                {requests.filter((r: any) => r.status === 'in_progress').length}
+                {requests.filter((r: any: any) => r.status === 'in_progress').length}
               </p>
             </div>
           </div>
@@ -175,7 +175,7 @@ function WorkRequestsContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Completed</p>
               <p className="text-2xl font-bold text-gray-900">
-                {requests.filter((r: any) => r.status === 'completed').length}
+                {requests.filter((r: any: any) => r.status === 'completed').length}
               </p>
             </div>
           </div>
@@ -192,7 +192,7 @@ function WorkRequestsContent() {
                 type="text"
                 placeholder="Search requests..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: any) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -200,7 +200,7 @@ function WorkRequestsContent() {
           
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e: any) => setStatusFilter(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Status</option>
@@ -215,7 +215,7 @@ function WorkRequestsContent() {
           
           <select
             value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
+            onChange={(e: any) => setPriorityFilter(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Priority</option>
@@ -239,7 +239,7 @@ function WorkRequestsContent() {
               <p className="text-gray-500">No requests found matching your criteria.</p>
             </div>
           ) : (
-            filteredRequests.map((request) => {
+            filteredRequests.map((request: any) => {
               const StatusIcon = statusIcons[request.status as keyof typeof statusIcons]
               return (
                 <div key={request.id} className="px-6 py-4 hover:bg-gray-50 cursor-pointer">

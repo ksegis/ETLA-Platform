@@ -80,7 +80,7 @@ class WorkRequestService {
       throw new Error('Failed to fetch work requests')
     }
 
-    return data.map((item: any) => ({
+    return data.map((item: any: any) => ({
       ...item,
       customer_name: item.customer ? `${item.customer.first_name} ${item.customer.last_name}` : 'Unknown',
       customer_email: item.customer?.email || '',
@@ -105,7 +105,7 @@ class WorkRequestService {
       throw new Error('Failed to fetch work requests')
     }
 
-    return data.map((item: any) => ({
+    return data.map((item: any: any) => ({
       ...item,
       customer_name: item.customer ? `${item.customer.first_name} ${item.customer.last_name}` : 'Unknown',
       customer_email: item.customer?.email || '',
@@ -238,7 +238,7 @@ class WorkRequestService {
       completed: 0
     }
 
-    data.forEach(item => {
+    data.forEach((item: any) => {
       if (item.status in stats) {
         stats[item.status as keyof typeof stats]++
       }

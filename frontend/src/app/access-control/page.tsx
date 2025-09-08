@@ -204,7 +204,7 @@ export default function AccessControlPage() {
 
       console.log('📊 Query Results:', {
         userCount: users?.length || 0,
-        users: users?.map((u: any) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
+        users: users?.map((u: any: any) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
       })
 
       if (error) {
@@ -212,7 +212,7 @@ export default function AccessControlPage() {
         throw error
       }
 
-      const formattedUsers: User[] = users?.map((user: any) => {
+      const formattedUsers: User[] = users?.map((user: any: any) => {
         const tenantUser = user.tenant_users[0] || {}
         const tenant = tenantUser.tenants || {}
         
@@ -282,7 +282,7 @@ export default function AccessControlPage() {
 
       if (error) throw error
 
-      const formattedInvitations: Invitation[] = invitations?.map((inv: any) => ({
+      const formattedInvitations: Invitation[] = invitations?.map((inv: any: any) => ({
         id: inv.id,
         email: inv.email,
         full_name: inv.full_name,
@@ -319,7 +319,7 @@ export default function AccessControlPage() {
   }
 
   // Filter users based on search and filters
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user: any) => {
     const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = filterRole === 'all' || user.role === filterRole
@@ -331,13 +331,13 @@ export default function AccessControlPage() {
   // Calculate statistics
   const stats = {
     totalUsers: users.length,
-    activeUsers: users.filter(u => u.is_active && u.status === 'active').length,
-    pendingUsers: users.filter(u => u.status === 'pending_assignment').length,
-    pendingInvites: invitations.filter(i => i.status === 'pending').length,
-    unreadNotifications: notifications.filter(n => !n.is_read).length
+    activeUsers: users.filter((u: any) => u.is_active && u.status === 'active').length,
+    pendingUsers: users.filter((u: any) => u.status === 'pending_assignment').length,
+    pendingInvites: invitations.filter((i: any) => i.status === 'pending').length,
+    unreadNotifications: notifications.filter((n: any) => !n.is_read).length
   }
 
-  const roleDistribution = users.reduce((acc, user) => {
+  const roleDistribution = users.reduce((acc: any, user: any) => {
     acc[user.role as keyof typeof acc] = (acc[user.role as keyof typeof acc] || 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -431,7 +431,7 @@ export default function AccessControlPage() {
               { id: 'roles', label: 'Roles & Permissions', icon: Shield },
               { id: 'invites', label: 'Invitations', icon: Mail },
               { id: 'notifications', label: 'Notifications', icon: AlertCircle }
-            ].map(tab => (
+            ].map((tab: any) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
@@ -537,7 +537,7 @@ export default function AccessControlPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(roleDistribution).map(([role, count]) => (
+                  {Object.entries(roleDistribution).map(([role, count]: any) => (
                     <div key={role} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <Shield className="h-4 w-4 text-gray-400" />
@@ -571,14 +571,14 @@ export default function AccessControlPage() {
                     type="text"
                     placeholder="Search users..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: any) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
               <select
                 value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
+                onChange={(e: any) => setFilterRole(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Roles</option>
@@ -588,7 +588,7 @@ export default function AccessControlPage() {
               </select>
               <select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+                onChange={(e: any) => setFilterStatus(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Status</option>
@@ -657,7 +657,7 @@ export default function AccessControlPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredUsers.map((user) => (
+                        {filteredUsers.map((user: any) => (
                           <tr key={user.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
@@ -793,7 +793,7 @@ export default function AccessControlPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {invitations.map((invitation) => (
+                        {invitations.map((invitation: any) => (
                           <tr key={invitation.id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>

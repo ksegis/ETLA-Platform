@@ -108,7 +108,7 @@ class ProjectService {
       throw new Error('Failed to fetch projects')
     }
 
-    return data.map((item: any) => ({
+    return data.map((item: any: any) => ({
       ...item,
       work_request_title: item.work_request?.title || '',
       team_lead_name: item.team_lead?.name || '',
@@ -250,7 +250,7 @@ class ProjectService {
       cancelled: 0
     }
 
-    data.forEach(item => {
+    data.forEach((item: any) => {
       if (item.status in stats) {
         stats[item.status as keyof typeof stats]++
       }

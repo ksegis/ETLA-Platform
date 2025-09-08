@@ -67,8 +67,8 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
   const parseEmails = (emailString: string): string[] => {
     return emailString
       .split(/[,\n]/)
-      .map((email: any) => email.trim())
-      .filter((email: any) => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      .map((email: any: any) => email.trim())
+      .filter((email: any: any) => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
   }
 
   const generatePreview = () => {
@@ -86,7 +86,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + formData.expires_in_days)
 
-    const preview: InvitationData[] = emails.map((email: any) => ({
+    const preview: InvitationData[] = emails.map((email: any: any) => ({
       email,
       tenant_id: formData.tenant_id,
       role: formData.role,
@@ -106,7 +106,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
     setSuccess('')
 
     try {
-      const invitationPromises = invitationPreview.map(async (invitation) => {
+      const invitationPromises = invitationPreview.map(async (invitation: any) => {
         // Create invitation record
         const { data: inviteData, error: inviteError } = await supabase
           .from('user_invitations')
@@ -155,8 +155,8 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
       })
 
       const results = await Promise.allSettled(invitationPromises)
-      const successful = results.filter((result: any) => result.status === 'fulfilled').length
-      const failed = results.filter((result: any) => result.status === 'rejected').length
+      const successful = results.filter((result: any: any) => result.status === 'fulfilled').length
+      const failed = results.filter((result: any: any) => result.status === 'rejected').length
 
       if (successful > 0) {
         setSuccess(`Successfully sent ${successful} invitation(s)${failed > 0 ? ` (${failed} failed)` : ''}`)
@@ -234,7 +234,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.emails}
-                  onChange={(e) => setFormData(prev => ({ ...prev, emails: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, emails: e.target.value }))}
                   placeholder="Enter email addresses separated by commas or new lines:&#10;user1@company.com&#10;user2@company.com, user3@company.com"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -252,10 +252,10 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.tenant_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tenant_id: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, tenant_id: e.target.value }))}
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map((tenant: any) => (
+                    {tenants.map((tenant: any: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name}
                       </option>
@@ -270,9 +270,9 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.role_level}
-                    onChange={(e) => setFormData(prev => ({ ...prev, role_level: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, role_level: e.target.value }))}
                   >
-                    {roleLevels.map((level: any) => (
+                    {roleLevels.map((level: any: any) => (
                       <option key={level.value} value={level.value}>
                         {level.label}
                       </option>
@@ -287,9 +287,9 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.role}
-                    onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                   >
-                    {roles.map((role: any) => (
+                    {roles.map((role: any: any) => (
                       <option key={role.value} value={role.value}>
                         {role.label}
                       </option>
@@ -304,9 +304,9 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.permission_scope}
-                    onChange={(e) => setFormData(prev => ({ ...prev, permission_scope: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, permission_scope: e.target.value }))}
                   >
-                    {permissionScopes.map((scope: any) => (
+                    {permissionScopes.map((scope: any: any) => (
                       <option key={scope.value} value={scope.value}>
                         {scope.label}
                       </option>
@@ -333,7 +333,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                       max="30"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={formData.expires_in_days}
-                      onChange={(e) => setFormData(prev => ({ ...prev, expires_in_days: parseInt(e.target.value) || 7 }))}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, expires_in_days: parseInt(e.target.value) || 7 }))}
                     />
                   </div>
 
@@ -342,7 +342,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                       type="checkbox"
                       id="send_immediately"
                       checked={formData.send_immediately}
-                      onChange={(e) => setFormData(prev => ({ ...prev, send_immediately: e.target.checked }))}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, send_immediately: e.target.checked }))}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="send_immediately" className="text-sm">
@@ -359,7 +359,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={formData.custom_message}
-                    onChange={(e) => setFormData(prev => ({ ...prev, custom_message: e.target.value }))}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, custom_message: e.target.value }))}
                     placeholder="Add a personal message to the invitation email..."
                   />
                 </div>
@@ -396,13 +396,13 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                 </h3>
 
                 <div className="bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto">
-                  {invitationPreview.map((invitation, index) => (
+                  {invitationPreview.map((invitation, index: any) => (
                     <div key={index} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-b-0">
                       <div>
                         <p className="font-medium">{invitation.email}</p>
                         <p className="text-sm text-gray-500">
-                          {roles.find(r => r.value === invitation.role)?.label} • 
-                          {roleLevels.find(l => l.value === invitation.role_level)?.label}
+                          {roles.find((r: any) => r.value === invitation.role)?.label} • 
+                          {roleLevels.find((l: any) => l.value === invitation.role_level)?.label}
                         </p>
                       </div>
                       <div className="text-sm text-gray-500">

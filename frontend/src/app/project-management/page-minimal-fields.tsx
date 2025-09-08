@@ -209,13 +209,13 @@ export default function MinimalFieldsProjectManagementPage() {
   // Calculate basic statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => p.status === 'active').length,
+    activeProjects: projects.filter((p: any: any) => p.status === 'active').length,
     totalWorkRequests: workRequests.length,
     totalRisks: risks.length
   }
 
   // Filter projects with minimal fields
-  const filteredProjects = projects.filter((project: any) => {
+  const filteredProjects = projects.filter((project: any: any) => {
     const name = project.name || ''
     const description = project.description || ''
     
@@ -227,7 +227,7 @@ export default function MinimalFieldsProjectManagementPage() {
   })
 
   // Filter work requests
-  const filteredWorkRequests = workRequests.filter((wr: any) => {
+  const filteredWorkRequests = workRequests.filter((wr: any: any) => {
     const name = wr.name || ''
     const description = wr.description || ''
     
@@ -239,7 +239,7 @@ export default function MinimalFieldsProjectManagementPage() {
   })
 
   // Filter risks
-  const filteredRisks = risks.filter((risk: any) => {
+  const filteredRisks = risks.filter((risk: any: any) => {
     const name = risk.name || ''
     const description = risk.description || ''
     
@@ -358,7 +358,7 @@ export default function MinimalFieldsProjectManagementPage() {
       }
 
       console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
+      setProjects(prev => prev.map((p: any: any) => p.id === selectedProject.id ? data[0] : p))
       setShowEditModal(false)
       setSelectedProject(null)
     } catch (err) {
@@ -385,7 +385,7 @@ export default function MinimalFieldsProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any: any) => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')
@@ -417,7 +417,7 @@ export default function MinimalFieldsProjectManagementPage() {
   // Render project list view
   const renderProjectListView = () => (
     <div className="space-y-4">
-      {filteredProjects.map((project) => (
+      {filteredProjects.map((project: any) => (
         <div key={project.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -472,7 +472,7 @@ export default function MinimalFieldsProjectManagementPage() {
   // Render project grid view
   const renderProjectGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredProjects.map((project) => (
+      {filteredProjects.map((project: any) => (
         <Card key={project.id} className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -519,7 +519,7 @@ export default function MinimalFieldsProjectManagementPage() {
   // Render work requests
   const renderWorkRequests = () => (
     <div className="space-y-4">
-      {filteredWorkRequests.map((workRequest) => (
+      {filteredWorkRequests.map((workRequest: any) => (
         <div key={workRequest.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -551,7 +551,7 @@ export default function MinimalFieldsProjectManagementPage() {
   // Render risks
   const renderRisks = () => (
     <div className="space-y-4">
-      {filteredRisks.map((risk) => (
+      {filteredRisks.map((risk: any) => (
         <div key={risk.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -699,7 +699,7 @@ export default function MinimalFieldsProjectManagementPage() {
 
         {/* Tab Navigation */}
         <div className="flex space-x-1 border-b overflow-x-auto">
-          {tabs.map((tab) => (
+          {tabs.map((tab: any) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
@@ -725,7 +725,7 @@ export default function MinimalFieldsProjectManagementPage() {
                   <Input
                     placeholder={`Search ${activeTab}...`}
                     value={filters.searchTerm}
-                    onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+                    onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                     className="pl-10"
                   />
                 </div>
@@ -733,7 +733,7 @@ export default function MinimalFieldsProjectManagementPage() {
               <div className="flex gap-2">
                 <select
                   value={filters.status}
-                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  onChange={(e: any) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Status</option>
@@ -841,7 +841,7 @@ export default function MinimalFieldsProjectManagementPage() {
                     </label>
                     <Input
                       value={newProject.name || ''}
-                      onChange={(e) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e: any) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Enter project name"
                     />
                   </div>
@@ -852,7 +852,7 @@ export default function MinimalFieldsProjectManagementPage() {
                     </label>
                     <textarea
                       value={newProject.description || ''}
-                      onChange={(e) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e: any) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Enter project description"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={3}
@@ -865,7 +865,7 @@ export default function MinimalFieldsProjectManagementPage() {
                     </label>
                     <select
                       value={newProject.status || 'active'}
-                      onChange={(e) => setNewProject(prev => ({ ...prev, status: e.target.value }))}
+                      onChange={(e: any) => setNewProject(prev => ({ ...prev, status: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="active">Active</option>
@@ -922,7 +922,7 @@ export default function MinimalFieldsProjectManagementPage() {
                     </label>
                     <Input
                       value={selectedProject.name || ''}
-                      onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                      onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
                       placeholder="Enter project name"
                     />
                   </div>
@@ -933,7 +933,7 @@ export default function MinimalFieldsProjectManagementPage() {
                     </label>
                     <textarea
                       value={selectedProject.description || ''}
-                      onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                      onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
                       placeholder="Enter project description"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={3}
@@ -946,7 +946,7 @@ export default function MinimalFieldsProjectManagementPage() {
                     </label>
                     <select
                       value={selectedProject.status || 'active'}
-                      onChange={(e) => setSelectedProject(prev => prev ? ({ ...prev, status: e.target.value }) : null)}
+                      onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, status: e.target.value }) : null)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="active">Active</option>

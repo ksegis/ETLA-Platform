@@ -165,7 +165,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
                       name="reset_method"
                       value="email"
                       checked={resetMethod === 'email'}
-                      onChange={(e) => setResetMethod(e.target.value as 'email')}
+                      onChange={(e: any) => setResetMethod(e.target.value as 'email')}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <label htmlFor="email_reset" className="ml-2 text-sm text-gray-700">
@@ -183,7 +183,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
                       name="reset_method"
                       value="direct"
                       checked={resetMethod === 'direct'}
-                      onChange={(e) => setResetMethod(e.target.value as 'direct')}
+                      onChange={(e: any) => setResetMethod(e.target.value as 'direct')}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <label htmlFor="direct_reset" className="ml-2 text-sm text-gray-700">
@@ -206,7 +206,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
                     <input
                       type="text"
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      onChange={(e: any) => setNewPassword(e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter new password"
                     />

@@ -189,7 +189,7 @@ export default function MissingCustomerModal({
                 <input
                   type="text"
                   value={newCustomerName}
-                  onChange={(e) => setNewCustomerName(e.target.value)}
+                  onChange={(e: any) => setNewCustomerName(e.target.value)}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder="Enter customer name"
                 />
@@ -200,7 +200,7 @@ export default function MissingCustomerModal({
                 <input
                   type="email"
                   value={newCustomerEmail}
-                  onChange={(e) => setNewCustomerEmail(e.target.value)}
+                  onChange={(e: any) => setNewCustomerEmail(e.target.value)}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder="Enter email address"
                 />
@@ -211,7 +211,7 @@ export default function MissingCustomerModal({
                 <input
                   type="tel"
                   value={newCustomerPhone}
-                  onChange={(e) => setNewCustomerPhone(e.target.value)}
+                  onChange={(e: any) => setNewCustomerPhone(e.target.value)}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder="Enter phone number"
                 />
@@ -221,7 +221,7 @@ export default function MissingCustomerModal({
                 <label className="text-sm font-medium">Address</label>
                 <textarea
                   value={newCustomerAddress}
-                  onChange={(e) => setNewCustomerAddress(e.target.value)}
+                  onChange={(e: any) => setNewCustomerAddress(e.target.value)}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder="Enter address"
                   rows={2}
@@ -255,11 +255,11 @@ export default function MissingCustomerModal({
                 ) : (
                   <select
                     value={selectedCustomerId}
-                    onChange={(e) => setSelectedCustomerId(e.target.value)}
+                    onChange={(e: any) => setSelectedCustomerId(e.target.value)}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Choose a customer...</option>
-                    {availableCustomers.map((customer) => (
+                    {availableCustomers.map((customer: any) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.name}
                       </option>

@@ -90,7 +90,7 @@ export default function ProjectManagementPage() {
         workRequests: workRequests.length,
         projectCharters: projectCharters.length,
         risks: risks.length,
-        missingCustomers: workRequests.filter((wr: any) => (wr as any).customer_missing || wr.customer_name === 'Missing Customer').length
+        missingCustomers: workRequests.filter((wr: any: any) => (wr as any).customer_missing || wr.customer_name === 'Missing Customer').length
       })
 
     } catch (error) {
@@ -102,12 +102,12 @@ export default function ProjectManagementPage() {
   }
 
   // Check for missing customers
-  const missingCustomerRequests = dashboardData.workRequests.filter((wr: any) => wr.customer_missing)
+  const missingCustomerRequests = dashboardData.workRequests.filter((wr: any: any) => wr.customer_missing)
   const hasMissingCustomers = missingCustomerRequests.length > 0
 
   // Filter functions
   const getFilteredWorkRequests = () => {
-    return dashboardData.workRequests.filter((request: any) => {
+    return dashboardData.workRequests.filter((request: any: any) => {
       const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (request.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -122,7 +122,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredProjects = () => {
-    return dashboardData.projectCharters.filter((project: any) => {
+    return dashboardData.projectCharters.filter((project: any: any) => {
       const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            project.description.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -133,7 +133,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredRisks = () => {
-    return dashboardData.risks.filter((risk: any) => {
+    return dashboardData.risks.filter((risk: any: any) => {
       const matchesSearch = risk.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            risk.description.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -146,28 +146,28 @@ export default function ProjectManagementPage() {
   // Metrics calculations
   const workRequestMetrics = {
     total: dashboardData.workRequests.length,
-    pending: dashboardData.workRequests.filter((r: any) => 
+    pending: dashboardData.workRequests.filter((r: any: any) => 
       r.approval_status === 'submitted' || 
       r.approval_status === 'under_review' ||
       r.status === 'submitted' ||
       r.status === 'under_review'
     ).length,
-    active: dashboardData.workRequests.filter((r: any) => 
+    active: dashboardData.workRequests.filter((r: any: any) => 
       r.approval_status === 'approved' || 
       r.approval_status === 'converted_to_project' ||
       r.status === 'in_progress' ||
       r.status === 'scheduled'
     ).length,
-    completed: dashboardData.workRequests.filter((r: any) => 
+    completed: dashboardData.workRequests.filter((r: any: any) => 
       r.status === 'completed'
     ).length
   }
 
   const projectMetrics = {
     total: dashboardData.projectCharters.length,
-    planning: dashboardData.projectCharters.filter((p: any) => p.status === 'planning').length,
-    active: dashboardData.projectCharters.filter((p: any) => p.status === 'active' || p.status === 'in_progress').length,
-    completed: dashboardData.projectCharters.filter((p: any) => p.status === 'completed').length
+    planning: dashboardData.projectCharters.filter((p: any: any) => p.status === 'planning').length,
+    active: dashboardData.projectCharters.filter((p: any: any) => p.status === 'active' || p.status === 'in_progress').length,
+    completed: dashboardData.projectCharters.filter((p: any: any) => p.status === 'completed').length
   }
 
   // Action handlers
@@ -358,7 +358,7 @@ export default function ProjectManagementPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboardData.risks.filter((r: any) => (r.risk_score || 0) >= 15).length}
+                {dashboardData.risks.filter((r: any: any) => (r.risk_score || 0) >= 15).length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Require immediate attention
@@ -397,7 +397,7 @@ export default function ProjectManagementPage() {
               { id: 'risks', label: 'Risks', icon: AlertTriangle },
               { id: 'stakeholders', label: 'Stakeholders', icon: Users },
               { id: 'compliance', label: 'Compliance', icon: CheckCircle }
-            ].map((tab) => {
+            ].map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button
@@ -426,7 +426,7 @@ export default function ProjectManagementPage() {
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: any) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -434,7 +434,7 @@ export default function ProjectManagementPage() {
           <div className="flex gap-2">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e: any) => setStatusFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Status</option>
@@ -448,7 +448,7 @@ export default function ProjectManagementPage() {
             </select>
             <select
               value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
+              onChange={(e: any) => setPriorityFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Priority</option>
@@ -495,7 +495,7 @@ export default function ProjectManagementPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {getFilteredWorkRequests().map((request) => (
+                    {getFilteredWorkRequests().map((request: any) => (
                       <tr key={request.id} className={request.customer_missing ? 'bg-orange-50' : ''}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">

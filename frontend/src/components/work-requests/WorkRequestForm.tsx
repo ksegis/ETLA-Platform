@@ -211,7 +211,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 </label>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter work request title"
                   maxLength={255}
                   className={errors.title ? 'border-red-500' : ''}
@@ -227,11 +227,11 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   </label>
                   <select
                     value={selectedCustomerId || ''}
-                    onChange={(e) => onCustomerChange?.(e.target.value)}
+                    onChange={(e: any) => onCustomerChange?.(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Customer/Tenant</option>
-                    {availableTenants.map((tenant) => (
+                    {availableTenants.map((tenant: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name}
                       </option>
@@ -246,7 +246,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 </label>
                 <select
                   value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                   className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.category ? 'border-red-500' : ''}`}
                 >
                   <option value="">Select Category</option>
@@ -270,7 +270,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 </label>
                 <select
                   value={formData.priority}
-                  onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="low">Low</option>
@@ -286,7 +286,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 </label>
                 <select
                   value={formData.urgency}
-                  onChange={(e) => setFormData(prev => ({ ...prev, urgency: e.target.value as any }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, urgency: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="low">Low</option>
@@ -302,7 +302,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 </label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="submitted">Submitted</option>
@@ -323,7 +323,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e: any) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Describe the work request in detail"
                 rows={4}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.description ? 'border-red-500' : ''}`}
@@ -344,7 +344,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <Input
                   type="number"
                   value={formData.budget}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
@@ -360,7 +360,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <Input
                   type="number"
                   value={formData.estimated_budget}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimated_budget: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, estimated_budget: e.target.value }))}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
@@ -376,7 +376,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <Input
                   type="number"
                   value={formData.estimated_hours}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
                   placeholder="0"
                   min="0"
                   step="1"
@@ -392,7 +392,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <Input
                   type="date"
                   value={formData.required_completion_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, required_completion_date: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, required_completion_date: e.target.value }))}
                 />
               </div>
               
@@ -403,7 +403,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <Input
                   type="date"
                   value={formData.requested_completion_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, requested_completion_date: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, requested_completion_date: e.target.value }))}
                 />
               </div>
             </div>
@@ -419,7 +419,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
               </label>
               <textarea
                 value={formData.business_justification}
-                onChange={(e) => setFormData(prev => ({ ...prev, business_justification: e.target.value }))}
+                onChange={(e: any) => setFormData(prev => ({ ...prev, business_justification: e.target.value }))}
                 placeholder="Explain the business need and expected benefits"
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -432,7 +432,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
               </label>
               <textarea
                 value={formData.impact_assessment}
-                onChange={(e) => setFormData(prev => ({ ...prev, impact_assessment: e.target.value }))}
+                onChange={(e: any) => setFormData(prev => ({ ...prev, impact_assessment: e.target.value }))}
                 placeholder="Describe the potential impact if this request is not fulfilled"
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -139,7 +139,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
               type="text"
               required
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -152,7 +152,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
               required
               rows={4}
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -165,7 +165,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
               <select
                 required
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Category</option>
@@ -186,7 +186,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
               <select
                 required
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                onChange={(e: any) => setFormData({ ...formData, priority: e.target.value as any })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low">Low</option>
@@ -205,7 +205,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
               <select
                 required
                 value={formData.urgency}
-                onChange={(e) => setFormData({ ...formData, urgency: e.target.value as any })}
+                onChange={(e: any) => setFormData({ ...formData, urgency: e.target.value as any })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low">Low</option>
@@ -223,7 +223,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
                 type="number"
                 min="1"
                 value={formData.estimated_hours}
-                onChange={(e) => setFormData({ ...formData, estimated_hours: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, estimated_hours: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -239,7 +239,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
                 min="0"
                 step="0.01"
                 value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, budget: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -251,7 +251,7 @@ function WorkRequestModal({ isOpen, onClose, workRequest, onSave }: WorkRequestM
               <input
                 type="date"
                 value={formData.required_completion_date}
-                onChange={(e) => setFormData({ ...formData, required_completion_date: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, required_completion_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -337,7 +337,7 @@ export default function WorkRequestsPage() {
     let filtered = workRequests
 
     if (searchTerm) {
-      filtered = filtered.filter((request: any) =>
+      filtered = filtered.filter((request: any: any) =>
         request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -345,11 +345,11 @@ export default function WorkRequestsPage() {
     }
 
     if (statusFilter) {
-      filtered = filtered.filter((request: any) => request.status === statusFilter)
+      filtered = filtered.filter((request: any: any) => request.status === statusFilter)
     }
 
     if (priorityFilter) {
-      filtered = filtered.filter((request: any) => request.priority === priorityFilter)
+      filtered = filtered.filter((request: any: any) => request.priority === priorityFilter)
     }
 
     setFilteredRequests(filtered)
@@ -491,7 +491,7 @@ export default function WorkRequestsPage() {
                     type="text"
                     placeholder="Search requests..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: any) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -499,22 +499,22 @@ export default function WorkRequestsPage() {
 
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e: any) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Statuses</option>
-                {Object.entries(statusConfig).map(([key, config]) => (
+                {Object.entries(statusConfig).map(([key, config]: any) => (
                   <option key={key} value={key}>{config.label}</option>
                 ))}
               </select>
 
               <select
                 value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
+                onChange={(e: any) => setPriorityFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Priorities</option>
-                {Object.entries(priorityConfig).map(([key, config]) => (
+                {Object.entries(priorityConfig).map(([key, config]: any) => (
                   <option key={key} value={key}>{config.label}</option>
                 ))}
               </select>
@@ -553,7 +553,7 @@ export default function WorkRequestsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredRequests.map((request) => {
+            {filteredRequests.map((request: any) => {
               const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
               const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
               const priorityStyle = priorityConfig[request.priority as keyof typeof priorityConfig] || priorityConfig.medium

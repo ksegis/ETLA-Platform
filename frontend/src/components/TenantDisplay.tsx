@@ -17,7 +17,7 @@ export function TenantDisplay({ tenantId, showIcon = true, className = '' }: Ten
   const targetTenantId = tenantId || selectedTenant?.id
   
   // Find the tenant in available tenants
-  const tenant = availableTenants.find(t => t.id === targetTenantId)
+  const tenant = availableTenants.find((t: any) => t.id === targetTenantId)
   
   // Generate friendly display name
   const getFriendlyName = (tenant: any, tenantId: string) => {
@@ -63,7 +63,7 @@ export function useFriendlyTenantName(tenantId?: string): string {
   const { availableTenants, selectedTenant } = useTenant()
   
   const targetTenantId = tenantId || selectedTenant?.id
-  const tenant = availableTenants.find(t => t.id === targetTenantId)
+  const tenant = availableTenants.find((t: any) => t.id === targetTenantId)
   
   if (tenant) {
     // Type assertion to handle extended tenant properties

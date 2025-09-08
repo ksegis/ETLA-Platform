@@ -190,7 +190,7 @@ export default function MFAVerification({ onSuccess, onBack, userEmail }: MFAVer
                     type="text"
                     placeholder="000000"
                     value={state.code}
-                    onChange={(e) => setState(prev => ({ 
+                    onChange={(e: any) => setState(prev => ({ 
                       ...prev, 
                       code: e.target.value.replace(/\D/g, '').slice(0, 6),
                       error: ''
@@ -215,7 +215,7 @@ export default function MFAVerification({ onSuccess, onBack, userEmail }: MFAVer
                     type="text"
                     placeholder="Enter backup code"
                     value={state.backupCode}
-                    onChange={(e) => setState(prev => ({ 
+                    onChange={(e: any) => setState(prev => ({ 
                       ...prev, 
                       backupCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''),
                       error: ''

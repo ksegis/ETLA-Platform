@@ -343,7 +343,7 @@ function AcceptInviteForm() {
                 id="fullName"
                 type="text"
                 value={state.fullName}
-                onChange={(e) => handleFullNameChange(e.target.value)}
+                onChange={(e: any) => handleFullNameChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter your full name"
                 disabled={state.isLoading}
@@ -359,7 +359,7 @@ function AcceptInviteForm() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={state.password}
-                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  onChange={(e: any) => handlePasswordChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Create a secure password"
                   required
@@ -389,7 +389,7 @@ function AcceptInviteForm() {
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={state.confirmPassword}
-                  onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                  onChange={(e: any) => handleConfirmPasswordChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Confirm your password"
                   required

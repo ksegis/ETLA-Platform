@@ -432,23 +432,23 @@ class PMBOKServiceRBAC {
           const dashboardData = {
             workRequests: {
               total: workRequests.length,
-              pending: workRequests.filter((wr: any) => 
+              pending: workRequests.filter((wr: any: any) => 
                 wr.approval_status === 'submitted' || 
                 wr.approval_status === 'under_review'
               ).length,
-              approved: workRequests.filter((wr: any) => wr.approval_status === 'approved').length,
-              declined: workRequests.filter((wr: any) => wr.approval_status === 'declined').length
+              approved: workRequests.filter((wr: any: any) => wr.approval_status === 'approved').length,
+              declined: workRequests.filter((wr: any: any) => wr.approval_status === 'declined').length
             },
             projects: {
               total: projects.length,
-              active: projects.filter((p: any) => p.status === 'active').length,
-              completed: projects.filter((p: any) => p.status === 'completed').length
+              active: projects.filter((p: any: any) => p.status === 'active').length,
+              completed: projects.filter((p: any: any) => p.status === 'completed').length
             },
             risks: {
               total: risks.length,
-              high: risks.filter((r: any) => r.risk_score && r.risk_score >= 15).length,
-              medium: risks.filter((r: any) => r.risk_score && r.risk_score >= 8 && r.risk_score < 15).length,
-              low: risks.filter((r: any) => r.risk_score && r.risk_score < 8).length
+              high: risks.filter((r: any: any) => r.risk_score && r.risk_score >= 15).length,
+              medium: risks.filter((r: any: any) => r.risk_score && r.risk_score >= 8 && r.risk_score < 15).length,
+              low: risks.filter((r: any: any) => r.risk_score && r.risk_score < 8).length
             }
           }
 
@@ -469,11 +469,11 @@ class PMBOKServiceRBAC {
 
   // Helper function to handle missing customers gracefully
   private async handleMissingCustomers(workRequests: any[]): Promise<WorkRequestWithApproval[]> {
-    const customerIds = Array.from(new Set(workRequests.map((wr: any) => wr.customer_id).filter(Boolean)))
+    const customerIds = Array.from(new Set(workRequests.map((wr: any: any) => wr.customer_id).filter(Boolean)))
     
     if (customerIds.length === 0) {
       console.log('⚠️ No customer IDs found in work requests')
-      return workRequests.map((wr: any) => ({
+      return workRequests.map((wr: any: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
       }))
@@ -488,7 +488,7 @@ class PMBOKServiceRBAC {
 
       if (error) {
         console.error('❌ Error fetching customer profiles:', error)
-        return workRequests.map((wr: any) => ({
+        return workRequests.map((wr: any: any) => ({
           ...wr,
           customer_name: 'Unknown Customer'
         }))
@@ -498,19 +498,19 @@ class PMBOKServiceRBAC {
       
       // Create customer lookup map
       const customerMap = new Map()
-      profiles?.forEach(profile => {
+      profiles?.forEach((profile: any) => {
         customerMap.set(profile.id, profile.name || profile.email || 'Unknown Customer')
       })
 
       // Transform work requests with customer names
-      return workRequests.map((wr: any) => ({
+      return workRequests.map((wr: any: any) => ({
         ...wr,
         customer_name: customerMap.get(wr.customer_id) || 'Missing Customer'
       }))
 
     } catch (error) {
       console.error('❌ Exception during customer lookup:', error)
-      return workRequests.map((wr: any) => ({
+      return workRequests.map((wr: any: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
       }))

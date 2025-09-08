@@ -126,7 +126,7 @@ export default function ProjectManagementPageRBAC() {
       visible: canAccessFeature(FEATURES.RISK_MANAGEMENT),
       count: data.risks.length
     }
-  ].filter((tab: any) => tab.visible)
+  ].filter((tab: any: any) => tab.visible)
 
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/dashboard' },
@@ -264,7 +264,7 @@ export default function ProjectManagementPageRBAC() {
               <div className="bg-white rounded-lg shadow">
                 <div className="border-b border-gray-200">
                   <nav className="flex space-x-8 px-6">
-                    {tabs.map((tab) => (
+                    {tabs.map((tab: any) => (
                       <button
                         key={tab.id}
                         onClick={() => setSelectedTab(tab.id)}
@@ -331,7 +331,7 @@ export default function ProjectManagementPageRBAC() {
                         <h4 className="text-md font-medium text-gray-900 mb-4">Recent Activity</h4>
                         <div className="space-y-3">
                           <WorkRequestGuard fallback={null}>
-                            {data.workRequests.slice(0, 3).map((request) => (
+                            {data.workRequests.slice(0, 3).map((request: any) => (
                               <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                                 <div>
                                   <p className="font-medium">{request.title}</p>
@@ -400,7 +400,7 @@ export default function ProjectManagementPageRBAC() {
                                 </tr>
                               </thead>
                               <tbody className="bg-white divide-y divide-gray-200">
-                                {data.workRequests.map((request) => (
+                                {data.workRequests.map((request: any) => (
                                   <tr key={request.id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                       <div className="text-sm font-medium text-gray-900">{request.title}</div>
@@ -468,7 +468,7 @@ export default function ProjectManagementPageRBAC() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {data.projects.map((project) => (
+                          {data.projects.map((project: any) => (
                             <div key={project.id} className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
                               <div className="flex items-center justify-between mb-4">
                                 <h4 className="text-lg font-medium text-gray-900">{project.title}</h4>
@@ -524,7 +524,7 @@ export default function ProjectManagementPageRBAC() {
                         </div>
 
                         <div className="space-y-4">
-                          {data.risks.map((risk) => (
+                          {data.risks.map((risk: any) => (
                             <div key={risk.id} className="border rounded-lg p-4">
                               <div className="flex items-center justify-between mb-2">
                                 <h4 className="font-medium text-gray-900">{risk.title}</h4>

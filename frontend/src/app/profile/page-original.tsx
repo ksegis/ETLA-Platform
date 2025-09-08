@@ -643,7 +643,7 @@ export default function ProfilePage() {
                         <input
                           type="text"
                           value={state.profile.full_name}
-                          onChange={(e) => setState(prev => ({
+                          onChange={(e: any) => setState(prev => ({
                             ...prev,
                             profile: prev.profile ? {
                               ...prev.profile,
@@ -682,7 +682,7 @@ export default function ProfilePage() {
                           <input
                             type="tel"
                             value={state.profile.phone}
-                            onChange={(e) => setState(prev => ({
+                            onChange={(e: any) => setState(prev => ({
                               ...prev,
                               profile: prev.profile ? {
                                 ...prev.profile,
@@ -704,7 +704,7 @@ export default function ProfilePage() {
                         <input
                           type="text"
                           value={state.profile.job_title}
-                          onChange={(e) => setState(prev => ({
+                          onChange={(e: any) => setState(prev => ({
                             ...prev,
                             profile: prev.profile ? {
                               ...prev.profile,
@@ -725,7 +725,7 @@ export default function ProfilePage() {
                           <input
                             type="text"
                             value={state.profile.department}
-                            onChange={(e) => setState(prev => ({
+                            onChange={(e: any) => setState(prev => ({
                               ...prev,
                               profile: prev.profile ? {
                                 ...prev.profile,
@@ -806,7 +806,7 @@ export default function ProfilePage() {
                     <input
                       type={state.showCurrentPassword ? 'text' : 'password'}
                       value={state.passwordData.currentPassword}
-                      onChange={(e) => setState(prev => ({
+                      onChange={(e: any) => setState(prev => ({
                         ...prev,
                         passwordData: {
                           ...prev.passwordData,
@@ -843,7 +843,7 @@ export default function ProfilePage() {
                     <input
                       type={state.showNewPassword ? 'text' : 'password'}
                       value={state.passwordData.newPassword}
-                      onChange={(e) => setState(prev => ({
+                      onChange={(e: any) => setState(prev => ({
                         ...prev,
                         passwordData: {
                           ...prev.passwordData,
@@ -880,7 +880,7 @@ export default function ProfilePage() {
                     <input
                       type={state.showConfirmPassword ? 'text' : 'password'}
                       value={state.passwordData.confirmPassword}
-                      onChange={(e) => setState(prev => ({
+                      onChange={(e: any) => setState(prev => ({
                         ...prev,
                         passwordData: {
                           ...prev.passwordData,
@@ -1054,7 +1054,7 @@ export default function ProfilePage() {
                       Save these backup codes in a safe place. You can use them to access your account if you lose your authenticator device.
                     </p>
                     <div className="grid grid-cols-2 gap-2 mb-4">
-                      {state.backupCodes.map((code, index) => (
+                      {state.backupCodes.map((code, index: any) => (
                         <code key={index} className="bg-white px-3 py-2 rounded border text-sm font-mono">
                           {code}
                         </code>
