@@ -84,6 +84,7 @@ interface ProjectCharter {
   assumptions?: string
   business_case?: string
   charter_status?: string
+  status?: string // Add status property
   work_request_id?: string
   completion_percentage?: number
   approved_by?: string
@@ -95,6 +96,11 @@ interface ProjectCharter {
   external_project_id?: string
   contract_number?: string
   billing_type?: string
+  
+  // Additional properties used in ViewProjectModal
+  objectives?: string
+  scope?: string
+  team_members?: string
   
   // Timestamps
   created_at?: string
