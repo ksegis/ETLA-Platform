@@ -195,7 +195,7 @@ export function usePermissions() {
     }
 
     // Get permissions for user's role
-    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[tenantUser.role]
+    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[tenantUser.role as keyof typeof DEFAULT_ROLE_PERMISSIONS]
     if (rolePermissions) {
       setUserPermissions(rolePermissions.permissions)
     } else {

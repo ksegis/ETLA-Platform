@@ -94,7 +94,7 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
   const getStatusDisplay = (request: WorkRequest) => {
     // Use approval_status if available, otherwise use regular status
     const status = request.approval_status || request.status
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted
+    const config = statusConfig[status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
     const StatusIcon = config.icon
     
     return (
@@ -260,13 +260,13 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
               <CardContent className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Priority</h3>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority]}`}>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority as keyof typeof priorityColors as keyof typeof priorityColors]}`}>
                     {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
                   </span>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Urgency</h3>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.urgency as keyof typeof priorityColors] || priorityColors.medium}`}>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.urgency as keyof typeof priorityColors as keyof typeof priorityColors as keyof typeof priorityColors] || priorityColors.medium}`}>
                     {request.urgency ? request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1) : 'Medium'}
                   </span>
                 </div>

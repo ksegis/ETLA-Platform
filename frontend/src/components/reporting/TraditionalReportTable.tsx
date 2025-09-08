@@ -183,7 +183,7 @@ export default function TraditionalReportTable({
               <tr key={index} className="hover:bg-gray-50">
                 {columns.map((column) => (
                   <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {column.render ? column.render(row) : (row[column.key] || '-')}
+                    {column.render ? column.render(row) : (row[column.key as keyof typeof row] || '-')}
                   </td>
                 ))}
               </tr>

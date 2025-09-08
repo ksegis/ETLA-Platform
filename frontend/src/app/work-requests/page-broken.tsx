@@ -554,9 +554,9 @@ export default function WorkRequestsPage() {
         ) : (
           <div className="space-y-4">
             {filteredRequests.map((request) => {
-              const StatusIcon = statusConfig[request.status]?.icon || Clock
-              const statusStyle = statusConfig[request.status] || statusConfig.submitted
-              const priorityStyle = priorityConfig[request.priority] || priorityConfig.medium
+              const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
+              const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
+              const priorityStyle = priorityConfig[request.priority as keyof typeof priorityConfig] || priorityConfig.medium
 
               return (
                 <Card key={request.id} className="hover:shadow-md transition-shadow">

@@ -508,8 +508,8 @@ export default function WorkRequestsPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredRequests.map((request) => {
-                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
-                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
+                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
+                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
 
                       return (
                         <tr key={request.id} className="hover:bg-gray-50">
@@ -570,8 +570,8 @@ export default function WorkRequestsPage() {
               /* Grid View */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map((request) => {
-                  const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
-                  const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
+                  const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
+                  const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
 
                   return (
                     <Card key={request.id} className="hover:shadow-lg transition-shadow">

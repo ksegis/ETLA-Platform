@@ -338,7 +338,7 @@ export default function AccessControlPage() {
   }
 
   const roleDistribution = users.reduce((acc, user) => {
-    acc[user.role] = (acc[user.role] || 0) + 1
+    acc[user.role as keyof typeof acc] = (acc[user.role as keyof typeof acc] || 0) + 1
     return acc
   }, {} as Record<string, number>)
 

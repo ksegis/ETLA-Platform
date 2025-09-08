@@ -240,18 +240,18 @@ function WorkRequestsContent() {
             </div>
           ) : (
             filteredRequests.map((request) => {
-              const StatusIcon = statusIcons[request.status]
+              const StatusIcon = statusIcons[request.status as keyof typeof statusIcons]
               return (
                 <div key={request.id} className="px-6 py-4 hover:bg-gray-50 cursor-pointer">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-medium text-gray-900">{request.title}</h3>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[request.status]}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[request.status as keyof typeof statusColors as keyof typeof statusColors]}`}>
                           <StatusIcon className="h-3 w-3 mr-1" />
                           {formatStatus(request.status)}
                         </span>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority]}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority as keyof typeof priorityColors as keyof typeof priorityColors]}`}>
                           {request.priority.toUpperCase()}
                         </span>
                       </div>

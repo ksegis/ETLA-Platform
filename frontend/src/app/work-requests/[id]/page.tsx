@@ -178,7 +178,7 @@ const roleColors = {
 
 // HELPER FUNCTION TO GET PRIORITY COLOR SAFELY
 const getPriorityColor = (priority: string) => {
-  return priorityColors[priority as keyof typeof priorityColors] || priorityColors.medium
+  return priorityColors[priority as keyof typeof priorityColors as keyof typeof priorityColors as keyof typeof priorityColors] || priorityColors.medium
 }
 
 // NEXT.JS 15 COMPATIBLE COMPONENT WITH ASYNC PARAMS
@@ -335,7 +335,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
   const getStatusDisplay = (request: ExtendedWorkRequest) => {
     // Use approval_status if available, otherwise use regular status
     const status = request.approval_status || request.status
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted
+    const config = statusConfig[status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
     const StatusIcon = config.icon
     
     return (
@@ -677,7 +677,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
                           <span className="font-medium text-gray-900">{comment.authorName}</span>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleColors[comment.authorRole]}`}>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleColors[comment.authorRole as keyof typeof roleColors]}`}>
                             {formatStatus(comment.authorRole)}
                           </span>
                           {comment.isInternal && (

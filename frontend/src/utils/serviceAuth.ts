@@ -104,7 +104,7 @@ export function hasServicePermission(
   }
 
   // Check role permissions
-  const rolePermissions = DEFAULT_ROLE_PERMISSIONS[context.userRole] || []
+  const rolePermissions = DEFAULT_ROLE_PERMISSIONS[context.userRole as keyof typeof DEFAULT_ROLE_PERMISSIONS] || []
   
   // Check for wildcard permission
   if (rolePermissions.includes('*')) {
