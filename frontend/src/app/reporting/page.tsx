@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
 import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
 import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle } from 'lucide-react';
 
@@ -253,6 +253,8 @@ interface EnhancedFilters {
 
 const EnhancedReportingPage: React.FC = () => {
   const { selectedTenant } = useTenant();
+  const accessibleTenantIds = useAccessibleTenantIds();
+  const { isMultiTenant, availableTenants } = useMultiTenantMode();
   const [activeTab, setActiveTab] = useState<string>('employees');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -302,6 +304,9 @@ const EnhancedReportingPage: React.FC = () => {
     complianceType: '',
     searchTerm: ''
   });
+  
+  // Tenant filter for multi-tenant users
+  const [tenantFilter, setTenantFilter] = useState<string>('');
 
   // Helper function to get searchable fields for each tab
   const getSearchableFields = (tabId: string): string[] => {
@@ -344,16 +349,23 @@ const EnhancedReportingPage: React.FC = () => {
 
   // Enhanced data loading functions (keeping existing implementation)
   const loadEmployeeData = async () => {
-    if (!selectedTenant?.id) return;
+    const tenantIds = accessibleTenantIds;
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping employee data load');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
     
     try {
+      console.log('Loading employee data for tenants:', tenantIds);
       const { data, error } = await supabase
         .from('employee_comprehensive_report')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('employee_name');
       
       if (error) throw error;
@@ -367,16 +379,23 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const loadPayStatementData = async () => {
-    if (!selectedTenant?.id) return;
+    const tenantIds = accessibleTenantIds;
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping pay statement data load');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
     
     try {
+      console.log('Loading pay statement data for tenants:', tenantIds);
       const { data, error } = await supabase
         .from('pay_statements_comprehensive_report')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('pay_date', { ascending: false });
       
       if (error) throw error;
@@ -390,7 +409,13 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const loadTimecardData = async () => {
-    if (!selectedTenant?.id) return;
+    const tenantIds = accessibleTenantIds;
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping timecard data load');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -399,7 +424,7 @@ const EnhancedReportingPage: React.FC = () => {
       const { data, error } = await supabase
         .from('timecards_comprehensive_report')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('work_date', { ascending: false });
       
       if (error) throw error;
@@ -413,7 +438,13 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const loadJobData = async () => {
-    if (!selectedTenant?.id) return;
+    const tenantIds = accessibleTenantIds;
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping job data load');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -422,7 +453,7 @@ const EnhancedReportingPage: React.FC = () => {
       const { data, error } = await supabase
         .from('jobs_comprehensive_report')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('job_title');
       
       if (error) throw error;
@@ -436,7 +467,13 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const loadTaxData = async () => {
-    if (!selectedTenant?.id) return;
+    const tenantIds = accessibleTenantIds;
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping tax data load');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -445,7 +482,7 @@ const EnhancedReportingPage: React.FC = () => {
       const { data, error } = await supabase
         .from('tax_records_comprehensive_report')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('tax_year', { ascending: false });
       
       if (error) throw error;
@@ -459,7 +496,13 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const loadBenefitData = async () => {
-    if (!selectedTenant?.id) return;
+    const tenantIds = accessibleTenantIds;
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping benefit data load');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -468,7 +511,7 @@ const EnhancedReportingPage: React.FC = () => {
       const { data, error } = await supabase
         .from('benefits_deductions_comprehensive_report')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('effective_date', { ascending: false });
       
       if (error) throw error;
@@ -482,7 +525,13 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const loadComplianceData = async () => {
-    if (!selectedTenant?.id) return;
+    const tenantIds = accessibleTenantIds;
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping compliance data load');
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -491,7 +540,7 @@ const EnhancedReportingPage: React.FC = () => {
       const { data, error } = await supabase
         .from('compliance_records_comprehensive_report')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('reporting_period', { ascending: false });
       
       if (error) throw error;
@@ -672,7 +721,7 @@ const EnhancedReportingPage: React.FC = () => {
   // Load data when tab changes
   useEffect(() => {
     loadTabData(activeTab);
-  }, [activeTab, selectedTenant]);
+  }, [activeTab, accessibleTenantIds.join(',')]);
 
   // Enhanced filter panel with searchable column indicators
   const renderEnhancedFilters = () => (

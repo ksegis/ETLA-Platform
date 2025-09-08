@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTenant } from '@/contexts/TenantContext'
+import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
 import { supabase } from '@/lib/supabase'
 
 // Complete PMBOK interface with all fields
@@ -139,6 +139,8 @@ interface Statistics {
 export default function ProjectManagementPage() {
   const { user } = useAuth()
   const { selectedTenant } = useTenant()
+  const accessibleTenantIds = useAccessibleTenantIds()
+  const { isMultiTenant, availableTenants } = useMultiTenantMode()
   
   // State management
   const [activeTab, setActiveTab] = useState('projects')
@@ -168,29 +170,36 @@ export default function ProjectManagementPage() {
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [departmentFilter, setDepartmentFilter] = useState('all')
   const [projectTypeFilter, setProjectTypeFilter] = useState('all')
+  const [tenantFilter, setTenantFilter] = useState('') // New tenant filter
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Load data on component mount
   useEffect(() => {
-    if (selectedTenant?.id) {
-      loadData()
-    }
-  }, [selectedTenant?.id])
+    loadData()
+  }, [accessibleTenantIds.join(',')])
 
   const loadData = async () => {
-    if (!selectedTenant?.id) return
+    const tenantIds = accessibleTenantIds
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping load')
+      setLoading(false)
+      return
+    }
     
     setLoading(true)
     setError(null)
     
     try {
+      console.log('Loading project data for tenants:', tenantIds)
+      
       // Load projects with error handling
       try {
         const { data: projectsData, error: projectsError } = await supabase
           .from('project_charters')
           .select('*')
-          .eq('tenant_id', selectedTenant.id)
+          .in('tenant_id', tenantIds) // Load from ALL accessible tenants
           .order('created_at', { ascending: false })
         
         if (projectsError) {
@@ -209,7 +218,7 @@ export default function ProjectManagementPage() {
         const { data: workRequestsData, error: workRequestsError } = await supabase
           .from('work_requests')
           .select('*')
-          .eq('tenant_id', selectedTenant.id)
+          .in('tenant_id', tenantIds) // Load from ALL accessible tenants
           .order('created_at', { ascending: false })
         
         if (workRequestsError) {
@@ -228,7 +237,7 @@ export default function ProjectManagementPage() {
         const { data: risksData, error: risksError } = await supabase
           .from('risk_register')
           .select('*')
-          .eq('tenant_id', selectedTenant.id)
+          .in('tenant_id', tenantIds) // Load from ALL accessible tenants
           .order('created_at', { ascending: false })
         
         if (risksError) {
@@ -381,8 +390,9 @@ export default function ProjectManagementPage() {
     const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter
     const matchesDepartment = departmentFilter === 'all' || project.department === departmentFilter
     const matchesProjectType = projectTypeFilter === 'all' || project.project_type === projectTypeFilter
+    const matchesTenant = !tenantFilter || project.tenant_id === tenantFilter
     
-    return matchesSearch && matchesStatus && matchesPriority && matchesDepartment && matchesProjectType
+    return matchesSearch && matchesStatus && matchesPriority && matchesDepartment && matchesProjectType && matchesTenant
   })
 
   // Get project display name
@@ -627,6 +637,23 @@ export default function ProjectManagementPage() {
                   <option value="Operations">Operations</option>
                   <option value="Marketing">Marketing</option>
                 </select>
+                
+                {/* Tenant Filter - Only show for multi-tenant users */}
+                {isMultiTenant && (
+                  <select
+                    value={tenantFilter}
+                    onChange={(e: any) => setTenantFilter(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Tenants</option>
+                    {availableTenants.map((tenant) => (
+                      <option key={tenant.id} value={tenant.id}>
+                        {tenant.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -635,6 +662,7 @@ export default function ProjectManagementPage() {
                     setPriorityFilter('all')
                     setDepartmentFilter('all')
                     setProjectTypeFilter('all')
+                    setTenantFilter('')
                   }}
                 >
                   Clear Filters
