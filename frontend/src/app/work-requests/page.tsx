@@ -92,6 +92,7 @@ export default function WorkRequestsPage() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false) // Add view modal state
   const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
   const [availableTenantsForCustomer, setAvailableTenantsForCustomer] = useState<Array<{id: string, name: string}>>([])
@@ -703,7 +704,14 @@ export default function WorkRequestsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center space-x-2">
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedRequest(request)
+                                  setIsViewModalOpen(true)
+                                }}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button 
@@ -747,7 +755,14 @@ export default function WorkRequestsPage() {
                             <CardDescription>{request.description?.slice(0, 100)}...</CardDescription>
                           </div>
                           <div className="flex space-x-1">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRequest(request)
+                                setIsViewModalOpen(true)
+                              }}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button 
@@ -827,6 +842,88 @@ export default function WorkRequestsPage() {
           selectedCustomerId={selectedCustomerId}
           onCustomerChange={setSelectedCustomerId}
         />
+
+        {/* View Modal */}
+        {isViewModalOpen && selectedRequest && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">View Work Request</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsViewModalOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Title</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.title}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.description}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <Badge className="mt-1">{selectedRequest.status}</Badge>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Priority</label>
+                    <Badge className="mt-1">{selectedRequest.priority}</Badge>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.category}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Budget</label>
+                    <p className="mt-1 text-sm text-gray-900">${getBudgetAmount(selectedRequest).toLocaleString()}</p>
+                  </div>
+                </div>
+                
+                {selectedRequest.required_completion_date && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Required Completion Date</label>
+                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.required_completion_date)}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Created</label>
+                  <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.created_at)}</p>
+                </div>
+                
+                {selectedRequest.internal_notes && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Internal Notes</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.internal_notes}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewModalOpen(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

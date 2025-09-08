@@ -812,6 +812,22 @@ const EnhancedReportingPage: React.FC = () => {
           <option value="Operations">Operations</option>
         </select>
         
+        {/* Tenant Filter - Only show for multi-tenant users */}
+        {isMultiTenant && (
+          <select
+            className="px-3 py-2 border border-gray-300 rounded-md"
+            value={tenantFilter}
+            onChange={(e: any) => setTenantFilter(e.target.value)}
+          >
+            <option value="">All Tenants</option>
+            {availableTenants.map((tenant) => (
+              <option key={tenant.id} value={tenant.id}>
+                {tenant.name}
+              </option>
+            ))}
+          </select>
+        )}
+        
         {/* Additional filters based on active tab */}
         {activeTab === 'tax-records' && (
           <>
@@ -872,12 +888,15 @@ const EnhancedReportingPage: React.FC = () => {
       
       <div className="flex gap-2 mt-4">
         <Button 
-          onClick={() => setFilters({
-            startDate: '', endDate: '', department: '', location: '', employeeStatus: '',
-            jobTitle: '', salaryMin: '', salaryMax: '', payType: '', flsaStatus: '',
-            division: '', costCenter: '', unionStatus: '', eeoCategory: '', approvalStatus: '',
-            taxYear: '', formType: '', deductionType: '', complianceType: '', searchTerm: ''
-          })}
+          onClick={() => {
+            setFilters({
+              startDate: '', endDate: '', department: '', location: '', employeeStatus: '',
+              jobTitle: '', salaryMin: '', salaryMax: '', payType: '', flsaStatus: '',
+              division: '', costCenter: '', unionStatus: '', eeoCategory: '', approvalStatus: '',
+              taxYear: '', formType: '', deductionType: '', complianceType: '', searchTerm: ''
+            });
+            setTenantFilter(''); // Clear tenant filter too
+          }}
           variant="outline"
         >
           Clear Filters

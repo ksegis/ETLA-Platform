@@ -18,8 +18,8 @@ export default function SplashPage() {
 
   const handleGetStarted = () => {
     if (user) {
-      // If user is authenticated, go to dashboard
-      router.push('/dashboard')
+      // If user is authenticated, go to work requests
+      router.push('/work-requests')
     } else {
       // If not authenticated, go to login
       router.push('/login')
