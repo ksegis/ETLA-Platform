@@ -204,7 +204,7 @@ export default function AccessControlPage() {
 
       console.log('📊 Query Results:', {
         userCount: users?.length || 0,
-        users: users?.map(u => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
+        users: users?.map((u: any) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
       })
 
       if (error) {
