@@ -75,7 +75,7 @@ function LoginForm() {
         }))
       } else {
         console.log('Login successful, redirecting...')
-        router.push('/dashboard')
+        router.push('/work-requests')
       }
     } catch (err: any) {
       console.error('Login exception:', err)
