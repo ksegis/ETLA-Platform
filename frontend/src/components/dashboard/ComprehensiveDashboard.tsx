@@ -119,7 +119,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         active: employees.filter((e: User) => e.employment_status === 'active').length,
         terminated: employees.filter((e: User) => e.employment_status === 'terminated').length,
         onLeave: employees.filter((e: User) => e.employment_status === 'on_leave').length,
-        byDepartment: employees.reduce((acc: Record<string, number>, e: any) => {
+        byDepartment: employees.reduce((acc: Record<string, number>, e: User) => {
           const dept = e.home_department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
@@ -132,7 +132,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
           union: employees.filter((e: User) => e.union_status === 'union_member').length,
           nonUnion: employees.filter((e: User) => e.union_status === 'non_union').length
         },
-        byEeoCategory: employees.reduce((acc: Record<string, number>, e: any) => {
+        byEeoCategory: employees.reduce((acc: Record<string, number>, e: User) => {
           const category = e.eeo_categories || 'Not Specified';
           acc[category] = (acc[category] || 0) + 1;
           return acc;

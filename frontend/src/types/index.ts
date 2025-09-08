@@ -198,6 +198,12 @@ export interface User extends BaseEntity {
   phone?: string;
   department?: string;
   job_title?: string;
+  // Employee-specific properties
+  employment_status?: 'active' | 'terminated' | 'on_leave';
+  home_department?: string;
+  flsa_status?: 'exempt' | 'non-exempt';
+  union_status?: 'union_member' | 'non_union';
+  eeo_categories?: string;
 }
 
 export interface Tenant extends BaseEntity {
