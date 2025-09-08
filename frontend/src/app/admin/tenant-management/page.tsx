@@ -116,7 +116,7 @@ export default function TenantManagementPage() {
 
       // Get user emails for each tenant user
       const tenantUsersWithEmails = await Promise.all(
-        (data || []).map(async (tu) => {
+        (data || []).map(async (tu: any) => {
           const { data: userData } = await supabase
             .from('auth.users')
             .select('email')
