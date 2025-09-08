@@ -252,6 +252,12 @@ export default function ProjectManagementPage() {
   const [complianceCategoryFilter, setComplianceCategoryFilter] = useState('')
   const [complianceViewMode, setComplianceViewMode] = useState<'overview' | 'detailed'>('overview')
 
+  // Charter tab state
+  const [isCharterPreviewOpen, setIsCharterPreviewOpen] = useState(false)
+
+  // WBS tab state
+  const [expandedWbsItems, setExpandedWbsItems] = useState<string[]>([])
+
   // Mock data arrays for new tabs
   const [workRequestItems] = useState([
     { id: '1', title: 'Database Migration', description: 'Migrate legacy database to modern cloud infrastructure', status: 'submitted', priority: 'high', created_at: '2025-01-15', budget: 25000, assignee: 'John Smith' },
@@ -1452,18 +1458,18 @@ export default function ProjectManagementPage() {
                       <tr key={risk.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{risk.risk_title || risk.title || risk.name}</div>
+                            <div className="text-sm font-medium text-gray-900">{risk.title}</div>
                             <div className="text-sm text-gray-500 truncate max-w-xs">{risk.description}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            (risk.risk_level || risk.level || risk.severity) === 'critical' ? 'bg-red-100 text-red-800' :
-                            (risk.risk_level || risk.level || risk.severity) === 'high' ? 'bg-orange-100 text-orange-800' :
-                            (risk.risk_level || risk.level || risk.severity) === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            risk.level === 'critical' ? 'bg-red-100 text-red-800' :
+                            risk.level === 'high' ? 'bg-orange-100 text-orange-800' :
+                            risk.level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-green-100 text-green-800'
                           }`}>
-                            {(risk.risk_level || risk.level || risk.severity) || 'Medium'}
+                            {risk.level || 'Medium'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
@@ -1813,31 +1819,41 @@ export default function ProjectManagementPage() {
 
             {/* WBS Content */}
             {wbsViewMode === 'tree' ? (
-              /* Tree View */
+              /* Tree View - Simplified */
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="space-y-4">
-                  {filteredWbsItems.filter(item => !item.parent_id).map((rootItem) => (
-                    <WbsTreeNode 
-                      key={rootItem.id} 
-                      item={rootItem} 
-                      allItems={filteredWbsItems}
-                      onEdit={(item) => {
-                        setSelectedWbsItem(item)
-                        setIsEditWbsItemModalOpen(true)
-                      }}
-                      onDelete={handleDeleteWbsItem}
-                      onToggle={(itemId) => {
-                        setExpandedWbsItems(prev => 
-                          prev.includes(itemId) 
-                            ? prev.filter(id => id !== itemId)
-                            : [...prev, itemId]
-                        )
-                      }}
-                      isExpanded={expandedWbsItems.includes(rootItem.id)}
-                    />
+                  {filteredWbsItems.map((item) => (
+                    <div key={item.id} className={`border-l-4 pl-4 py-2 ${
+                      item.level === 1 ? 'border-blue-500 bg-blue-50' :
+                      item.level === 2 ? 'border-green-500 bg-green-50 ml-4' :
+                      'border-gray-500 bg-gray-50 ml-8'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{item.code} - {item.name}</div>
+                          <div className="text-sm text-gray-500">Level {item.level} • {item.assignee}</div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full" 
+                              style={{ width: `${item.progress}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-600">{item.progress}%</span>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            item.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            item.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {item.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                   
-                  {filteredWbsItems.filter(item => !item.parent_id).length === 0 && (
+                  {filteredWbsItems.length === 0 && (
                     <div className="text-center py-12">
                       <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No WBS Items</h3>
@@ -1870,12 +1886,12 @@ export default function ProjectManagementPage() {
                       {filteredWbsItems.map((item) => (
                         <tr key={item.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 text-sm font-mono text-gray-900">
-                            {item.wbs_code || `${item.level || 1}.${item.sequence || 1}`}
+                            {item.code}
                           </td>
                           <td className="px-6 py-4">
                             <div style={{ paddingLeft: `${((item.level || 1) - 1) * 20}px` }}>
-                              <div className="text-sm font-medium text-gray-900">{item.name || item.title}</div>
-                              <div className="text-sm text-gray-500 truncate max-w-xs">{item.description}</div>
+                              <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-xs">WBS Item Level {item.level}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900">
@@ -1906,7 +1922,7 @@ export default function ProjectManagementPage() {
                             {item.assignee || 'Unassigned'}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900">
-                            {item.due_date ? new Date(item.due_date).toLocaleDateString() : 'No due date'}
+                            {item.end_date ? new Date(item.end_date).toLocaleDateString() : 'No due date'}
                           </td>
                           <td className="px-6 py-4 text-sm font-medium">
                             <div className="flex items-center gap-2">
@@ -2018,7 +2034,7 @@ export default function ProjectManagementPage() {
                     <p className="text-sm font-medium text-red-800">Overdue</p>
                     <p className="text-2xl font-bold text-red-900">
                       {scheduleItems.filter(item => 
-                        item.due_date && new Date(item.due_date) < new Date() && item.status !== 'completed'
+                        item.end_date && new Date(item.end_date) < new Date() && item.status !== 'completed'
                       ).length}
                     </p>
                   </div>
@@ -2092,7 +2108,7 @@ export default function ProjectManagementPage() {
                           <div className="flex-1 grid grid-cols-12 gap-1 h-8">
                             {Array.from({length: 12}, (_, monthIndex) => {
                               const startDate = item.start_date ? new Date(item.start_date) : null
-                              const endDate = item.due_date ? new Date(item.due_date) : null
+                              const endDate = item.end_date ? new Date(item.end_date) : null
                               const currentMonth = new Date(2024, monthIndex)
                               const nextMonth = new Date(2024, monthIndex + 1)
                               
@@ -2152,8 +2168,8 @@ export default function ProjectManagementPage() {
                         <tr key={item.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <div>
-                              <div className="text-sm font-medium text-gray-900">{item.name || item.title}</div>
-                              <div className="text-sm text-gray-500 truncate max-w-xs">{item.description}</div>
+                              <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-xs">WBS Item Level {item.level}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -2190,7 +2206,7 @@ export default function ProjectManagementPage() {
                             {item.start_date ? new Date(item.start_date).toLocaleDateString() : 'Not set'}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900">
-                            {item.due_date ? new Date(item.due_date).toLocaleDateString() : 'Not set'}
+                            {item.end_date ? new Date(item.end_date).toLocaleDateString() : 'Not set'}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900">
                             {item.assignee || 'Unassigned'}
