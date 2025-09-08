@@ -197,7 +197,7 @@ export class RBACAdminService {
           .eq('user_id', userId)
           .eq('tenant_id', tenantId)
 
-        overrides = overrideData?.map(item => ({
+        overrides = overrideData?.map((item: any) => ({
           permissionId: item.permission_id,
           effect: item.effect
         })) || []

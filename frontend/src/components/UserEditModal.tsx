@@ -358,7 +358,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map(tenant => (
+                    {tenants.map((tenant: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name} ({tenant.tenant_type})
                       </option>

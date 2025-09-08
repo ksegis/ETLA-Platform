@@ -314,20 +314,20 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter(p => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
-    completedProjects: projects.filter(p => p.status === 'completed').length,
-    onHoldProjects: projects.filter(p => p.status === 'on_hold').length,
+    activeProjects: projects.filter((p: any) => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
+    completedProjects: projects.filter((p: any) => p.status === 'completed').length,
+    onHoldProjects: projects.filter((p: any) => p.status === 'on_hold').length,
     totalWorkRequests: workRequests.length,
-    pendingWorkRequests: workRequests.filter(wr => ['submitted', 'under_review'].includes(wr.status || '')).length,
-    approvedWorkRequests: workRequests.filter(wr => wr.status === 'approved').length,
+    pendingWorkRequests: workRequests.filter((wr: any) => ['submitted', 'under_review'].includes(wr.status || '')).length,
+    approvedWorkRequests: workRequests.filter((wr: any) => wr.status === 'approved').length,
     totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
     totalRisks: risks.length,
-    highRisks: risks.filter(r => getRiskLevel(r) === 'high').length,
-    mitigatedRisks: risks.filter(r => r.status === 'resolved').length
+    highRisks: risks.filter((r: any) => getRiskLevel(r) === 'high').length,
+    mitigatedRisks: risks.filter((r: any) => r.status === 'resolved').length
   }
 
   // Filter projects with database compatibility
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = projects.filter((project: any) => {
     const title = getProjectTitle(project)
     const description = project.description || ''
     const teamLead = getTeamLead(project)
@@ -345,7 +345,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   })
 
   // Filter work requests with database compatibility
-  const filteredWorkRequests = workRequests.filter(wr => {
+  const filteredWorkRequests = workRequests.filter((wr: any) => {
     const title = getWorkRequestTitle(wr)
     const description = wr.description || ''
     const customerName = wr.customer_name || ''
@@ -360,7 +360,7 @@ export default function DatabaseAlignedProjectManagementPage() {
   })
 
   // Filter risks with database compatibility
-  const filteredRisks = risks.filter(risk => {
+  const filteredRisks = risks.filter((risk: any) => {
     const title = getRiskTitle(risk)
     const description = risk.risk_description || risk.description || ''
     
@@ -604,7 +604,7 @@ export default function DatabaseAlignedProjectManagementPage() {
       }
 
       console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map(p => p.id === selectedProject.id ? data[0] : p))
+      setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
       setShowEditModal(false)
       setSelectedProject(null)
     } catch (err) {
@@ -631,7 +631,7 @@ export default function DatabaseAlignedProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter(p => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')
@@ -691,7 +691,7 @@ export default function DatabaseAlignedProjectManagementPage() {
         return
       }
 
-      setWorkRequests(prev => prev.map(wr => wr.id === workRequestId ? data[0] : wr))
+      setWorkRequests(prev => prev.map((wr: any) => wr.id === workRequestId ? data[0] : wr))
     } catch (err) {
       console.error(`Unexpected error ${action}ing work request:`, err)
       setError(`Failed to ${action} work request due to an unexpected error.`)
@@ -1507,7 +1507,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select a work request</option>
-                        {workRequests.filter(wr => wr.status === 'approved').map(wr => (
+                        {workRequests.filter((wr: any) => wr.status === 'approved').map((wr: any) => (
                           <option key={wr.id} value={wr.id}>{getWorkRequestTitle(wr)}</option>
                         ))}
                       </select>

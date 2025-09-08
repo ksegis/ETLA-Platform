@@ -305,7 +305,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     onChange={(e) => setFormData(prev => ({ ...prev, tenant_id: e.target.value }))}
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map(tenant => (
+                    {tenants.map((tenant: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name}
                       </option>
@@ -322,7 +322,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     value={formData.role_level}
                     onChange={(e) => setFormData(prev => ({ ...prev, role_level: e.target.value }))}
                   >
-                    {roleLevels.map(level => (
+                    {roleLevels.map((level: any) => (
                       <option key={level.value} value={level.value}>
                         {level.label}
                       </option>
@@ -339,7 +339,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     value={formData.role}
                     onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                   >
-                    {roles.map(role => (
+                    {roles.map((role: any) => (
                       <option key={role.value} value={role.value}>
                         {role.label}
                       </option>
@@ -356,7 +356,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     value={formData.permission_scope}
                     onChange={(e) => setFormData(prev => ({ ...prev, permission_scope: e.target.value }))}
                   >
-                    {permissionScopes.map(scope => (
+                    {permissionScopes.map((scope: any) => (
                       <option key={scope.value} value={scope.value}>
                         {scope.label}
                       </option>

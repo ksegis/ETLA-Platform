@@ -126,7 +126,7 @@ export default function ProjectManagementPageRBAC() {
       visible: canAccessFeature(FEATURES.RISK_MANAGEMENT),
       count: data.risks.length
     }
-  ].filter(tab => tab.visible)
+  ].filter((tab: any) => tab.visible)
 
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/dashboard' },

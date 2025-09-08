@@ -67,8 +67,8 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
   const parseEmails = (emailString: string): string[] => {
     return emailString
       .split(/[,\n]/)
-      .map(email => email.trim())
-      .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      .map((email: any) => email.trim())
+      .filter((email: any) => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
   }
 
   const generatePreview = () => {
@@ -86,7 +86,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + formData.expires_in_days)
 
-    const preview: InvitationData[] = emails.map(email => ({
+    const preview: InvitationData[] = emails.map((email: any) => ({
       email,
       tenant_id: formData.tenant_id,
       role: formData.role,
@@ -155,8 +155,8 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
       })
 
       const results = await Promise.allSettled(invitationPromises)
-      const successful = results.filter(result => result.status === 'fulfilled').length
-      const failed = results.filter(result => result.status === 'rejected').length
+      const successful = results.filter((result: any) => result.status === 'fulfilled').length
+      const failed = results.filter((result: any) => result.status === 'rejected').length
 
       if (successful > 0) {
         setSuccess(`Successfully sent ${successful} invitation(s)${failed > 0 ? ` (${failed} failed)` : ''}`)
@@ -255,7 +255,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                     onChange={(e) => setFormData(prev => ({ ...prev, tenant_id: e.target.value }))}
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map(tenant => (
+                    {tenants.map((tenant: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name}
                       </option>
@@ -272,7 +272,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                     value={formData.role_level}
                     onChange={(e) => setFormData(prev => ({ ...prev, role_level: e.target.value }))}
                   >
-                    {roleLevels.map(level => (
+                    {roleLevels.map((level: any) => (
                       <option key={level.value} value={level.value}>
                         {level.label}
                       </option>
@@ -289,7 +289,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                     value={formData.role}
                     onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                   >
-                    {roles.map(role => (
+                    {roles.map((role: any) => (
                       <option key={role.value} value={role.value}>
                         {role.label}
                       </option>
@@ -306,7 +306,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                     value={formData.permission_scope}
                     onChange={(e) => setFormData(prev => ({ ...prev, permission_scope: e.target.value }))}
                   >
-                    {permissionScopes.map(scope => (
+                    {permissionScopes.map((scope: any) => (
                       <option key={scope.value} value={scope.value}>
                         {scope.label}
                       </option>

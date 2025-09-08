@@ -250,7 +250,7 @@ function NavigationItem({ item, level = 0, isCollapsed = false }: NavigationItem
   const hasChildren = item.children && item.children.length > 0
   
   // Filter visible children
-  const visibleChildren = item.children?.filter(child => {
+  const visibleChildren = item.children?.filter((child: any) => {
     if (child.adminOnly && !isAdmin()) return false
     if (child.hostAdminOnly && !isHostAdmin()) return false
     if (child.feature) {
@@ -472,7 +472,7 @@ const QUICK_ACTIONS: QuickAction[] = [
 export function QuickActionsRBAC({ className = '' }: { className?: string }) {
   const { hasPermission } = usePermissions()
   
-  const accessibleActions = QUICK_ACTIONS.filter(action =>
+  const accessibleActions = QUICK_ACTIONS.filter((action: any) =>
     hasPermission(action.feature, action.permission)
   )
   

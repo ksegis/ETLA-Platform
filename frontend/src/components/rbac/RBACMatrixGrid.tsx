@@ -235,9 +235,9 @@ export default function RBACMatrixGrid({
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(headerGroup => (
+            {table.getHeaderGroups().map((headerGroup: any) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
+                {headerGroup.headers.map((header: any) => (
                   <th
                     key={header.id}
                     className={`px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
@@ -255,9 +255,9 @@ export default function RBACMatrixGrid({
             ))}
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map(row => (
+            {table.getRowModel().rows.map((row: any) => (
               <tr key={row.id} className="hover:bg-gray-50">
-                {row.getVisibleCells().map(cell => (
+                {row.getVisibleCells().map((cell: any) => (
                   <td
                     key={cell.id}
                     className={`px-2 py-1 whitespace-nowrap text-sm text-gray-900 ${
@@ -363,12 +363,12 @@ function BulkPermissionCell({
   userCells, 
   onBulkChange 
 }: BulkPermissionCellProps) {
-  const resourceCells = userCells.filter(cell => 
+  const resourceCells = userCells.filter((cell: any) => 
     permissions.some(p => p.permissionId === cell.permissionId)
   )
 
-  const allowCount = resourceCells.filter(c => c.state === 'allow').length
-  const denyCount = resourceCells.filter(c => c.state === 'deny').length
+  const allowCount = resourceCells.filter((c: any) => c.state === 'allow').length
+  const denyCount = resourceCells.filter((c: any) => c.state === 'deny').length
   const totalCount = resourceCells.length
 
   const getState = () => {

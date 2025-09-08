@@ -337,7 +337,7 @@ export default function WorkRequestsPage() {
     let filtered = workRequests
 
     if (searchTerm) {
-      filtered = filtered.filter(request =>
+      filtered = filtered.filter((request: any) =>
         request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -345,11 +345,11 @@ export default function WorkRequestsPage() {
     }
 
     if (statusFilter) {
-      filtered = filtered.filter(request => request.status === statusFilter)
+      filtered = filtered.filter((request: any) => request.status === statusFilter)
     }
 
     if (priorityFilter) {
-      filtered = filtered.filter(request => request.priority === priorityFilter)
+      filtered = filtered.filter((request: any) => request.priority === priorityFilter)
     }
 
     setFilteredRequests(filtered)

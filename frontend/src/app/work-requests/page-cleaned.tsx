@@ -127,11 +127,11 @@ export default function WorkRequestsPage() {
       // Calculate stats
       const requestStats = {
         total: data?.length || 0,
-        submitted: data?.filter(r => r.status === 'submitted').length || 0,
-        under_review: data?.filter(r => r.status === 'under_review').length || 0,
-        approved: data?.filter(r => r.status === 'approved').length || 0,
-        in_progress: data?.filter(r => r.status === 'in_progress').length || 0,
-        completed: data?.filter(r => r.status === 'completed').length || 0
+        submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
+        under_review: data?.filter((r: any) => r.status === 'under_review').length || 0,
+        approved: data?.filter((r: any) => r.status === 'approved').length || 0,
+        in_progress: data?.filter((r: any) => r.status === 'in_progress').length || 0,
+        completed: data?.filter((r: any) => r.status === 'completed').length || 0
       }
       setStats(requestStats)
 
@@ -197,7 +197,7 @@ export default function WorkRequestsPage() {
         return
       }
 
-      setWorkRequests(prev => prev.map(r => r.id === requestId ? data : r))
+      setWorkRequests(prev => prev.map((r: any) => r.id === requestId ? data : r))
       setIsEditModalOpen(false)
       setSelectedRequest(null)
       loadWorkRequests() // Reload to update stats
@@ -223,7 +223,7 @@ export default function WorkRequestsPage() {
         return
       }
 
-      setWorkRequests(prev => prev.filter(r => r.id !== requestId))
+      setWorkRequests(prev => prev.filter((r: any) => r.id !== requestId))
       loadWorkRequests() // Reload to update stats
     } catch (error) {
       console.error('Error deleting work request:', error)
@@ -236,7 +236,7 @@ export default function WorkRequestsPage() {
     let filtered = workRequests
 
     if (searchTerm) {
-      filtered = filtered.filter(request =>
+      filtered = filtered.filter((request: any) =>
         request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.business_justification?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -244,11 +244,11 @@ export default function WorkRequestsPage() {
     }
 
     if (statusFilter) {
-      filtered = filtered.filter(request => request.status === statusFilter)
+      filtered = filtered.filter((request: any) => request.status === statusFilter)
     }
 
     if (priorityFilter) {
-      filtered = filtered.filter(request => request.priority === priorityFilter)
+      filtered = filtered.filter((request: any) => request.priority === priorityFilter)
     }
 
     setFilteredRequests(filtered)

@@ -157,7 +157,7 @@ export class PMBOKService {
     if (error) throw error
     
     // Transform data to match interface using profiles data
-    return (data || []).map(request => ({
+    return (data || []).map((request: any) => ({
       ...request,
       customer_name: request.profiles?.full_name || 'Unknown Customer',
       customer_email: '', // profiles table doesn't have email
@@ -468,20 +468,20 @@ export class PMBOKService {
     const requests = data || []
     return {
       total: requests.length,
-      pending: requests.filter(r => 
+      pending: requests.filter((r: any) => 
         r.approval_status === 'submitted' || 
         r.approval_status === 'under_review' ||
         r.status === 'submitted' || 
         r.status === 'under_review'
       ).length,
-      approved: requests.filter(r => 
+      approved: requests.filter((r: any) => 
         r.approval_status === 'approved' || 
         r.status === 'approved'
       ).length,
-      declined: requests.filter(r => 
+      declined: requests.filter((r: any) => 
         r.approval_status === 'declined'
       ).length,
-      converted: requests.filter(r => 
+      converted: requests.filter((r: any) => 
         r.approval_status === 'converted_to_project'
       ).length
     }

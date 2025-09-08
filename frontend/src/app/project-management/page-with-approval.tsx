@@ -66,13 +66,13 @@ export default function ProjectManagementPage() {
 
   // Calculate metrics from real data
   const totalRequests = dashboardData.workRequests.length
-  const pendingReview = dashboardData.workRequests.filter(req => 
+  const pendingReview = dashboardData.workRequests.filter((req: any) => 
     req.approval_status === 'submitted' || req.approval_status === 'under_review'
   ).length
-  const activeProjects = dashboardData.workRequests.filter(req => 
+  const activeProjects = dashboardData.workRequests.filter((req: any) => 
     req.approval_status === 'approved' || req.status === 'in_progress'
   ).length
-  const completed = dashboardData.workRequests.filter(req => 
+  const completed = dashboardData.workRequests.filter((req: any) => 
     req.status === 'completed'
   ).length
 

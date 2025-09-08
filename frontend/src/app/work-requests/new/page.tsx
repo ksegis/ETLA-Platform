@@ -81,7 +81,7 @@ export default function NewWorkRequestPage() {
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags.filter((tag: any) => tag !== tagToRemove)
     }))
   }
 
@@ -205,7 +205,7 @@ export default function NewWorkRequestPage() {
                 }`}
               >
                 <option value="">Select a category</option>
-                {categories.map(cat => (
+                {categories.map((cat: any) => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
                 ))}
               </select>
@@ -224,7 +224,7 @@ export default function NewWorkRequestPage() {
                 Priority Level *
               </label>
               <div className="space-y-2">
-                {priorities.map(priority => (
+                {priorities.map((priority: any) => (
                   <label key={priority.value} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
@@ -249,7 +249,7 @@ export default function NewWorkRequestPage() {
                 Urgency *
               </label>
               <div className="space-y-2">
-                {urgencies.map(urgency => (
+                {urgencies.map((urgency: any) => (
                   <label key={urgency.value} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
@@ -339,7 +339,7 @@ export default function NewWorkRequestPage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {formData.tags.map(tag => (
+              {formData.tags.map((tag: any) => (
                 <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
                   {tag}
                   <button

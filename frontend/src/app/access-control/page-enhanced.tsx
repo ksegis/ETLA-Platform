@@ -284,7 +284,7 @@ export default function AccessControlPageEnhanced() {
   const exportUsers = () => {
     const csvContent = [
       ['Email', 'Name', 'Role', 'Level', 'Tenant', 'Status', 'Last Login', 'Created'].join(','),
-      ...filteredUsers.map(user => [
+      ...filteredUsers.map((user: any) => [
         user.email,
         user.full_name,
         user.role,

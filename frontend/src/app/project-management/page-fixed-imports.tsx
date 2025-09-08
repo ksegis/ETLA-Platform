@@ -90,7 +90,7 @@ export default function ProjectManagementPage() {
         workRequests: workRequests.length,
         projectCharters: projectCharters.length,
         risks: risks.length,
-        missingCustomers: workRequests.filter(wr => (wr as any).customer_missing || wr.customer_name === 'Missing Customer').length
+        missingCustomers: workRequests.filter((wr: any) => (wr as any).customer_missing || wr.customer_name === 'Missing Customer').length
       })
 
     } catch (error) {
@@ -102,12 +102,12 @@ export default function ProjectManagementPage() {
   }
 
   // Check for missing customers
-  const missingCustomerRequests = dashboardData.workRequests.filter(wr => wr.customer_missing)
+  const missingCustomerRequests = dashboardData.workRequests.filter((wr: any) => wr.customer_missing)
   const hasMissingCustomers = missingCustomerRequests.length > 0
 
   // Filter functions
   const getFilteredWorkRequests = () => {
-    return dashboardData.workRequests.filter(request => {
+    return dashboardData.workRequests.filter((request: any) => {
       const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (request.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -122,7 +122,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredProjects = () => {
-    return dashboardData.projectCharters.filter(project => {
+    return dashboardData.projectCharters.filter((project: any) => {
       const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            project.description.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -133,7 +133,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredRisks = () => {
-    return dashboardData.risks.filter(risk => {
+    return dashboardData.risks.filter((risk: any) => {
       const matchesSearch = risk.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            risk.description.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -146,28 +146,28 @@ export default function ProjectManagementPage() {
   // Metrics calculations
   const workRequestMetrics = {
     total: dashboardData.workRequests.length,
-    pending: dashboardData.workRequests.filter(r => 
+    pending: dashboardData.workRequests.filter((r: any) => 
       r.approval_status === 'submitted' || 
       r.approval_status === 'under_review' ||
       r.status === 'submitted' ||
       r.status === 'under_review'
     ).length,
-    active: dashboardData.workRequests.filter(r => 
+    active: dashboardData.workRequests.filter((r: any) => 
       r.approval_status === 'approved' || 
       r.approval_status === 'converted_to_project' ||
       r.status === 'in_progress' ||
       r.status === 'scheduled'
     ).length,
-    completed: dashboardData.workRequests.filter(r => 
+    completed: dashboardData.workRequests.filter((r: any) => 
       r.status === 'completed'
     ).length
   }
 
   const projectMetrics = {
     total: dashboardData.projectCharters.length,
-    planning: dashboardData.projectCharters.filter(p => p.status === 'planning').length,
-    active: dashboardData.projectCharters.filter(p => p.status === 'active' || p.status === 'in_progress').length,
-    completed: dashboardData.projectCharters.filter(p => p.status === 'completed').length
+    planning: dashboardData.projectCharters.filter((p: any) => p.status === 'planning').length,
+    active: dashboardData.projectCharters.filter((p: any) => p.status === 'active' || p.status === 'in_progress').length,
+    completed: dashboardData.projectCharters.filter((p: any) => p.status === 'completed').length
   }
 
   // Action handlers
@@ -358,7 +358,7 @@ export default function ProjectManagementPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {dashboardData.risks.filter(r => (r.risk_score || 0) >= 15).length}
+                {dashboardData.risks.filter((r: any) => (r.risk_score || 0) >= 15).length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Require immediate attention

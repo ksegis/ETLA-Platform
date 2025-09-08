@@ -48,13 +48,13 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
 
     // Count emails when emails field changes
     if (field === 'emails') {
-      const emails = (value as string).split(/[,\n]/).filter(email => email.trim().length > 0)
+      const emails = (value as string).split(/[,\n]/).filter((email: any) => email.trim().length > 0)
       setEmailCount(emails.length)
     }
   }
 
   const validateEmails = (emailString: string): string[] => {
-    const emails = emailString.split(/[,\n]/).map(email => email.trim()).filter(email => email.length > 0)
+    const emails = emailString.split(/[,\n]/).map((email: any) => email.trim()).filter((email: any) => email.length > 0)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     
     const validEmails: string[] = []
@@ -236,7 +236,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map(tenant => (
+                    {tenants.map((tenant: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name} ({tenant.tenant_type})
                       </option>

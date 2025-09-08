@@ -163,7 +163,7 @@ export default function TeamResourcesPage() {
   const [filterAvailability, setFilterAvailability] = useState('all')
   const [filterSkill, setFilterSkill] = useState('all')
 
-  const filteredMembers = mockTeamMembers.filter(member => {
+  const filteredMembers = mockTeamMembers.filter((member: any) => {
     const matchesAvailability = filterAvailability === 'all' || member.availability === filterAvailability
     const matchesSkill = filterSkill === 'all' || member.skills.some(skill => 
       skill.toLowerCase().includes(filterSkill.toLowerCase())
@@ -176,7 +176,7 @@ export default function TeamResourcesPage() {
   const getTeamStats = () => {
     const totalCapacity = mockTeamMembers.reduce((sum, member) => sum + member.weeklyCapacity, 0)
     const totalWorkload = mockTeamMembers.reduce((sum, member) => sum + member.currentWorkload, 0)
-    const availableMembers = mockTeamMembers.filter(member => member.availability === 'available').length
+    const availableMembers = mockTeamMembers.filter((member: any) => member.availability === 'available').length
     const avgUtilization = mockTeamMembers.reduce((sum, member) => sum + member.utilizationRate, 0) / mockTeamMembers.length
 
     return { totalCapacity, totalWorkload, availableMembers, avgUtilization }
@@ -300,7 +300,7 @@ export default function TeamResourcesPage() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Skills</option>
-            {allSkills.map(skill => (
+            {allSkills.map((skill: any) => (
               <option key={skill} value={skill}>{skill}</option>
             ))}
           </select>
@@ -316,7 +316,7 @@ export default function TeamResourcesPage() {
             </div>
             
             <div className="divide-y divide-gray-200">
-              {filteredMembers.map(member => {
+              {filteredMembers.map((member: any) => {
                 const AvailabilityIcon = availabilityConfig[member.availability].icon
                 return (
                   <div 
@@ -364,7 +364,7 @@ export default function TeamResourcesPage() {
                     
                     {/* Skills */}
                     <div className="mt-3 flex flex-wrap gap-1">
-                      {member.skills.slice(0, 4).map(skill => (
+                      {member.skills.slice(0, 4).map((skill: any) => (
                         <span key={skill} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
                           {skill}
                         </span>
@@ -408,7 +408,7 @@ export default function TeamResourcesPage() {
                   Skills & Expertise
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {selectedMember.skills.map(skill => (
+                  {selectedMember.skills.map((skill: any) => (
                     <span key={skill} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                       {skill}
                     </span>
@@ -423,7 +423,7 @@ export default function TeamResourcesPage() {
                   <p className="text-gray-500 text-sm">No active projects</p>
                 ) : (
                   <div className="space-y-4">
-                    {selectedMember.currentProjects.map(project => (
+                    {selectedMember.currentProjects.map((project: any) => (
                       <div key={project.id} className="border rounded-lg p-3">
                         <h4 className="font-medium text-gray-900 mb-2">{project.title}</h4>
                         <div className="space-y-2">

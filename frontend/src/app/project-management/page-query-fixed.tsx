@@ -314,12 +314,12 @@ export default function QueryFixedProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter(p => 
+    activeProjects: projects.filter((p: any) => 
       p.charter_status === 'active' || 
       p.charter_status === 'approved' || 
       p.charter_status === 'in_progress'
     ).length,
-    completedProjects: projects.filter(p => 
+    completedProjects: projects.filter((p: any) => 
       p.completion_percentage === 100 || 
       p.charter_status === 'completed'
     ).length,
@@ -332,7 +332,7 @@ export default function QueryFixedProjectManagementPage() {
   }
 
   // Filter projects
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = projects.filter((project: any) => {
     const title = project.title || project.project_name || ''
     const description = project.description || project.business_case || ''
     const projectCode = project.project_code || ''
@@ -352,7 +352,7 @@ export default function QueryFixedProjectManagementPage() {
   })
 
   // Filter work requests and risks
-  const filteredWorkRequests = workRequests.filter(wr => {
+  const filteredWorkRequests = workRequests.filter((wr: any) => {
     const name = wr.name || wr.title || ''
     const description = wr.description || ''
     
@@ -363,7 +363,7 @@ export default function QueryFixedProjectManagementPage() {
     return matchesSearch && matchesStatus
   })
 
-  const filteredRisks = risks.filter(risk => {
+  const filteredRisks = risks.filter((risk: any) => {
     const name = risk.name || risk.title || ''
     const description = risk.description || ''
     
@@ -558,7 +558,7 @@ export default function QueryFixedProjectManagementPage() {
       }
 
       console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map(p => p.id === selectedProject.id ? data[0] : p))
+      setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
       setShowEditModal(false)
       setSelectedProject(null)
     } catch (err) {
@@ -585,7 +585,7 @@ export default function QueryFixedProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter(p => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')

@@ -249,8 +249,8 @@ class PMBOKService {
 
       console.log('✅ Work requests processed successfully:', {
         total: workRequests.length,
-        withCustomers: workRequests.filter(wr => !wr.customer_missing).length,
-        missingCustomers: workRequests.filter(wr => wr.customer_missing).length
+        withCustomers: workRequests.filter((wr: any) => !wr.customer_missing).length,
+        missingCustomers: workRequests.filter((wr: any) => wr.customer_missing).length
       })
 
       return workRequests

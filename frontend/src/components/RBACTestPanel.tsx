@@ -53,7 +53,7 @@ export default function RBACTestPanel() {
       { feature: FEATURES.SYSTEM_SETTINGS, permission: PERMISSIONS.VIEW, roles: ['host_admin'] },
     ]
 
-    return testCases.map(testCase => ({
+    return testCases.map((testCase: any) => ({
       ...testCase,
       expected: testCase.roles.includes(userRole)
     }))
@@ -97,7 +97,7 @@ export default function RBACTestPanel() {
     return passed ? '✅' : '❌'
   }
 
-  const passedTests = testResults.filter(r => r.passed).length
+  const passedTests = testResults.filter((r: any) => r.passed).length
   const totalTests = testResults.length
   const passRate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0
 

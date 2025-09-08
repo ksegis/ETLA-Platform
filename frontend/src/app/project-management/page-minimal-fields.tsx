@@ -209,13 +209,13 @@ export default function MinimalFieldsProjectManagementPage() {
   // Calculate basic statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter(p => p.status === 'active').length,
+    activeProjects: projects.filter((p: any) => p.status === 'active').length,
     totalWorkRequests: workRequests.length,
     totalRisks: risks.length
   }
 
   // Filter projects with minimal fields
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = projects.filter((project: any) => {
     const name = project.name || ''
     const description = project.description || ''
     
@@ -227,7 +227,7 @@ export default function MinimalFieldsProjectManagementPage() {
   })
 
   // Filter work requests
-  const filteredWorkRequests = workRequests.filter(wr => {
+  const filteredWorkRequests = workRequests.filter((wr: any) => {
     const name = wr.name || ''
     const description = wr.description || ''
     
@@ -239,7 +239,7 @@ export default function MinimalFieldsProjectManagementPage() {
   })
 
   // Filter risks
-  const filteredRisks = risks.filter(risk => {
+  const filteredRisks = risks.filter((risk: any) => {
     const name = risk.name || ''
     const description = risk.description || ''
     
@@ -358,7 +358,7 @@ export default function MinimalFieldsProjectManagementPage() {
       }
 
       console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map(p => p.id === selectedProject.id ? data[0] : p))
+      setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
       setShowEditModal(false)
       setSelectedProject(null)
     } catch (err) {
@@ -385,7 +385,7 @@ export default function MinimalFieldsProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter(p => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')
