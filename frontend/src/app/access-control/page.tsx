@@ -289,12 +289,18 @@ export default function AccessControlPage() {
 
   const loadNotifications = async () => {
     try {
-      const { data: notifications, error } = await supabase
+      let query = supabase
         .from('admin_notifications')
         .select('*')
-        .eq('admin_id', user?.id)
         .order('created_at', { ascending: false })
         .limit(50)
+
+      // Host admin should see all notifications, others see only their own
+      if (!isHostAdmin && user?.id) {
+        query = query.eq('admin_id', user.id)
+      }
+
+      const { data: notifications, error } = await query
 
       if (error) throw error
       setNotifications(notifications || [])
