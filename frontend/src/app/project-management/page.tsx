@@ -164,6 +164,7 @@ export default function ProjectManagementPage() {
   // Form and UI state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<ProjectCharter | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -173,6 +174,10 @@ export default function ProjectManagementPage() {
   const [tenantFilter, setTenantFilter] = useState('') // New tenant filter
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Load data on component mount
   useEffect(() => {
@@ -394,6 +399,27 @@ export default function ProjectManagementPage() {
     
     return matchesSearch && matchesStatus && matchesPriority && matchesDepartment && matchesProjectType && matchesTenant
   })
+
+  // Pagination logic
+  const totalItems = filteredProjects.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedProjects = filteredProjects.slice(startIndex, endIndex)
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, statusFilter, priorityFilter, departmentFilter, projectTypeFilter, tenantFilter])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items)
+    setCurrentPage(1)
+  }
 
   // Get project display name
   const getProjectName = (project: ProjectCharter) => {
@@ -673,7 +699,7 @@ export default function ProjectManagementPage() {
             {/* Project List Header */}
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-semibold text-gray-900">
-                Enhanced Projects ({filteredProjects.length} records)
+                Enhanced Projects ({totalItems} total, showing {startIndex + 1}-{Math.min(endIndex, totalItems)})
               </h3>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
@@ -718,7 +744,7 @@ export default function ProjectManagementPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredProjects.map((project: any) => (
+                      {paginatedProjects.map((project: any) => (
                         <tr key={project.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
@@ -760,7 +786,14 @@ export default function ProjectManagementPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center space-x-2">
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedProject(project)
+                                  setIsViewModalOpen(true)
+                                }}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button 
@@ -790,7 +823,7 @@ export default function ProjectManagementPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project: any) => (
+                {paginatedProjects.map((project: any) => (
                   <Card key={project.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -801,7 +834,14 @@ export default function ProjectManagementPage() {
                           )}
                         </div>
                         <div className="flex space-x-1">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedProject(project)
+                              setIsViewModalOpen(true)
+                            }}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button 
@@ -857,6 +897,77 @@ export default function ProjectManagementPage() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalItems > 0 && (
+              <div className="mt-6 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-700">Show</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span className="text-sm text-gray-700">per page</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+
+                <div className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </div>
               </div>
             )}
           </div>
@@ -949,6 +1060,18 @@ export default function ProjectManagementPage() {
           onSubmit={(updates: any) => handleUpdateProject(selectedProject.id, updates)}
           project={selectedProject}
           workRequests={workRequests}
+        />
+      )}
+
+      {/* View Project Modal */}
+      {isViewModalOpen && selectedProject && (
+        <ViewProjectModal
+          isOpen={isViewModalOpen}
+          onClose={() => {
+            setIsViewModalOpen(false)
+            setSelectedProject(null)
+          }}
+          project={selectedProject}
         />
       )}
     </DashboardLayout>
@@ -1447,6 +1570,180 @@ function EditProjectModal({
             </Button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// View Project Modal Component
+function ViewProjectModal({ 
+  isOpen, 
+  onClose, 
+  project 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  project: ProjectCharter
+}) {
+  if (!isOpen) return null
+
+  const getProjectName = (project: ProjectCharter) => {
+    return project.title || project.project_name || project.project_title || 'Untitled Project'
+  }
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Not set'
+    return new Date(dateString).toLocaleDateString()
+  }
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return '$0.00'
+    return `$${amount.toLocaleString()}`
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-gray-900">Project Details</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Project Name</label>
+                <p className="mt-1 text-sm text-gray-900">{getProjectName(project)}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Project Code</label>
+                <p className="mt-1 text-sm text-gray-900">{project.project_code || 'Not assigned'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <p className="mt-1 text-sm text-gray-900">{project.description || 'No description provided'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  project.priority === 'high' ? 'bg-red-100 text-red-800' :
+                  project.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  project.priority === 'low' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {project.priority || 'Not set'}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  project.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                  project.status === 'on_hold' ? 'bg-yellow-100 text-yellow-800' :
+                  project.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {project.status || 'Not set'}
+                </span>
+              </div>
+            </div>
+
+            {/* Project Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Project Details</h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                <p className="mt-1 text-sm text-gray-900">{formatDate(project.start_date)}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End Date</label>
+                <p className="mt-1 text-sm text-gray-900">{formatDate(project.end_date)}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Budget</label>
+                <p className="mt-1 text-sm text-gray-900">{formatCurrency(project.budget || project.estimated_budget)}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Project Manager</label>
+                <p className="mt-1 text-sm text-gray-900">{project.project_manager || 'Not assigned'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Sponsor</label>
+                <p className="mt-1 text-sm text-gray-900">{project.sponsor || 'Not assigned'}</p>
+              </div>
+            </div>
+
+            {/* Stakeholders & Team */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Team & Stakeholders</h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Stakeholders</label>
+                <p className="mt-1 text-sm text-gray-900">{project.stakeholders || 'Not specified'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Team Members</label>
+                <p className="mt-1 text-sm text-gray-900">{project.team_members || 'Not specified'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Department</label>
+                <p className="mt-1 text-sm text-gray-900">{project.department || 'Not specified'}</p>
+              </div>
+            </div>
+
+            {/* Objectives & Scope */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Objectives & Scope</h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Objectives</label>
+                <p className="mt-1 text-sm text-gray-900">{project.objectives || 'Not specified'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Scope</label>
+                <p className="mt-1 text-sm text-gray-900">{project.scope || 'Not specified'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Deliverables</label>
+                <p className="mt-1 text-sm text-gray-900">{project.deliverables || 'Not specified'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Close
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )
