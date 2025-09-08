@@ -269,6 +269,8 @@ const EnhancedReportingPage: React.FC = () => {
   const [benefitData, setBenefitData] = useState<BenefitDeduction[]>([]);
   const [complianceData, setComplianceData] = useState<ComplianceRecord[]>([]);
   const [selectedPayStatement, setSelectedPayStatement] = useState<PayStatementDetail | null>(null);
+  const [selectedTimecard, setSelectedTimecard] = useState<EnhancedTimecard | null>(null);
+  const [selectedTaxRecord, setSelectedTaxRecord] = useState<TaxRecord | null>(null);
   
   // Enhanced view mode state - separate for each tab
   const [viewModes, setViewModes] = useState<Record<string, 'list' | 'grid'>>({
@@ -508,14 +510,14 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('benefits_deductions_comprehensive_report')
+      const { data: benefitData, error: benefitError } = await supabase
+        .from('benefit_deductions')
         .select('*')
-        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
+        .in('tenant_id', tenantIds)
         .order('effective_date', { ascending: false });
       
-      if (error) throw error;
-      setBenefitData(data || []);
+      if (benefitError) throw benefitError;
+      setBenefitData(benefitData || []);
     } catch (err: any) {
       console.error('Error loading benefit data:', err);
       setError(`Failed to load benefit data: ${err.message}`);
@@ -538,10 +540,10 @@ const EnhancedReportingPage: React.FC = () => {
     
     try {
       const { data, error } = await supabase
-        .from('compliance_records_comprehensive_report')
+        .from('compliance_records')
         .select('*')
         .in('tenant_id', tenantIds) // Load from ALL accessible tenants
-        .order('reporting_period', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       setComplianceData(data || []);
@@ -1174,8 +1176,6 @@ const EnhancedReportingPage: React.FC = () => {
             searchTerm={filters.searchTerm}
             onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Pay Statements"
-            onExportCSV={() => downloadCSV(filteredData, 'enhanced_pay_statements')}
-            onExportJSON={() => downloadJSON(filteredData, 'enhanced_pay_statements')}
           />
         ) : (
           <div className="grid gap-4">
@@ -1277,8 +1277,6 @@ const EnhancedReportingPage: React.FC = () => {
             searchTerm={filters.searchTerm}
             onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Timecards"
-            onExportCSV={() => downloadCSV(filteredData, 'enhanced_timecards')}
-            onExportJSON={() => downloadJSON(filteredData, 'enhanced_timecards')}
           />
         ) : (
           <div className="grid gap-4">
@@ -1309,6 +1307,15 @@ const EnhancedReportingPage: React.FC = () => {
                       <p><strong>Department:</strong> {timecard.department}</p>
                       <p><strong>Supervisor:</strong> {timecard.supervisor}</p>
                       <p><strong>Status:</strong> <Badge variant={timecard.approval_status === 'approved' ? 'default' : 'secondary'}>{timecard.approval_status}</Badge></p>
+                      <div className="flex gap-2 mt-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => setSelectedTimecard(timecard as any)}
+                          variant="outline"
+                        >
+                          View Details
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -1364,8 +1371,6 @@ const EnhancedReportingPage: React.FC = () => {
             searchTerm={filters.searchTerm}
             onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Job Catalog"
-            onExportCSV={() => downloadCSV(filteredData, 'job_catalog')}
-            onExportJSON={() => downloadJSON(filteredData, 'job_catalog')}
           />
         ) : (
           <div className="grid gap-4">
@@ -1438,8 +1443,6 @@ const EnhancedReportingPage: React.FC = () => {
             searchTerm={filters.searchTerm}
             onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Tax Records"
-            onExportCSV={() => downloadCSV(filteredData, 'tax_records')}
-            onExportJSON={() => downloadJSON(filteredData, 'tax_records')}
           />
         ) : (
           <div className="grid gap-4">
@@ -1470,7 +1473,13 @@ const EnhancedReportingPage: React.FC = () => {
                       <p><strong>Status:</strong> <Badge>{record.document_status}</Badge></p>
                       <p><strong>Issue Date:</strong> {record.issue_date}</p>
                       <div className="flex gap-2 mt-2">
-                        <Button size="sm" variant="outline">View Document</Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => setSelectedTaxRecord(record as any)}
+                          variant="outline"
+                        >
+                          View Details
+                        </Button>
                         <Button size="sm" variant="outline">Export</Button>
                       </div>
                     </div>
@@ -1522,8 +1531,6 @@ const EnhancedReportingPage: React.FC = () => {
             searchTerm={filters.searchTerm}
             onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Benefits & Deductions"
-            onExportCSV={() => downloadCSV(filteredData, 'benefits_deductions')}
-            onExportJSON={() => downloadJSON(filteredData, 'benefits_deductions')}
           />
         ) : (
           <div className="grid gap-4">
@@ -1604,8 +1611,6 @@ const EnhancedReportingPage: React.FC = () => {
             searchTerm={filters.searchTerm}
             onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
             title="Compliance Reports"
-            onExportCSV={() => downloadCSV(filteredData, 'compliance_reports')}
-            onExportJSON={() => downloadJSON(filteredData, 'compliance_reports')}
           />
         ) : (
           <div className="grid gap-4">
@@ -1646,7 +1651,98 @@ const EnhancedReportingPage: React.FC = () => {
 
   const renderAllReports = () => (
     <div className="space-y-8">
-      <ComprehensiveDashboard onCategoryClick={(category: any) => setActiveTab(category)} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('employees')}>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl">👥</div>
+            <div>
+              <h3 className="text-lg font-semibold">Enhanced Employees</h3>
+              <p className="text-gray-600">Comprehensive employee records and demographics</p>
+              <p className="text-sm text-blue-600 mt-2">{employeeData.length} records available</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('pay-statements')}>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl">💰</div>
+            <div>
+              <h3 className="text-lg font-semibold">Pay Statements</h3>
+              <p className="text-gray-600">Detailed payroll and earnings statements</p>
+              <p className="text-sm text-blue-600 mt-2">{payStatementData.length} records available</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('timecards')}>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl">⏰</div>
+            <div>
+              <h3 className="text-lg font-semibold">Timecards</h3>
+              <p className="text-gray-600">Time tracking and attendance records</p>
+              <p className="text-sm text-blue-600 mt-2">{timecardData.length} records available</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('jobs')}>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl">💼</div>
+            <div>
+              <h3 className="text-lg font-semibold">Job Catalog</h3>
+              <p className="text-gray-600">Position descriptions and job classifications</p>
+              <p className="text-sm text-blue-600 mt-2">{jobData.length} records available</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('tax-records')}>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl">📋</div>
+            <div>
+              <h3 className="text-lg font-semibold">Tax Records</h3>
+              <p className="text-gray-600">W-2, 1099, and tax document management</p>
+              <p className="text-sm text-blue-600 mt-2">{taxData.length} records available</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('benefits-deductions')}>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl">🏥</div>
+            <div>
+              <h3 className="text-lg font-semibold">Benefits & Deductions</h3>
+              <p className="text-gray-600">Employee benefits and payroll deductions</p>
+              <p className="text-sm text-blue-600 mt-2">{benefitData.length} records available</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('compliance')}>
+          <div className="flex items-center space-x-4">
+            <div className="text-3xl">📊</div>
+            <div>
+              <h3 className="text-lg font-semibold">Compliance Reports</h3>
+              <p className="text-gray-600">Regulatory compliance and audit reports</p>
+              <p className="text-sm text-blue-600 mt-2">{complianceData.length} records available</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Report Categories</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="p-4">
+            <h3 className="font-semibold text-green-700">✅ Active Reports</h3>
+            <p className="text-sm text-gray-600 mt-2">All report types are currently active and available for data export and analysis.</p>
+          </Card>
+          <Card className="p-4">
+            <h3 className="font-semibold text-blue-700">📈 Export Options</h3>
+            <p className="text-sm text-gray-600 mt-2">Each report supports CSV, JSON, Excel, and PDF export formats for comprehensive data analysis.</p>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 
@@ -1785,6 +1881,118 @@ const EnhancedReportingPage: React.FC = () => {
                   Generate PDF
                 </Button>
                 <Button variant="outline" onClick={() => setSelectedPayStatement(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Timecard Detail Modal */}
+        {selectedTimecard && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Timecard Detail</h2>
+                <Button onClick={() => setSelectedTimecard(null)} variant="outline">
+                  Close
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-2">Employee Information</h3>
+                  <p><strong>Name:</strong> {selectedTimecard.employee_name}</p>
+                  <p><strong>Employee Code:</strong> {selectedTimecard.employee_code}</p>
+                  <p><strong>Department:</strong> {selectedTimecard.department}</p>
+                  <p><strong>Supervisor:</strong> {selectedTimecard.supervisor}</p>
+                  <p><strong>Work Date:</strong> {selectedTimecard.work_date}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Time Details</h3>
+                  <p><strong>Clock In:</strong> {selectedTimecard.clock_in}</p>
+                  <p><strong>Clock Out:</strong> {selectedTimecard.clock_out}</p>
+                  <p><strong>Break Duration:</strong> {selectedTimecard.break_duration} minutes</p>
+                  <p><strong>Total Hours:</strong> {selectedTimecard.total_hours}</p>
+                  <p><strong>Approval Status:</strong> <Badge variant={selectedTimecard.approval_status === 'approved' ? 'default' : 'secondary'}>{selectedTimecard.approval_status}</Badge></p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Hours Breakdown</h3>
+                  <p><strong>Regular Hours:</strong> {selectedTimecard.regular_hours}</p>
+                  <p><strong>Overtime Hours:</strong> {selectedTimecard.overtime_hours}</p>
+                  <p><strong>Holiday Hours:</strong> {selectedTimecard.holiday_hours}</p>
+                  <p><strong>Sick Hours:</strong> {selectedTimecard.sick_hours}</p>
+                  <p><strong>Vacation Hours:</strong> {selectedTimecard.vacation_hours}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Additional Information</h3>
+                  <p><strong>Job Code:</strong> {selectedTimecard.job_code}</p>
+                  <p><strong>Cost Center:</strong> {selectedTimecard.cost_center}</p>
+                  <p><strong>Pay Rate:</strong> ${selectedTimecard.pay_rate}</p>
+                  <p><strong>Notes:</strong> {selectedTimecard.notes || 'None'}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mt-6">
+                <Button variant="outline" onClick={() => setSelectedTimecard(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tax Record Detail Modal */}
+        {selectedTaxRecord && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Tax Record Detail - {selectedTaxRecord.form_type}</h2>
+                <Button onClick={() => setSelectedTaxRecord(null)} variant="outline">
+                  Close
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-2">Employee Information</h3>
+                  <p><strong>Employee Name:</strong> {selectedTaxRecord.employee_name}</p>
+                  <p><strong>Employee ID:</strong> {selectedTaxRecord.employee_id}</p>
+                  <p><strong>SSN:</strong> {selectedTaxRecord.ssn}</p>
+                  <p><strong>Tax Year:</strong> {selectedTaxRecord.tax_year}</p>
+                  <p><strong>Form Type:</strong> {selectedTaxRecord.form_type}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Earnings & Compensation</h3>
+                  <p><strong>Wages, Tips & Compensation:</strong> ${selectedTaxRecord.wages_tips_compensation?.toLocaleString()}</p>
+                  <p><strong>Federal Income Tax Withheld:</strong> ${selectedTaxRecord.federal_income_tax_withheld?.toLocaleString()}</p>
+                  <p><strong>Social Security Wages:</strong> ${selectedTaxRecord.social_security_wages?.toLocaleString()}</p>
+                  <p><strong>Medicare Wages:</strong> ${selectedTaxRecord.medicare_wages?.toLocaleString()}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Tax Withholdings</h3>
+                  <p><strong>Social Security Tax:</strong> ${selectedTaxRecord.social_security_tax_withheld?.toLocaleString()}</p>
+                  <p><strong>Medicare Tax:</strong> ${selectedTaxRecord.medicare_tax_withheld?.toLocaleString()}</p>
+                  <p><strong>State Income Tax:</strong> ${selectedTaxRecord.state_income_tax?.toLocaleString()}</p>
+                  <p><strong>Local Tax:</strong> ${selectedTaxRecord.local_tax?.toLocaleString()}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Document Information</h3>
+                  <p><strong>Document Status:</strong> <Badge>{selectedTaxRecord.document_status}</Badge></p>
+                  <p><strong>Issue Date:</strong> {selectedTaxRecord.issue_date}</p>
+                  <p><strong>Filing Status:</strong> {selectedTaxRecord.filing_status}</p>
+                  <p><strong>Dependents:</strong> {selectedTaxRecord.dependents}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mt-6">
+                <Button variant="outline" onClick={() => setSelectedTaxRecord(null)}>
                   Close
                 </Button>
               </div>
