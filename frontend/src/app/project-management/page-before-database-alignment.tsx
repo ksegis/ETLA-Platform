@@ -213,7 +213,7 @@ export default function EnhancedProjectManagementPage() {
         .eq('table_type', 'BASE TABLE')
 
       if (!error && data) {
-        const tableNames = data.map(row => row.table_name)
+        const tableNames = data.map((row: any) => row.table_name)
         setAvailableTables(tableNames)
         console.log('Available tables:', tableNames)
       }
