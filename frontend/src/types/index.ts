@@ -222,6 +222,7 @@ export interface PayStatement extends BaseEntity {
   overtime_pay?: number;
   regular_hours?: number;
   regular_pay?: number;
+  department?: string;
 }
 
 export interface Tenant extends BaseEntity {
