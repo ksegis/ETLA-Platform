@@ -212,7 +212,7 @@ export default function AccessControlPage() {
         throw error
       }
 
-      const formattedUsers: User[] = users?.map(user => {
+      const formattedUsers: User[] = users?.map((user: any) => {
         const tenantUser = user.tenant_users[0] || {}
         const tenant = tenantUser.tenants || {}
         
