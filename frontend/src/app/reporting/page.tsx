@@ -818,9 +818,10 @@ const EnhancedReportingPage: React.FC = () => {
       'OT Hours': statement.overtime_hours,
       'Gross Pay': `$${statement.gross_pay}`,
       'Net Pay': `$${statement.net_pay}`,
-      'Federal Tax': `$${statement.federal_income_tax_withheld}`,
-      'State Tax': `$${statement.state_income_tax}`,
-      'FICA Tax': `$${statement.fica_tax_withheld}`
+      'Federal Tax': `$${statement.federal_tax_withheld}`,
+      'State Tax': `$${statement.state_tax_withheld}`,
+      'Social Security': `$${statement.social_security_tax}`,
+      'Medicare': `$${statement.medicare_tax}`
     }];
     
     downloadPDF(payStatementData, `pay_statement_${statement.check_number}`, `Pay Statement - ${statement.employee_name}`);
