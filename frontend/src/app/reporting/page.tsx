@@ -1155,7 +1155,7 @@ const EnhancedReportingPage: React.FC = () => {
       { key: 'actions', label: 'Actions', sortable: false, render: (statement: EnhancedPayStatement) => (
         <Button 
           size="sm" 
-          onClick={() => setSelectedPayStatement(statement)}
+          onClick={() => setSelectedPayStatement(statement as any)}
           variant="outline"
         >
           View Details
@@ -1265,7 +1265,7 @@ const EnhancedReportingPage: React.FC = () => {
       { key: 'actions', label: 'Actions', sortable: false, render: (timecard: EnhancedTimecard) => (
         <Button 
           size="sm" 
-          onClick={() => setSelectedTimecard(timecard)}
+          onClick={() => setSelectedTimecard(timecard as any)}
           variant="outline"
         >
           View Details
@@ -1446,7 +1446,7 @@ const EnhancedReportingPage: React.FC = () => {
       { key: 'actions', label: 'Actions', sortable: false, render: (tax: TaxRecord) => (
         <Button 
           size="sm" 
-          onClick={() => setSelectedTaxRecord(tax)}
+          onClick={() => setSelectedTaxRecord(tax as any)}
           variant="outline"
         >
           View Details
