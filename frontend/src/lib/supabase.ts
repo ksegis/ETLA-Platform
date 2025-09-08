@@ -526,3 +526,168 @@ export const userManagement = {
   }
 }
 
+
+// Mock data for demo mode
+const mockUsers = [
+  {
+    id: 'user-1',
+    email: 'john.doe@company.com',
+    full_name: 'John Doe',
+    phone: '+1-555-0101',
+    department: 'Engineering',
+    job_title: 'Senior Developer',
+    tenant_users: [{
+      role: 'client_admin',
+      role_level: 'senior',
+      is_active: true,
+      tenant_id: 'tenant-1',
+      tenants: { name: 'Tech Corp', code: 'TECH' }
+    }]
+  },
+  {
+    id: 'user-2', 
+    email: 'jane.smith@company.com',
+    full_name: 'Jane Smith',
+    phone: '+1-555-0102',
+    department: 'Marketing',
+    job_title: 'Marketing Manager',
+    tenant_users: [{
+      role: 'user',
+      role_level: 'mid',
+      is_active: true,
+      tenant_id: 'tenant-1',
+      tenants: { name: 'Tech Corp', code: 'TECH' }
+    }]
+  },
+  {
+    id: 'user-3',
+    email: 'bob.wilson@company.com', 
+    full_name: 'Bob Wilson',
+    phone: '+1-555-0103',
+    department: 'Sales',
+    job_title: 'Sales Representative',
+    tenant_users: [{
+      role: 'user',
+      role_level: 'junior',
+      is_active: true,
+      tenant_id: 'tenant-2',
+      tenants: { name: 'Sales Inc', code: 'SALES' }
+    }]
+  },
+  {
+    id: 'user-4',
+    email: 'alice.brown@company.com',
+    full_name: 'Alice Brown', 
+    phone: '+1-555-0104',
+    department: 'HR',
+    job_title: 'HR Specialist',
+    tenant_users: [{
+      role: 'hr_admin',
+      role_level: 'mid',
+      is_active: true,
+      tenant_id: 'tenant-1',
+      tenants: { name: 'Tech Corp', code: 'TECH' }
+    }]
+  },
+  {
+    id: 'user-5',
+    email: 'demo@company.com',
+    full_name: 'Demo User',
+    phone: '+1-555-0105', 
+    department: 'Administration',
+    job_title: 'System Administrator',
+    tenant_users: [{
+      role: 'host_admin',
+      role_level: 'senior',
+      is_active: true,
+      tenant_id: 'tenant-1',
+      tenants: { name: 'Tech Corp', code: 'TECH' }
+    }]
+  }
+]
+
+const mockInvitations = [
+  {
+    id: 'invite-1',
+    email: 'newuser@company.com',
+    full_name: 'New User',
+    role: 'user',
+    status: 'pending',
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date().toISOString()
+  }
+]
+
+const mockNotifications = [
+  {
+    id: 'notif-1',
+    type: 'user_registered',
+    title: 'New User Registration',
+    message: 'John Doe has registered and needs approval',
+    is_read: false,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'notif-2', 
+    type: 'invitation_expired',
+    title: 'Invitation Expired',
+    message: 'Invitation for newuser@company.com has expired',
+    is_read: true,
+    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  }
+]
+
+// Enhanced Supabase client with mock data support
+const originalSupabase = supabase
+
+// Check if we're in demo mode (no real Supabase connection)
+const isDemoMode = !supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl.includes('localhost')
+
+if (isDemoMode) {
+  console.log('🎭 Demo mode detected - using mock data')
+  
+  // Override the from method to return mock data
+  const originalFrom = supabase.from.bind(supabase)
+  supabase.from = (table: string) => {
+    const query = originalFrom(table)
+    
+    // Override select method
+    const originalSelect = query.select.bind(query)
+    query.select = (columns?: string) => {
+      const selectQuery = originalSelect(columns)
+      
+      // Override the query execution
+      selectQuery.then = (resolve: any, reject: any) => {
+        setTimeout(() => {
+          let data = null
+          let error = null
+          
+          switch (table) {
+            case 'profiles':
+              data = mockUsers
+              break
+            case 'user_invitations':
+              data = mockInvitations
+              break
+            case 'admin_notifications':
+              data = mockNotifications
+              break
+            default:
+              data = []
+          }
+          
+          resolve({ data, error })
+        }, 100) // Simulate network delay
+        
+        return selectQuery
+      }
+      
+      return selectQuery
+    }
+    
+    return query
+  }
+}
+
+export { supabase as default }
+
