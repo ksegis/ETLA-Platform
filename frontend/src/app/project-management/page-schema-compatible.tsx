@@ -213,7 +213,7 @@ export default function EnhancedProjectManagementPage() {
         .eq('table_type', 'BASE TABLE')
 
       if (!error && data) {
-        const tableNames = data.map((row: any: any) => row.table_name)
+        const tableNames = data.map((row: any) => row.table_name)
         setAvailableTables(tableNames)
         console.log('Available tables:', tableNames)
       }
@@ -341,20 +341,20 @@ export default function EnhancedProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any: any) => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
-    completedProjects: projects.filter((p: any: any) => p.status === 'completed').length,
-    onHoldProjects: projects.filter((p: any: any) => p.status === 'on_hold').length,
+    activeProjects: projects.filter((p: any) => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
+    completedProjects: projects.filter((p: any) => p.status === 'completed').length,
+    onHoldProjects: projects.filter((p: any) => p.status === 'on_hold').length,
     totalWorkRequests: workRequests.length,
-    pendingWorkRequests: workRequests.filter((wr: any: any) => ['submitted', 'under_review'].includes(wr.status || '')).length,
-    approvedWorkRequests: workRequests.filter((wr: any: any) => wr.status === 'approved').length,
+    pendingWorkRequests: workRequests.filter((wr: any) => ['submitted', 'under_review'].includes(wr.status || '')).length,
+    approvedWorkRequests: workRequests.filter((wr: any) => wr.status === 'approved').length,
     totalBudget: projects.reduce((sum: any, p: any) => sum + (p.budget || 0), 0),
     totalRisks: risks.length,
-    highRisks: risks.filter((r: any: any) => (r.risk_level || r.level) === 'high').length,
-    mitigatedRisks: risks.filter((r: any: any) => r.status === 'resolved').length
+    highRisks: risks.filter((r: any) => (r.risk_level || r.level) === 'high').length,
+    mitigatedRisks: risks.filter((r: any) => r.status === 'resolved').length
   }
 
   // Filter projects with schema compatibility
-  const filteredProjects = projects.filter((project: any: any) => {
+  const filteredProjects = projects.filter((project: any) => {
     const title = getProjectTitle(project)
     const description = project.description || ''
     const teamLead = getTeamLead(project)
@@ -372,7 +372,7 @@ export default function EnhancedProjectManagementPage() {
   })
 
   // Filter work requests with schema compatibility
-  const filteredWorkRequests = workRequests.filter((wr: any: any) => {
+  const filteredWorkRequests = workRequests.filter((wr: any) => {
     const title = getWorkRequestTitle(wr)
     const description = wr.description || ''
     const customerName = wr.customer_name || ''
@@ -387,7 +387,7 @@ export default function EnhancedProjectManagementPage() {
   })
 
   // Filter risks with schema compatibility
-  const filteredRisks = risks.filter((risk: any: any) => {
+  const filteredRisks = risks.filter((risk: any) => {
     const title = getRiskTitle(risk)
     const description = risk.risk_description || risk.description || ''
     
@@ -575,7 +575,7 @@ export default function EnhancedProjectManagementPage() {
 
           if (!error && data) {
             console.log(`Project updated in ${tableName}:`, data)
-            setProjects(prev => prev.map((p: any: any) => p.id === selectedProject.id ? data[0] : p))
+            setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
             setShowEditModal(false)
             setSelectedProject(null)
             success = true
@@ -615,7 +615,7 @@ export default function EnhancedProjectManagementPage() {
 
           if (!error) {
             console.log(`Project deleted from ${tableName}`)
-            setProjects(prev => prev.filter((p: any: any) => p.id !== projectId))
+            setProjects(prev => prev.filter((p: any) => p.id !== projectId))
             success = true
             break
           }
@@ -689,7 +689,7 @@ export default function EnhancedProjectManagementPage() {
 
           if (!error && data) {
             console.log(`Work request updated in ${tableName}:`, data)
-            setWorkRequests(prev => prev.map((wr: any: any) => wr.id === workRequestId ? data[0] : wr))
+            setWorkRequests(prev => prev.map((wr: any) => wr.id === workRequestId ? data[0] : wr))
             success = true
             break
           }
@@ -1083,7 +1083,7 @@ export default function EnhancedProjectManagementPage() {
             <div className="flex items-center">
               <Building className="h-5 w-5 text-blue-500 mr-2" />
               <p className="text-blue-700">
-                Available database tables: {availableTables.filter((t: any: any) => 
+                Available database tables: {availableTables.filter((t: any) => 
                   t.includes('project') || t.includes('work') || t.includes('risk')
                 ).join(', ') || 'None found'}
               </p>
@@ -1534,7 +1534,7 @@ export default function EnhancedProjectManagementPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select a work request</option>
-                        {workRequests.filter((wr: any: any) => wr.status === 'approved').map((wr: any: any) => (
+                        {workRequests.filter((wr: any) => wr.status === 'approved').map((wr: any) => (
                           <option key={wr.id} value={wr.id}>{getWorkRequestTitle(wr)}</option>
                         ))}
                       </select>

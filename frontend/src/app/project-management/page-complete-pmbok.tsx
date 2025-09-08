@@ -253,17 +253,17 @@ export default function ProjectManagementPage() {
   // Calculate statistics
   useEffect(() => {
     const totalProjects = projects.length
-    const activeProjects = projects.filter((p: any: any) => 
+    const activeProjects = projects.filter((p: any) => 
       p.charter_status !== 'completed' && p.charter_status !== 'cancelled'
     ).length
-    const completedProjects = projects.filter((p: any: any) => p.charter_status === 'completed').length
-    const onHoldProjects = projects.filter((p: any: any) => p.charter_status === 'on_hold').length
+    const completedProjects = projects.filter((p: any) => p.charter_status === 'completed').length
+    const onHoldProjects = projects.filter((p: any) => p.charter_status === 'on_hold').length
     
     const totalWorkRequests = workRequests.length
-    const pendingWorkRequests = workRequests.filter((wr: any: any) => wr.status === 'pending').length
-    const approvedWorkRequests = workRequests.filter((wr: any: any) => wr.status === 'approved').length
+    const pendingWorkRequests = workRequests.filter((wr: any) => wr.status === 'pending').length
+    const approvedWorkRequests = workRequests.filter((wr: any) => wr.status === 'approved').length
     
-    const highRisks = risks.filter((r: any: any) => 
+    const highRisks = risks.filter((r: any) => 
       r.risk_level === 'high' || r.level === 'high' || r.severity === 'high'
     ).length
     
@@ -336,7 +336,7 @@ export default function ProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.map((p: any: any) => p.id === projectId ? data : p))
+      setProjects(prev => prev.map((p: any) => p.id === projectId ? data : p))
       setIsEditModalOpen(false)
       setSelectedProject(null)
     } catch (error) {
@@ -361,7 +361,7 @@ export default function ProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter((p: any: any) => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
     } catch (error) {
       console.error('Error deleting project:', error)
       setError('Failed to delete project. Please try again.')
@@ -369,7 +369,7 @@ export default function ProjectManagementPage() {
   }
 
   // Filter projects
-  const filteredProjects = projects.filter((project: any: any) => {
+  const filteredProjects = projects.filter((project: any) => {
     const matchesSearch = !searchTerm || 
       (project.title || project.project_name || project.project_title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (project.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1090,7 +1090,7 @@ function CreateProjectModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Create without work request</option>
-                  {workRequests.filter((wr: any: any) => wr.status === 'approved').map((wr: any: any) => (
+                  {workRequests.filter((wr: any) => wr.status === 'approved').map((wr: any) => (
                     <option key={wr.id} value={wr.id}>
                       {wr.title || `Work Request ${wr.id.slice(0, 8)}`}
                     </option>

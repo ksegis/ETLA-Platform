@@ -80,7 +80,7 @@ class WorkRequestService {
       throw new Error('Failed to fetch work requests')
     }
 
-    return data.map((item: any: any) => ({
+    return data.map((item: any) => ({
       ...item,
       customer_name: item.customer ? `${item.customer.first_name} ${item.customer.last_name}` : 'Unknown',
       customer_email: item.customer?.email || '',
@@ -105,7 +105,7 @@ class WorkRequestService {
       throw new Error('Failed to fetch work requests')
     }
 
-    return data.map((item: any: any) => ({
+    return data.map((item: any) => ({
       ...item,
       customer_name: item.customer ? `${item.customer.first_name} ${item.customer.last_name}` : 'Unknown',
       customer_email: item.customer?.email || '',

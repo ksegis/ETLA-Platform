@@ -324,8 +324,8 @@ export default function FullPMBOKProjectManagementPage() {
   // Calculate enhanced statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any: any) => p.charter_status === 'active' || p.charter_status === 'approved').length,
-    completedProjects: projects.filter((p: any: any) => p.completion_percentage === 100).length,
+    activeProjects: projects.filter((p: any) => p.charter_status === 'active' || p.charter_status === 'approved').length,
+    completedProjects: projects.filter((p: any) => p.completion_percentage === 100).length,
     totalBudget: projects.reduce((sum: any, p: any) => sum + (p.budget || 0), 0),
     actualSpend: projects.reduce((sum: any, p: any) => sum + (p.actual_budget || 0), 0),
     totalWorkRequests: workRequests.length,
@@ -336,7 +336,7 @@ export default function FullPMBOKProjectManagementPage() {
   }
 
   // Enhanced filter projects with all new fields
-  const filteredProjects = projects.filter((project: any: any) => {
+  const filteredProjects = projects.filter((project: any) => {
     const title = project.title || project.project_name || ''
     const description = project.description || ''
     const projectCode = project.project_code || ''
@@ -356,7 +356,7 @@ export default function FullPMBOKProjectManagementPage() {
   })
 
   // Filter work requests and risks (unchanged)
-  const filteredWorkRequests = workRequests.filter((wr: any: any) => {
+  const filteredWorkRequests = workRequests.filter((wr: any) => {
     const name = wr.name || wr.title || ''
     const description = wr.description || ''
     
@@ -367,7 +367,7 @@ export default function FullPMBOKProjectManagementPage() {
     return matchesSearch && matchesStatus
   })
 
-  const filteredRisks = risks.filter((risk: any: any) => {
+  const filteredRisks = risks.filter((risk: any) => {
     const name = risk.name || risk.title || ''
     const description = risk.description || ''
     
@@ -599,7 +599,7 @@ export default function FullPMBOKProjectManagementPage() {
       }
 
       console.log('Project updated successfully:', data)
-      setProjects(prev => prev.map((p: any: any) => p.id === selectedProject.id ? data[0] : p))
+      setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
       setShowEditModal(false)
       setSelectedProject(null)
     } catch (err) {
@@ -626,7 +626,7 @@ export default function FullPMBOKProjectManagementPage() {
         return
       }
 
-      setProjects(prev => prev.filter((p: any: any) => p.id !== projectId))
+      setProjects(prev => prev.filter((p: any) => p.id !== projectId))
     } catch (err) {
       console.error('Unexpected error deleting project:', err)
       setError('Failed to delete project due to an unexpected error.')

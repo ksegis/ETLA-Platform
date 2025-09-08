@@ -204,7 +204,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => 
       prev.includes(groupId) 
-        ? prev.filter((id: any: any) => id !== groupId)
+        ? prev.filter((id: any) => id !== groupId)
         : [...prev, groupId]
     )
   }

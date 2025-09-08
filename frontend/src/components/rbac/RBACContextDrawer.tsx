@@ -25,8 +25,8 @@ export default function RBACContextDrawer({
 }: RBACContextDrawerProps) {
   if (!isOpen) return null
 
-  const overridePermissions = userPermissions.filter((p: any: any) => p.origin === 'override')
-  const rolePermissions = userPermissions.filter((p: any: any) => p.origin === 'role' && p.state === 'allow')
+  const overridePermissions = userPermissions.filter((p: any) => p.origin === 'override')
+  const rolePermissions = userPermissions.filter((p: any) => p.origin === 'role' && p.state === 'allow')
 
   return (
     <>
@@ -97,7 +97,7 @@ export default function RBACContextDrawer({
                   Permission Overrides ({overridePermissions.length})
                 </h4>
                 <div className="space-y-2">
-                  {overridePermissions.map((permission: any: any) => (
+                  {overridePermissions.map((permission: any) => (
                     <div
                       key={permission.permissionId}
                       className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md"
@@ -146,7 +146,7 @@ export default function RBACContextDrawer({
                 Role Permissions ({rolePermissions.length})
               </h4>
               <div className="space-y-1 max-h-64 overflow-y-auto">
-                {rolePermissions.map((permission: any: any) => (
+                {rolePermissions.map((permission: any) => (
                   <div
                     key={permission.permissionId}
                     className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md"
@@ -168,7 +168,7 @@ export default function RBACContextDrawer({
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-3">All Permissions</h4>
               <div className="space-y-1 max-h-96 overflow-y-auto">
-                {userPermissions.map((permission: any: any) => (
+                {userPermissions.map((permission: any) => (
                   <div
                     key={permission.permissionId}
                     className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md"

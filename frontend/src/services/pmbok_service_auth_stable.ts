@@ -198,7 +198,7 @@ class PMBOKService {
       console.log('✅ Work requests fetched:', workRequestsData.length)
 
       // Step 2: Get customer information
-      const customerIds = Array.from(new Set(workRequestsData.map((wr: any: any) => wr.customer_id).filter(Boolean)))
+      const customerIds = Array.from(new Set(workRequestsData.map((wr: any) => wr.customer_id).filter(Boolean)))
       console.log('👥 Fetching customer info for IDs:', customerIds)
 
       let customerMap = new Map()
@@ -216,7 +216,7 @@ class PMBOKService {
           if (customersError) {
             console.warn('⚠️ Error fetching customers:', customersError)
           } else if (customersData) {
-            customersData.forEach((customer: any: any) => {
+            customersData.forEach((customer: any) => {
               customerMap.set(customer.id, customer)
             })
             console.log('✅ Customer data loaded:', customersData.length)
@@ -227,7 +227,7 @@ class PMBOKService {
       }
 
       // Step 3: Merge data gracefully
-      const workRequests: WorkRequest[] = workRequestsData.map((request: any: any) => {
+      const workRequests: WorkRequest[] = workRequestsData.map((request: any) => {
         const customer = customerMap.get(request.customer_id)
         const customerMissing = !customer && !!request.customer_id
 
@@ -249,8 +249,8 @@ class PMBOKService {
 
       console.log('✅ Work requests processed successfully:', {
         total: workRequests.length,
-        withCustomers: workRequests.filter((wr: any: any) => !wr.customer_missing).length,
-        missingCustomers: workRequests.filter((wr: any: any) => wr.customer_missing).length
+        withCustomers: workRequests.filter((wr: any) => !wr.customer_missing).length,
+        missingCustomers: workRequests.filter((wr: any) => wr.customer_missing).length
       })
 
       return workRequests

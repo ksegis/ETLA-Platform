@@ -163,11 +163,11 @@ export default function WorkRequestsPage() {
       // Calculate stats - FIXED to use correct enum values
       const requestStats = {
         total: data?.length || 0,
-        submitted: data?.filter((r: any: any) => r.status === 'submitted').length || 0,
-        under_review: data?.filter((r: any: any) => r.status === 'under_review').length || 0,
-        approved: data?.filter((r: any: any) => r.status === 'approved').length || 0,
-        in_progress: data?.filter((r: any: any) => r.status === 'in_progress').length || 0,
-        completed: data?.filter((r: any: any) => r.status === 'completed').length || 0
+        submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
+        under_review: data?.filter((r: any) => r.status === 'under_review').length || 0,
+        approved: data?.filter((r: any) => r.status === 'approved').length || 0,
+        in_progress: data?.filter((r: any) => r.status === 'in_progress').length || 0,
+        completed: data?.filter((r: any) => r.status === 'completed').length || 0
       }
       setStats(requestStats)
 
@@ -326,7 +326,7 @@ export default function WorkRequestsPage() {
       }
 
       console.log('Updated work request:', data)
-      setWorkRequests(prev => prev.map((req: any: any) => req.id === selectedRequest.id ? data : req))
+      setWorkRequests(prev => prev.map((req: any) => req.id === selectedRequest.id ? data : req))
       setIsEditModalOpen(false)
       setSelectedRequest(null)
       setError(null)
@@ -353,7 +353,7 @@ export default function WorkRequestsPage() {
         return
       }
 
-      setWorkRequests(prev => prev.filter((r: any: any) => r.id !== requestId))
+      setWorkRequests(prev => prev.filter((r: any) => r.id !== requestId))
       loadWorkRequests() // Reload to update stats
       setError(null)
     } catch (error) {
@@ -367,7 +367,7 @@ export default function WorkRequestsPage() {
     let filtered = workRequests
 
     if (searchTerm) {
-      filtered = filtered.filter((request: any: any) =>
+      filtered = filtered.filter((request: any) =>
         request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.business_justification?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -375,11 +375,11 @@ export default function WorkRequestsPage() {
     }
 
     if (statusFilter) {
-      filtered = filtered.filter((request: any: any) => request.status === statusFilter)
+      filtered = filtered.filter((request: any) => request.status === statusFilter)
     }
 
     if (priorityFilter) {
-      filtered = filtered.filter((request: any: any) => request.priority === priorityFilter)
+      filtered = filtered.filter((request: any) => request.priority === priorityFilter)
     }
 
     setFilteredRequests(filtered)

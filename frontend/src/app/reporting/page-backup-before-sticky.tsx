@@ -528,7 +528,7 @@ const EnhancedReportingPage: React.FC = () => {
 
   // Enhanced filtering function (keeping existing implementation)
   const applyFilters = (data: any[], dataType: string) => {
-    return data.filter((item: any: any) => {
+    return data.filter((item: any) => {
       // Search term filter
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
@@ -602,8 +602,8 @@ const EnhancedReportingPage: React.FC = () => {
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
-      ...data.map((row: any: any) => 
-        headers.map((header: any: any) => {
+      ...data.map((row: any) => 
+        headers.map((header: any) => {
           const value = row[header];
           return typeof value === 'string' && value.includes(',') 
             ? `"${value}"` 

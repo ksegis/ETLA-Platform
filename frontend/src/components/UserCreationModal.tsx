@@ -295,7 +295,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Tenant</option>
-                    {tenants.map((tenant: any: any) => (
+                    {tenants.map((tenant: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name} ({tenant.tenant_type})
                       </option>

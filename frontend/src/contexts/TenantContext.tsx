@@ -95,7 +95,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
         if (accessError) throw accessError
         
         if (accessData && accessData.length > 0) {
-          const tenantIds = accessData.map((item: any: any) => item.tenant_id)
+          const tenantIds = accessData.map((item: any) => item.tenant_id)
           
           // Then get the actual tenant records
           const { data: tenantsData, error: tenantsError } = await supabase

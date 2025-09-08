@@ -142,7 +142,7 @@ export const RBACTestComponent: React.FC = () => {
       <div className="mb-8 p-4 bg-blue-50 rounded-lg">
         <h2 className="text-lg font-semibold mb-4">Feature Access Tests</h2>
         <div className="space-y-2 text-sm">
-          {Object.values(FEATURES).map((feature: any: any) => (
+          {Object.values(FEATURES).map((feature: any) => (
             <div key={feature} className="flex justify-between">
               <span>{feature}:</span>
               <span className={permissions.canAccessFeature(feature) ? 'text-green-600' : 'text-red-600'}>

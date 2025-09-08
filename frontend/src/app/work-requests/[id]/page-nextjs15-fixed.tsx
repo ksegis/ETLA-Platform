@@ -245,11 +245,11 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
   }
 
   const formatStatus = (status: string) => {
-    return status.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return status.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatCategory = (category: string) => {
-    return category.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return category.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatFileSize = (bytes: number) => {

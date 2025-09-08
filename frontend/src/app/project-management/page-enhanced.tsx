@@ -160,27 +160,27 @@ export default function ProjectManagementPage() {
   // Calculate dashboard metrics from REAL data only
   const workRequestMetrics = {
     total: dashboardData.workRequests.length,
-    pending: dashboardData.workRequests.filter((r: any: any) => r.status === 'submitted' || r.status === 'under_review').length,
-    active: dashboardData.workRequests.filter((r: any: any) => r.status === 'in_progress' || r.status === 'approved').length,
-    completed: dashboardData.workRequests.filter((r: any: any) => r.status === 'completed').length
+    pending: dashboardData.workRequests.filter((r: any) => r.status === 'submitted' || r.status === 'under_review').length,
+    active: dashboardData.workRequests.filter((r: any) => r.status === 'in_progress' || r.status === 'approved').length,
+    completed: dashboardData.workRequests.filter((r: any) => r.status === 'completed').length
   }
 
   const projectMetrics = {
     total: dashboardData.projectCharters.length,
-    active: dashboardData.projectCharters.filter((p: any: any) => p.charter_status === 'active').length,
+    active: dashboardData.projectCharters.filter((p: any) => p.charter_status === 'active').length,
     totalBudget: dashboardData.projectCharters.reduce((sum: any, p: any) => sum + (p.estimated_budget || 0), 0),
     compliance: dashboardData.projectCharters.length > 0 ? 85 : 0 // Calculate from actual data
   }
 
   const riskMetrics = {
     total: dashboardData.risks.length,
-    high: dashboardData.risks.filter((r: any: any) => r.risk_level === 'high').length,
-    medium: dashboardData.risks.filter((r: any: any) => r.risk_level === 'medium').length,
-    mitigated: dashboardData.risks.filter((r: any: any) => r.status === 'resolved').length
+    high: dashboardData.risks.filter((r: any) => r.risk_level === 'high').length,
+    medium: dashboardData.risks.filter((r: any) => r.risk_level === 'medium').length,
+    mitigated: dashboardData.risks.filter((r: any) => r.status === 'resolved').length
   }
 
   // Filter functions using REAL data
-  const filteredWorkRequests = dashboardData.workRequests.filter((request: any: any) => {
+  const filteredWorkRequests = dashboardData.workRequests.filter((request: any) => {
     const matchesSearch = request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter
@@ -188,12 +188,12 @@ export default function ProjectManagementPage() {
     return matchesSearch && matchesStatus && matchesPriority
   })
 
-  const filteredProjectCharters = dashboardData.projectCharters.filter((charter: any: any) => {
+  const filteredProjectCharters = dashboardData.projectCharters.filter((charter: any) => {
     return charter.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
            charter.project_code?.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  const filteredRisks = dashboardData.risks.filter((risk: any: any) => {
+  const filteredRisks = dashboardData.risks.filter((risk: any) => {
     return risk.risk_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
            risk.risk_description?.toLowerCase().includes(searchTerm.toLowerCase())
   })

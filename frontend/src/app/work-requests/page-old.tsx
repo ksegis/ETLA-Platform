@@ -94,7 +94,7 @@ function WorkRequestsContent() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
 
-  const filteredRequests = requests.filter((request: any: any) => {
+  const filteredRequests = requests.filter((request: any) => {
     const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.description.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter
@@ -104,11 +104,11 @@ function WorkRequestsContent() {
   })
 
   const formatStatus = (status: string) => {
-    return status.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return status.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   const formatCategory = (category: string) => {
-    return category.split('_').map((word: any: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return category.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }
 
   return (
@@ -147,7 +147,7 @@ function WorkRequestsContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Under Review</p>
               <p className="text-2xl font-bold text-gray-900">
-                {requests.filter((r: any: any) => r.status === 'under_review').length}
+                {requests.filter((r: any) => r.status === 'under_review').length}
               </p>
             </div>
           </div>
@@ -161,7 +161,7 @@ function WorkRequestsContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">In Progress</p>
               <p className="text-2xl font-bold text-gray-900">
-                {requests.filter((r: any: any) => r.status === 'in_progress').length}
+                {requests.filter((r: any) => r.status === 'in_progress').length}
               </p>
             </div>
           </div>
@@ -175,7 +175,7 @@ function WorkRequestsContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Completed</p>
               <p className="text-2xl font-bold text-gray-900">
-                {requests.filter((r: any: any) => r.status === 'completed').length}
+                {requests.filter((r: any) => r.status === 'completed').length}
               </p>
             </div>
           </div>

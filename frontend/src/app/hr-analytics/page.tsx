@@ -90,11 +90,11 @@ export default function HRAnalyticsDashboard() {
       }
 
       // Calculate metrics
-      const activeEmployees = employees?.filter((emp: any: any) => emp.status === 'active').length || 0;
-      const terminatedEmployees = employees?.filter((emp: any: any) => emp.status === 'terminated').length || 0;
-      const onLeaveEmployees = employees?.filter((emp: any: any) => emp.status === 'on_leave').length || 0;
+      const activeEmployees = employees?.filter((emp: any) => emp.status === 'active').length || 0;
+      const terminatedEmployees = employees?.filter((emp: any) => emp.status === 'terminated').length || 0;
+      const onLeaveEmployees = employees?.filter((emp: any) => emp.status === 'on_leave').length || 0;
       
-      const totalPayroll = payroll?.reduce((sum: number: any, pay: any: any: any) => sum + (parseFloat(pay.gross_pay) || 0), 0) || 0;
+      const totalPayroll = payroll?.reduce((sum: number: any, pay: any) => sum + (parseFloat(pay.gross_pay) || 0), 0) || 0;
       const averageSalary = activeEmployees > 0 ? totalPayroll / activeEmployees : 0;
 
       setHrMetrics({

@@ -152,7 +152,7 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const formattedUsers: User[] = users?.map((user: any: any) => ({
+      const formattedUsers: User[] = users?.map((user: any) => ({
         id: user.id,
         email: user.email || 'N/A',
         full_name: user.full_name || 'Unknown',
@@ -212,7 +212,7 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const roleStats: RoleStats[] = (Object.entries(stats?.reduce((acc: Record<string: any, number>, user: any: any: any) => {
+      const roleStats: RoleStats[] = (Object.entries(stats?.reduce((acc: Record<string: any, number>, user: any) => {
         const key = `${user.role_level}_${user.role}`
         acc[key] = (acc[key] || 0) + 1
         return acc
@@ -284,7 +284,7 @@ export default function AccessControlPageEnhanced() {
   const exportUsers = () => {
     const csvContent = [
       ['Email', 'Name', 'Role', 'Level', 'Tenant', 'Status', 'Last Login', 'Created'].join(','),
-      ...filteredUsers.map((user: any: any) => [
+      ...filteredUsers.map((user: any) => [
         user.email,
         user.full_name,
         user.role,

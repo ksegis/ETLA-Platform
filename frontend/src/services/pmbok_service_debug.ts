@@ -189,7 +189,7 @@ export class PMBOKService {
             this.supabase
               .from('profiles')
               .select('id, full_name')
-              .in('id', simpleData.map((r: any: any) => r.customer_id).filter(Boolean))
+              .in('id', simpleData.map((r: any) => r.customer_id).filter(Boolean))
               .limit(10),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Profile query timeout')), 5000))
           ]) as any
@@ -200,10 +200,10 @@ export class PMBOKService {
             console.log('✅ Profile query succeeded, found', profileData?.length || 0, 'profiles')
             
             // Create a map for quick lookup
-            const profileMap = new Map(profileData?.map((p: any: any) => [p.id, p.full_name]) || [])
+            const profileMap = new Map(profileData?.map((p: any) => [p.id, p.full_name]) || [])
             
             // Transform data with customer names
-            const transformedData = simpleData.map((request: any: any) => ({
+            const transformedData = simpleData.map((request: any) => ({
               ...request,
               customer_name: profileMap.get(request.customer_id) || 'Unknown Customer',
               customer_email: '', // profiles table doesn't have email
@@ -219,7 +219,7 @@ export class PMBOKService {
       }
 
       // Fallback: Return simple data without customer names
-      const fallbackData = (simpleData || []).map((request: any: any) => ({
+      const fallbackData = (simpleData || []).map((request: any) => ({
         ...request,
         customer_name: 'Customer ID: ' + request.customer_id,
         customer_email: '',

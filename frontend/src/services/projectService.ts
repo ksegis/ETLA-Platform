@@ -108,7 +108,7 @@ class ProjectService {
       throw new Error('Failed to fetch projects')
     }
 
-    return data.map((item: any: any) => ({
+    return data.map((item: any) => ({
       ...item,
       work_request_title: item.work_request?.title || '',
       team_lead_name: item.team_lead?.name || '',

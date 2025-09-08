@@ -153,7 +153,7 @@ export default function ProjectManagementPage() {
 
   // Filter functions
   const getFilteredWorkRequests = () => {
-    return dashboardData.workRequests.filter((request: any: any) => {
+    return dashboardData.workRequests.filter((request: any) => {
       const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            request.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -165,7 +165,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredProjects = () => {
-    return dashboardData.projects.filter((project: any: any) => {
+    return dashboardData.projects.filter((project: any) => {
       const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase())
       
       if (statusFilter === 'all') return matchesSearch
@@ -174,7 +174,7 @@ export default function ProjectManagementPage() {
   }
 
   const getFilteredRisks = () => {
-    return dashboardData.risks.filter((risk: any: any) => {
+    return dashboardData.risks.filter((risk: any) => {
       const matchesSearch = risk.title.toLowerCase().includes(searchTerm.toLowerCase())
       
       if (statusFilter === 'all') return matchesSearch
@@ -188,15 +188,15 @@ export default function ProjectManagementPage() {
     
     return {
       total: workRequests.length,
-      pending: workRequests.filter((r: any: any) => {
+      pending: workRequests.filter((r: any) => {
         const status = r.approval_status || r.status
         return status === 'submitted' || status === 'under_review'
       }).length,
-      active: workRequests.filter((r: any: any) => {
+      active: workRequests.filter((r: any) => {
         const status = r.approval_status || r.status
         return status === 'approved' || status === 'in_progress' || status === 'converted_to_project'
       }).length,
-      completed: workRequests.filter((r: any: any) => {
+      completed: workRequests.filter((r: any) => {
         const status = r.approval_status || r.status
         return status === 'completed'
       }).length
@@ -328,7 +328,7 @@ export default function ProjectManagementPage() {
               { id: 'risks', label: 'Risks', icon: AlertTriangle },
               { id: 'stakeholders', label: 'Stakeholders', icon: Users },
               { id: 'compliance', label: 'Compliance', icon: CheckCircle }
-            ].map((tab: any: any) => {
+            ].map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button

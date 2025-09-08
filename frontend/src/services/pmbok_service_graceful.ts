@@ -150,13 +150,13 @@ class PMBOKService {
       // Step 3: Create customer lookup map
       const customerMap = new Map()
       if (customersData) {
-        customersData.forEach((customer: any: any) => {
+        customersData.forEach((customer: any) => {
           customerMap.set(customer.id, customer)
         })
       }
 
       // Step 4: Merge data gracefully, marking missing customers
-      const workRequests: WorkRequest[] = workRequestsData.map((request: any: any) => {
+      const workRequests: WorkRequest[] = workRequestsData.map((request: any) => {
         const customer = customerMap.get(request.customer_id)
         
         if (!customer) {

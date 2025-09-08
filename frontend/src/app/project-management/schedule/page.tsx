@@ -104,7 +104,7 @@ export default function ProjectSchedulePage() {
 
   const teamMembers = ['Sarah Johnson', 'Mike Chen', 'Lisa Wang', 'David Kim']
 
-  const filteredProjects = projects.filter((project: any: any) => {
+  const filteredProjects = projects.filter((project: any) => {
     const matchesTeamMember = selectedTeamMember === 'all' || project.assignedTo === selectedTeamMember
     const matchesStatus = selectedStatus === 'all' || project.status === selectedStatus
     return matchesTeamMember && matchesStatus
@@ -127,7 +127,7 @@ export default function ProjectSchedulePage() {
 
   const getProjectsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0]
-    return filteredProjects.filter((project: any: any) => {
+    return filteredProjects.filter((project: any) => {
       const startDate = new Date(project.startDate)
       const endDate = new Date(project.endDate)
       return date >= startDate && date <= endDate
@@ -170,7 +170,7 @@ export default function ProjectSchedulePage() {
             {day}
           </div>
           <div className="space-y-1">
-            {dayProjects.slice(0, 3).map((project: any: any) => (
+            {dayProjects.slice(0, 3).map((project: any) => (
               <div
                 key={`${project.id}-${day}`}
                 className={`text-xs p-1 rounded border-l-2 ${statusColors[project.status as keyof typeof statusColors as keyof typeof statusColors as keyof typeof statusColors]} ${priorityColors[project.priority as keyof typeof priorityColors as keyof typeof priorityColors as keyof typeof priorityColors]} cursor-pointer hover:opacity-80`}
@@ -196,8 +196,8 @@ export default function ProjectSchedulePage() {
   const getWorkloadStats = () => {
     const totalHours = filteredProjects.reduce((sum: any, project: any) => sum + project.estimatedHours, 0)
     const completedHours = filteredProjects.reduce((sum: any, project: any) => sum + (project.completedHours || 0), 0)
-    const activeProjects = filteredProjects.filter((p: any: any) => p.status === 'in_progress').length
-    const scheduledProjects = filteredProjects.filter((p: any: any) => p.status === 'scheduled').length
+    const activeProjects = filteredProjects.filter((p: any) => p.status === 'in_progress').length
+    const scheduledProjects = filteredProjects.filter((p: any) => p.status === 'scheduled').length
 
     return { totalHours, completedHours, activeProjects, scheduledProjects }
   }
@@ -298,7 +298,7 @@ export default function ProjectSchedulePage() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Team Members</option>
-            {teamMembers.map((member: any: any) => (
+            {teamMembers.map((member: any) => (
               <option key={member} value={member}>{member}</option>
             ))}
           </select>
@@ -392,7 +392,7 @@ export default function ProjectSchedulePage() {
         {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-0">
           {/* Day Headers */}
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day: any: any) => (
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day: any) => (
             <div key={day} className="p-3 text-sm font-medium text-gray-500 bg-gray-50 border-b border-gray-200 text-center">
               {day}
             </div>
@@ -415,7 +415,7 @@ export default function ProjectSchedulePage() {
               <p className="text-gray-500">No projects found matching your criteria.</p>
             </div>
           ) : (
-            filteredProjects.map((project: any: any) => (
+            filteredProjects.map((project: any) => (
               <div key={project.id} className="px-6 py-4 hover:bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">

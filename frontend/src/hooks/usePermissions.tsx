@@ -265,8 +265,8 @@ export function usePermissions() {
 
     // Get all permissions for this feature
     return userPermissions
-      .filter((p: any: any) => p.feature === feature)
-      .map((p: any: any) => p.permission)
+      .filter((p: any) => p.feature === feature)
+      .map((p: any) => p.permission)
   }
 
   // Check if user can perform specific actions
@@ -320,7 +320,7 @@ export function usePermissions() {
     }
 
     // Get unique features from user permissions
-    return Array.from(new Set(userPermissions.map((p: any: any) => p.feature)))
+    return Array.from(new Set(userPermissions.map((p: any) => p.feature)))
   }
 
   // Check if user is admin (any admin role)

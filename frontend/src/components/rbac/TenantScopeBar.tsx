@@ -54,7 +54,7 @@ export default function TenantScopeBar({
                       No tenants available
                     </div>
                   ) : (
-                    tenants.map((tenant: any: any) => (
+                    tenants.map((tenant: any) => (
                       <button
                         key={tenant.id}
                         onClick={() => {

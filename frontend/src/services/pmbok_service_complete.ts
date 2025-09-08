@@ -150,13 +150,13 @@ class PMBOKService {
       // Step 3: Create customer lookup map
       const customerMap = new Map()
       if (customersData) {
-        customersData.forEach((customer: any: any) => {
+        customersData.forEach((customer: any) => {
           customerMap.set(customer.id, customer)
         })
       }
 
       // Step 4: Merge data gracefully, marking missing customers
-      const workRequests: WorkRequest[] = workRequestsData.map((request: any: any) => {
+      const workRequests: WorkRequest[] = workRequestsData.map((request: any) => {
         const customer = customerMap.get(request.customer_id)
         
         if (!customer) {
@@ -206,7 +206,7 @@ class PMBOKService {
       const workRequests = await this.getWorkRequests()
       const missingCustomers = new Map<string, MissingCustomer>()
 
-      workRequests.forEach((request: any: any) => {
+      workRequests.forEach((request: any) => {
         if (request.customer_missing) {
           const existing = missingCustomers.get(request.customer_id)
           if (existing) {
@@ -415,7 +415,7 @@ class PMBOKService {
       if (createProject) {
         // Create project charter from work request
         const workRequests = await this.getWorkRequests()
-        const workRequest = workRequests.find((wr: any: any) => wr.id === workRequestId)
+        const workRequest = workRequests.find((wr: any) => wr.id === workRequestId)
         
         if (workRequest) {
           await this.createProjectCharter({

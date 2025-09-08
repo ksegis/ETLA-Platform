@@ -131,15 +131,15 @@ export default function ProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any: any) => (p.status || '') === 'active' || (p.status || '') === 'in_progress').length,
-    completedProjects: projects.filter((p: any: any) => (p.status || '') === 'completed').length,
+    activeProjects: projects.filter((p: any) => (p.status || '') === 'active' || (p.status || '') === 'in_progress').length,
+    completedProjects: projects.filter((p: any) => (p.status || '') === 'completed').length,
     totalWorkRequests: workRequests.length,
-    pendingWorkRequests: workRequests.filter((wr: any: any) => (wr.status || '') === 'submitted' || (wr.status || '') === 'under_review').length,
-    approvedWorkRequests: workRequests.filter((wr: any: any) => (wr.status || '') === 'approved').length
+    pendingWorkRequests: workRequests.filter((wr: any) => (wr.status || '') === 'submitted' || (wr.status || '') === 'under_review').length,
+    approvedWorkRequests: workRequests.filter((wr: any) => (wr.status || '') === 'approved').length
   }
 
   // Filter projects
-  const filteredProjects = projects.filter((project: any: any) => {
+  const filteredProjects = projects.filter((project: any) => {
     const matchesSearch = (project.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (project.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || (project.status || '') === statusFilter
