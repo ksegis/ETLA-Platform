@@ -176,24 +176,24 @@ const createMockSupabaseClient = () => {
   return {
     from: (table: string) => ({
       select: (columns?: string) => ({
-        eq: (column: string, value: any) => ({
-          order: (column: string, options?: any) => ({
+        eq: (column: string, value) => ({
+          order: (column: string, options?) => ({
             limit: (limit: number) => Promise.resolve({ data: getMockData(table), error: null }),
-            then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+            then: (resolve) => resolve({ data: getMockData(table), error: null })
           }),
-          then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+          then: (resolve) => resolve({ data: getMockData(table), error: null })
         }),
-        order: (column: string, options?: any) => ({
-          then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+        order: (column: string, options?) => ({
+          then: (resolve) => resolve({ data: getMockData(table), error: null })
         }),
-        then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+        then: (resolve) => resolve({ data: getMockData(table), error: null })
       }),
-      insert: (data: any) => Promise.resolve({ data, error: null }),
-      update: (data: any) => ({
-        eq: (column: string, value: any) => Promise.resolve({ data, error: null })
+      insert: (data) => Promise.resolve({ data, error: null }),
+      update: (data) => ({
+        eq: (column: string, value) => Promise.resolve({ data, error: null })
       }),
       delete: () => ({
-        eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
+        eq: (column: string, value) => Promise.resolve({ data: null, error: null })
       })
     }),
     auth: {

@@ -355,11 +355,11 @@ export default function WorkRequestsPage() {
       // Calculate stats
       const requestStats = {
         total: data?.length || 0,
-        submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
-        under_review: data?.filter((r: any) => r.status === 'under_review').length || 0,
-        approved: data?.filter((r: any) => r.status === 'approved').length || 0,
-        in_progress: data?.filter((r: any) => r.status === 'in_progress').length || 0,
-        completed: data?.filter((r: any) => r.status === 'completed').length || 0
+        submitted: data?.filter((r) => r.status === 'submitted').length || 0,
+        under_review: data?.filter((r) => r.status === 'under_review').length || 0,
+        approved: data?.filter((r) => r.status === 'approved').length || 0,
+        in_progress: data?.filter((r) => r.status === 'in_progress').length || 0,
+        completed: data?.filter((r) => r.status === 'completed').length || 0
       }
       setStats(requestStats)
 

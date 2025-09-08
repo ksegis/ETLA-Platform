@@ -81,7 +81,7 @@ export default function NewWorkRequestPage() {
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter((tag: any) => tag !== tagToRemove)
+      tags: prev.tags.filter((tag) => tag !== tagToRemove)
     }))
   }
 
@@ -96,7 +96,7 @@ export default function NewWorkRequestPage() {
   const removeFile = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      attachments: prev.attachments.filter((_, i: any) => i !== index)
+      attachments: prev.attachments.filter((_, i) => i !== index)
     }))
   }
 

@@ -102,7 +102,7 @@ export default function AccessControlPage() {
       const effectivePermissions = await RBACAdminService.getEffectivePermissions(selectedTenant.id, userIds)
 
       // Build matrix rows
-      const matrixUsers: RBACMatrixRowUser[] = userList.map((user: any) => ({
+      const matrixUsers: RBACMatrixRowUser[] = userList.map((user) => ({
         userId: user.userId,
         email: user.email,
         display_name: user.display_name,

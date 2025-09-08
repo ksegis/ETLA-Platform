@@ -512,7 +512,7 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Select team member</option>
-                  {teamMembers.filter((m: any) => m.availability === 'Available').map((member: any) => (
+                  {teamMembers.filter((m: any) => m.availability === 'Available').map((member) => (
                     <option key={member.id} value={member.name}>{member.name}</option>
                   ))}
                 </select>

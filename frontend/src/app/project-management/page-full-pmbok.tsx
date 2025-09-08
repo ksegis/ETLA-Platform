@@ -324,14 +324,14 @@ export default function FullPMBOKProjectManagementPage() {
   // Calculate enhanced statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => p.charter_status === 'active' || p.charter_status === 'approved').length,
-    completedProjects: projects.filter((p: any) => p.completion_percentage === 100).length,
-    totalBudget: projects.reduce((sum: any, p: any) => sum + (p.budget || 0), 0),
-    actualSpend: projects.reduce((sum: any, p: any) => sum + (p.actual_budget || 0), 0),
+    activeProjects: projects.filter((p) => p.charter_status === 'active' || p.charter_status === 'approved').length,
+    completedProjects: projects.filter((p) => p.completion_percentage === 100).length,
+    totalBudget: projects.reduce((sum, p: any) => sum + (p.budget || 0), 0),
+    actualSpend: projects.reduce((sum, p: any) => sum + (p.actual_budget || 0), 0),
     totalWorkRequests: workRequests.length,
     totalRisks: risks.length,
     averageCompletion: projects.length > 0 
-      ? Math.round(projects.reduce((sum: any, p: any) => sum + (p.completion_percentage || 0), 0) / projects.length)
+      ? Math.round(projects.reduce((sum: any, p) => sum + (p.completion_percentage || 0), 0) / projects.length)
       : 0
   }
 

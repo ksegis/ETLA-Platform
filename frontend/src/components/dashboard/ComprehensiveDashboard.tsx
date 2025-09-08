@@ -115,23 +115,23 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       const employees = employeesResult.data || [];
       const employeeMetrics = {
         total: employees.length,
-        active: employees.filter((e: any) => e.employment_status === 'active').length,
-        terminated: employees.filter((e: any) => e.employment_status === 'terminated').length,
-        onLeave: employees.filter((e: any) => e.employment_status === 'on_leave').length,
-        byDepartment: employees.reduce((acc: any, e: any) => {
+        active: employees.filter((e) => e.employment_status === 'active').length,
+        terminated: employees.filter((e) => e.employment_status === 'terminated').length,
+        onLeave: employees.filter((e) => e.employment_status === 'on_leave').length,
+        byDepartment: employees.reduce((acc, e: any) => {
           const dept = e.home_department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
         }, {}),
         byFlsaStatus: {
-          exempt: employees.filter((e: any) => e.flsa_status === 'exempt').length,
-          nonExempt: employees.filter((e: any) => e.flsa_status === 'non-exempt').length
+          exempt: employees.filter((e) => e.flsa_status === 'exempt').length,
+          nonExempt: employees.filter((e) => e.flsa_status === 'non-exempt').length
         },
         byUnionStatus: {
-          union: employees.filter((e: any) => e.union_status === 'union_member').length,
-          nonUnion: employees.filter((e: any) => e.union_status === 'non_union').length
+          union: employees.filter((e) => e.union_status === 'union_member').length,
+          nonUnion: employees.filter((e) => e.union_status === 'non_union').length
         },
-        byEeoCategory: employees.reduce((acc: any, e: any) => {
+        byEeoCategory: employees.reduce((acc, e: any) => {
           const category = e.eeo_categories || 'Not Specified';
           acc[category] = (acc[category] || 0) + 1;
           return acc;
@@ -142,105 +142,105 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       const payStatements = payStatementsResult.data || [];
       const payStatementMetrics = {
         total: payStatements.length,
-        totalGrossPay: payStatements.reduce((sum: any, p: any) => sum + (p.gross_pay || 0), 0),
-        totalNetPay: payStatements.reduce((sum: any, p: any) => sum + (p.net_pay || 0), 0),
-        totalTaxes: payStatements.reduce((sum: any, p: any) => sum + (p.federal_tax_withheld || 0) + (p.state_tax_withheld || 0), 0),
-        byMonth: payStatements.reduce((acc: any, p: any) => {
+        totalGrossPay: payStatements.reduce((sum, p: any) => sum + (p.gross_pay || 0), 0),
+        totalNetPay: payStatements.reduce((sum, p: any) => sum + (p.net_pay || 0), 0),
+        totalTaxes: payStatements.reduce((sum, p: any) => sum + (p.federal_tax_withheld || 0) + (p.state_tax_withheld || 0), 0),
+        byMonth: payStatements.reduce((acc, p: any) => {
           const month = new Date(p.pay_date).toISOString().substring(0, 7);
           if (!acc[month]) acc[month] = { count: 0, grossPay: 0 };
           acc[month].count += 1;
           acc[month].grossPay += p.gross_pay || 0;
           return acc;
         }, {}),
-        byDepartment: payStatements.reduce((acc: any, p: any) => {
+        byDepartment: payStatements.reduce((acc, p: any) => {
           const dept = p.department || 'Unknown';
           if (!acc[dept]) acc[dept] = { count: 0, grossPay: 0 };
           acc[dept].count += 1;
           acc[dept].grossPay += p.gross_pay || 0;
           return acc;
         }, {}),
-        averageGrossPay: payStatements.length > 0 ? payStatements.reduce((sum: any, p: any) => sum + (p.gross_pay || 0), 0) / payStatements.length : 0,
-        averageNetPay: payStatements.length > 0 ? payStatements.reduce((sum: any, p: any) => sum + (p.net_pay || 0), 0) / payStatements.length : 0
+        averageGrossPay: payStatements.length > 0 ? payStatements.reduce((sum, p: any) => sum + (p.gross_pay || 0), 0) / payStatements.length : 0,
+        averageNetPay: payStatements.length > 0 ? payStatements.reduce((sum, p: any) => sum + (p.net_pay || 0), 0) / payStatements.length : 0
       };
 
       // Process timecard metrics
       const timecards = timecardsResult.data || [];
       const timecardMetrics = {
         total: timecards.length,
-        totalHours: timecards.reduce((sum: any, t: any) => sum + (t.total_hours || 0), 0),
-        regularHours: timecards.reduce((sum: any, t: any) => sum + (t.regular_hours || 0), 0),
-        overtimeHours: timecards.reduce((sum: any, t: any) => sum + (t.overtime_hours || 0), 0),
-        holidayHours: timecards.reduce((sum: any, t: any) => sum + (t.holiday_hours || 0), 0),
-        byApprovalStatus: timecards.reduce((acc: any, t: any) => {
+        totalHours: timecards.reduce((sum, t: any) => sum + (t.total_hours || 0), 0),
+        regularHours: timecards.reduce((sum, t: any) => sum + (t.regular_hours || 0), 0),
+        overtimeHours: timecards.reduce((sum, t: any) => sum + (t.overtime_hours || 0), 0),
+        holidayHours: timecards.reduce((sum, t: any) => sum + (t.holiday_hours || 0), 0),
+        byApprovalStatus: timecards.reduce((acc, t: any) => {
           const status = t.approval_status || 'pending';
           acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {}),
-        byDepartment: timecards.reduce((acc: any, t: any) => {
+        byDepartment: timecards.reduce((acc, t: any) => {
           const dept = t.department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
         }, {}),
-        averageHoursPerEmployee: employees.length > 0 ? timecards.reduce((sum: any, t: any) => sum + (t.total_hours || 0), 0) / employees.length : 0
+        averageHoursPerEmployee: employees.length > 0 ? timecards.reduce((sum, t: any) => sum + (t.total_hours || 0), 0) / employees.length : 0
       };
 
       // Process job metrics
       const jobs = jobsResult.data || [];
       const jobMetrics = {
         total: jobs.length,
-        byDepartment: jobs.reduce((acc: any, j: any) => {
+        byDepartment: jobs.reduce((acc, j: any) => {
           const dept = j.department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
         }, {}),
         byFlsaClassification: {
-          exempt: jobs.filter((j: any) => j.flsa_classification === 'exempt').length,
-          nonExempt: jobs.filter((j: any) => j.flsa_classification === 'non-exempt').length
+          exempt: jobs.filter((j) => j.flsa_classification === 'exempt').length,
+          nonExempt: jobs.filter((j) => j.flsa_classification === 'non-exempt').length
         },
         payRangeAnalysis: {
-          minRange: jobs.length > 0 ? Math.min(...jobs.map((j: any) => j.min_pay_range || 0)) : 0,
-          maxRange: jobs.length > 0 ? Math.max(...jobs.map((j: any) => j.max_pay_range || 0)) : 0,
-          averageRange: jobs.length > 0 ? jobs.reduce((sum: any, j: any) => sum + (j.midpoint_pay || 0), 0) / jobs.length : 0
+          minRange: jobs.length > 0 ? Math.min(...jobs.map((j) => j.min_pay_range || 0)) : 0,
+          maxRange: jobs.length > 0 ? Math.max(...jobs.map((j) => j.max_pay_range || 0)) : 0,
+          averageRange: jobs.length > 0 ? jobs.reduce((sum, j: any) => sum + (j.midpoint_pay || 0), 0) / jobs.length : 0
         },
-        totalEmployeesInJobs: jobs.reduce((sum: any, j: any) => sum + (j.employee_count || 0), 0)
+        totalEmployeesInJobs: jobs.reduce((sum, j: any) => sum + (j.employee_count || 0), 0)
       };
 
       // Process tax record metrics
       const taxRecords = taxRecordsResult.data || [];
       const taxMetrics = {
         total: taxRecords.length,
-        byFormType: taxRecords.reduce((acc: any, t: any) => {
+        byFormType: taxRecords.reduce((acc, t: any) => {
           const type = t.form_type || 'Unknown';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {}),
-        byTaxYear: taxRecords.reduce((acc: any, t: any) => {
+        byTaxYear: taxRecords.reduce((acc, t: any) => {
           const year = t.tax_year?.toString() || 'Unknown';
           acc[year] = (acc[year] || 0) + 1;
           return acc;
         }, {}),
-        byStatus: taxRecords.reduce((acc: any, t: any) => {
+        byStatus: taxRecords.reduce((acc, t: any) => {
           const status = t.document_status || 'Unknown';
           acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {}),
-        totalWages: taxRecords.reduce((sum: any, t: any) => sum + (t.wages_tips_compensation || 0), 0),
-        totalTaxesWithheld: taxRecords.reduce((sum: any, t: any) => sum + (t.federal_income_tax_withheld || 0) + (t.state_income_tax || 0), 0)
+        totalWages: taxRecords.reduce((sum, t: any) => sum + (t.wages_tips_compensation || 0), 0),
+        totalTaxesWithheld: taxRecords.reduce((sum, t: any) => sum + (t.federal_income_tax_withheld || 0) + (t.state_income_tax || 0), 0)
       };
 
       // Process benefit metrics
       const benefits = benefitsResult.data || [];
       const benefitMetrics = {
         total: benefits.length,
-        byDeductionType: benefits.reduce((acc: any, b: any) => {
+        byDeductionType: benefits.reduce((acc, b: any) => {
           const type = b.deduction_type || 'Unknown';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {}),
-        totalEmployeeContributions: benefits.reduce((sum: any, b: any) => sum + (b.employee_contribution || 0), 0),
-        totalEmployerContributions: benefits.reduce((sum: any, b: any) => sum + (b.employer_contribution || 0), 0),
-        activeGarnishments: benefits.filter((b: any) => b.court_order_number && b.end_date === null).length,
-        byFrequency: benefits.reduce((acc: any, b: any) => {
+        totalEmployeeContributions: benefits.reduce((sum, b: any) => sum + (b.employee_contribution || 0), 0),
+        totalEmployerContributions: benefits.reduce((sum, b: any) => sum + (b.employer_contribution || 0), 0),
+        activeGarnishments: benefits.filter((b) => b.court_order_number && b.end_date === null).length,
+        byFrequency: benefits.reduce((acc, b: any) => {
           const freq = b.frequency || 'Unknown';
           acc[freq] = (acc[freq] || 0) + 1;
           return acc;
@@ -251,23 +251,23 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       const compliance = complianceResult.data || [];
       const complianceMetrics = {
         total: compliance.length,
-        byComplianceType: compliance.reduce((acc: any, c: any) => {
+        byComplianceType: compliance.reduce((acc, c: any) => {
           const type = c.compliance_type || 'Unknown';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {}),
-        byStatus: compliance.reduce((acc: any, c: any) => {
+        byStatus: compliance.reduce((acc, c: any) => {
           const status = c.status || 'Unknown';
           acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {}),
-        upcomingDeadlines: compliance.filter((c: any) => {
+        upcomingDeadlines: compliance.filter((c) => {
           const dueDate = new Date(c.due_date);
           const now = new Date();
           const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
           return dueDate > now && dueDate <= thirtyDaysFromNow;
         }).length,
-        overdueReports: compliance.filter((c: any) => {
+        overdueReports: compliance.filter((c) => {
           const dueDate = new Date(c.due_date);
           const now = new Date();
           return dueDate < now && c.status !== 'completed';
@@ -503,7 +503,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
             </div>
             <div className="mt-4">
               <h4 className="font-medium mb-2">By Department:</h4>
-              {Object.entries(metrics.payStatements.byDepartment).slice(0, 3).map(([dept, data]: [string, any]: any) => (
+              {Object.entries(metrics.payStatements.byDepartment).slice(0, 3).map(([dept, data]: [string, any]) => (
                 <div key={dept} className="flex justify-between text-sm">
                   <span>{dept}:</span>
                   <span>${data.grossPay.toLocaleString()}</span>

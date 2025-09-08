@@ -54,7 +54,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
   }
 
   const validateEmails = (emailString: string): string[] => {
-    const emails = emailString.split(/[,\n]/).map((email: any) => email.trim()).filter((email: any) => email.length > 0)
+    const emails = emailString.split(/[,\n]/).map((email: any) => email.trim()).filter((email) => email.length > 0)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     
     const validEmails: string[] = []
@@ -292,7 +292,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                   Invitation Preview
                 </h4>
                 <div className="text-sm text-blue-800">
-                  <p><strong>{emailCount}</strong> user{emailCount > 1 ? 's' : ''} will be invited as <strong>{formData.role}</strong> ({formData.role_level}) to <strong>{tenants.find((t: any) => t.id === formData.tenant_id)?.name}</strong></p>
+                  <p><strong>{emailCount}</strong> user{emailCount > 1 ? 's' : ''} will be invited as <strong>{formData.role}</strong> ({formData.role_level}) to <strong>{tenants.find((t) => t.id === formData.tenant_id)?.name}</strong></p>
                   <p className="mt-1">Invitations will expire in <strong>{formData.expires_in_days} day{formData.expires_in_days > 1 ? 's' : ''}</strong></p>
                 </div>
               </div>

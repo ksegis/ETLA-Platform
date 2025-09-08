@@ -468,20 +468,20 @@ export class PMBOKService {
     const requests = data || []
     return {
       total: requests.length,
-      pending: requests.filter((r: any) => 
+      pending: requests.filter((r) => 
         r.approval_status === 'submitted' || 
         r.approval_status === 'under_review' ||
         r.status === 'submitted' || 
         r.status === 'under_review'
       ).length,
-      approved: requests.filter((r: any) => 
+      approved: requests.filter((r) => 
         r.approval_status === 'approved' || 
         r.status === 'approved'
       ).length,
-      declined: requests.filter((r: any) => 
+      declined: requests.filter((r) => 
         r.approval_status === 'declined'
       ).length,
-      converted: requests.filter((r: any) => 
+      converted: requests.filter((r) => 
         r.approval_status === 'converted_to_project'
       ).length
     }

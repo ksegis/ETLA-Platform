@@ -479,15 +479,15 @@ class PMBOKService {
       
       return {
         total: workRequests.length,
-        pending: workRequests.filter((r: any) => 
+        pending: workRequests.filter((r) => 
           r.approval_status === 'submitted' || 
           r.approval_status === 'under_review' ||
           r.status === 'submitted' ||
           r.status === 'under_review'
         ).length,
-        approved: workRequests.filter((r: any) => r.approval_status === 'approved').length,
-        declined: workRequests.filter((r: any) => r.approval_status === 'declined').length,
-        converted: workRequests.filter((r: any) => r.approval_status === 'converted_to_project').length
+        approved: workRequests.filter((r) => r.approval_status === 'approved').length,
+        declined: workRequests.filter((r) => r.approval_status === 'declined').length,
+        converted: workRequests.filter((r) => r.approval_status === 'converted_to_project').length
       }
     } catch (error) {
       console.error('❌ Error getting work request stats:', error)

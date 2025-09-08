@@ -29,8 +29,8 @@ interface AuthContextType {
   tenantUser: TenantUser | null
   session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error }>
+  signUp: (email: string, password: string) => Promise<{ error }>
   signOut: () => Promise<void>
   refreshTenant: () => Promise<void>
   refreshSession: () => Promise<void>

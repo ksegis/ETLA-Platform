@@ -94,7 +94,7 @@ export default function HRAnalyticsDashboard() {
       const terminatedEmployees = employees?.filter((emp: any) => emp.status === 'terminated').length || 0;
       const onLeaveEmployees = employees?.filter((emp: any) => emp.status === 'on_leave').length || 0;
       
-      const totalPayroll = payroll?.reduce((sum: number: any, pay: any) => sum + (parseFloat(pay.gross_pay) || 0), 0) || 0;
+      const totalPayroll = payroll?.reduce((sum: number, pay) => sum + (parseFloat(pay.gross_pay) || 0), 0) || 0;
       const averageSalary = activeEmployees > 0 ? totalPayroll / activeEmployees : 0;
 
       setHrMetrics({

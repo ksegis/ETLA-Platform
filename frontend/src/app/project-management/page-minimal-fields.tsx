@@ -209,7 +209,7 @@ export default function MinimalFieldsProjectManagementPage() {
   // Calculate basic statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => p.status === 'active').length,
+    activeProjects: projects.filter((p) => p.status === 'active').length,
     totalWorkRequests: workRequests.length,
     totalRisks: risks.length
   }

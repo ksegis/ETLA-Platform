@@ -174,10 +174,10 @@ export default function TeamResourcesPage() {
   const allSkills = Array.from(new Set(mockTeamMembers.flatMap((member: any) => member.skills)))
 
   const getTeamStats = () => {
-    const totalCapacity = mockTeamMembers.reduce((sum: any, member: any) => sum + member.weeklyCapacity, 0)
-    const totalWorkload = mockTeamMembers.reduce((sum: any, member: any) => sum + member.currentWorkload, 0)
+    const totalCapacity = mockTeamMembers.reduce((sum: any, member) => sum + member.weeklyCapacity, 0)
+    const totalWorkload = mockTeamMembers.reduce((sum: any, member) => sum + member.currentWorkload, 0)
     const availableMembers = mockTeamMembers.filter((member: any) => member.availability === 'available').length
-    const avgUtilization = mockTeamMembers.reduce((sum: any, member: any) => sum + member.utilizationRate, 0) / mockTeamMembers.length
+    const avgUtilization = mockTeamMembers.reduce((sum: any, member) => sum + member.utilizationRate, 0) / mockTeamMembers.length
 
     return { totalCapacity, totalWorkload, availableMembers, avgUtilization }
   }

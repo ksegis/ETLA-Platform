@@ -432,23 +432,23 @@ class PMBOKServiceRBAC {
           const dashboardData = {
             workRequests: {
               total: workRequests.length,
-              pending: workRequests.filter((wr: any) => 
+              pending: workRequests.filter((wr) => 
                 wr.approval_status === 'submitted' || 
                 wr.approval_status === 'under_review'
               ).length,
-              approved: workRequests.filter((wr: any) => wr.approval_status === 'approved').length,
-              declined: workRequests.filter((wr: any) => wr.approval_status === 'declined').length
+              approved: workRequests.filter((wr) => wr.approval_status === 'approved').length,
+              declined: workRequests.filter((wr) => wr.approval_status === 'declined').length
             },
             projects: {
               total: projects.length,
-              active: projects.filter((p: any) => p.status === 'active').length,
-              completed: projects.filter((p: any) => p.status === 'completed').length
+              active: projects.filter((p) => p.status === 'active').length,
+              completed: projects.filter((p) => p.status === 'completed').length
             },
             risks: {
               total: risks.length,
-              high: risks.filter((r: any) => r.risk_score && r.risk_score >= 15).length,
-              medium: risks.filter((r: any) => r.risk_score && r.risk_score >= 8 && r.risk_score < 15).length,
-              low: risks.filter((r: any) => r.risk_score && r.risk_score < 8).length
+              high: risks.filter((r) => r.risk_score && r.risk_score >= 15).length,
+              medium: risks.filter((r) => r.risk_score && r.risk_score >= 8 && r.risk_score < 15).length,
+              low: risks.filter((r) => r.risk_score && r.risk_score < 8).length
             }
           }
 

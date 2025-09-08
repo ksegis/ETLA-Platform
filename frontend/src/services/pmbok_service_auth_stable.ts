@@ -227,7 +227,7 @@ class PMBOKService {
       }
 
       // Step 3: Merge data gracefully
-      const workRequests: WorkRequest[] = workRequestsData.map((request: any) => {
+      const workRequests: WorkRequest[] = workRequestsData.map((request) => {
         const customer = customerMap.get(request.customer_id)
         const customerMissing = !customer && !!request.customer_id
 
@@ -249,8 +249,8 @@ class PMBOKService {
 
       console.log('✅ Work requests processed successfully:', {
         total: workRequests.length,
-        withCustomers: workRequests.filter((wr: any) => !wr.customer_missing).length,
-        missingCustomers: workRequests.filter((wr: any) => wr.customer_missing).length
+        withCustomers: workRequests.filter((wr) => !wr.customer_missing).length,
+        missingCustomers: workRequests.filter((wr) => wr.customer_missing).length
       })
 
       return workRequests

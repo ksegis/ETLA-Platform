@@ -204,7 +204,7 @@ export default function AccessControlPage() {
 
       console.log('📊 Query Results:', {
         userCount: users?.length || 0,
-        users: users?.map((u: any) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
+        users: users?.map((u) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
       })
 
       if (error) {
@@ -212,7 +212,7 @@ export default function AccessControlPage() {
         throw error
       }
 
-      const formattedUsers: User[] = users?.map((user: any) => {
+      const formattedUsers: User[] = users?.map((user) => {
         const tenantUser = user.tenant_users[0] || {}
         const tenant = tenantUser.tenants || {}
         
@@ -282,7 +282,7 @@ export default function AccessControlPage() {
 
       if (error) throw error
 
-      const formattedInvitations: Invitation[] = invitations?.map((inv: any) => ({
+      const formattedInvitations: Invitation[] = invitations?.map((inv) => ({
         id: inv.id,
         email: inv.email,
         full_name: inv.full_name,
@@ -331,13 +331,13 @@ export default function AccessControlPage() {
   // Calculate statistics
   const stats = {
     totalUsers: users.length,
-    activeUsers: users.filter((u: any) => u.is_active && u.status === 'active').length,
-    pendingUsers: users.filter((u: any) => u.status === 'pending_assignment').length,
-    pendingInvites: invitations.filter((i: any) => i.status === 'pending').length,
-    unreadNotifications: notifications.filter((n: any) => !n.is_read).length
+    activeUsers: users.filter((u) => u.is_active && u.status === 'active').length,
+    pendingUsers: users.filter((u) => u.status === 'pending_assignment').length,
+    pendingInvites: invitations.filter((i) => i.status === 'pending').length,
+    unreadNotifications: notifications.filter((n) => !n.is_read).length
   }
 
-  const roleDistribution = users.reduce((acc: any, user: any) => {
+  const roleDistribution = users.reduce((acc: any, user) => {
     acc[user.role as keyof typeof acc] = (acc[user.role as keyof typeof acc] || 0) + 1
     return acc
   }, {} as Record<string, number>)

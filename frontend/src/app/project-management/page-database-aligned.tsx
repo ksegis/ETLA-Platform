@@ -314,16 +314,16 @@ export default function DatabaseAlignedProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
-    completedProjects: projects.filter((p: any) => p.status === 'completed').length,
-    onHoldProjects: projects.filter((p: any) => p.status === 'on_hold').length,
+    activeProjects: projects.filter((p) => ['active', 'in_progress', 'planning'].includes(p.status || '')).length,
+    completedProjects: projects.filter((p) => p.status === 'completed').length,
+    onHoldProjects: projects.filter((p) => p.status === 'on_hold').length,
     totalWorkRequests: workRequests.length,
-    pendingWorkRequests: workRequests.filter((wr: any) => ['submitted', 'under_review'].includes(wr.status || '')).length,
-    approvedWorkRequests: workRequests.filter((wr: any) => wr.status === 'approved').length,
-    totalBudget: projects.reduce((sum: any, p: any) => sum + (p.budget || 0), 0),
+    pendingWorkRequests: workRequests.filter((wr) => ['submitted', 'under_review'].includes(wr.status || '')).length,
+    approvedWorkRequests: workRequests.filter((wr) => wr.status === 'approved').length,
+    totalBudget: projects.reduce((sum, p: any) => sum + (p.budget || 0), 0),
     totalRisks: risks.length,
-    highRisks: risks.filter((r: any) => getRiskLevel(r) === 'high').length,
-    mitigatedRisks: risks.filter((r: any) => r.status === 'resolved').length
+    highRisks: risks.filter((r) => getRiskLevel(r) === 'high').length,
+    mitigatedRisks: risks.filter((r) => r.status === 'resolved').length
   }
 
   // Filter projects with database compatibility
@@ -1507,7 +1507,7 @@ export default function DatabaseAlignedProjectManagementPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select a work request</option>
-                        {workRequests.filter((wr: any) => wr.status === 'approved').map((wr: any) => (
+                        {workRequests.filter((wr: any) => wr.status === 'approved').map((wr) => (
                           <option key={wr.id} value={wr.id}>{getWorkRequestTitle(wr)}</option>
                         ))}
                       </select>

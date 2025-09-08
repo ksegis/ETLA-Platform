@@ -267,9 +267,9 @@ export default function ProjectManagementPage() {
       r.risk_level === 'high' || r.level === 'high' || r.severity === 'high'
     ).length
     
-    const totalBudget = projects.reduce((sum: any, p: any) => sum + (p.budget || p.estimated_budget || 0), 0)
+    const totalBudget = projects.reduce((sum: any, p) => sum + (p.budget || p.estimated_budget || 0), 0)
     const averageCompletion = projects.length > 0 
-      ? projects.reduce((sum: any, p: any) => sum + (p.completion_percentage || 0), 0) / projects.length 
+      ? projects.reduce((sum: any, p) => sum + (p.completion_percentage || 0), 0) / projects.length 
       : 0
 
     setStatistics({
@@ -1091,7 +1091,7 @@ function CreateProjectModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Create without work request</option>
-                  {workRequests.filter((wr: any) => wr.status === 'approved').map((wr: any) => (
+                  {workRequests.filter((wr: any) => wr.status === 'approved').map((wr) => (
                     <option key={wr.id} value={wr.id}>
                       {wr.title || `Work Request ${wr.id.slice(0, 8)}`}
                     </option>

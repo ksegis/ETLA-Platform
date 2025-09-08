@@ -194,8 +194,8 @@ export default function ProjectSchedulePage() {
   }
 
   const getWorkloadStats = () => {
-    const totalHours = filteredProjects.reduce((sum: any, project: any) => sum + project.estimatedHours, 0)
-    const completedHours = filteredProjects.reduce((sum: any, project: any) => sum + (project.completedHours || 0), 0)
+    const totalHours = filteredProjects.reduce((sum: any, project) => sum + project.estimatedHours, 0)
+    const completedHours = filteredProjects.reduce((sum: any, project) => sum + (project.completedHours || 0), 0)
     const activeProjects = filteredProjects.filter((p: any) => p.status === 'in_progress').length
     const scheduledProjects = filteredProjects.filter((p: any) => p.status === 'scheduled').length
 

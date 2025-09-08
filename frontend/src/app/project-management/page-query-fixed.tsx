@@ -314,20 +314,20 @@ export default function QueryFixedProjectManagementPage() {
   // Calculate statistics
   const stats = {
     totalProjects: projects.length,
-    activeProjects: projects.filter((p: any) => 
+    activeProjects: projects.filter((p) => 
       p.charter_status === 'active' || 
       p.charter_status === 'approved' || 
       p.charter_status === 'in_progress'
     ).length,
-    completedProjects: projects.filter((p: any) => 
+    completedProjects: projects.filter((p) => 
       p.completion_percentage === 100 || 
       p.charter_status === 'completed'
     ).length,
-    totalBudget: projects.reduce((sum: any, p: any) => sum + (p.budget || p.estimated_budget || 0), 0),
+    totalBudget: projects.reduce((sum, p: any) => sum + (p.budget || p.estimated_budget || 0), 0),
     totalWorkRequests: workRequests.length,
     totalRisks: risks.length,
     averageCompletion: projects.length > 0 
-      ? Math.round(projects.reduce((sum: any, p: any) => sum + (p.completion_percentage || 0), 0) / projects.length)
+      ? Math.round(projects.reduce((sum: any, p) => sum + (p.completion_percentage || 0), 0) / projects.length)
       : 0
   }
 

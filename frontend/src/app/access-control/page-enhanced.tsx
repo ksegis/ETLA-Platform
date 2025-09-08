@@ -152,7 +152,7 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const formattedUsers: User[] = users?.map((user: any) => ({
+      const formattedUsers: User[] = users?.map((user) => ({
         id: user.id,
         email: user.email || 'N/A',
         full_name: user.full_name || 'Unknown',
@@ -212,7 +212,7 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const roleStats: RoleStats[] = (Object.entries(stats?.reduce((acc: Record<string: any, number>, user: any) => {
+      const roleStats: RoleStats[] = (Object.entries(stats?.reduce((acc: Record<string, number>, user: any) => {
         const key = `${user.role_level}_${user.role}`
         acc[key] = (acc[key] || 0) + 1
         return acc
@@ -403,7 +403,7 @@ export default function AccessControlPageEnhanced() {
                 { id: 'invites', label: 'Invitations', icon: Mail },
                 { id: 'cleanup', label: 'System Cleanup', icon: Settings }
               ] : [])
-            ].map(({ id, label, icon: Icon }: any) => (
+            ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id as any)}
@@ -827,7 +827,7 @@ export default function AccessControlPageEnhanced() {
                   </div>
                   <p className="text-xs text-green-700 mb-2">Primary SSO provider for corporate users</p>
                   <div className="text-xs text-green-600">
-                    Last sync: {new Date().toLocaleDateString()} | {users.filter((u: any) => u.email.includes('@')).length} users authenticated
+                    Last sync: {new Date().toLocaleDateString()} | {users.filter((u) => u.email.includes('@')).length} users authenticated
                   </div>
                 </div>
                 

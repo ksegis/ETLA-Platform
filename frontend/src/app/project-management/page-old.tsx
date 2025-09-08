@@ -188,15 +188,15 @@ export default function ProjectManagementPage() {
     
     return {
       total: workRequests.length,
-      pending: workRequests.filter((r: any) => {
+      pending: workRequests.filter((r) => {
         const status = r.approval_status || r.status
         return status === 'submitted' || status === 'under_review'
       }).length,
-      active: workRequests.filter((r: any) => {
+      active: workRequests.filter((r) => {
         const status = r.approval_status || r.status
         return status === 'approved' || status === 'in_progress' || status === 'converted_to_project'
       }).length,
-      completed: workRequests.filter((r: any) => {
+      completed: workRequests.filter((r) => {
         const status = r.approval_status || r.status
         return status === 'completed'
       }).length

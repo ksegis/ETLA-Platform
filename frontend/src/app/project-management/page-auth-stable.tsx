@@ -90,7 +90,7 @@ export default function ProjectManagementPage() {
         workRequests: workRequests.length,
         projectCharters: projectCharters.length,
         risks: risks.length,
-        missingCustomers: workRequests.filter((wr: any) => wr.customer_missing).length
+        missingCustomers: workRequests.filter((wr) => wr.customer_missing).length
       })
 
     } catch (error) {
@@ -146,28 +146,28 @@ export default function ProjectManagementPage() {
   // Metrics calculations
   const workRequestMetrics = {
     total: dashboardData.workRequests.length,
-    pending: dashboardData.workRequests.filter((r: any) => 
+    pending: dashboardData.workRequests.filter((r) => 
       r.approval_status === 'submitted' || 
       r.approval_status === 'under_review' ||
       r.status === 'submitted' ||
       r.status === 'under_review'
     ).length,
-    active: dashboardData.workRequests.filter((r: any) => 
+    active: dashboardData.workRequests.filter((r) => 
       r.approval_status === 'approved' || 
       r.approval_status === 'converted_to_project' ||
       r.status === 'in_progress' ||
       r.status === 'scheduled'
     ).length,
-    completed: dashboardData.workRequests.filter((r: any) => 
+    completed: dashboardData.workRequests.filter((r) => 
       r.status === 'completed'
     ).length
   }
 
   const projectMetrics = {
     total: dashboardData.projectCharters.length,
-    planning: dashboardData.projectCharters.filter((p: any) => p.status === 'planning').length,
-    active: dashboardData.projectCharters.filter((p: any) => p.status === 'active' || p.status === 'in_progress').length,
-    completed: dashboardData.projectCharters.filter((p: any) => p.status === 'completed').length
+    planning: dashboardData.projectCharters.filter((p) => p.status === 'planning').length,
+    active: dashboardData.projectCharters.filter((p) => p.status === 'active' || p.status === 'in_progress').length,
+    completed: dashboardData.projectCharters.filter((p) => p.status === 'completed').length
   }
 
   // Action handlers

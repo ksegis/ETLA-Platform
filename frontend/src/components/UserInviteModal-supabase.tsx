@@ -86,7 +86,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + formData.expires_in_days)
 
-    const preview: InvitationData[] = emails.map((email: any) => ({
+    const preview: InvitationData[] = emails.map((email) => ({
       email,
       tenant_id: formData.tenant_id,
       role: formData.role,
