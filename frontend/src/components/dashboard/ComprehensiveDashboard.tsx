@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { User } from "@/types";
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -115,23 +116,23 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       const employees = employeesResult.data || [];
       const employeeMetrics = {
         total: employees.length,
-        active: employees.filter((e: any) => e.employment_status === 'active').length,
-        terminated: employees.filter((e: any) => e.employment_status === 'terminated').length,
-        onLeave: employees.filter((e: any) => e.employment_status === 'on_leave').length,
-        byDepartment: employees.reduce((acc: any, e: any) => {
+        active: employees.filter((e: User) => e.employment_status === 'active').length,
+        terminated: employees.filter((e: User) => e.employment_status === 'terminated').length,
+        onLeave: employees.filter((e: User) => e.employment_status === 'on_leave').length,
+        byDepartment: employees.reduce((acc: Record<string, number>, e: any) => {
           const dept = e.home_department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
         }, {}),
         byFlsaStatus: {
-          exempt: employees.filter((e: any) => e.flsa_status === 'exempt').length,
-          nonExempt: employees.filter((e: any) => e.flsa_status === 'non-exempt').length
+          exempt: employees.filter((e: User) => e.flsa_status === 'exempt').length,
+          nonExempt: employees.filter((e: User) => e.flsa_status === 'non-exempt').length
         },
         byUnionStatus: {
-          union: employees.filter((e: any) => e.union_status === 'union_member').length,
-          nonUnion: employees.filter((e: any) => e.union_status === 'non_union').length
+          union: employees.filter((e: User) => e.union_status === 'union_member').length,
+          nonUnion: employees.filter((e: User) => e.union_status === 'non_union').length
         },
-        byEeoCategory: employees.reduce((acc, e: any) => {
+        byEeoCategory: employees.reduce((acc: Record<string, number>, e: any) => {
           const category = e.eeo_categories || 'Not Specified';
           acc[category] = (acc[category] || 0) + 1;
           return acc;
