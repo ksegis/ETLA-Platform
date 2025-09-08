@@ -90,19 +90,26 @@ interface EnhancedTimecard {
   work_date: string;
   clock_in: string;
   clock_out: string;
+  break_duration: number;
   total_hours: number;
   regular_hours: number;
   overtime_hours: number;
   doubletime_hours: number;
   holiday_hours: number;
+  sick_hours: number;
+  vacation_hours: number;
   department: string;
   supervisor: string;
+  job_code: string;
+  cost_center: string;
+  pay_rate: number;
   day_of_week: string;
   shift_code: string;
   schedule_code: string;
   approval_status: string;
   approver_id: string;
   approval_date: string;
+  notes: string;
 }
 
 interface JobRecord {
