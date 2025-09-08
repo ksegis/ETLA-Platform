@@ -115,6 +115,13 @@ interface WorkRequest {
   status?: string
   priority?: string
   created_at?: string
+  requester?: string
+  assignee?: string
+  due_date?: string
+  department?: string
+  category?: string
+  budget?: number
+  created_date?: string
 }
 
 interface Risk {
@@ -3831,6 +3838,1805 @@ function ViewProjectModal({
           <div className="flex justify-end">
             <Button onClick={onClose} variant="outline">
               Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ViewWorkRequestModal Component
+function ViewWorkRequestModal({ 
+  isOpen, 
+  onClose, 
+  workRequest 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  workRequest: WorkRequest | null
+}) {
+  if (!isOpen || !workRequest) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Work Request Details</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Title</label>
+                <p className="mt-1 text-sm text-gray-900">{workRequest.title}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  workRequest.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  workRequest.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                  workRequest.status === 'approved' ? 'bg-purple-100 text-purple-800' :
+                  workRequest.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {(workRequest.status || 'unknown').replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  workRequest.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                  workRequest.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                  workRequest.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {(workRequest.priority || 'unknown').toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Requester</label>
+                <p className="mt-1 text-sm text-gray-900">{workRequest.requester}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Assignee</label>
+                <p className="mt-1 text-sm text-gray-900">{workRequest.assignee || 'Unassigned'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                <p className="mt-1 text-sm text-gray-900">{workRequest.due_date}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{workRequest.description}</p>
+            </div>
+
+            {/* Additional Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Department</label>
+                <p className="mt-1 text-sm text-gray-900">{workRequest.department || 'Not specified'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <p className="mt-1 text-sm text-gray-900">{workRequest.category || 'Not specified'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Created Date</label>
+                <p className="mt-1 text-sm text-gray-900">{workRequest.created_date}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Budget</label>
+                <p className="mt-1 text-sm text-gray-900">${workRequest.budget?.toLocaleString() || 'Not specified'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// ViewRiskModal Component
+function ViewRiskModal({ 
+  isOpen, 
+  onClose, 
+  risk 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  risk: any | null
+}) {
+  if (!isOpen || !risk) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Risk Details</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Title</label>
+                <p className="mt-1 text-sm text-gray-900">{risk.title}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Level</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  risk.level === 'critical' ? 'bg-red-100 text-red-800' :
+                  risk.level === 'high' ? 'bg-orange-100 text-orange-800' :
+                  risk.level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {risk.level.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Probability</label>
+                <p className="mt-1 text-sm text-gray-900">{risk.probability}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Impact</label>
+                <p className="mt-1 text-sm text-gray-900">{risk.impact}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  risk.status === 'mitigated' ? 'bg-green-100 text-green-800' :
+                  risk.status === 'monitoring' ? 'bg-blue-100 text-blue-800' :
+                  risk.status === 'active' ? 'bg-red-100 text-red-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {risk.status.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Owner</label>
+                <p className="mt-1 text-sm text-gray-900">{risk.owner}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Risk Description</label>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{risk.description}</p>
+            </div>
+
+            {/* Mitigation Strategy */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Mitigation Strategy</label>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{risk.mitigation}</p>
+            </div>
+
+            {/* Risk Assessment */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Risk Assessment Matrix</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Probability Score:</span>
+                  <span className="ml-2 font-medium">{risk.probability}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Impact Score:</span>
+                  <span className="ml-2 font-medium">{risk.impact}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Overall Risk Level:</span>
+                  <span className={`ml-2 font-medium ${
+                    risk.level === 'critical' ? 'text-red-600' :
+                    risk.level === 'high' ? 'text-orange-600' :
+                    risk.level === 'medium' ? 'text-yellow-600' :
+                    'text-green-600'
+                  }`}>
+                    {risk.level.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// ViewWbsItemModal Component
+function ViewWbsItemModal({ 
+  isOpen, 
+  onClose, 
+  wbsItem 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  wbsItem: any | null
+}) {
+  if (!isOpen || !wbsItem) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">WBS Item Details</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">WBS Code</label>
+                <p className="mt-1 text-sm text-gray-900">{wbsItem.code}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Task Name</label>
+                <p className="mt-1 text-sm text-gray-900">{wbsItem.name}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Level</label>
+                <p className="mt-1 text-sm text-gray-900">Level {wbsItem.level}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  wbsItem.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  wbsItem.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                  wbsItem.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {wbsItem.status.replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Progress</label>
+                <div className="mt-1">
+                  <div className="flex items-center">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ width: `${wbsItem.progress}%` }}
+                      ></div>
+                    </div>
+                    <span className="ml-2 text-sm text-gray-600">{wbsItem.progress}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Assignee</label>
+                <p className="mt-1 text-sm text-gray-900">{wbsItem.assignee || 'Unassigned'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                <p className="mt-1 text-sm text-gray-900">{wbsItem.start_date}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End Date</label>
+                <p className="mt-1 text-sm text-gray-900">{wbsItem.end_date}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{wbsItem.description}</p>
+            </div>
+
+            {/* Dependencies */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Dependencies</label>
+              <p className="mt-1 text-sm text-gray-900">{wbsItem.dependencies || 'None'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ViewScheduleItemModal Component
+function ViewScheduleItemModal({ 
+  isOpen, 
+  onClose, 
+  scheduleItem 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  scheduleItem: any | null
+}) {
+  if (!isOpen || !scheduleItem) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Schedule Item Details</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Task Name</label>
+                <p className="mt-1 text-sm text-gray-900">{scheduleItem.name}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Type</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  scheduleItem.type === 'milestone' ? 'bg-purple-100 text-purple-800' :
+                  scheduleItem.type === 'deliverable' ? 'bg-blue-100 text-blue-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {scheduleItem.type.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  scheduleItem.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  scheduleItem.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                  scheduleItem.status === 'not_started' ? 'bg-gray-100 text-gray-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {scheduleItem.status.replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Progress</label>
+                <div className="mt-1">
+                  <div className="flex items-center">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ width: `${scheduleItem.progress}%` }}
+                      ></div>
+                    </div>
+                    <span className="ml-2 text-sm text-gray-600">{scheduleItem.progress}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Assignee</label>
+                <p className="mt-1 text-sm text-gray-900">{scheduleItem.assignee}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Duration</label>
+                <p className="mt-1 text-sm text-gray-900">{scheduleItem.duration} days</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                <p className="mt-1 text-sm text-gray-900">{scheduleItem.start_date}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End Date</label>
+                <p className="mt-1 text-sm text-gray-900">{scheduleItem.end_date}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{scheduleItem.description}</p>
+            </div>
+
+            {/* Dependencies */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Dependencies</label>
+              <p className="mt-1 text-sm text-gray-900">{scheduleItem.dependencies || 'None'}</p>
+            </div>
+
+            {/* Critical Path */}
+            {scheduleItem.critical_path && (
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-red-900 mb-2">Critical Path Item</h3>
+                <p className="text-sm text-red-700">This task is on the critical path. Any delays will impact the project timeline.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ViewStakeholderModal Component
+function ViewStakeholderModal({ 
+  isOpen, 
+  onClose, 
+  stakeholder 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  stakeholder: any | null
+}) {
+  if (!isOpen || !stakeholder) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Stakeholder Details</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <p className="mt-1 text-sm text-gray-900">{stakeholder.name}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Role</label>
+                <p className="mt-1 text-sm text-gray-900">{stakeholder.role}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Department</label>
+                <p className="mt-1 text-sm text-gray-900">{stakeholder.department}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <p className="mt-1 text-sm text-gray-900">{stakeholder.email}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Influence Level</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  stakeholder.influence === 'high' ? 'bg-red-100 text-red-800' :
+                  stakeholder.influence === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {stakeholder.influence.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Interest Level</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  stakeholder.interest === 'high' ? 'bg-blue-100 text-blue-800' :
+                  stakeholder.interest === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {stakeholder.interest.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Engagement Level</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  stakeholder.engagement === 'leading' ? 'bg-green-100 text-green-800' :
+                  stakeholder.engagement === 'supportive' ? 'bg-blue-100 text-blue-800' :
+                  stakeholder.engagement === 'neutral' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {stakeholder.engagement.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Communication Frequency</label>
+                <p className="mt-1 text-sm text-gray-900">{stakeholder.communication_frequency}</p>
+              </div>
+            </div>
+
+            {/* Strategy */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Engagement Strategy</label>
+              <p className="mt-1 text-sm text-gray-900">{stakeholder.strategy}</p>
+            </div>
+
+            {/* Expectations */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Expectations</label>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{stakeholder.expectations}</p>
+            </div>
+
+            {/* Stakeholder Matrix Position */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Stakeholder Matrix Position</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Quadrant:</span>
+                  <span className="ml-2 font-medium">
+                    {stakeholder.influence === 'high' && stakeholder.interest === 'high' ? 'Manage Closely' :
+                     stakeholder.influence === 'high' && stakeholder.interest === 'low' ? 'Keep Satisfied' :
+                     stakeholder.influence === 'low' && stakeholder.interest === 'high' ? 'Keep Informed' :
+                     'Monitor'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Priority:</span>
+                  <span className="ml-2 font-medium">
+                    {stakeholder.influence === 'high' && stakeholder.interest === 'high' ? 'Critical' :
+                     stakeholder.influence === 'high' || stakeholder.interest === 'high' ? 'High' :
+                     'Medium'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// ViewComplianceItemModal Component
+function ViewComplianceItemModal({ 
+  isOpen, 
+  onClose, 
+  complianceItem 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  complianceItem: any | null
+}) {
+  if (!isOpen || !complianceItem) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Compliance Item Details</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Requirement</label>
+                <p className="mt-1 text-sm text-gray-900">{complianceItem.requirement}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  complianceItem.category === 'regulatory' ? 'bg-red-100 text-red-800' :
+                  complianceItem.category === 'security' ? 'bg-blue-100 text-blue-800' :
+                  complianceItem.category === 'privacy' ? 'bg-purple-100 text-purple-800' :
+                  complianceItem.category === 'quality' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {complianceItem.category.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  complianceItem.status === 'compliant' ? 'bg-green-100 text-green-800' :
+                  complianceItem.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                  complianceItem.status === 'non_compliant' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {complianceItem.status.replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  complianceItem.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                  complianceItem.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                  complianceItem.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {complianceItem.priority.toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Owner</label>
+                <p className="mt-1 text-sm text-gray-900">{complianceItem.owner}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                <p className="mt-1 text-sm text-gray-900">{complianceItem.due_date}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Last Review</label>
+                <p className="mt-1 text-sm text-gray-900">{complianceItem.last_review}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Next Review</label>
+                <p className="mt-1 text-sm text-gray-900">{complianceItem.next_review}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{complianceItem.description}</p>
+            </div>
+
+            {/* Evidence */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Evidence/Documentation</label>
+              <p className="mt-1 text-sm text-gray-900">{complianceItem.evidence || 'No evidence provided'}</p>
+            </div>
+
+            {/* Actions Required */}
+            {complianceItem.actions_required && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Actions Required</label>
+                <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{complianceItem.actions_required}</p>
+              </div>
+            )}
+
+            {/* Compliance Score */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Compliance Assessment</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Compliance Score:</span>
+                  <span className={`ml-2 font-medium ${
+                    complianceItem.score >= 90 ? 'text-green-600' :
+                    complianceItem.score >= 70 ? 'text-yellow-600' :
+                    'text-red-600'
+                  }`}>
+                    {complianceItem.score}%
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Risk Level:</span>
+                  <span className={`ml-2 font-medium ${
+                    complianceItem.score >= 90 ? 'text-green-600' :
+                    complianceItem.score >= 70 ? 'text-yellow-600' :
+                    'text-red-600'
+                  }`}>
+                    {complianceItem.score >= 90 ? 'Low' :
+                     complianceItem.score >= 70 ? 'Medium' : 'High'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">
+              Close
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// EditWorkRequestModal Component
+function EditWorkRequestModal({ 
+  isOpen, 
+  onClose, 
+  workRequest,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  workRequest: WorkRequest | null
+  onSave: (updatedWorkRequest: WorkRequest) => void
+}) {
+  const [formData, setFormData] = useState<Partial<WorkRequest>>({})
+
+  useEffect(() => {
+    if (workRequest) {
+      setFormData(workRequest)
+    }
+  }, [workRequest])
+
+  if (!isOpen || !workRequest) return null
+
+  const handleSave = () => {
+    if (formData.title && formData.description) {
+      onSave(formData as WorkRequest)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Work Request</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Title *</label>
+                <input
+                  type="text"
+                  value={formData.title || ''}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  value={formData.status || ''}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="submitted">Submitted</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <select
+                  value={formData.priority || ''}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Requester</label>
+                <input
+                  type="text"
+                  value={formData.requester || ''}
+                  onChange={(e) => setFormData({...formData, requester: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Assignee</label>
+                <input
+                  type="text"
+                  value={formData.assignee || ''}
+                  onChange={(e) => setFormData({...formData, assignee: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                <input
+                  type="date"
+                  value={formData.due_date || ''}
+                  onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Department</label>
+                <input
+                  type="text"
+                  value={formData.department || ''}
+                  onChange={(e) => setFormData({...formData, department: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Budget</label>
+                <input
+                  type="number"
+                  value={formData.budget || ''}
+                  onChange={(e) => setFormData({...formData, budget: parseFloat(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description *</label>
+              <textarea
+                value={formData.description || ''}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={4}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// EditRiskModal Component
+function EditRiskModal({ 
+  isOpen, 
+  onClose, 
+  risk,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  risk: any | null
+  onSave: (updatedRisk: any) => void
+}) {
+  const [formData, setFormData] = useState<any>({})
+
+  useEffect(() => {
+    if (risk) {
+      setFormData(risk)
+    }
+  }, [risk])
+
+  if (!isOpen || !risk) return null
+
+  const handleSave = () => {
+    if (formData.title && formData.description) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Risk</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Title *</label>
+                <input
+                  type="text"
+                  value={formData.title || ''}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Level</label>
+                <select
+                  value={formData.level || ''}
+                  onChange={(e) => setFormData({...formData, level: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Probability</label>
+                <select
+                  value={formData.probability || ''}
+                  onChange={(e) => setFormData({...formData, probability: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="very_low">Very Low</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="very_high">Very High</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Impact</label>
+                <select
+                  value={formData.impact || ''}
+                  onChange={(e) => setFormData({...formData, impact: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="very_low">Very Low</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="very_high">Very High</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  value={formData.status || ''}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="identified">Identified</option>
+                  <option value="active">Active</option>
+                  <option value="monitoring">Monitoring</option>
+                  <option value="mitigated">Mitigated</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Owner</label>
+                <input
+                  type="text"
+                  value={formData.owner || ''}
+                  onChange={(e) => setFormData({...formData, owner: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Risk Description *</label>
+              <textarea
+                value={formData.description || ''}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            {/* Mitigation Strategy */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Mitigation Strategy</label>
+              <textarea
+                value={formData.mitigation || ''}
+                onChange={(e) => setFormData({...formData, mitigation: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// EditWbsItemModal Component
+function EditWbsItemModal({ 
+  isOpen, 
+  onClose, 
+  wbsItem,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  wbsItem: any | null
+  onSave: (updatedWbsItem: any) => void
+}) {
+  const [formData, setFormData] = useState<any>({})
+
+  useEffect(() => {
+    if (wbsItem) {
+      setFormData(wbsItem)
+    }
+  }, [wbsItem])
+
+  if (!isOpen || !wbsItem) return null
+
+  const handleSave = () => {
+    if (formData.name && formData.code) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit WBS Item</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">WBS Code *</label>
+                <input
+                  type="text"
+                  value={formData.code || ''}
+                  onChange={(e) => setFormData({...formData, code: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Task Name *</label>
+                <input
+                  type="text"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Level</label>
+                <select
+                  value={formData.level || ''}
+                  onChange={(e) => setFormData({...formData, level: parseInt(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="1">Level 1</option>
+                  <option value="2">Level 2</option>
+                  <option value="3">Level 3</option>
+                  <option value="4">Level 4</option>
+                  <option value="5">Level 5</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  value={formData.status || ''}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="not_started">Not Started</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="on_hold">On Hold</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Progress (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.progress || ''}
+                  onChange={(e) => setFormData({...formData, progress: parseInt(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Assignee</label>
+                <input
+                  type="text"
+                  value={formData.assignee || ''}
+                  onChange={(e) => setFormData({...formData, assignee: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                <input
+                  type="date"
+                  value={formData.start_date || ''}
+                  onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End Date</label>
+                <input
+                  type="date"
+                  value={formData.end_date || ''}
+                  onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={formData.description || ''}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Dependencies */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Dependencies</label>
+              <input
+                type="text"
+                value={formData.dependencies || ''}
+                onChange={(e) => setFormData({...formData, dependencies: e.target.value})}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 1.1, 1.2"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// EditScheduleItemModal Component
+function EditScheduleItemModal({ 
+  isOpen, 
+  onClose, 
+  scheduleItem,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  scheduleItem: any | null
+  onSave: (updatedScheduleItem: any) => void
+}) {
+  const [formData, setFormData] = useState<any>({})
+
+  useEffect(() => {
+    if (scheduleItem) {
+      setFormData(scheduleItem)
+    }
+  }, [scheduleItem])
+
+  if (!isOpen || !scheduleItem) return null
+
+  const handleSave = () => {
+    if (formData.name && formData.start_date && formData.end_date) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Schedule Item</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Task Name *</label>
+                <input
+                  type="text"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Type</label>
+                <select
+                  value={formData.type || ''}
+                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="task">Task</option>
+                  <option value="milestone">Milestone</option>
+                  <option value="deliverable">Deliverable</option>
+                  <option value="phase">Phase</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  value={formData.status || ''}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="not_started">Not Started</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Progress (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.progress || ''}
+                  onChange={(e) => setFormData({...formData, progress: parseInt(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Assignee</label>
+                <input
+                  type="text"
+                  value={formData.assignee || ''}
+                  onChange={(e) => setFormData({...formData, assignee: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Duration (days)</label>
+                <input
+                  type="number"
+                  value={formData.duration || ''}
+                  onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date *</label>
+                <input
+                  type="date"
+                  value={formData.start_date || ''}
+                  onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End Date *</label>
+                <input
+                  type="date"
+                  value={formData.end_date || ''}
+                  onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={formData.description || ''}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Dependencies */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Dependencies</label>
+              <input
+                type="text"
+                value={formData.dependencies || ''}
+                onChange={(e) => setFormData({...formData, dependencies: e.target.value})}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Task A, Task B"
+              />
+            </div>
+
+            {/* Critical Path */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.critical_path || false}
+                onChange={(e) => setFormData({...formData, critical_path: e.target.checked})}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-gray-900">
+                Critical Path Item
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// EditStakeholderModal Component
+function EditStakeholderModal({ 
+  isOpen, 
+  onClose, 
+  stakeholder,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  stakeholder: any | null
+  onSave: (updatedStakeholder: any) => void
+}) {
+  const [formData, setFormData] = useState<any>({})
+
+  useEffect(() => {
+    if (stakeholder) {
+      setFormData(stakeholder)
+    }
+  }, [stakeholder])
+
+  if (!isOpen || !stakeholder) return null
+
+  const handleSave = () => {
+    if (formData.name && formData.role) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Stakeholder</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name *</label>
+                <input
+                  type="text"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Role *</label>
+                <input
+                  type="text"
+                  value={formData.role || ''}
+                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Department</label>
+                <input
+                  type="text"
+                  value={formData.department || ''}
+                  onChange={(e) => setFormData({...formData, department: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  value={formData.email || ''}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Influence Level</label>
+                <select
+                  value={formData.influence || ''}
+                  onChange={(e) => setFormData({...formData, influence: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Interest Level</label>
+                <select
+                  value={formData.interest || ''}
+                  onChange={(e) => setFormData({...formData, interest: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Engagement Level</label>
+                <select
+                  value={formData.engagement || ''}
+                  onChange={(e) => setFormData({...formData, engagement: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="unaware">Unaware</option>
+                  <option value="resistant">Resistant</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="supportive">Supportive</option>
+                  <option value="leading">Leading</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Communication Frequency</label>
+                <select
+                  value={formData.communication_frequency || ''}
+                  onChange={(e) => setFormData({...formData, communication_frequency: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="bi-weekly">Bi-weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="as-needed">As Needed</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Strategy */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Engagement Strategy</label>
+              <textarea
+                value={formData.strategy || ''}
+                onChange={(e) => setFormData({...formData, strategy: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Expectations */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Expectations</label>
+              <textarea
+                value={formData.expectations || ''}
+                onChange={(e) => setFormData({...formData, expectations: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// EditComplianceItemModal Component
+function EditComplianceItemModal({ 
+  isOpen, 
+  onClose, 
+  complianceItem,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  complianceItem: any | null
+  onSave: (updatedComplianceItem: any) => void
+}) {
+  const [formData, setFormData] = useState<any>({})
+
+  useEffect(() => {
+    if (complianceItem) {
+      setFormData(complianceItem)
+    }
+  }, [complianceItem])
+
+  if (!isOpen || !complianceItem) return null
+
+  const handleSave = () => {
+    if (formData.requirement && formData.category) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Compliance Item</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Requirement *</label>
+                <input
+                  type="text"
+                  value={formData.requirement || ''}
+                  onChange={(e) => setFormData({...formData, requirement: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category *</label>
+                <select
+                  value={formData.category || ''}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="regulatory">Regulatory</option>
+                  <option value="security">Security</option>
+                  <option value="privacy">Privacy</option>
+                  <option value="quality">Quality</option>
+                  <option value="environmental">Environmental</option>
+                  <option value="financial">Financial</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  value={formData.status || ''}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="compliant">Compliant</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="non_compliant">Non-Compliant</option>
+                  <option value="pending_review">Pending Review</option>
+                  <option value="not_applicable">Not Applicable</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <select
+                  value={formData.priority || ''}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Owner</label>
+                <input
+                  type="text"
+                  value={formData.owner || ''}
+                  onChange={(e) => setFormData({...formData, owner: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                <input
+                  type="date"
+                  value={formData.due_date || ''}
+                  onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Compliance Score (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.score || ''}
+                  onChange={(e) => setFormData({...formData, score: parseInt(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Next Review Date</label>
+                <input
+                  type="date"
+                  value={formData.next_review || ''}
+                  onChange={(e) => setFormData({...formData, next_review: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={formData.description || ''}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Evidence */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Evidence/Documentation</label>
+              <textarea
+                value={formData.evidence || ''}
+                onChange={(e) => setFormData({...formData, evidence: e.target.value})}
+                rows={2}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Actions Required */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Actions Required</label>
+              <textarea
+                value={formData.actions_required || ''}
+                onChange={(e) => setFormData({...formData, actions_required: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
+              Save Changes
             </Button>
           </div>
         </div>
