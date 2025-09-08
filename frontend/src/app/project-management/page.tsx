@@ -25,7 +25,8 @@ import {
   Target,
   TrendingUp,
   Shield,
-  Zap
+  Zap,
+  XCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -184,6 +185,163 @@ export default function ProjectManagementPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  // Work Requests tab state
+  const [isCreateWorkRequestModalOpen, setIsCreateWorkRequestModalOpen] = useState(false)
+  const [isEditWorkRequestModalOpen, setIsEditWorkRequestModalOpen] = useState(false)
+  const [isViewWorkRequestModalOpen, setIsViewWorkRequestModalOpen] = useState(false)
+  const [selectedWorkRequest, setSelectedWorkRequest] = useState<WorkRequest | null>(null)
+  const [workRequestSearchTerm, setWorkRequestSearchTerm] = useState('')
+  const [workRequestStatusFilter, setWorkRequestStatusFilter] = useState('')
+  const [workRequestPriorityFilter, setWorkRequestPriorityFilter] = useState('')
+
+  // Risks tab state
+  const [isCreateRiskModalOpen, setIsCreateRiskModalOpen] = useState(false)
+  const [isEditRiskModalOpen, setIsEditRiskModalOpen] = useState(false)
+  const [isViewRiskModalOpen, setIsViewRiskModalOpen] = useState(false)
+  const [selectedRisk, setSelectedRisk] = useState<Risk | null>(null)
+  const [riskSearchTerm, setRiskSearchTerm] = useState('')
+  const [riskLevelFilter, setRiskLevelFilter] = useState('')
+  const [riskStatusFilter, setRiskStatusFilter] = useState('')
+
+  // Charter tab state
+  const [isEditCharterModalOpen, setIsEditCharterModalOpen] = useState(false)
+  const [isViewCharterModalOpen, setIsViewCharterModalOpen] = useState(false)
+
+  // WBS tab state
+  const [isCreateWbsItemModalOpen, setIsCreateWbsItemModalOpen] = useState(false)
+  const [isEditWbsItemModalOpen, setIsEditWbsItemModalOpen] = useState(false)
+  const [isViewWbsItemModalOpen, setIsViewWbsItemModalOpen] = useState(false)
+  const [selectedWbsItem, setSelectedWbsItem] = useState<any>(null)
+  const [wbsSearchTerm, setWbsSearchTerm] = useState('')
+  const [wbsStatusFilter, setWbsStatusFilter] = useState('')
+  const [wbsLevelFilter, setWbsLevelFilter] = useState('')
+  const [wbsViewMode, setWbsViewMode] = useState<'tree' | 'table'>('table')
+
+  // Schedule tab state
+  const [isCreateMilestoneModalOpen, setIsCreateMilestoneModalOpen] = useState(false)
+  const [isEditScheduleItemModalOpen, setIsEditScheduleItemModalOpen] = useState(false)
+  const [isViewScheduleItemModalOpen, setIsViewScheduleItemModalOpen] = useState(false)
+  const [selectedScheduleItem, setSelectedScheduleItem] = useState<any>(null)
+  const [scheduleSearchTerm, setScheduleSearchTerm] = useState('')
+  const [scheduleStatusFilter, setScheduleStatusFilter] = useState('')
+  const [scheduleTypeFilter, setScheduleTypeFilter] = useState('')
+  const [scheduleViewMode, setScheduleViewMode] = useState<'gantt' | 'timeline'>('timeline')
+
+  // EVM tab state
+  const [isUpdateEvmModalOpen, setIsUpdateEvmModalOpen] = useState(false)
+  const [evmViewMode, setEvmViewMode] = useState<'dashboard' | 'detailed'>('dashboard')
+
+  // Stakeholders tab state
+  const [isCreateStakeholderModalOpen, setIsCreateStakeholderModalOpen] = useState(false)
+  const [isEditStakeholderModalOpen, setIsEditStakeholderModalOpen] = useState(false)
+  const [isViewStakeholderModalOpen, setIsViewStakeholderModalOpen] = useState(false)
+  const [selectedStakeholder, setSelectedStakeholder] = useState<any>(null)
+  const [stakeholderSearchTerm, setStakeholderSearchTerm] = useState('')
+  const [stakeholderInfluenceFilter, setStakeholderInfluenceFilter] = useState('')
+  const [stakeholderInterestFilter, setStakeholderInterestFilter] = useState('')
+  const [stakeholderViewMode, setStakeholderViewMode] = useState<'grid' | 'list'>('grid')
+
+  // Compliance tab state
+  const [isCreateComplianceItemModalOpen, setIsCreateComplianceItemModalOpen] = useState(false)
+  const [isEditComplianceItemModalOpen, setIsEditComplianceItemModalOpen] = useState(false)
+  const [isViewComplianceItemModalOpen, setIsViewComplianceItemModalOpen] = useState(false)
+  const [selectedComplianceItem, setSelectedComplianceItem] = useState<any>(null)
+  const [complianceSearchTerm, setComplianceSearchTerm] = useState('')
+  const [complianceStatusFilter, setComplianceStatusFilter] = useState('')
+  const [complianceCategoryFilter, setComplianceCategoryFilter] = useState('')
+  const [complianceViewMode, setComplianceViewMode] = useState<'overview' | 'detailed'>('overview')
+
+  // Mock data arrays for new tabs
+  const [workRequestItems] = useState([
+    { id: '1', title: 'Database Migration', description: 'Migrate legacy database to modern cloud infrastructure', status: 'submitted', priority: 'high', created_at: '2025-01-15', budget: 25000, assignee: 'John Smith' },
+    { id: '2', title: 'Website Redesign', description: 'Complete redesign of company website with modern UI/UX', status: 'in_progress', priority: 'medium', created_at: '2025-01-10', budget: 15000, assignee: 'Sarah Johnson' },
+    { id: '3', title: 'Security Audit', description: 'Comprehensive security audit of all systems', status: 'completed', priority: 'critical', created_at: '2025-01-05', budget: 8000, assignee: 'Mike Wilson' }
+  ])
+
+  const [riskItems] = useState([
+    { id: '1', title: 'Budget Overrun Risk', description: 'Project may exceed allocated budget due to scope creep', level: 'high', probability: 'medium', impact: 'high', status: 'active', mitigation: 'Implement strict change control process', owner: 'Project Manager' },
+    { id: '2', title: 'Resource Availability', description: 'Key team members may not be available during critical phases', level: 'medium', probability: 'low', impact: 'high', status: 'mitigated', mitigation: 'Cross-train team members and identify backup resources', owner: 'HR Manager' },
+    { id: '3', title: 'Technology Risk', description: 'New technology stack may have compatibility issues', level: 'low', probability: 'low', impact: 'medium', status: 'monitoring', mitigation: 'Conduct proof of concept and testing', owner: 'Technical Lead' }
+  ])
+
+  const [wbsItems] = useState([
+    { id: '1', code: '1.0', name: 'Project Initiation', level: 1, status: 'completed', progress: 100, start_date: '2025-01-01', end_date: '2025-01-15', assignee: 'Project Manager' },
+    { id: '2', code: '1.1', name: 'Project Charter', level: 2, status: 'completed', progress: 100, start_date: '2025-01-01', end_date: '2025-01-05', assignee: 'Project Manager' },
+    { id: '3', code: '1.2', name: 'Stakeholder Analysis', level: 2, status: 'completed', progress: 100, start_date: '2025-01-06', end_date: '2025-01-15', assignee: 'Business Analyst' },
+    { id: '4', code: '2.0', name: 'Planning Phase', level: 1, status: 'in_progress', progress: 65, start_date: '2025-01-16', end_date: '2025-02-28', assignee: 'Project Manager' },
+    { id: '5', code: '2.1', name: 'Requirements Gathering', level: 2, status: 'completed', progress: 100, start_date: '2025-01-16', end_date: '2025-02-05', assignee: 'Business Analyst' },
+    { id: '6', code: '2.2', name: 'Technical Design', level: 2, status: 'in_progress', progress: 30, start_date: '2025-02-06', end_date: '2025-02-28', assignee: 'Technical Lead' }
+  ])
+
+  const [scheduleItems] = useState([
+    { id: '1', name: 'Project Kickoff', type: 'milestone', status: 'completed', start_date: '2025-01-01', end_date: '2025-01-01', progress: 100, assignee: 'Project Manager' },
+    { id: '2', name: 'Requirements Phase', type: 'task', status: 'completed', start_date: '2025-01-02', end_date: '2025-01-31', progress: 100, assignee: 'Business Analyst' },
+    { id: '3', name: 'Design Phase', type: 'task', status: 'in_progress', start_date: '2025-02-01', end_date: '2025-02-28', progress: 45, assignee: 'Technical Lead' },
+    { id: '4', name: 'Development Phase', type: 'task', status: 'not_started', start_date: '2025-03-01', end_date: '2025-05-31', progress: 0, assignee: 'Development Team' },
+    { id: '5', name: 'Testing Phase', type: 'task', status: 'not_started', start_date: '2025-06-01', end_date: '2025-06-30', progress: 0, assignee: 'QA Team' },
+    { id: '6', name: 'Go-Live', type: 'milestone', status: 'not_started', start_date: '2025-07-01', end_date: '2025-07-01', progress: 0, assignee: 'Project Manager' }
+  ])
+
+  const [evmData] = useState({
+    budgetAtCompletion: 500000,
+    earnedValue: 180000,
+    actualCost: 195000,
+    plannedValue: 200000,
+    costPerformanceIndex: 0.92,
+    schedulePerformanceIndex: 0.90,
+    costVariance: -15000,
+    scheduleVariance: -20000,
+    estimateAtCompletion: 543478,
+    estimateToComplete: 348478,
+    varianceAtCompletion: -43478
+  })
+
+  const [stakeholderItems] = useState([
+    { id: '1', name: 'CEO', role: 'Executive Sponsor', influence: 'high', interest: 'high', engagement: 'supportive', strategy: 'Manage closely', contact: 'ceo@company.com', email: 'ceo@company.com', department: 'Executive', expectations: 'Project success and ROI', communication_frequency: 'Weekly' },
+    { id: '2', name: 'IT Director', role: 'Technical Sponsor', influence: 'high', interest: 'high', engagement: 'leading', strategy: 'Manage closely', contact: 'it.director@company.com', email: 'it.director@company.com', department: 'IT', expectations: 'Technical excellence and delivery', communication_frequency: 'Daily' },
+    { id: '3', name: 'End Users', role: 'Primary Users', influence: 'medium', interest: 'high', engagement: 'neutral', strategy: 'Keep satisfied', contact: 'users@company.com', email: 'users@company.com', department: 'Operations', expectations: 'User-friendly solution', communication_frequency: 'Bi-weekly' },
+    { id: '4', name: 'Finance Team', role: 'Budget Approver', influence: 'high', interest: 'medium', engagement: 'supportive', strategy: 'Keep informed', contact: 'finance@company.com', email: 'finance@company.com', department: 'Finance', expectations: 'Budget compliance', communication_frequency: 'Monthly' },
+    { id: '5', name: 'External Vendor', role: 'Service Provider', influence: 'low', interest: 'high', engagement: 'supportive', strategy: 'Monitor', contact: 'vendor@external.com', email: 'vendor@external.com', department: 'External', expectations: 'Contract fulfillment', communication_frequency: 'As needed' }
+  ])
+
+  const [complianceItems] = useState([
+    { id: '1', requirement: 'GDPR Data Protection', description: 'Ensure all personal data handling complies with GDPR regulations', category: 'privacy', status: 'compliant', priority: 'high', due_date: '2025-03-01', owner: 'Privacy Officer' },
+    { id: '2', requirement: 'SOX Financial Controls', description: 'Implement financial controls as required by Sarbanes-Oxley Act', category: 'regulatory', status: 'in_progress', priority: 'critical', due_date: '2025-02-15', owner: 'Finance Director' },
+    { id: '3', requirement: 'ISO 27001 Security', description: 'Maintain information security management system certification', category: 'security', status: 'compliant', priority: 'high', due_date: '2025-06-01', owner: 'CISO' },
+    { id: '4', requirement: 'Environmental Impact Assessment', description: 'Assess and mitigate environmental impact of project activities', category: 'environmental', status: 'pending_review', priority: 'medium', due_date: '2025-04-01', owner: 'Sustainability Manager' }
+  ])
+
+  const [complianceAuditTrail] = useState([
+    { action: 'Compliance Review Completed', description: 'GDPR compliance review completed with no issues found', timestamp: '2025-01-15 10:30', user: 'Privacy Officer' },
+    { action: 'SOX Controls Updated', description: 'Financial controls updated to meet SOX requirements', timestamp: '2025-01-10 14:15', user: 'Finance Director' },
+    { action: 'Security Assessment', description: 'ISO 27001 security assessment conducted', timestamp: '2025-01-05 09:00', user: 'CISO' }
+  ])
+
+  // Handler functions for CRUD operations
+  const handleDeleteWorkRequest = (id: string) => {
+    console.log('Delete work request:', id)
+  }
+
+  const handleDeleteRisk = (id: string) => {
+    console.log('Delete risk:', id)
+  }
+
+  const handleDeleteWbsItem = (id: string) => {
+    console.log('Delete WBS item:', id)
+  }
+
+  const handleDeleteScheduleItem = (id: string) => {
+    console.log('Delete schedule item:', id)
+  }
+
+  const handleDeleteStakeholder = (id: string) => {
+    console.log('Delete stakeholder:', id)
+  }
+
+  const handleDeleteComplianceItem = (id: string) => {
+    console.log('Delete compliance item:', id)
+  }
 
   // Load data on component mount
   useEffect(() => {
@@ -412,6 +570,60 @@ export default function ProjectManagementPage() {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const paginatedProjects = filteredProjects.slice(startIndex, endIndex)
+
+  // Filtered arrays for new tabs
+  const filteredWorkRequests = workRequestItems.filter((request: any) => {
+    const matchesSearch = !workRequestSearchTerm || 
+      request.title.toLowerCase().includes(workRequestSearchTerm.toLowerCase()) ||
+      request.description.toLowerCase().includes(workRequestSearchTerm.toLowerCase())
+    const matchesStatus = !workRequestStatusFilter || request.status === workRequestStatusFilter
+    const matchesPriority = !workRequestPriorityFilter || request.priority === workRequestPriorityFilter
+    return matchesSearch && matchesStatus && matchesPriority
+  })
+
+  const filteredRisks = riskItems.filter((risk: any) => {
+    const matchesSearch = !riskSearchTerm || 
+      risk.title.toLowerCase().includes(riskSearchTerm.toLowerCase()) ||
+      risk.description.toLowerCase().includes(riskSearchTerm.toLowerCase())
+    const matchesLevel = !riskLevelFilter || risk.level === riskLevelFilter
+    const matchesStatus = !riskStatusFilter || risk.status === riskStatusFilter
+    return matchesSearch && matchesLevel && matchesStatus
+  })
+
+  const filteredWbsItems = wbsItems.filter((item: any) => {
+    const matchesSearch = !wbsSearchTerm || 
+      item.name.toLowerCase().includes(wbsSearchTerm.toLowerCase()) ||
+      item.code.toLowerCase().includes(wbsSearchTerm.toLowerCase())
+    const matchesStatus = !wbsStatusFilter || item.status === wbsStatusFilter
+    const matchesLevel = !wbsLevelFilter || item.level.toString() === wbsLevelFilter
+    return matchesSearch && matchesStatus && matchesLevel
+  })
+
+  const filteredScheduleItems = scheduleItems.filter((item: any) => {
+    const matchesSearch = !scheduleSearchTerm || 
+      item.name.toLowerCase().includes(scheduleSearchTerm.toLowerCase())
+    const matchesStatus = !scheduleStatusFilter || item.status === scheduleStatusFilter
+    const matchesType = !scheduleTypeFilter || item.type === scheduleTypeFilter
+    return matchesSearch && matchesStatus && matchesType
+  })
+
+  const filteredStakeholders = stakeholderItems.filter((stakeholder: any) => {
+    const matchesSearch = !stakeholderSearchTerm || 
+      stakeholder.name.toLowerCase().includes(stakeholderSearchTerm.toLowerCase()) ||
+      stakeholder.role.toLowerCase().includes(stakeholderSearchTerm.toLowerCase())
+    const matchesInfluence = !stakeholderInfluenceFilter || stakeholder.influence === stakeholderInfluenceFilter
+    const matchesInterest = !stakeholderInterestFilter || stakeholder.interest === stakeholderInterestFilter
+    return matchesSearch && matchesInfluence && matchesInterest
+  })
+
+  const filteredComplianceItems = complianceItems.filter((item: any) => {
+    const matchesSearch = !complianceSearchTerm || 
+      item.requirement.toLowerCase().includes(complianceSearchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(complianceSearchTerm.toLowerCase())
+    const matchesStatus = !complianceStatusFilter || item.status === complianceStatusFilter
+    const matchesCategory = !complianceCategoryFilter || item.category === complianceCategoryFilter
+    return matchesSearch && matchesStatus && matchesCategory
+  })
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -2301,39 +2513,39 @@ export default function ProjectManagementPage() {
                   <Users className="h-8 w-8 text-blue-600" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-blue-800">Total Stakeholders</p>
-                    <p className="text-2xl font-bold text-blue-900">{stakeholders.length}</p>
+                    <p className="text-2xl font-bold text-blue-900">{stakeholderItems.length}</p>
                   </div>
                 </div>
               </div>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+                  <TrendingUp className="h-8 w-8 text-green-600" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-green-800">High Influence</p>
                     <p className="text-2xl font-bold text-green-900">
-                      {stakeholders.filter(s => s.influence === 'high').length}
+                      {stakeholderItems.filter(s => s.influence === 'high').length}
                     </p>
                   </div>
                 </div>
               </div>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <AlertTriangle className="h-8 w-8 text-yellow-600" />
+                  <Target className="h-8 w-8 text-yellow-600" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-yellow-800">High Interest</p>
                     <p className="text-2xl font-bold text-yellow-900">
-                      {stakeholders.filter(s => s.interest === 'high').length}
+                      {stakeholderItems.filter(s => s.interest === 'high').length}
                     </p>
                   </div>
                 </div>
               </div>
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <Star className="h-8 w-8 text-purple-600" />
+                  <Users className="h-8 w-8 text-purple-600" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-purple-800">Key Players</p>
                     <p className="text-2xl font-bold text-purple-900">
-                      {stakeholders.filter(s => s.influence === 'high' && s.interest === 'high').length}
+                      {stakeholderItems.filter(s => s.influence === 'high' && s.interest === 'high').length}
                     </p>
                   </div>
                 </div>
@@ -2382,7 +2594,7 @@ export default function ProjectManagementPage() {
                   <h5 className="font-medium text-red-800 mb-2">Manage Closely</h5>
                   <p className="text-xs text-red-600 mb-2">High Influence, High Interest</p>
                   <div className="space-y-1">
-                    {stakeholders
+                    {stakeholderItems
                       .filter(s => s.influence === 'high' && s.interest === 'high')
                       .slice(0, 3)
                       .map(stakeholder => (
@@ -2398,7 +2610,7 @@ export default function ProjectManagementPage() {
                   <h5 className="font-medium text-yellow-800 mb-2">Keep Informed</h5>
                   <p className="text-xs text-yellow-600 mb-2">Low Influence, High Interest</p>
                   <div className="space-y-1">
-                    {stakeholders
+                    {stakeholderItems
                       .filter(s => s.influence === 'low' && s.interest === 'high')
                       .slice(0, 3)
                       .map(stakeholder => (
@@ -2414,7 +2626,7 @@ export default function ProjectManagementPage() {
                   <h5 className="font-medium text-blue-800 mb-2">Keep Satisfied</h5>
                   <p className="text-xs text-blue-600 mb-2">High Influence, Low Interest</p>
                   <div className="space-y-1">
-                    {stakeholders
+                    {stakeholderItems
                       .filter(s => s.influence === 'high' && s.interest === 'low')
                       .slice(0, 3)
                       .map(stakeholder => (
@@ -2430,7 +2642,7 @@ export default function ProjectManagementPage() {
                   <h5 className="font-medium text-gray-800 mb-2">Monitor</h5>
                   <p className="text-xs text-gray-600 mb-2">Low Influence, Low Interest</p>
                   <div className="space-y-1">
-                    {stakeholders
+                    {stakeholderItems
                       .filter(s => s.influence === 'low' && s.interest === 'low')
                       .slice(0, 3)
                       .map(stakeholder => (
