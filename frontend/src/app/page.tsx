@@ -17,13 +17,8 @@ export default function SplashPage() {
   }, [])
 
   const handleGetStarted = () => {
-    if (user) {
-      // If user is authenticated, go to work requests
-      router.push('/work-requests')
-    } else {
-      // If not authenticated, go to login
-      router.push('/login')
-    }
+    // Always go to login page first
+    router.push('/login')
   }
 
   const handleLearnMore = () => {
@@ -95,7 +90,7 @@ export default function SplashPage() {
 
             {/* Tagline */}
             <p className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Connecting Enterprise Operations Through Intelligent Workforce Management
+              Empowering Enterprise Continuity Through Intelligent Data Migration & Compliance Analytics
             </p>
 
             {/* CTA Buttons */}
@@ -124,16 +119,17 @@ export default function SplashPage() {
             </h2>
 
             <div className="grid md:grid-cols-3 gap-8">
-              {/* Feature 1 */}
+              {/* Feature 1 - Data Continuity & Migration */}
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 hover:bg-white/20 transition-all duration-300">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v6m0 0l3-3m-3 3L9 4" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-4">Workforce Management</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Data Continuity & Migration</h3>
                 <p className="text-blue-100">
-                  Comprehensive employee lifecycle management with advanced analytics and reporting capabilities.
+                  Ensure lasting access to legacy HR & payroll data with structured migration pipelines, data validation, and long-term compliance-grade storage.
                 </p>
               </div>
 
