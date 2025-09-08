@@ -434,10 +434,9 @@ const EnhancedReportingPage: React.FC = () => {
     
     try {
       const { data, error } = await supabase
-        .from('timecards_comprehensive_report')
+        .from('timecards')
         .select('*')
-        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
-        .order('work_date', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       setTimecardData(data || []);
@@ -492,9 +491,8 @@ const EnhancedReportingPage: React.FC = () => {
     
     try {
       const { data, error } = await supabase
-        .from('tax_records_comprehensive_report')
+        .from('tax_records')
         .select('*')
-        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
         .order('tax_year', { ascending: false });
       
       if (error) throw error;
