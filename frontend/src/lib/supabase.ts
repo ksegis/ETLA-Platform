@@ -476,6 +476,13 @@ const createMockSupabaseClient = () => {
           }),
           then: (resolve: any) => resolve({ data: getMockData(table), error: null })
         }),
+        in: (column: string, values: any[]) => ({
+          order: (column: string, options?: any) => ({
+            limit: (limit: number) => Promise.resolve({ data: getMockData(table), error: null }),
+            then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+          }),
+          then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+        }),
         order: (column: string, options?: any) => ({
           then: (resolve: any) => resolve({ data: getMockData(table), error: null })
         }),

@@ -1,3 +1,4 @@
 {
-  "/project-management/page": "app/project-management/page.js"
+  "/project-management/page": "app/project-management/page.js",
+  "/reporting/page": "app/reporting/page.js"
 }

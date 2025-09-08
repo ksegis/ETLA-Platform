@@ -711,11 +711,119 @@ const EnhancedReportingPage: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Enhanced export functionality
+  const downloadPDF = async (data: any[], filename: string, title: string) => {
+    try {
+      // Create HTML content for PDF
+      const headers = data.length > 0 ? Object.keys(data[0]) : [];
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f8f9fa; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .footer { margin-top: 20px; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          <p>Total Records: ${data.length}</p>
+          <table>
+            <thead>
+              <tr>
+                ${headers.map(header => `<th>${header.replace(/_/g, ' ').toUpperCase()}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(row => `
+                <tr>
+                  ${headers.map(header => `<td>${row[header] || ''}</td>`).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="footer">
+            <p>HelixBridge - Enterprise Workforce Management</p>
+            <p>Report generated from Enhanced Reporting System</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Create blob and download
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}_${new Date().toISOString().split('T')[0]}.html`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      // Note: For true PDF generation, you would use libraries like jsPDF or Puppeteer
+      console.log('HTML report generated. For PDF conversion, integrate with jsPDF or server-side PDF generation.');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF report');
+    }
+  };
+
+  const downloadExcel = (data: any[], filename: string) => {
+    if (!data.length) return;
+    
+    try {
+      // Create CSV content with Excel-friendly formatting
+      const headers = Object.keys(data[0]);
+      const csvContent = [
+        headers.map(h => h.replace(/_/g, ' ').toUpperCase()).join('\t'),
+        ...data.map((row: any) => 
+          headers.map((header: any) => {
+            const value = row[header];
+            if (value === null || value === undefined) return '';
+            if (typeof value === 'string' && (value.includes(',') || value.includes('\t'))) {
+              return `"${value}"`;
+            }
+            return value;
+          }).join('\t')
+        )
+      ].join('\n');
+      
+      // Create blob with Excel MIME type
+      const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}_${new Date().toISOString().split('T')[0]}.xls`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating Excel file:', error);
+      alert('Error generating Excel report');
+    }
+  };
+
   // Pay statement detail view
   const generatePayStatementPDF = (statement: PayStatementDetail) => {
-    // This would integrate with a PDF generation library
-    console.log('Generating PDF for pay statement:', statement.check_number);
-    alert('PDF generation would be implemented here');
+    const payStatementData = [{
+      'Check Number': statement.check_number,
+      'Employee': statement.employee_name,
+      'Pay Date': statement.pay_date,
+      'Regular Hours': statement.regular_hours,
+      'OT Hours': statement.ot_hours,
+      'Gross Pay': `$${statement.gross_pay}`,
+      'Net Pay': `$${statement.net_pay}`,
+      'Federal Tax': `$${statement.federal_income_tax_withheld}`,
+      'State Tax': `$${statement.state_income_tax}`,
+      'FICA Tax': `$${statement.fica_tax_withheld}`
+    }];
+    
+    downloadPDF(payStatementData, `pay_statement_${statement.check_number}`, `Pay Statement - ${statement.employee_name}`);
   };
 
   // Load data when tab changes
@@ -1049,6 +1157,12 @@ const EnhancedReportingPage: React.FC = () => {
             <Button onClick={() => downloadJSON(filteredData, 'enhanced_pay_statements')} variant="outline">
               Export JSON
             </Button>
+            <Button onClick={() => downloadExcel(filteredData, 'enhanced_pay_statements')} variant="outline">
+              Export Excel
+            </Button>
+            <Button onClick={() => downloadPDF(filteredData, 'enhanced_pay_statements', 'Enhanced Pay Statements Report')} variant="outline">
+              Export PDF
+            </Button>
           </div>
         </div>
         
@@ -1145,6 +1259,12 @@ const EnhancedReportingPage: React.FC = () => {
             </Button>
             <Button onClick={() => downloadJSON(filteredData, 'enhanced_timecards')} variant="outline">
               Export JSON
+            </Button>
+            <Button onClick={() => downloadExcel(filteredData, 'enhanced_timecards')} variant="outline">
+              Export Excel
+            </Button>
+            <Button onClick={() => downloadPDF(filteredData, 'enhanced_timecards', 'Enhanced Timecards Report')} variant="outline">
+              Export PDF
             </Button>
           </div>
         </div>
