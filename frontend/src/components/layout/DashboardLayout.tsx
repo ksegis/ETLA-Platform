@@ -166,7 +166,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     // Listen for auth changes - with error handling
     const setupAuthListener = async () => {
       try {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session: any) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
           setUser(session?.user || null)
         })
 
