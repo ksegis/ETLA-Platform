@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User } from "@/types";
+import { User, PayStatement } from "@/types";
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -143,53 +143,53 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       const payStatements = payStatementsResult.data || [];
       const payStatementMetrics = {
         total: payStatements.length,
-        totalGrossPay: payStatements.reduce((sum, p: any) => sum + (p.gross_pay || 0), 0),
-        totalNetPay: payStatements.reduce((sum, p: any) => sum + (p.net_pay || 0), 0),
-        totalTaxes: payStatements.reduce((sum, p: any) => sum + (p.federal_tax_withheld || 0) + (p.state_tax_withheld || 0), 0),
-        byMonth: payStatements.reduce((acc, p: any) => {
+        totalGrossPay: payStatements.reduce((sum: number, p: PayStatement) => sum + (p.gross_pay || 0), 0),
+        totalNetPay: payStatements.reduce((sum: number, p: PayStatement) => sum + (p.net_pay || 0), 0),
+        totalTaxes: payStatements.reduce((sum: number, p: PayStatement) => sum + (p.federal_tax_withheld || 0) + (p.state_tax_withheld || 0), 0),
+        byMonth: payStatements.reduce((acc: Record<string, {count: number, grossPay: number}>, p: PayStatement) => {
           const month = new Date(p.pay_date).toISOString().substring(0, 7);
           if (!acc[month]) acc[month] = { count: 0, grossPay: 0 };
           acc[month].count += 1;
           acc[month].grossPay += p.gross_pay || 0;
           return acc;
         }, {}),
-        byDepartment: payStatements.reduce((acc, p: any) => {
+        byDepartment: payStatements.reduce((acc: Record<string, {count: number, grossPay: number}>, p: PayStatement) => {
           const dept = p.department || 'Unknown';
           if (!acc[dept]) acc[dept] = { count: 0, grossPay: 0 };
           acc[dept].count += 1;
           acc[dept].grossPay += p.gross_pay || 0;
           return acc;
         }, {}),
-        averageGrossPay: payStatements.length > 0 ? payStatements.reduce((sum, p: any) => sum + (p.gross_pay || 0), 0) / payStatements.length : 0,
-        averageNetPay: payStatements.length > 0 ? payStatements.reduce((sum, p: any) => sum + (p.net_pay || 0), 0) / payStatements.length : 0
+        averageGrossPay: payStatements.length > 0 ? payStatements.reduce((sum: number, p: PayStatement) => sum + (p.gross_pay || 0), 0) / payStatements.length : 0,
+        averageNetPay: payStatements.length > 0 ? payStatements.reduce((sum: number, p: PayStatement) => sum + (p.net_pay || 0), 0) / payStatements.length : 0
       };
 
       // Process timecard metrics
       const timecards = timecardsResult.data || [];
       const timecardMetrics = {
         total: timecards.length,
-        totalHours: timecards.reduce((sum, t: any) => sum + (t.total_hours || 0), 0),
-        regularHours: timecards.reduce((sum, t: any) => sum + (t.regular_hours || 0), 0),
-        overtimeHours: timecards.reduce((sum, t: any) => sum + (t.overtime_hours || 0), 0),
-        holidayHours: timecards.reduce((sum, t: any) => sum + (t.holiday_hours || 0), 0),
-        byApprovalStatus: timecards.reduce((acc, t: any) => {
+        totalHours: timecards.reduce((sum: number, t: any) => sum + (t.total_hours || 0), 0),
+        regularHours: timecards.reduce((sum: number, t: any) => sum + (t.regular_hours || 0), 0),
+        overtimeHours: timecards.reduce((sum: number, t: any) => sum + (t.overtime_hours || 0), 0),
+        holidayHours: timecards.reduce((sum: number, t: any) => sum + (t.holiday_hours || 0), 0),
+        byApprovalStatus: timecards.reduce((acc: Record<string, any>, t: any) => {
           const status = t.approval_status || 'pending';
           acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {}),
-        byDepartment: timecards.reduce((acc, t: any) => {
+        byDepartment: timecards.reduce((acc: Record<string, any>, t: any) => {
           const dept = t.department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
         }, {}),
-        averageHoursPerEmployee: employees.length > 0 ? timecards.reduce((sum, t: any) => sum + (t.total_hours || 0), 0) / employees.length : 0
+        averageHoursPerEmployee: employees.length > 0 ? timecards.reduce((sum: number, t: any) => sum + (t.total_hours || 0), 0) / employees.length : 0
       };
 
       // Process job metrics
       const jobs = jobsResult.data || [];
       const jobMetrics = {
         total: jobs.length,
-        byDepartment: jobs.reduce((acc, j: any) => {
+        byDepartment: jobs.reduce((acc: Record<string, any>, j: any) => {
           const dept = j.department || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
@@ -201,47 +201,47 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         payRangeAnalysis: {
           minRange: jobs.length > 0 ? Math.min(...jobs.map((j: any) => j.min_pay_range || 0)) : 0,
           maxRange: jobs.length > 0 ? Math.max(...jobs.map((j: any) => j.max_pay_range || 0)) : 0,
-          averageRange: jobs.length > 0 ? jobs.reduce((sum, j: any) => sum + (j.midpoint_pay || 0), 0) / jobs.length : 0
+          averageRange: jobs.length > 0 ? jobs.reduce((sum: number, j: any) => sum + (j.midpoint_pay || 0), 0) / jobs.length : 0
         },
-        totalEmployeesInJobs: jobs.reduce((sum, j: any) => sum + (j.employee_count || 0), 0)
+        totalEmployeesInJobs: jobs.reduce((sum: number, j: any) => sum + (j.employee_count || 0), 0)
       };
 
       // Process tax record metrics
       const taxRecords = taxRecordsResult.data || [];
       const taxMetrics = {
         total: taxRecords.length,
-        byFormType: taxRecords.reduce((acc, t: any) => {
+        byFormType: taxRecords.reduce((acc: Record<string, any>, t: any) => {
           const type = t.form_type || 'Unknown';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {}),
-        byTaxYear: taxRecords.reduce((acc, t: any) => {
+        byTaxYear: taxRecords.reduce((acc: Record<string, any>, t: any) => {
           const year = t.tax_year?.toString() || 'Unknown';
           acc[year] = (acc[year] || 0) + 1;
           return acc;
         }, {}),
-        byStatus: taxRecords.reduce((acc, t: any) => {
+        byStatus: taxRecords.reduce((acc: Record<string, any>, t: any) => {
           const status = t.document_status || 'Unknown';
           acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {}),
-        totalWages: taxRecords.reduce((sum, t: any) => sum + (t.wages_tips_compensation || 0), 0),
-        totalTaxesWithheld: taxRecords.reduce((sum, t: any) => sum + (t.federal_income_tax_withheld || 0) + (t.state_income_tax || 0), 0)
+        totalWages: taxRecords.reduce((sum: number, t: any) => sum + (t.wages_tips_compensation || 0), 0),
+        totalTaxesWithheld: taxRecords.reduce((sum: number, t: any) => sum + (t.federal_income_tax_withheld || 0) + (t.state_income_tax || 0), 0)
       };
 
       // Process benefit metrics
       const benefits = benefitsResult.data || [];
       const benefitMetrics = {
         total: benefits.length,
-        byDeductionType: benefits.reduce((acc, b: any) => {
+        byDeductionType: benefits.reduce((acc: Record<string, any>, b: any) => {
           const type = b.deduction_type || 'Unknown';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {}),
-        totalEmployeeContributions: benefits.reduce((sum, b: any) => sum + (b.employee_contribution || 0), 0),
-        totalEmployerContributions: benefits.reduce((sum, b: any) => sum + (b.employer_contribution || 0), 0),
+        totalEmployeeContributions: benefits.reduce((sum: number, b: any) => sum + (b.employee_contribution || 0), 0),
+        totalEmployerContributions: benefits.reduce((sum: number, b: any) => sum + (b.employer_contribution || 0), 0),
         activeGarnishments: benefits.filter((b: any) => b.court_order_number && b.end_date === null).length,
-        byFrequency: benefits.reduce((acc, b: any) => {
+        byFrequency: benefits.reduce((acc: Record<string, any>, b: any) => {
           const freq = b.frequency || 'Unknown';
           acc[freq] = (acc[freq] || 0) + 1;
           return acc;
@@ -252,12 +252,12 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       const compliance = complianceResult.data || [];
       const complianceMetrics = {
         total: compliance.length,
-        byComplianceType: compliance.reduce((acc, c: any) => {
+        byComplianceType: compliance.reduce((acc: Record<string, any>, c: any) => {
           const type = c.compliance_type || 'Unknown';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {}),
-        byStatus: compliance.reduce((acc, c: any) => {
+        byStatus: compliance.reduce((acc: Record<string, any>, c: any) => {
           const status = c.status || 'Unknown';
           acc[status] = (acc[status] || 0) + 1;
           return acc;

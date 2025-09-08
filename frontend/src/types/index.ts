@@ -206,6 +206,24 @@ export interface User extends BaseEntity {
   eeo_categories?: string;
 }
 
+export interface PayStatement extends BaseEntity {
+  user_id: string;
+  pay_period_start: string;
+  pay_period_end: string;
+  pay_date: string;
+  gross_pay: number;
+  net_pay: number;
+  federal_tax_withheld: number;
+  state_tax_withheld: number;
+  social_security_tax: number;
+  medicare_tax: number;
+  other_deductions?: number;
+  overtime_hours?: number;
+  overtime_pay?: number;
+  regular_hours?: number;
+  regular_pay?: number;
+}
+
 export interface Tenant extends BaseEntity {
   name: string;
   domain: string;
