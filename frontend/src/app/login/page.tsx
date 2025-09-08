@@ -176,7 +176,7 @@ function LoginForm() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            ETLA Platform
+            HelixBridge
           </h1>
           <p className="text-gray-600">
             {state.activeTab === 'login' ? 'Sign in to access your account' : 'Reset your password'}
@@ -451,86 +451,9 @@ function LoginForm() {
           )}
         </Card>
 
-        {/* Demo Accounts - Only show on login tab */}
-        {state.activeTab === 'login' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Demo Accounts</CardTitle>
-              <CardDescription>
-                Use these demo accounts to explore different user roles and permissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('demo.hostadmin@democompany.com', 'demo123')}
-                  disabled={state.isLoading || state.isGoogleLoading}
-                  className="w-full justify-start text-left"
-                >
-                  <div className="flex flex-col items-start">
-                    <div className="font-medium">Host Admin</div>
-                    <div className="text-xs text-gray-500">demo.hostadmin@democompany.com</div>
-                    <div className="text-xs text-blue-600">Full system access, can manage all tenants</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('demo.hostmanager@democompany.com', 'demo123')}
-                  disabled={state.isLoading || state.isGoogleLoading}
-                  className="w-full justify-start text-left"
-                >
-                  <div className="flex flex-col items-start">
-                    <div className="font-medium">Host Manager</div>
-                    <div className="text-xs text-gray-500">demo.hostmanager@democompany.com</div>
-                    <div className="text-xs text-blue-600">Host-level management access, can oversee operations</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('demo.clientadmin@democompany.com', 'demo123')}
-                  disabled={state.isLoading || state.isGoogleLoading}
-                  className="w-full justify-start text-left"
-                >
-                  <div className="flex flex-col items-start">
-                    <div className="font-medium">Primary Client Admin</div>
-                    <div className="text-xs text-gray-500">demo.clientadmin@democompany.com</div>
-                    <div className="text-xs text-blue-600">Primary client admin access, can manage tenant users</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillTestCredentials('demo.subclientuser@democompany.com', 'demo123')}
-                  disabled={state.isLoading || state.isGoogleLoading}
-                  className="w-full justify-start text-left"
-                >
-                  <div className="flex flex-col items-start">
-                    <div className="font-medium">Sub Client User</div>
-                    <div className="text-xs text-gray-500">demo.subclientuser@democompany.com</div>
-                    <div className="text-xs text-blue-600">Limited access, can view own data and submit requests</div>
-                  </div>
-                </Button>
-              </div>
-              <p className="text-xs text-gray-600 mt-3 text-center">
-                All demo accounts use password: <code className="bg-gray-100 px-1 rounded">demo123</code>
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Need help? Check the{' '}
-            <a href="/rbac-test" className="text-blue-600 hover:text-blue-500">
-              RBAC Test Page
-            </a>
+            © 2024 HelixBridge. All rights reserved.
           </p>
         </div>
       </div>
