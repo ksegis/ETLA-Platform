@@ -282,7 +282,7 @@ export default function AccessControlPage() {
 
       if (error) throw error
 
-      const formattedInvitations: Invitation[] = invitations?.map(inv => ({
+      const formattedInvitations: Invitation[] = invitations?.map((inv: any) => ({
         id: inv.id,
         email: inv.email,
         full_name: inv.full_name,
