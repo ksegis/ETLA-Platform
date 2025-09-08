@@ -212,11 +212,11 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const roleStats: RoleStats[] = Object.entries(stats?.reduce((acc, user) => {
+      const roleStats: RoleStats[] = Object.entries(stats?.reduce((acc: Record<string, number>, user: any) => {
         const key = `${user.role_level}_${user.role}`
         acc[key] = (acc[key] || 0) + 1
         return acc
-      }, {} as Record<string, number>) || {}).map(([key, count]) => {
+      }, {} as Record<string, number>) || {}).map(([key, count]: [string, number]) => {
         const [role_level, role] = key.split('_')
         return {
           role,
