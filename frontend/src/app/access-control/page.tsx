@@ -167,11 +167,27 @@ export default function AccessControlPage() {
 
       // Filter by tenant if not host admin
       // Host admin should see ALL users regardless of selectedTenant
+      console.log('🔍 Access Control Debug:', {
+        isHostAdmin,
+        selectedTenant: selectedTenant?.name,
+        userRole: user?.role,
+        userEmail: user?.email,
+        willFilter: !isHostAdmin && selectedTenant
+      })
+      
       if (!isHostAdmin && selectedTenant) {
+        console.log('🚫 Applying tenant filter for tenant:', selectedTenant.name)
         query = query.eq('tenant_users.tenant_id', selectedTenant.id)
+      } else {
+        console.log('✅ No tenant filtering - showing all users')
       }
 
       const { data: users, error } = await query
+
+      console.log('📊 Query Results:', {
+        userCount: users?.length || 0,
+        users: users?.map(u => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
+      })
 
       if (error) {
         console.error('Error loading users:', error)
