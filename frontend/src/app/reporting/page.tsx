@@ -144,9 +144,11 @@ interface TaxRecord {
   tax_record_id: string;
   employee_id: string;
   employee_name: string;
+  ssn: string;
   tax_year: number;
   form_type: string;
   filing_status: string;
+  dependents: number;
   tax_jurisdiction: string;
   state_code: string;
   wages_tips_compensation: number;
@@ -157,6 +159,7 @@ interface TaxRecord {
   medicare_tax_withheld: number;
   state_wages: number;
   state_income_tax: number;
+  local_tax: number;
   nonemployee_compensation: number;
   misc_income: number;
   document_status: string;
