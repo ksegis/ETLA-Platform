@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext'
 import { Tenant } from '@/types'
 
 interface TenantContextType {
-  // Current selected tenant
+  // Current selected tenant (for filtering)
   selectedTenant: Tenant | null
   setSelectedTenant: (tenant: Tenant | null) => void
   
@@ -19,6 +19,10 @@ interface TenantContextType {
   // Functions
   loadAvailableTenants: () => Promise<void>
   canSelectTenant: () => boolean
+  
+  // Multi-tenant support
+  getAllAccessibleTenantIds: () => string[]
+  isMultiTenant: () => boolean
   
   // Demo mode
   isDemoMode: boolean
@@ -131,6 +135,19 @@ export function TenantProvider({ children }: TenantProviderProps) {
     return tenantUser?.role === 'host_admin' || tenantUser?.role === 'program_manager'
   }
 
+  // Get all accessible tenant IDs for data loading
+  const getAllAccessibleTenantIds = (): string[] => {
+    if (isDemoMode) {
+      return [demoTenant.id]
+    }
+    return availableTenants.map(tenant => tenant.id)
+  }
+
+  // Check if user has access to multiple tenants
+  const isMultiTenant = (): boolean => {
+    return availableTenants.length > 1
+  }
+
   // Load tenants when auth state changes
   useEffect(() => {
     loadAvailableTenants()
@@ -143,6 +160,8 @@ export function TenantProvider({ children }: TenantProviderProps) {
     isLoading,
     loadAvailableTenants,
     canSelectTenant,
+    getAllAccessibleTenantIds,
+    isMultiTenant,
     isDemoMode
   }
 
@@ -161,7 +180,7 @@ export function useTenant() {
   return context
 }
 
-// Hook to get current tenant ID for database queries
+// Hook to get current tenant ID for database queries (single tenant)
 export function useCurrentTenantId(): string | null {
   const { selectedTenant, isDemoMode } = useTenant()
   
@@ -170,5 +189,21 @@ export function useCurrentTenantId(): string | null {
   }
   
   return selectedTenant?.id || null
+}
+
+// Hook to get all accessible tenant IDs for multi-tenant database queries
+export function useAccessibleTenantIds(): string[] {
+  const { getAllAccessibleTenantIds } = useTenant()
+  return getAllAccessibleTenantIds()
+}
+
+// Hook to check if user should see tenant filtering UI
+export function useMultiTenantMode(): { isMultiTenant: boolean; selectedTenant: Tenant | null; availableTenants: Tenant[] } {
+  const { isMultiTenant, selectedTenant, availableTenants } = useTenant()
+  return {
+    isMultiTenant: isMultiTenant(),
+    selectedTenant,
+    availableTenants
+  }
 }
 

@@ -10,7 +10,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import WorkRequestForm from '@/components/work-requests/WorkRequestForm'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTenant } from '@/contexts/TenantContext'
+import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
 
 // Types matching the database schema exactly
 interface WorkRequest {
@@ -88,12 +88,13 @@ export default function WorkRequestsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
+  const [tenantFilter, setTenantFilter] = useState('') // New tenant filter
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
-  const [availableTenants, setAvailableTenants] = useState<Array<{id: string, name: string}>>([])
+  const [availableTenantsForCustomer, setAvailableTenantsForCustomer] = useState<Array<{id: string, name: string}>>([])
 
   // Load available tenants for customer selection (for host admins and primary customer admins)
   const loadAvailableTenants = async () => {
@@ -105,13 +106,13 @@ export default function WorkRequestsPage() {
           .order('name')
 
         if (error) throw error
-        setAvailableTenants(data || [])
+        setAvailableTenantsForCustomer(data || [])
       } catch (err) {
         console.error('Error loading tenants:', err)
       }
     } else if (tenantUser?.role === 'primary_customer_admin' && selectedTenant) {
       // Primary customer admins can see their own tenant
-      setAvailableTenants([{ id: selectedTenant.id, name: selectedTenant.name }])
+      setAvailableTenantsForCustomer([{ id: selectedTenant.id, name: selectedTenant.name }])
       setSelectedCustomerId(selectedTenant.id)
     }
   }
@@ -126,11 +127,15 @@ export default function WorkRequestsPage() {
 
   const { user, tenantUser } = useAuth()
   const { selectedTenant } = useTenant()
+  const accessibleTenantIds = useAccessibleTenantIds()
+  const { isMultiTenant, availableTenants } = useMultiTenantMode()
 
-  // Load work requests from database
+  // Load work requests from database - UPDATED for multi-tenant support
   const loadWorkRequests = async () => {
-    if (!selectedTenant?.id) {
-      console.log('No tenant selected, skipping load')
+    const tenantIds = accessibleTenantIds
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping load')
       setLoading(false)
       return
     }
@@ -139,13 +144,13 @@ export default function WorkRequestsPage() {
       setLoading(true)
       setError(null)
       
-      console.log('Loading work requests for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('Loading work requests for tenants:', tenantIds)
 
-      // Query work requests with error handling
+      // Query work requests for ALL accessible tenants
       const { data, error: queryError } = await supabase
         .from('work_requests')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .in('tenant_id', tenantIds)  // Load from ALL accessible tenants
         .order('created_at', { ascending: false })
 
       if (queryError) {
@@ -156,7 +161,7 @@ export default function WorkRequestsPage() {
         return
       }
 
-      console.log('Loaded work requests:', data)
+      console.log('Loaded work requests from all tenants:', data)
       setWorkRequests(data || [])
       setFilteredRequests(data || [])
 
@@ -382,14 +387,18 @@ export default function WorkRequestsPage() {
       filtered = filtered.filter((request: any) => request.priority === priorityFilter)
     }
 
-    setFilteredRequests(filtered)
-  }, [workRequests, searchTerm, statusFilter, priorityFilter])
+    if (tenantFilter) {
+      filtered = filtered.filter((request: any) => request.tenant_id === tenantFilter)
+    }
 
-  // Load data when tenant changes
+    setFilteredRequests(filtered)
+  }, [workRequests, searchTerm, statusFilter, priorityFilter, tenantFilter])
+
+  // Load data when accessible tenants change
   useEffect(() => {
     loadWorkRequests()
     loadAvailableTenants()
-  }, [selectedTenant?.id, tenantUser?.role])
+  }, [accessibleTenantIds.join(','), tenantUser?.role]) // Use accessible tenant IDs instead of selected tenant
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
@@ -405,16 +414,6 @@ export default function WorkRequestsPage() {
 
   const getCompletionDate = (request: WorkRequest) => {
     return request.required_completion_date || request.requested_completion_date
-  }
-
-  if (!selectedTenant) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-600">Please select a tenant to view work requests.</p>
-        </div>
-      </DashboardLayout>
-    )
   }
 
   return (
@@ -567,6 +566,22 @@ export default function WorkRequestsPage() {
                 <option value="critical">Critical</option>
               </select>
               
+              {/* Tenant Filter - Only show for multi-tenant users */}
+              {isMultiTenant && (
+                <select
+                  value={tenantFilter}
+                  onChange={(e: any) => setTenantFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Tenants</option>
+                  {availableTenants.map((tenant) => (
+                    <option key={tenant.id} value={tenant.id}>
+                      {tenant.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              
               {/* View Toggle */}
               <div className="flex border border-gray-300 rounded-md">
                 <Button
@@ -596,7 +611,16 @@ export default function WorkRequestsPage() {
             <CardTitle>Work Requests ({filteredRequests.length})</CardTitle>
             <CardDescription>
               {filteredRequests.length} of {workRequests.length} requests
-              {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
+              {isMultiTenant ? (
+                <span className="ml-2">
+                  | {tenantFilter ? 
+                    `Filtered to: ${availableTenants.find(t => t.id === tenantFilter)?.name}` : 
+                    `From ${availableTenants.length} tenants`
+                  }
+                </span>
+              ) : (
+                selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -784,7 +808,7 @@ export default function WorkRequestsPage() {
           onSave={handleCreateRequest}
           title="Create New Work Request"
           userRole={tenantUser?.role}
-          availableTenants={availableTenants}
+          availableTenants={availableTenantsForCustomer}
           selectedCustomerId={selectedCustomerId}
           onCustomerChange={setSelectedCustomerId}
         />
@@ -799,7 +823,7 @@ export default function WorkRequestsPage() {
           request={selectedRequest}
           title="Edit Work Request"
           userRole={tenantUser?.role}
-          availableTenants={availableTenants}
+          availableTenants={availableTenantsForCustomer}
           selectedCustomerId={selectedCustomerId}
           onCustomerChange={setSelectedCustomerId}
         />
