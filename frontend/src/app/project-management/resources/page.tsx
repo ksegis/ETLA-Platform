@@ -317,7 +317,7 @@ export default function TeamResourcesPage() {
             
             <div className="divide-y divide-gray-200">
               {filteredMembers.map((member: any) => {
-                const AvailabilityIcon = availabilityConfig[member.availability].icon
+                const AvailabilityIcon = availabilityConfig[member.availability as keyof typeof availabilityConfig].icon
                 return (
                   <div 
                     key={member.id} 
@@ -335,7 +335,7 @@ export default function TeamResourcesPage() {
                           <h3 className="text-lg font-medium text-gray-900">{member.name}</h3>
                           <p className="text-sm text-gray-600">{member.role}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${availabilityConfig[member.availability].color}`}>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${availabilityConfig[member.availability as keyof typeof availabilityConfig].color}`}>
                               <AvailabilityIcon className="h-3 w-3 mr-1" />
                               {member.availability.charAt(0).toUpperCase() + member.availability.slice(1)}
                             </span>
