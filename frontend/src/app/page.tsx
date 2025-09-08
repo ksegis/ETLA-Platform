@@ -16,20 +16,14 @@ export default function SplashPage() {
     return () => clearTimeout(timer)
   }, [])
 
-  useEffect(() => {
-    // Redirect authenticated users to dashboard after showing splash page
-    if (!loading && user) {
-      // Show splash page for 3 seconds before redirecting
-      const redirectTimer = setTimeout(() => {
-        router.push('/dashboard')
-      }, 3000)
-      
-      return () => clearTimeout(redirectTimer)
-    }
-  }, [user, loading, router])
-
   const handleGetStarted = () => {
-    router.push('/login')
+    if (user) {
+      // If user is authenticated, go to dashboard
+      router.push('/dashboard')
+    } else {
+      // If not authenticated, go to login
+      router.push('/login')
+    }
   }
 
   const handleLearnMore = () => {
@@ -110,7 +104,7 @@ export default function SplashPage() {
                 onClick={handleGetStarted}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
-                Get Started
+                {user ? 'Go' : 'Get Started'}
               </button>
               <button
                 onClick={handleLearnMore}
