@@ -340,27 +340,87 @@ export default function ProjectManagementPage() {
 
   // Handler functions for CRUD operations
   const handleDeleteWorkRequest = (id: string) => {
-    console.log('Delete work request:', id)
+    if (!confirm('Are you sure you want to delete this work request?')) return
+    
+    try {
+      // For now, working with mock data - in production this would be a database call
+      console.log('Delete work request:', id)
+      // TODO: Implement actual deletion when backend is ready
+      // setWorkRequests(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting work request:', error)
+      setError('Failed to delete work request. Please try again.')
+    }
   }
 
   const handleDeleteRisk = (id: string) => {
-    console.log('Delete risk:', id)
+    if (!confirm('Are you sure you want to delete this risk?')) return
+    
+    try {
+      // For now, working with mock data - in production this would be a database call
+      console.log('Delete risk:', id)
+      // TODO: Implement actual deletion when backend is ready
+      // setRisks(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting risk:', error)
+      setError('Failed to delete risk. Please try again.')
+    }
   }
 
   const handleDeleteWbsItem = (id: string) => {
-    console.log('Delete WBS item:', id)
+    if (!confirm('Are you sure you want to delete this WBS item?')) return
+    
+    try {
+      // For now, working with mock data - in production this would be a database call
+      console.log('Delete WBS item:', id)
+      // TODO: Implement actual deletion when backend is ready
+      // setWbsItems(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting WBS item:', error)
+      setError('Failed to delete WBS item. Please try again.')
+    }
   }
 
   const handleDeleteScheduleItem = (id: string) => {
-    console.log('Delete schedule item:', id)
+    if (!confirm('Are you sure you want to delete this schedule item?')) return
+    
+    try {
+      // For now, working with mock data - in production this would be a database call
+      console.log('Delete schedule item:', id)
+      // TODO: Implement actual deletion when backend is ready
+      // setScheduleItems(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting schedule item:', error)
+      setError('Failed to delete schedule item. Please try again.')
+    }
   }
 
   const handleDeleteStakeholder = (id: string) => {
-    console.log('Delete stakeholder:', id)
+    if (!confirm('Are you sure you want to delete this stakeholder?')) return
+    
+    try {
+      // For now, working with mock data - in production this would be a database call
+      console.log('Delete stakeholder:', id)
+      // TODO: Implement actual deletion when backend is ready
+      // setStakeholderItems(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting stakeholder:', error)
+      setError('Failed to delete stakeholder. Please try again.')
+    }
   }
 
   const handleDeleteComplianceItem = (id: string) => {
-    console.log('Delete compliance item:', id)
+    if (!confirm('Are you sure you want to delete this compliance item?')) return
+    
+    try {
+      // For now, working with mock data - in production this would be a database call
+      console.log('Delete compliance item:', id)
+      // TODO: Implement actual deletion when backend is ready
+      // setComplianceItems(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting compliance item:', error)
+      setError('Failed to delete compliance item. Please try again.')
+    }
   }
 
   // Load data on component mount
@@ -593,56 +653,68 @@ export default function ProjectManagementPage() {
 
   // Filtered arrays for new tabs
   const filteredWorkRequests = workRequestItems.filter((request: any) => {
+    // Project-specific filtering - only show work requests for selected project
+    const matchesProject = !selectedProject || request.project_id === selectedProject.id
     const matchesSearch = !workRequestSearchTerm || 
       request.title.toLowerCase().includes(workRequestSearchTerm.toLowerCase()) ||
       request.description.toLowerCase().includes(workRequestSearchTerm.toLowerCase())
     const matchesStatus = !workRequestStatusFilter || request.status === workRequestStatusFilter
     const matchesPriority = !workRequestPriorityFilter || request.priority === workRequestPriorityFilter
-    return matchesSearch && matchesStatus && matchesPriority
+    return matchesProject && matchesSearch && matchesStatus && matchesPriority
   })
 
   const filteredRisks = riskItems.filter((risk: any) => {
+    // Project-specific filtering - only show risks for selected project
+    const matchesProject = !selectedProject || risk.project_id === selectedProject.id
     const matchesSearch = !riskSearchTerm || 
       risk.title.toLowerCase().includes(riskSearchTerm.toLowerCase()) ||
       risk.description.toLowerCase().includes(riskSearchTerm.toLowerCase())
     const matchesLevel = !riskLevelFilter || risk.level === riskLevelFilter
     const matchesStatus = !riskStatusFilter || risk.status === riskStatusFilter
-    return matchesSearch && matchesLevel && matchesStatus
+    return matchesProject && matchesSearch && matchesLevel && matchesStatus
   })
 
   const filteredWbsItems = wbsItems.filter((item: any) => {
+    // Project-specific filtering - only show WBS items for selected project
+    const matchesProject = !selectedProject || item.project_id === selectedProject.id
     const matchesSearch = !wbsSearchTerm || 
       item.name.toLowerCase().includes(wbsSearchTerm.toLowerCase()) ||
       item.code.toLowerCase().includes(wbsSearchTerm.toLowerCase())
     const matchesStatus = !wbsStatusFilter || item.status === wbsStatusFilter
     const matchesLevel = !wbsLevelFilter || item.level.toString() === wbsLevelFilter
-    return matchesSearch && matchesStatus && matchesLevel
+    return matchesProject && matchesSearch && matchesStatus && matchesLevel
   })
 
   const filteredScheduleItems = scheduleItems.filter((item: any) => {
+    // Project-specific filtering - only show schedule items for selected project
+    const matchesProject = !selectedProject || item.project_id === selectedProject.id
     const matchesSearch = !scheduleSearchTerm || 
       item.name.toLowerCase().includes(scheduleSearchTerm.toLowerCase())
     const matchesStatus = !scheduleStatusFilter || item.status === scheduleStatusFilter
     const matchesType = !scheduleTypeFilter || item.type === scheduleTypeFilter
-    return matchesSearch && matchesStatus && matchesType
+    return matchesProject && matchesSearch && matchesStatus && matchesType
   })
 
   const filteredStakeholders = stakeholderItems.filter((stakeholder: any) => {
+    // Project-specific filtering - only show stakeholders for selected project
+    const matchesProject = !selectedProject || stakeholder.project_id === selectedProject.id
     const matchesSearch = !stakeholderSearchTerm || 
       stakeholder.name.toLowerCase().includes(stakeholderSearchTerm.toLowerCase()) ||
       stakeholder.role.toLowerCase().includes(stakeholderSearchTerm.toLowerCase())
     const matchesInfluence = !stakeholderInfluenceFilter || stakeholder.influence === stakeholderInfluenceFilter
     const matchesInterest = !stakeholderInterestFilter || stakeholder.interest === stakeholderInterestFilter
-    return matchesSearch && matchesInfluence && matchesInterest
+    return matchesProject && matchesSearch && matchesInfluence && matchesInterest
   })
 
   const filteredComplianceItems = complianceItems.filter((item: any) => {
+    // Project-specific filtering - only show compliance items for selected project
+    const matchesProject = !selectedProject || item.project_id === selectedProject.id
     const matchesSearch = !complianceSearchTerm || 
       item.requirement.toLowerCase().includes(complianceSearchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(complianceSearchTerm.toLowerCase())
     const matchesStatus = !complianceStatusFilter || item.status === complianceStatusFilter
     const matchesCategory = !complianceCategoryFilter || item.category === complianceCategoryFilter
-    return matchesSearch && matchesStatus && matchesCategory
+    return matchesProject && matchesSearch && matchesStatus && matchesCategory
   })
 
   // Reset to first page when filters change
@@ -786,6 +858,67 @@ export default function ProjectManagementPage() {
           </Button>
         </div>
 
+        {/* Project Selector */}
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Building className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium text-blue-900">Selected Project:</span>
+                </div>
+                <select
+                  value={selectedProject?.id || ''}
+                  onChange={(e) => {
+                    const project = projects.find(p => p.id === e.target.value)
+                    setSelectedProject(project || null)
+                  }}
+                  className="px-3 py-2 border border-blue-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a project to manage...</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {getProjectName(project)} - {project.status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedProject && (
+                <div className="text-sm text-blue-700">
+                  <span className="font-medium">Manager:</span> {getProjectTeamLead(selectedProject)}
+                </div>
+              )}
+            </div>
+            {selectedProject && (
+              <div className="mt-3 p-3 bg-white rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{getProjectName(selectedProject)}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{selectedProject.description || 'No description available'}</p>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      selectedProject.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      selectedProject.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                      selectedProject.status === 'on_hold' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {selectedProject.status?.replace('_', ' ').toUpperCase()}
+                    </span>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      selectedProject.priority === 'high' ? 'bg-red-100 text-red-800' :
+                      selectedProject.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {selectedProject.priority?.toUpperCase()} PRIORITY
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Error Alert */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
@@ -833,7 +966,10 @@ export default function ProjectManagementPage() {
                 }`}
               >
                 <tab.icon className="h-4 w-4 mr-2" />
-                {tab.label}
+                {tab.id === 'projects' ? tab.label : (
+                  selectedProject ? `${getProjectName(selectedProject)} - ${tab.label}` : 
+                  `${tab.label} (Select Project)`
+                )}
                 {tab.count !== undefined && (
                   <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
                     activeTab === tab.id
@@ -847,6 +983,23 @@ export default function ProjectManagementPage() {
             ))}
           </nav>
         </div>
+
+        {/* Project Selection Warning */}
+        {activeTab !== 'projects' && !selectedProject && (
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 mr-3" />
+                <div>
+                  <h3 className="font-medium text-yellow-800">Project Selection Required</h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Please select a project above to view and manage {tabs.find(t => t.id === activeTab)?.label.toLowerCase()}.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'projects' && (
@@ -3169,6 +3322,316 @@ export default function ProjectManagementPage() {
             setSelectedProject(null)
           }}
           project={selectedProject}
+        />
+      )}
+
+      {/* Work Request Modals */}
+      {isCreateWorkRequestModalOpen && (
+        <CreateWorkRequestModal
+          isOpen={isCreateWorkRequestModalOpen}
+          onClose={() => setIsCreateWorkRequestModalOpen(false)}
+          selectedProject={selectedProject}
+          onSave={(newWorkRequest) => {
+            // Add project_id to the new work request
+            const workRequestWithProject = {
+              ...newWorkRequest,
+              project_id: selectedProject?.id,
+              id: Date.now().toString() // Temporary ID for demo
+            }
+            console.log('Create work request:', workRequestWithProject)
+            setIsCreateWorkRequestModalOpen(false)
+          }}
+        />
+      )}
+
+      {isEditWorkRequestModalOpen && selectedWorkRequest && (
+        <EditWorkRequestModal
+          isOpen={isEditWorkRequestModalOpen}
+          onClose={() => {
+            setIsEditWorkRequestModalOpen(false)
+            setSelectedWorkRequest(null)
+          }}
+          workRequest={selectedWorkRequest}
+          onSave={(updatedWorkRequest) => {
+            console.log('Update work request:', updatedWorkRequest)
+            setIsEditWorkRequestModalOpen(false)
+            setSelectedWorkRequest(null)
+          }}
+        />
+      )}
+
+      {isViewWorkRequestModalOpen && selectedWorkRequest && (
+        <ViewWorkRequestModal
+          isOpen={isViewWorkRequestModalOpen}
+          onClose={() => {
+            setIsViewWorkRequestModalOpen(false)
+            setSelectedWorkRequest(null)
+          }}
+          workRequest={selectedWorkRequest}
+        />
+      )}
+
+      {/* Risk Modals */}
+      {isCreateRiskModalOpen && (
+        <CreateRiskModal
+          isOpen={isCreateRiskModalOpen}
+          onClose={() => setIsCreateRiskModalOpen(false)}
+          selectedProject={selectedProject}
+          onSave={(newRisk) => {
+            // Add project_id to the new risk
+            const riskWithProject = {
+              ...newRisk,
+              project_id: selectedProject?.id,
+              id: Date.now().toString() // Temporary ID for demo
+            }
+            console.log('Create risk:', riskWithProject)
+            setIsCreateRiskModalOpen(false)
+          }}
+        />
+      )}
+
+      {isEditRiskModalOpen && selectedRisk && (
+        <EditRiskModal
+          isOpen={isEditRiskModalOpen}
+          onClose={() => {
+            setIsEditRiskModalOpen(false)
+            setSelectedRisk(null)
+          }}
+          risk={selectedRisk}
+          onSave={(updatedRisk) => {
+            console.log('Update risk:', updatedRisk)
+            setIsEditRiskModalOpen(false)
+            setSelectedRisk(null)
+          }}
+        />
+      )}
+
+      {isViewRiskModalOpen && selectedRisk && (
+        <ViewRiskModal
+          isOpen={isViewRiskModalOpen}
+          onClose={() => {
+            setIsViewRiskModalOpen(false)
+            setSelectedRisk(null)
+          }}
+          risk={selectedRisk}
+        />
+      )}
+
+      {/* Charter Modals */}
+      {isEditCharterModalOpen && selectedProject && (
+        <EditCharterModal
+          isOpen={isEditCharterModalOpen}
+          onClose={() => setIsEditCharterModalOpen(false)}
+          project={selectedProject}
+          onSave={(updatedCharter) => {
+            console.log('Update charter:', updatedCharter)
+            setIsEditCharterModalOpen(false)
+          }}
+        />
+      )}
+
+      {isViewCharterModalOpen && selectedProject && (
+        <ViewCharterModal
+          isOpen={isViewCharterModalOpen}
+          onClose={() => setIsViewCharterModalOpen(false)}
+          project={selectedProject}
+        />
+      )}
+
+      {/* WBS Modals */}
+      {isCreateWbsItemModalOpen && (
+        <CreateWbsItemModal
+          isOpen={isCreateWbsItemModalOpen}
+          onClose={() => setIsCreateWbsItemModalOpen(false)}
+          selectedProject={selectedProject}
+          onSave={(newWbsItem) => {
+            // Add project_id to the new WBS item
+            const wbsItemWithProject = {
+              ...newWbsItem,
+              project_id: selectedProject?.id,
+              id: Date.now().toString() // Temporary ID for demo
+            }
+            console.log('Create WBS item:', wbsItemWithProject)
+            setIsCreateWbsItemModalOpen(false)
+          }}
+        />
+      )}
+
+      {isEditWbsItemModalOpen && selectedWbsItem && (
+        <EditWbsItemModal
+          isOpen={isEditWbsItemModalOpen}
+          onClose={() => {
+            setIsEditWbsItemModalOpen(false)
+            setSelectedWbsItem(null)
+          }}
+          wbsItem={selectedWbsItem}
+          onSave={(updatedWbsItem) => {
+            console.log('Update WBS item:', updatedWbsItem)
+            setIsEditWbsItemModalOpen(false)
+            setSelectedWbsItem(null)
+          }}
+        />
+      )}
+
+      {isViewWbsItemModalOpen && selectedWbsItem && (
+        <ViewWbsItemModal
+          isOpen={isViewWbsItemModalOpen}
+          onClose={() => {
+            setIsViewWbsItemModalOpen(false)
+            setSelectedWbsItem(null)
+          }}
+          wbsItem={selectedWbsItem}
+        />
+      )}
+
+      {/* Schedule Modals */}
+      {isCreateMilestoneModalOpen && (
+        <CreateMilestoneModal
+          isOpen={isCreateMilestoneModalOpen}
+          onClose={() => setIsCreateMilestoneModalOpen(false)}
+          selectedProject={selectedProject}
+          onSave={(newMilestone) => {
+            // Add project_id to the new milestone
+            const milestoneWithProject = {
+              ...newMilestone,
+              project_id: selectedProject?.id,
+              id: Date.now().toString() // Temporary ID for demo
+            }
+            console.log('Create milestone:', milestoneWithProject)
+            setIsCreateMilestoneModalOpen(false)
+          }}
+        />
+      )}
+
+      {isEditScheduleItemModalOpen && selectedScheduleItem && (
+        <EditScheduleItemModal
+          isOpen={isEditScheduleItemModalOpen}
+          onClose={() => {
+            setIsEditScheduleItemModalOpen(false)
+            setSelectedScheduleItem(null)
+          }}
+          scheduleItem={selectedScheduleItem}
+          onSave={(updatedScheduleItem) => {
+            console.log('Update schedule item:', updatedScheduleItem)
+            setIsEditScheduleItemModalOpen(false)
+            setSelectedScheduleItem(null)
+          }}
+        />
+      )}
+
+      {isViewScheduleItemModalOpen && selectedScheduleItem && (
+        <ViewScheduleItemModal
+          isOpen={isViewScheduleItemModalOpen}
+          onClose={() => {
+            setIsViewScheduleItemModalOpen(false)
+            setSelectedScheduleItem(null)
+          }}
+          scheduleItem={selectedScheduleItem}
+        />
+      )}
+
+      {/* EVM Modals */}
+      {isUpdateEvmModalOpen && (
+        <UpdateEvmModal
+          isOpen={isUpdateEvmModalOpen}
+          onClose={() => setIsUpdateEvmModalOpen(false)}
+          evmData={evmData}
+          onSave={(updatedEvmData) => {
+            console.log('Update EVM data:', updatedEvmData)
+            setIsUpdateEvmModalOpen(false)
+          }}
+        />
+      )}
+
+      {/* Stakeholder Modals */}
+      {isCreateStakeholderModalOpen && (
+        <CreateStakeholderModal
+          isOpen={isCreateStakeholderModalOpen}
+          onClose={() => setIsCreateStakeholderModalOpen(false)}
+          selectedProject={selectedProject}
+          onSave={(newStakeholder) => {
+            // Add project_id to the new stakeholder
+            const stakeholderWithProject = {
+              ...newStakeholder,
+              project_id: selectedProject?.id,
+              id: Date.now().toString() // Temporary ID for demo
+            }
+            console.log('Create stakeholder:', stakeholderWithProject)
+            setIsCreateStakeholderModalOpen(false)
+          }}
+        />
+      )}
+
+      {isEditStakeholderModalOpen && selectedStakeholder && (
+        <EditStakeholderModal
+          isOpen={isEditStakeholderModalOpen}
+          onClose={() => {
+            setIsEditStakeholderModalOpen(false)
+            setSelectedStakeholder(null)
+          }}
+          stakeholder={selectedStakeholder}
+          onSave={(updatedStakeholder) => {
+            console.log('Update stakeholder:', updatedStakeholder)
+            setIsEditStakeholderModalOpen(false)
+            setSelectedStakeholder(null)
+          }}
+        />
+      )}
+
+      {isViewStakeholderModalOpen && selectedStakeholder && (
+        <ViewStakeholderModal
+          isOpen={isViewStakeholderModalOpen}
+          onClose={() => {
+            setIsViewStakeholderModalOpen(false)
+            setSelectedStakeholder(null)
+          }}
+          stakeholder={selectedStakeholder}
+        />
+      )}
+
+      {/* Compliance Modals */}
+      {isCreateComplianceItemModalOpen && (
+        <CreateComplianceItemModal
+          isOpen={isCreateComplianceItemModalOpen}
+          onClose={() => setIsCreateComplianceItemModalOpen(false)}
+          selectedProject={selectedProject}
+          onSave={(newComplianceItem) => {
+            // Add project_id to the new compliance item
+            const complianceItemWithProject = {
+              ...newComplianceItem,
+              project_id: selectedProject?.id,
+              id: Date.now().toString() // Temporary ID for demo
+            }
+            console.log('Create compliance item:', complianceItemWithProject)
+            setIsCreateComplianceItemModalOpen(false)
+          }}
+        />
+      )}
+
+      {isEditComplianceItemModalOpen && selectedComplianceItem && (
+        <EditComplianceItemModal
+          isOpen={isEditComplianceItemModalOpen}
+          onClose={() => {
+            setIsEditComplianceItemModalOpen(false)
+            setSelectedComplianceItem(null)
+          }}
+          complianceItem={selectedComplianceItem}
+          onSave={(updatedComplianceItem) => {
+            console.log('Update compliance item:', updatedComplianceItem)
+            setIsEditComplianceItemModalOpen(false)
+            setSelectedComplianceItem(null)
+          }}
+        />
+      )}
+
+      {isViewComplianceItemModalOpen && selectedComplianceItem && (
+        <ViewComplianceItemModal
+          isOpen={isViewComplianceItemModalOpen}
+          onClose={() => {
+            setIsViewComplianceItemModalOpen(false)
+            setSelectedComplianceItem(null)
+          }}
+          complianceItem={selectedComplianceItem}
         />
       )}
     </DashboardLayout>
@@ -5638,6 +6101,814 @@ function EditComplianceItemModal({
             <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">
               Save Changes
             </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+// CreateWorkRequestModal Component
+function CreateWorkRequestModal({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  selectedProject
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onSave: (newWorkRequest: any) => void
+  selectedProject: any
+}) {
+  const [formData, setFormData] = useState<any>({
+    title: '',
+    description: '',
+    status: 'submitted',
+    priority: 'medium',
+    requester: '',
+    assignee: '',
+    due_date: '',
+    department: '',
+    budget: 0
+  })
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    if (formData.title && formData.description) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Create Work Request</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Title *</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description *</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={4}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Create</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// CreateRiskModal Component
+function CreateRiskModal({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  selectedProject
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onSave: (newRisk: any) => void
+  selectedProject: any
+}) {
+  const [formData, setFormData] = useState<any>({
+    title: '',
+    description: '',
+    level: 'medium',
+    probability: 'medium',
+    impact: 'medium',
+    status: 'identified',
+    owner: '',
+    mitigation: ''
+  })
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    if (formData.title && formData.description) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Create Risk</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Title *</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Risk Level</label>
+                <select
+                  value={formData.level}
+                  onChange={(e) => setFormData({...formData, level: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description *</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={4}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Create</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// CreateWbsItemModal Component
+function CreateWbsItemModal({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  selectedProject
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onSave: (newWbsItem: any) => void
+  selectedProject: any
+}) {
+  const [formData, setFormData] = useState<any>({
+    code: '',
+    name: '',
+    level: 1,
+    status: 'not_started',
+    progress: 0,
+    assignee: '',
+    start_date: '',
+    end_date: '',
+    description: ''
+  })
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    if (formData.code && formData.name) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Create WBS Item</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">WBS Code *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({...formData, code: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Task Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Create</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// CreateMilestoneModal Component
+function CreateMilestoneModal({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  selectedProject
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onSave: (newMilestone: any) => void
+  selectedProject: any
+}) {
+  const [formData, setFormData] = useState<any>({
+    name: '',
+    type: 'milestone',
+    status: 'not_started',
+    start_date: '',
+    end_date: '',
+    assignee: '',
+    description: ''
+  })
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    if (formData.name && formData.start_date && formData.end_date) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Create Milestone</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Milestone Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Type</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="milestone">Milestone</option>
+                  <option value="task">Task</option>
+                  <option value="deliverable">Deliverable</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date *</label>
+                <input
+                  type="date"
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End Date *</label>
+                <input
+                  type="date"
+                  value={formData.end_date}
+                  onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Create</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// CreateStakeholderModal Component
+function CreateStakeholderModal({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  selectedProject
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onSave: (newStakeholder: any) => void
+  selectedProject: any
+}) {
+  const [formData, setFormData] = useState<any>({
+    name: '',
+    role: '',
+    influence: 'medium',
+    interest: 'medium',
+    engagement: 'neutral',
+    email: '',
+    department: '',
+    expectations: ''
+  })
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    if (formData.name && formData.role) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Create Stakeholder</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Role *</label>
+                <input
+                  type="text"
+                  value={formData.role}
+                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Influence</label>
+                <select
+                  value={formData.influence}
+                  onChange={(e) => setFormData({...formData, influence: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Interest</label>
+                <select
+                  value={formData.interest}
+                  onChange={(e) => setFormData({...formData, interest: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Expectations</label>
+              <textarea
+                value={formData.expectations}
+                onChange={(e) => setFormData({...formData, expectations: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Create</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// CreateComplianceItemModal Component
+function CreateComplianceItemModal({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  selectedProject
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onSave: (newComplianceItem: any) => void
+  selectedProject: any
+}) {
+  const [formData, setFormData] = useState<any>({
+    requirement: '',
+    description: '',
+    category: 'regulatory',
+    status: 'pending_review',
+    priority: 'medium',
+    due_date: '',
+    owner: ''
+  })
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    if (formData.requirement && formData.description) {
+      onSave(formData)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Create Compliance Item</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Requirement *</label>
+                <input
+                  type="text"
+                  value={formData.requirement}
+                  onChange={(e) => setFormData({...formData, requirement: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="regulatory">Regulatory</option>
+                  <option value="security">Security</option>
+                  <option value="privacy">Privacy</option>
+                  <option value="quality">Quality</option>
+                  <option value="environmental">Environmental</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Priority</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                <input
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description *</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={4}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Create</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// UpdateEvmModal Component
+function UpdateEvmModal({ 
+  isOpen, 
+  onClose, 
+  evmData,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  evmData: any
+  onSave: (updatedEvmData: any) => void
+}) {
+  const [formData, setFormData] = useState<any>(evmData || {})
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    onSave(formData)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Update EVM Data</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Planned Value</label>
+                <input
+                  type="number"
+                  value={formData.plannedValue || ''}
+                  onChange={(e) => setFormData({...formData, plannedValue: parseFloat(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Earned Value</label>
+                <input
+                  type="number"
+                  value={formData.earnedValue || ''}
+                  onChange={(e) => setFormData({...formData, earnedValue: parseFloat(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Actual Cost</label>
+                <input
+                  type="number"
+                  value={formData.actualCost || ''}
+                  onChange={(e) => setFormData({...formData, actualCost: parseFloat(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Budget at Completion</label>
+                <input
+                  type="number"
+                  value={formData.budgetAtCompletion || ''}
+                  onChange={(e) => setFormData({...formData, budgetAtCompletion: parseFloat(e.target.value)})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Update</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// EditCharterModal Component
+function EditCharterModal({ 
+  isOpen, 
+  onClose, 
+  project,
+  onSave
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  project: any
+  onSave: (updatedCharter: any) => void
+}) {
+  const [formData, setFormData] = useState<any>(project || {})
+
+  if (!isOpen) return null
+
+  const handleSave = () => {
+    onSave(formData)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Edit Project Charter</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Project Name</label>
+                <input
+                  type="text"
+                  value={formData.project_name || ''}
+                  onChange={(e) => setFormData({...formData, project_name: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Project Manager</label>
+                <input
+                  type="text"
+                  value={formData.project_manager || ''}
+                  onChange={(e) => setFormData({...formData, project_manager: e.target.value})}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Project Scope</label>
+              <textarea
+                value={formData.project_scope || ''}
+                onChange={(e) => setFormData({...formData, project_scope: e.target.value})}
+                rows={4}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Success Criteria</label>
+              <textarea
+                value={formData.success_criteria || ''}
+                onChange={(e) => setFormData({...formData, success_criteria: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button onClick={handleSave} className="bg-blue-600 text-white hover:bg-blue-700">Save Changes</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ViewCharterModal Component
+function ViewCharterModal({ 
+  isOpen, 
+  onClose, 
+  project
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  project: any
+}) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Project Charter Preview</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Project Overview</h3>
+              <p className="mt-2 text-gray-700">{project?.description || 'No description available'}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Project Scope</h3>
+              <p className="mt-2 text-gray-700">{project?.project_scope || 'Project scope not defined'}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Success Criteria</h3>
+              <p className="mt-2 text-gray-700">{project?.success_criteria || 'Success criteria not defined'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <Button onClick={onClose} variant="outline">Close</Button>
           </div>
         </div>
       </div>
