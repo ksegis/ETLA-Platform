@@ -166,6 +166,7 @@ export default function AccessControlPage() {
         .order('created_at', { ascending: false })
 
       // Filter by tenant if not host admin
+      // Host admin should see ALL users regardless of selectedTenant
       if (!isHostAdmin && selectedTenant) {
         query = query.eq('tenant_users.tenant_id', selectedTenant.id)
       }
