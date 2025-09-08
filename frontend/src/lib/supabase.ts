@@ -1052,3 +1052,7 @@ export const userManagement = {
   }
 }
 
+
+// Export the standard Supabase client
+export { supabase as default }
+
