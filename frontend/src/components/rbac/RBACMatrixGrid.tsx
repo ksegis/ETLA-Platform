@@ -62,7 +62,7 @@ export default function RBACMatrixGrid({
 
     return Array.from(groups.entries()).map(([resource, permissions]: any) => ({
       resource,
-      permissions: permissions.sort((a, b: any) => a.action.localeCompare(b.action))
+      permissions: permissions.sort((a: RBACPermissionCatalog, b: RBACPermissionCatalog) => a.action.localeCompare(b.action))
     }))
   }, [permissionCatalog])
 

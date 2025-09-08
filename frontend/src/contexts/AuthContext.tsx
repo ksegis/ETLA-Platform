@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import type { User, Session } from '@supabase/supabase-js'
+import type { User, Session, AuthError, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { setServiceAuthContext } from '@/utils/serviceAuth'
 
@@ -29,8 +29,8 @@ interface AuthContextType {
   tenantUser: TenantUser | null
   session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error }>
-  signUp: (email: string, password: string) => Promise<{ error }>
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
   refreshTenant: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -179,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession: any) => {
+      async (event: AuthChangeEvent, newSession: Session | null) => {
         console.log('🔄 AuthProvider: Auth state changed:', event)
         
         if (newSession) {

@@ -108,17 +108,14 @@ export default function UserSwitcher() {
       if (error) {
         console.error('Detailed login error:', {
           message: error.message,
-          status: error.status,
-          statusText: error.statusText,
-          name: error.name,
-          cause: error.cause
+          status: (error as any).status,
+          name: error.name
         })
         
         // Show detailed error message
         const errorDetails = [
           `Message: ${error.message}`,
-          error.status ? `Status: ${error.status}` : '',
-          error.statusText ? `Status Text: ${error.statusText}` : '',
+          (error as any).status ? `Status: ${(error as any).status}` : '',
           error.name ? `Error Type: ${error.name}` : ''
         ].filter(Boolean).join('\n')
         
