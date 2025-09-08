@@ -27,19 +27,19 @@ export const RBAC_TEST_SCENARIOS = {
         name: "User with view permissions",
         setup: "Login as user with WORK_REQUESTS.VIEW permission",
         expected: "hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW) returns true",
-        test: (permissions) => permissions.hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW)
+        test: (permissions: any) => permissions.hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW)
       },
       {
         name: "User without create permissions", 
         setup: "Login as user without WORK_REQUESTS.CREATE permission",
         expected: "hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE) returns false",
-        test: (permissions) => !permissions.hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE)
+        test: (permissions: any) => !permissions.hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE)
       },
       {
         name: "Host admin access",
         setup: "Login as host_admin user",
         expected: "isHostAdmin() returns true and has all permissions",
-        test: (permissions) => permissions.isHostAdmin() && permissions.hasPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.MANAGE)
+        test: (permissions: any) => permissions.isHostAdmin() && permissions.hasPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.MANAGE)
       }
     ]
   },
@@ -248,7 +248,7 @@ export const validateRBACImplementation = {
   },
 
   // Run basic permission logic tests
-  testPermissionLogic: (permissions) => {
+  testPermissionLogic: (permissions: any) => {
     if (!permissions) return { success: false, error: 'No permissions object provided' }
     
     try {

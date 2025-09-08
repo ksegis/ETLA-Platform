@@ -152,7 +152,7 @@ export default function AccessControlPageEnhanced() {
 
       if (error) throw error
 
-      const formattedUsers: User[] = users?.map((user) => ({
+      const formattedUsers: User[] = users?.map((user: any) => ({
         id: user.id,
         email: user.email || 'N/A',
         full_name: user.full_name || 'Unknown',

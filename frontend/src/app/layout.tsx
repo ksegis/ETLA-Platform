@@ -3,8 +3,13 @@ import { TenantProvider } from '@/contexts/TenantContext'
 import './globals.css'
 
 export const metadata = {
-  title: 'Invictus - ETLA - Extract Transform Load Audit',
-  description: 'Secure, scalable payroll and benefits ETL platform',
+  title: 'HelixBridge - Enterprise Workforce Management',
+  description: 'Connecting Enterprise Operations Through Intelligent Workforce Management',
+  icons: {
+    icon: '/helix-icon.png',
+    shortcut: '/helix-icon.png',
+    apple: '/helix-icon.png',
+  },
 }
 
 export default function RootLayout({

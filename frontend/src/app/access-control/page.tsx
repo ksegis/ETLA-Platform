@@ -204,7 +204,7 @@ export default function AccessControlPage() {
 
       console.log('📊 Query Results:', {
         userCount: users?.length || 0,
-        users: users?.map((u) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
+        users: users?.map((u: any) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
       })
 
       if (error) {
@@ -212,7 +212,7 @@ export default function AccessControlPage() {
         throw error
       }
 
-      const formattedUsers: User[] = users?.map((user) => {
+      const formattedUsers: User[] = users?.map((user: any) => {
         const tenantUser = user.tenant_users[0] || {}
         const tenant = tenantUser.tenants || {}
         
@@ -282,7 +282,7 @@ export default function AccessControlPage() {
 
       if (error) throw error
 
-      const formattedInvitations: Invitation[] = invitations?.map((inv) => ({
+      const formattedInvitations: Invitation[] = invitations?.map((inv: any) => ({
         id: inv.id,
         email: inv.email,
         full_name: inv.full_name,

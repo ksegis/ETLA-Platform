@@ -6,7 +6,7 @@ interface Column {
   label: string;
   sortable?: boolean;
   width?: string;
-  render?: (item) => React.ReactNode;
+  render?: (item: any) => React.ReactNode;
 }
 
 interface TraditionalReportTableProps {

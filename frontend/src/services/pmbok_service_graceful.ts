@@ -156,7 +156,7 @@ class PMBOKService {
       }
 
       // Step 4: Merge data gracefully, marking missing customers
-      const workRequests: WorkRequest[] = workRequestsData.map((request) => {
+      const workRequests: WorkRequest[] = workRequestsData.map((request: any) => {
         const customer = customerMap.get(request.customer_id)
         
         if (!customer) {
