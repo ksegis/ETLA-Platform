@@ -10,7 +10,7 @@ import TraditionalReportTable from '@/components/reporting/TraditionalReportTabl
 import FacsimileDocument from '@/components/facsimile/FacsimileDocument';
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
-import { PayStatement, Timecard, TaxRecord, Employee } from '@/types/facsimile';
+import { PayStatement as FacsimilePayStatement, Timecard as FacsimileTimecard, TaxRecord as FacsimileTaxRecord, Employee as FacsimileEmployee } from '@/types/facsimile';
 import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle, X } from 'lucide-react';
 
 // Enhanced interfaces for the new database schema
@@ -286,9 +286,9 @@ const EnhancedReportingPage: React.FC = () => {
   
   // Facsimile modal states
   const [showFacsimileModal, setShowFacsimileModal] = useState<boolean>(false);
-  const [facsimileData, setFacsimileData] = useState<PayStatement | Timecard | TaxRecord | null>(null);
+  const [facsimileData, setFacsimileData] = useState<FacsimilePayStatement | FacsimileTimecard | FacsimileTaxRecord | null>(null);
   const [facsimileType, setFacsimileType] = useState<'pay_statement' | 'timecard' | 'tax_w2' | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<FacsimileEmployee | null>(null);
   
   // Enhanced view mode state - separate for each tab
   const [viewModes, setViewModes] = useState<Record<string, 'list' | 'grid'>>({
