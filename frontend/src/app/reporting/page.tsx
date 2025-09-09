@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/Badge';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
 import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+import FacsimileDocument from '@/components/facsimile/FacsimileDocument';
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
-import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle } from 'lucide-react';
+import { PayStatement, Timecard, TaxRecord, Employee } from '@/types/facsimile';
+import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle, X } from 'lucide-react';
 
 // Enhanced interfaces for the new database schema
 interface EnhancedEmployee {
@@ -282,6 +284,12 @@ const EnhancedReportingPage: React.FC = () => {
   const [selectedTimecard, setSelectedTimecard] = useState<EnhancedTimecard | null>(null);
   const [selectedTaxRecord, setSelectedTaxRecord] = useState<TaxRecord | null>(null);
   
+  // Facsimile modal states
+  const [showFacsimileModal, setShowFacsimileModal] = useState<boolean>(false);
+  const [facsimileData, setFacsimileData] = useState<PayStatement | Timecard | TaxRecord | null>(null);
+  const [facsimileType, setFacsimileType] = useState<'pay_statement' | 'timecard' | 'tax_w2' | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  
   // Enhanced view mode state - separate for each tab
   const [viewModes, setViewModes] = useState<Record<string, 'list' | 'grid'>>({
     employees: 'list',
@@ -357,6 +365,38 @@ const EnhancedReportingPage: React.FC = () => {
   // Helper function to get view mode for specific tab
   const getViewMode = (tabId: string): 'list' | 'grid' => {
     return viewModes[tabId] || 'list';
+  };
+
+  // Facsimile modal functions
+  const openFacsimile = async (data: any, type: 'pay_statement' | 'timecard' | 'tax_w2') => {
+    setFacsimileData(data);
+    setFacsimileType(type);
+    
+    // Try to find employee data
+    if (data.employee_id) {
+      try {
+        const { data: employee, error } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('employee_id', data.employee_id)
+          .single();
+        
+        if (!error && employee) {
+          setSelectedEmployee(employee);
+        }
+      } catch (err) {
+        console.log('Could not load employee data for facsimile');
+      }
+    }
+    
+    setShowFacsimileModal(true);
+  };
+
+  const closeFacsimile = () => {
+    setShowFacsimileModal(false);
+    setFacsimileData(null);
+    setFacsimileType(null);
+    setSelectedEmployee(null);
   };
 
   // Enhanced data loading functions (keeping existing implementation)
@@ -1153,7 +1193,7 @@ const EnhancedReportingPage: React.FC = () => {
       { key: 'actions', label: 'Actions', sortable: false, render: (statement: EnhancedPayStatement) => (
         <Button 
           size="sm" 
-          onClick={() => setSelectedPayStatement(statement as any)}
+          onClick={() => openFacsimile(statement as any, 'pay_statement')}
           variant="outline"
         >
           View Details
@@ -1263,7 +1303,7 @@ const EnhancedReportingPage: React.FC = () => {
       { key: 'actions', label: 'Actions', sortable: false, render: (timecard: EnhancedTimecard) => (
         <Button 
           size="sm" 
-          onClick={() => setSelectedTimecard(timecard as any)}
+          onClick={() => openFacsimile(timecard as any, 'timecard')}
           variant="outline"
         >
           View Details
@@ -1444,7 +1484,7 @@ const EnhancedReportingPage: React.FC = () => {
       { key: 'actions', label: 'Actions', sortable: false, render: (tax: TaxRecord) => (
         <Button 
           size="sm" 
-          onClick={() => setSelectedTaxRecord(tax as any)}
+          onClick={() => openFacsimile(tax as any, 'tax_w2')}
           variant="outline"
         >
           View Details
@@ -2031,6 +2071,27 @@ const EnhancedReportingPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Facsimile Modal */}
+      {showFacsimileModal && facsimileData && facsimileType && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto w-full">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold">Document Facsimile</h2>
+              <Button onClick={closeFacsimile} variant="outline" size="sm">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-0">
+              <FacsimileDocument
+                templateKey={facsimileType}
+                data={facsimileData}
+                employee={selectedEmployee || undefined}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
