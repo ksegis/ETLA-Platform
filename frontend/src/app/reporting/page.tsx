@@ -264,7 +264,7 @@ interface EnhancedFilters {
 }
 
 const EnhancedReportingPage: React.FC = () => {
-  const { selectedTenant } = useTenant();
+  const { selectedTenant, isDemoMode } = useTenant();
   const accessibleTenantIds = useAccessibleTenantIds();
   const { isMultiTenant, availableTenants } = useMultiTenantMode();
   const [activeTab, setActiveTab] = useState<string>('employees');

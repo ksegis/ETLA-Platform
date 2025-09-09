@@ -483,6 +483,13 @@ const createMockSupabaseClient = () => {
           }),
           then: (resolve: any) => resolve({ data: getMockData(table), error: null })
         }),
+        or: (condition: string) => ({
+          order: (column: string, options?: any) => ({
+            limit: (limit: number) => Promise.resolve({ data: getMockData(table), error: null }),
+            then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+          }),
+          then: (resolve: any) => resolve({ data: getMockData(table), error: null })
+        }),
         order: (column: string, options?: any) => ({
           then: (resolve: any) => resolve({ data: getMockData(table), error: null })
         }),
@@ -519,9 +526,13 @@ const getMockData = (table: string) => {
       return mockPayStatements
     case 'timecards_comprehensive_report':
       return mockTimecards
+    case 'timecards':
+      return mockTimecards
     case 'jobs_comprehensive_report':
       return mockJobs
     case 'tax_records_comprehensive_report':
+      return mockTaxRecords
+    case 'tax_records':
       return mockTaxRecords
     case 'benefits_deductions_comprehensive_report':
       return mockBenefits
