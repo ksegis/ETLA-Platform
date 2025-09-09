@@ -474,38 +474,18 @@ const EnhancedReportingPage: React.FC = () => {
     
     try {
       console.log('Loading timecard data for tenants:', tenantIds);
+      const { data, error } = await supabase
+        .from('timecards_comprehensive_report')
+        .select('*')
+        .or(`tenant_id.in.(${tenantIds.join(',')}),tenant_id.is.null`)
+        .order('created_at', { ascending: false });
       
-      // Handle demo mode vs authenticated mode
-      if (isDemoMode) {
-        // In demo mode, use the demo tenant ID or customer_id
-        const demoTenantId = '99883779-9517-4ca9-a3f8-7fdc59051f0e';
-        const { data, error } = await supabase
-          .from('timecards')
-          .select('*')
-          .or(`tenant_id.eq.${demoTenantId},customer_id.eq.DEMO`)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Timecard query error:', error);
-          throw error;
-        }
-        console.log('Timecards loaded (demo mode):', data?.length || 0, 'records');
-        setTimecardData(data || []);
-      } else {
-        // In authenticated mode, filter by accessible tenant IDs
-        const { data, error } = await supabase
-          .from('timecards')
-          .select('*')
-          .in('tenant_id', tenantIds)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error('Timecard query error:', error);
-          throw error;
-        }
-        console.log('Timecards loaded (auth mode):', data?.length || 0, 'records');
-        setTimecardData(data || []);
+      if (error) {
+        console.error('Timecard query error:', error);
+        throw error;
       }
+      console.log('Timecards loaded:', data?.length || 0, 'records');
+      setTimecardData(data || []);
     } catch (err: any) {
       console.error('Error loading timecard data:', err);
       setError(`Failed to load timecard data: ${err.message}`);
@@ -557,38 +537,18 @@ const EnhancedReportingPage: React.FC = () => {
     
     try {
       console.log('Loading tax data for tenants:', tenantIds);
+      const { data, error } = await supabase
+        .from('tax_records_comprehensive_report')
+        .select('*')
+        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
+        .order('tax_year', { ascending: false });
       
-      // Handle demo mode vs authenticated mode
-      if (isDemoMode) {
-        // In demo mode, use the demo tenant ID directly
-        const demoTenantId = '99883779-9517-4ca9-a3f8-7fdc59051f0e';
-        const { data, error } = await supabase
-          .from('tax_records')
-          .select('*')
-          .eq('tenant_id', demoTenantId)
-          .order('tax_year', { ascending: false });
-        
-        if (error) {
-          console.error('Tax records query error:', error);
-          throw error;
-        }
-        console.log('Tax records loaded (demo mode):', data?.length || 0, 'records');
-        setTaxData(data || []);
-      } else {
-        // In authenticated mode, filter by accessible tenant IDs
-        const { data, error } = await supabase
-          .from('tax_records')
-          .select('*')
-          .in('tenant_id', tenantIds)
-          .order('tax_year', { ascending: false });
-        
-        if (error) {
-          console.error('Tax records query error:', error);
-          throw error;
-        }
-        console.log('Tax records loaded (auth mode):', data?.length || 0, 'records');
-        setTaxData(data || []);
+      if (error) {
+        console.error('Tax records query error:', error);
+        throw error;
       }
+      console.log('Tax records loaded:', data?.length || 0, 'records');
+      setTaxData(data || []);
     } catch (err: any) {
       console.error('Error loading tax data:', err);
       setError(`Failed to load tax data: ${err.message}`);

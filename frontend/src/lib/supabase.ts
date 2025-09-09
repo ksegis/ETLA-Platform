@@ -3,12 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
 
-// Check if we're in demo mode (invalid/placeholder credentials)
-const isDemoMode = !supabaseUrl || 
-                   supabaseUrl === 'https://demo.supabase.co' ||
-                   supabaseUrl.includes('placeholder') ||
-                   supabaseUrl.includes('your-project') ||
-                   supabaseUrl === 'https://your-project.supabase.co'
+// Check if we're in demo mode (only when explicitly set to demo values)
+const isDemoMode = supabaseUrl === 'https://demo.supabase.co' ||
+                   supabaseAnonKey === 'demo_anon_key' ||
+                   (!supabaseUrl && !supabaseAnonKey)
 
 // Mock data for demo mode
 const mockUsers = [
@@ -331,26 +329,31 @@ const mockJobs = [
   }
 ]
 
-const mockTaxRecords = [
-  {
-    id: 'tax1',
+const mockTaxRecords = Array.from({ length: 50 }, (_, i) => {
+  const formTypes = ['W-2', '1099-MISC', '1099-NEC'];
+  const statuses = ['completed', 'pending', 'filed', 'under_review'];
+  const taxYears = ['2024', '2023', '2022', '2021'];
+  const employees = ['emp1', 'emp2', 'emp3', 'emp4', 'emp5'];
+  
+  const baseWage = 45000 + (i * 1000);
+  const taxRate = 0.18 + (i % 5) * 0.02;
+  
+  return {
+    id: `tax${i + 1}`,
     tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
-    form_type: 'W-2',
-    tax_year: '2024',
-    status: 'completed',
-    total_wages: 85000,
-    total_taxes_withheld: 15300
-  },
-  {
-    id: 'tax2',
-    tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
-    form_type: '1099',
-    tax_year: '2024',
-    status: 'pending',
-    total_wages: 25000,
-    total_taxes_withheld: 3750
-  }
-]
+    employee_id: employees[i % employees.length],
+    employee_code: `EMP${String(i + 1).padStart(3, '0')}`,
+    form_type: formTypes[i % formTypes.length],
+    tax_year: taxYears[i % taxYears.length],
+    status: statuses[i % statuses.length],
+    filing_status: i % 2 === 0 ? 'single' : 'married',
+    total_wages: baseWage,
+    federal_tax: Math.round(baseWage * taxRate),
+    state_tax: Math.round(baseWage * (taxRate * 0.6)),
+    total_taxes_withheld: Math.round(baseWage * (taxRate * 1.6)),
+    created_at: `2024-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`
+  };
+})
 
 const mockBenefits = [
   {
