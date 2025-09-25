@@ -288,7 +288,7 @@ class ExportUtils {
   /**
    * Validate export data
    */
-  validateExportData<T>(data: T[], columns: ExportColumn[]): { isValid: boolean; errors: string[] } {
+  validateExportData<T extends object>(data: T[], columns: ExportColumn[]): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!data || data.length === 0) {
