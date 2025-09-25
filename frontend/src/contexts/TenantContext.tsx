@@ -10,6 +10,9 @@ interface TenantContextType {
   selectedTenant: Tenant | null
   setSelectedTenant: (tenant: Tenant | null) => void
   
+  // Current tenant (alias for selectedTenant for compatibility)
+  currentTenant: Tenant | null
+  
   // Available tenants for current user
   availableTenants: Tenant[]
   
@@ -156,6 +159,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
   const value: TenantContextType = {
     selectedTenant,
     setSelectedTenant,
+    currentTenant: selectedTenant, // Alias for compatibility
     availableTenants,
     isLoading,
     loadAvailableTenants,
