@@ -34,7 +34,14 @@ import {
   Target,
   Zap,
   Key,
-  User
+  User,
+  UserCheck,
+  MessageSquare,
+  ClipboardList,
+  BarChart2,
+  UserPlus,
+  Calendar as CalendarIcon,
+  FileCheck
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -65,7 +72,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit', 'talent', 'questionnaires'])
   const router = useRouter()
   const pathname = usePathname()
 
@@ -82,8 +89,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       items: [
         { name: 'Work Requests', href: '/work-requests', icon: FileText },
         { name: 'Project Management', href: '/project-management', icon: Calendar },
-        { name: 'Reporting', href: '/reporting', icon: TrendingUp },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true }
+        { name: 'Enhanced Reporting', href: '/reporting', icon: TrendingUp, isNew: true },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true },
+        { name: 'Grid Reports', href: '/reporting/grid', icon: BarChart2, isNew: true }
       ]
     },
     {
@@ -128,6 +136,40 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'System Settings', href: '/settings', icon: Settings },
         { name: 'API Configuration', href: '/api-config', icon: Zap },
         { name: 'Integration Settings', href: '/integrations', icon: Target }
+      ]
+    },
+    {
+      id: 'talent',
+      title: 'Talent Management',
+      icon: UserCheck,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-600',
+      hoverColor: 'hover:bg-emerald-50',
+      textColor: 'text-emerald-900',
+      defaultExpanded: true,
+      items: [
+        { name: 'Talent Dashboard', href: '/talent', icon: BarChart2, isNew: true },
+        { name: 'Jobs Management', href: '/talent/jobs', icon: Briefcase, isNew: true },
+        { name: 'Application Pipeline', href: '/talent/pipeline', icon: ClipboardList, isNew: true },
+        { name: 'Candidates', href: '/talent/candidates', icon: UserPlus, isNew: true },
+        { name: 'Interviews', href: '/talent/interviews', icon: CalendarIcon, isNew: true },
+        { name: 'Offers', href: '/talent/offers', icon: FileCheck, isNew: true }
+      ]
+    },
+    {
+      id: 'questionnaires',
+      title: 'ROM Questionnaires',
+      icon: MessageSquare,
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-600',
+      hoverColor: 'hover:bg-pink-50',
+      textColor: 'text-pink-900',
+      defaultExpanded: true,
+      items: [
+        { name: 'Questionnaire Dashboard', href: '/questionnaires', icon: BarChart2, isNew: true },
+        { name: 'Questionnaire Builder', href: '/questionnaires/builder', icon: ClipboardList, isNew: true },
+        { name: 'Response Analytics', href: '/questionnaires/analytics', icon: TrendingUp, isNew: true },
+        { name: 'Active Surveys', href: '/questionnaires/active', icon: Activity, isNew: true }
       ]
     },
     {
