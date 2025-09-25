@@ -156,6 +156,208 @@ class BrandingService {
   }
 
   /**
+   * Replace HelixBridge branding with customer branding in text content
+   */
+  replaceHelixBridgeBranding(content: string, branding: CustomerBranding): string {
+    if (!content) return content;
+
+    // Define replacement patterns
+    const replacements = [
+      // Exact matches
+      { pattern: /HelixBridge Platform/gi, replacement: `${branding.displayName} Platform` },
+      { pattern: /HelixBridge/gi, replacement: branding.displayName },
+      
+      // Common variations
+      { pattern: /Helix Bridge/gi, replacement: branding.displayName },
+      { pattern: /HELIXBRIDGE/gi, replacement: branding.displayName.toUpperCase() },
+      { pattern: /helixbridge/gi, replacement: branding.displayName.toLowerCase() },
+      
+      // Legal entity references
+      { pattern: /HelixBridge, Inc\./gi, replacement: branding.legalName },
+      { pattern: /HelixBridge Inc/gi, replacement: branding.legalName },
+      { pattern: /HelixBridge Corporation/gi, replacement: branding.legalName },
+      { pattern: /HelixBridge LLC/gi, replacement: branding.legalName },
+      
+      // System references
+      { pattern: /HelixBridge System/gi, replacement: `${branding.displayName} System` },
+      { pattern: /HelixBridge Dashboard/gi, replacement: `${branding.displayName} Dashboard` },
+      { pattern: /HelixBridge Portal/gi, replacement: `${branding.displayName} Portal` },
+      { pattern: /HelixBridge Application/gi, replacement: `${branding.displayName} Application` },
+      
+      // URL and domain references (be careful with these)
+      { pattern: /helixbridge\.com/gi, replacement: `${branding.shortName.toLowerCase()}.com` },
+      { pattern: /www\.helixbridge\.com/gi, replacement: `www.${branding.shortName.toLowerCase()}.com` },
+      
+      // Email references
+      { pattern: /@helixbridge\.com/gi, replacement: `@${branding.shortName.toLowerCase()}.com` },
+      
+      // Support and contact references
+      { pattern: /HelixBridge Support/gi, replacement: `${branding.displayName} Support` },
+      { pattern: /HelixBridge Customer Service/gi, replacement: `${branding.displayName} Customer Service` },
+      { pattern: /HelixBridge Team/gi, replacement: `${branding.displayName} Team` },
+      
+      // Copyright and legal references
+      { pattern: /© HelixBridge/gi, replacement: `© ${branding.legalName}` },
+      { pattern: /Copyright HelixBridge/gi, replacement: `Copyright ${branding.legalName}` },
+      { pattern: /Powered by HelixBridge/gi, replacement: `Powered by ${branding.displayName}` },
+      { pattern: /Built by HelixBridge/gi, replacement: `Built by ${branding.displayName}` }
+    ];
+
+    let processedContent = content;
+    
+    // Apply all replacements
+    replacements.forEach(({ pattern, replacement }) => {
+      processedContent = processedContent.replace(pattern, replacement);
+    });
+
+    return processedContent;
+  }
+
+  /**
+   * Replace branding in HTML content while preserving structure
+   */
+  replaceHelixBridgeBrandingInHTML(htmlContent: string, branding: CustomerBranding): string {
+    if (!htmlContent) return htmlContent;
+
+    // First apply text replacements
+    let processedHTML = this.replaceHelixBridgeBranding(htmlContent, branding);
+
+    // Handle specific HTML attributes and meta tags
+    const htmlReplacements = [
+      // Title tags
+      { pattern: /<title>([^<]*HelixBridge[^<]*)<\/title>/gi, replacement: (match: string, title: string) => {
+        const newTitle = this.replaceHelixBridgeBranding(title, branding);
+        return `<title>${newTitle}</title>`;
+      }},
+      
+      // Meta descriptions
+      { pattern: /<meta\s+name="description"\s+content="([^"]*HelixBridge[^"]*)"/gi, replacement: (match: string, content: string) => {
+        const newContent = this.replaceHelixBridgeBranding(content, branding);
+        return `<meta name="description" content="${newContent}"`;
+      }},
+      
+      // Alt text in images
+      { pattern: /alt="([^"]*HelixBridge[^"]*)"/gi, replacement: (match: string, altText: string) => {
+        const newAltText = this.replaceHelixBridgeBranding(altText, branding);
+        return `alt="${newAltText}"`;
+      }},
+      
+      // Placeholder text
+      { pattern: /placeholder="([^"]*HelixBridge[^"]*)"/gi, replacement: (match: string, placeholder: string) => {
+        const newPlaceholder = this.replaceHelixBridgeBranding(placeholder, branding);
+        return `placeholder="${newPlaceholder}"`;
+      }}
+    ];
+
+    // Apply HTML-specific replacements
+    htmlReplacements.forEach(({ pattern, replacement }) => {
+      if (typeof replacement === 'function') {
+        processedHTML = processedHTML.replace(pattern, replacement as any);
+      } else {
+        processedHTML = processedHTML.replace(pattern, replacement);
+      }
+    });
+
+    return processedHTML;
+  }
+
+  /**
+   * Replace branding in JSON content
+   */
+  replaceHelixBridgeBrandingInJSON(jsonContent: string, branding: CustomerBranding): string {
+    if (!jsonContent) return jsonContent;
+
+    try {
+      const parsed = JSON.parse(jsonContent);
+      const processedObject = this.replaceHelixBridgeBrandingInObject(parsed, branding);
+      return JSON.stringify(processedObject, null, 2);
+    } catch (error) {
+      console.warn('Could not parse JSON for branding replacement, applying text replacement:', error);
+      return this.replaceHelixBridgeBranding(jsonContent, branding);
+    }
+  }
+
+  /**
+   * Recursively replace branding in JavaScript objects
+   */
+  private replaceHelixBridgeBrandingInObject(obj: any, branding: CustomerBranding): any {
+    if (typeof obj === 'string') {
+      return this.replaceHelixBridgeBranding(obj, branding);
+    } else if (Array.isArray(obj)) {
+      return obj.map(item => this.replaceHelixBridgeBrandingInObject(item, branding));
+    } else if (obj && typeof obj === 'object') {
+      const result: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        // Replace branding in both keys and values
+        const newKey = this.replaceHelixBridgeBranding(key, branding);
+        result[newKey] = this.replaceHelixBridgeBrandingInObject(value, branding);
+      }
+      return result;
+    }
+    return obj;
+  }
+
+  /**
+   * Get CSS variables for customer branding
+   */
+  getCustomerBrandingCSS(branding: CustomerBranding): string {
+    return `
+      :root {
+        --customer-primary-color: ${branding.primaryColor || '#3B82F6'};
+        --customer-secondary-color: ${branding.secondaryColor || '#1E40AF'};
+        --customer-brand-name: "${branding.displayName}";
+        --customer-legal-name: "${branding.legalName}";
+        --customer-short-name: "${branding.shortName}";
+      }
+      
+      .customer-primary-bg { background-color: var(--customer-primary-color); }
+      .customer-secondary-bg { background-color: var(--customer-secondary-color); }
+      .customer-primary-text { color: var(--customer-primary-color); }
+      .customer-secondary-text { color: var(--customer-secondary-color); }
+      .customer-primary-border { border-color: var(--customer-primary-color); }
+      .customer-secondary-border { border-color: var(--customer-secondary-color); }
+    `;
+  }
+
+  /**
+   * Apply customer branding to document head
+   */
+  applyBrandingToDocument(branding: CustomerBranding): void {
+    if (typeof document === 'undefined') return;
+
+    // Update document title if it contains HelixBridge
+    if (document.title.includes('HelixBridge')) {
+      document.title = this.replaceHelixBridgeBranding(document.title, branding);
+    }
+
+    // Update or create meta description
+    let metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement;
+    if (metaDescription && metaDescription.content.includes('HelixBridge')) {
+      metaDescription.content = this.replaceHelixBridgeBranding(metaDescription.content, branding);
+    }
+
+    // Add or update custom CSS variables
+    let styleElement = document.getElementById('customer-branding-styles');
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'customer-branding-styles';
+      document.head.appendChild(styleElement);
+    }
+    styleElement.textContent = this.getCustomerBrandingCSS(branding);
+
+    // Update favicon if logo URL is provided
+    if (branding.logoUrl) {
+      let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+      }
+      favicon.href = branding.logoUrl;
+    }
+  }
+
+  /**
    * Clear branding cache for a specific tenant
    */
   clearCache(tenantId?: string): void {
@@ -173,6 +375,14 @@ class BrandingService {
    */
   async preloadBranding(tenantIds: string[]): Promise<void> {
     await this.getBulkCustomerBranding(tenantIds);
+  }
+
+  /**
+   * Get customer legal name for a specific tenant (convenience method)
+   */
+  async getCustomerLegalName(tenantId: string): Promise<string> {
+    const branding = await this.getCustomerBranding(tenantId);
+    return branding.legalName;
   }
 }
 
