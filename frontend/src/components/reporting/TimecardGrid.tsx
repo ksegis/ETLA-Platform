@@ -96,7 +96,7 @@ export default function TimecardGrid({
   }, [gridData]);
 
   // Format time display
-  const formatTime = (timeStr: string): string => {
+  const formatTime = (timeStr: string | undefined): string => {
     if (!timeStr) return '--';
     
     try {
