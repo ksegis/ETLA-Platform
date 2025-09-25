@@ -15,6 +15,16 @@ export interface CustomerBranding {
   secondaryColor?: string;
 }
 
+interface Tenant {
+  id: string;
+  name: string;
+  legal_name?: string;
+  display_name?: string;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+}
+
 class BrandingService {
   private brandingCache: Map<string, CustomerBranding> = new Map();
   private cacheExpiry: Map<string, number> = new Map();
@@ -127,7 +137,7 @@ class BrandingService {
       }
 
       // Process fetched tenants
-      tenants?.forEach(tenant => {
+      tenants?.forEach((tenant: Tenant) => {
         const branding: CustomerBranding = {
           legalName: tenant.legal_name || tenant.name || 'ETLA Platform',
           displayName: tenant.display_name || tenant.name || 'ETLA Platform',
