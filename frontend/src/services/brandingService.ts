@@ -213,7 +213,7 @@ class BrandingService {
     this.cacheExpiry.set(tenantId, Date.now() + this.CACHE_DURATION);
   }
 
-  private getDefaultBranding(tenantId: string): CustomerBranding {
+  public getDefaultBranding(tenantId: string): CustomerBranding {
     return {
       legalName: 'ETLA Platform',
       displayName: 'ETLA Platform',
