@@ -59,7 +59,7 @@ export default function EnhancedTaxRecords({
 
   // Get unique tax years
   const availableYears = React.useMemo(() => {
-    const years = [...new Set(taxRecords.map(record => record.tax_year))];
+    const years = Array.from(new Set(taxRecords.map(record => record.tax_year)));
     return years.sort((a, b) => b - a); // Most recent first
   }, [taxRecords]);
 
