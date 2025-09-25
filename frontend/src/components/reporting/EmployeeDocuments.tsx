@@ -143,7 +143,7 @@ export default function EmployeeDocuments({
       }
 
       // Transform data to include uploaded_by_name
-      const transformedData = data?.map(doc => ({
+      const transformedData = data?.map((doc: any) => ({
         ...doc,
         uploaded_by_name: doc.uploaded_by_profile?.full_name || 'Unknown'
       })) || [];
