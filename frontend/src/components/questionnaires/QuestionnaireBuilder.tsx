@@ -100,12 +100,19 @@ interface Questionnaire {
   };
 }
 
+interface QuestionnaireTemplate {
+  name: string;
+  category: string;
+  description: string;
+  questions: number;
+}
+
 interface QuestionnaireBuilderProps {
   initialQuestionnaire?: Questionnaire;
   onSave?: (questionnaire: Questionnaire) => void;
   onPreview?: (questionnaire: Questionnaire) => void;
   onPublish?: (questionnaire: Questionnaire) => void;
-  templates?: Questionnaire[];
+  templates?: QuestionnaireTemplate[];
 }
 
 const QUESTION_TYPES = [
@@ -120,12 +127,13 @@ const QUESTION_TYPES = [
   { type: 'phone', label: 'Phone', icon: Type, description: 'Phone number input' },
   { type: 'file', label: 'File Upload', icon: Upload, description: 'File attachment' },
   { type: 'image', label: 'Image Upload', icon: Image, description: 'Image file upload' },
+  { type: 'video', label: 'Video Upload', icon: Video, description: 'Video file upload' },
   { type: 'url', label: 'Website URL', icon: Link, description: 'URL validation' },
   { type: 'matrix', label: 'Matrix/Grid', icon: Layout, description: 'Grid of questions' },
   { type: 'ranking', label: 'Ranking', icon: List, description: 'Drag to rank items' }
-];
+] as const;
 
-const QUESTIONNAIRE_TEMPLATES = [
+const QUESTIONNAIRE_TEMPLATES: QuestionnaireTemplate[] = [
   {
     name: 'Employee Satisfaction Survey',
     category: 'HR',
@@ -740,8 +748,9 @@ export default function QuestionnaireBuilder({
                               value={selectedQuestionData.settings?.scale?.min || 1}
                               onChange={(e) => {
                                 const scale = { 
-                                  ...(selectedQuestionData.settings?.scale || {}), 
-                                  min: parseInt(e.target.value) 
+                                  min: parseInt(e.target.value),
+                                  max: selectedQuestionData.settings?.scale?.max || 5,
+                                  labels: selectedQuestionData.settings?.scale?.labels
                                 };
                                 handleUpdateQuestion(selectedQuestionData.id, { 
                                   settings: { ...selectedQuestionData.settings, scale } 
@@ -757,8 +766,9 @@ export default function QuestionnaireBuilder({
                               value={selectedQuestionData.settings?.scale?.max || 5}
                               onChange={(e) => {
                                 const scale = { 
-                                  ...(selectedQuestionData.settings?.scale || {}), 
-                                  max: parseInt(e.target.value) 
+                                  min: selectedQuestionData.settings?.scale?.min || 1,
+                                  max: parseInt(e.target.value),
+                                  labels: selectedQuestionData.settings?.scale?.labels
                                 };
                                 handleUpdateQuestion(selectedQuestionData.id, { 
                                   settings: { ...selectedQuestionData.settings, scale } 

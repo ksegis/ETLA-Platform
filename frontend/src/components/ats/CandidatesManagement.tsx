@@ -109,7 +109,7 @@ export default function CandidatesManagement({
   const [selectedExperience, setSelectedExperience] = useState<string>('all');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'applied_date' | 'experience'>('applied_date');
+  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'applied_date' | 'experience_years'>('applied_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentViewMode, setCurrentViewMode] = useState(viewMode);
   const [showFilters, setShowFilters] = useState(false);
@@ -270,9 +270,9 @@ export default function CandidatesManagement({
 
   // Get unique values for filters
   const filterOptions = useMemo(() => {
-    const sources = [...new Set(candidates.map(c => c.source))].sort();
-    const skills = [...new Set(candidates.flatMap(c => c.skills))].sort();
-    const companies = [...new Set(candidates.map(c => c.current_company).filter(Boolean))].sort();
+    const sources = Array.from(new Set(candidates.map(c => c.source))).sort();
+    const skills = Array.from(new Set(candidates.flatMap(c => c.skills))).sort();
+    const companies = Array.from(new Set(candidates.map(c => c.current_company).filter(Boolean))).sort();
     
     return { sources, skills, companies };
   }, [candidates]);
@@ -315,12 +315,29 @@ export default function CandidatesManagement({
 
     // Sort candidates
     filtered.sort((a, b) => {
-      let aValue: any = a[sortBy];
-      let bValue: any = b[sortBy];
+      let aValue: any;
+      let bValue: any;
       
-      if (sortBy === 'applied_date') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
+      switch (sortBy) {
+        case 'name':
+          aValue = a.name;
+          bValue = b.name;
+          break;
+        case 'rating':
+          aValue = a.rating;
+          bValue = b.rating;
+          break;
+        case 'applied_date':
+          aValue = new Date(a.applied_date);
+          bValue = new Date(b.applied_date);
+          break;
+        case 'experience_years':
+          aValue = a.experience_years;
+          bValue = b.experience_years;
+          break;
+        default:
+          aValue = a.name;
+          bValue = b.name;
       }
       
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -400,12 +417,12 @@ export default function CandidatesManagement({
   };
 
   // Get status badge variant
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
     switch (status) {
-      case 'active': return 'success';
-      case 'on_hold': return 'warning';
+      case 'active': return 'default';
+      case 'on_hold': return 'outline';
       case 'rejected': return 'destructive';
-      case 'hired': return 'default';
+      case 'hired': return 'secondary';
       default: return 'secondary';
     }
   };
