@@ -189,7 +189,7 @@ export default function EmployeeDocuments({
   };
 
   // Handle document download
-  const handleDownload = async (document: EmployeeDocument) => {
+  const handleDownload = async (employeeDocument: EmployeeDocument) => {
     if (!canDownloadDocuments) {
       alert('You do not have permission to download documents.');
       return;
@@ -199,7 +199,7 @@ export default function EmployeeDocuments({
       // Get signed URL for download
       const { data, error } = await supabase.storage
         .from('employee-documents')
-        .createSignedUrl(document.file_url, 60); // 1 minute expiry
+        .createSignedUrl(employeeDocument.file_url, 60); // 1 minute expiry
 
       if (error) {
         console.error('Error creating signed URL:', error);
@@ -210,7 +210,7 @@ export default function EmployeeDocuments({
       // Trigger download
       const link = document.createElement('a');
       link.href = data.signedUrl;
-      link.download = document.document_name;
+      link.download = employeeDocument.document_name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -221,11 +221,11 @@ export default function EmployeeDocuments({
   };
 
   // Handle document preview
-  const handlePreview = (document: EmployeeDocument) => {
+  const handlePreview = (employeeDocument: EmployeeDocument) => {
     if (onPreviewDocument) {
-      onPreviewDocument(document);
+      onPreviewDocument(employeeDocument);
     } else {
-      setPreviewDocument(document);
+      setPreviewDocument(employeeDocument);
     }
   };
 
@@ -353,24 +353,24 @@ export default function EmployeeDocuments({
 
       {/* Documents List */}
       <div className="space-y-3">
-        {filteredDocuments.map((document) => {
-          const isExpired = isDocumentExpired(document);
+        {filteredDocuments.map((doc) => {
+          const isExpired = isDocumentExpired(doc);
           
           return (
-            <Card key={document.id} className={`p-4 ${isExpired ? 'border-red-200 bg-red-50' : ''}`}>
+            <Card key={doc.id} className={`p-4 ${isExpired ? 'border-red-200 bg-red-50' : ''}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
-                  {getDocumentIcon(document.mime_type)}
+                  {getDocumentIcon(doc.mime_type)}
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium text-gray-900 truncate">
-                        {document.document_name}
+                        {doc.document_name}
                       </h4>
-                      <Badge className={DOCUMENT_TYPE_COLORS[document.document_type]}>
-                        {DOCUMENT_TYPE_LABELS[document.document_type]}
+                      <Badge className={DOCUMENT_TYPE_COLORS[doc.document_type]}>
+                        {DOCUMENT_TYPE_LABELS[doc.document_type]}
                       </Badge>
-                      {document.is_confidential && (
+                      {doc.is_confidential && (
                         <Badge variant="secondary" className="bg-red-100 text-red-800">
                           <Shield className="h-3 w-3 mr-1" />
                           Confidential
@@ -387,23 +387,23 @@ export default function EmployeeDocuments({
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(document.upload_date).toLocaleDateString()}
+                        {new Date(doc.upload_date).toLocaleDateString()}
                       </div>
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        {document.uploaded_by_name}
+                        {doc.uploaded_by_name}
                       </div>
-                      <span>{formatFileSize(document.file_size)}</span>
-                      {document.expiration_date && (
+                      <span>{formatFileSize(doc.file_size)}</span>
+                      {doc.expiration_date && (
                         <span className={isExpired ? 'text-red-600 font-medium' : ''}>
-                          Expires: {new Date(document.expiration_date).toLocaleDateString()}
+                          Expires: {new Date(doc.expiration_date).toLocaleDateString()}
                         </span>
                       )}
                     </div>
                     
-                    {document.notes && (
+                    {doc.notes && (
                       <p className="text-sm text-gray-600 mt-1 truncate">
-                        {document.notes}
+                        {doc.notes}
                       </p>
                     )}
                   </div>
@@ -413,7 +413,7 @@ export default function EmployeeDocuments({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePreview(document)}
+                    onClick={() => handlePreview(doc)}
                     className="flex items-center gap-1"
                   >
                     <Eye className="h-4 w-4" />
@@ -424,7 +424,7 @@ export default function EmployeeDocuments({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDownload(document)}
+                      onClick={() => handleDownload(doc)}
                       className="flex items-center gap-1"
                     >
                       <Download className="h-4 w-4" />
