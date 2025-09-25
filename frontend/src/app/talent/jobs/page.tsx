@@ -187,7 +187,7 @@ export default function JobsPage() {
 
   // Get unique departments
   const departments = React.useMemo(() => {
-    return [...new Set(jobs.map(job => job.department))];
+    return Array.from(new Set(jobs.map(job => job.department)));
   }, [jobs]);
 
   const formatSalary = (min?: number, max?: number, currency: string = 'USD') => {
