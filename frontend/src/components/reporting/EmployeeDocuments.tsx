@@ -244,11 +244,7 @@ export default function EmployeeDocuments({
 
     exportUtils.exportEmployeeDocuments(
       exportData,
-      { name: employeeName, id: employeeId },
-      {
-        filename: exportUtils.generateFilename(`employee_documents_${employeeName.replace(/\s+/g, '_')}`),
-        includeTimestamp: true
-      }
+      exportUtils.generateFilename(`employee_documents_${employeeName.replace(/\s+/g, '_')}`)
     );
   };
 
