@@ -125,7 +125,7 @@ export default function TimecardGrid({
     setExportLoading(true);
     
     try {
-      const filename = exportUtils.generateFilename(
+      const filename = exportUtils.generateExportFilename(
         `timecard_${employeeName.replace(/\s+/g, '_')}_${payPeriodStart}_${payPeriodEnd}`,
         format
       );

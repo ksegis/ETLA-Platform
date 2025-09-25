@@ -82,7 +82,7 @@ export default function EnhancedTimecardGrid({
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('work_date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [showFilters, setShowFiltersPanel] = useState(false);
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
   // Load customer branding
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function EnhancedTimecardGrid({
 
   // Get unique departments for filter
   const departments = useMemo(() => {
-    const depts = [...new Set(data.map(item => item.department).filter(Boolean))];
+    const depts = Array.from(new Set(data.map(item => item.department).filter(Boolean)));
     return depts.sort();
   }, [data]);
 
@@ -131,31 +131,37 @@ export default function EnhancedTimecardGrid({
 
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
-    const stats = filteredAndSortedData.reduce(
-      (acc, item) => ({
-        totalEmployees: new Set([...acc.totalEmployees, item.employee_id]).size,
-        totalHours: acc.totalHours + item.total_hours,
-        regularHours: acc.regularHours + item.regular_hours,
-        overtimeHours: acc.overtimeHours + item.overtime_hours,
-        pendingEntries: acc.pendingEntries + (item.status === 'pending' ? 1 : 0),
-        approvedEntries: acc.approvedEntries + (item.status === 'approved' ? 1 : 0),
-        rejectedEntries: acc.rejectedEntries + (item.status === 'rejected' ? 1 : 0)
-      }),
-      {
-        totalEmployees: new Set(),
-        totalHours: 0,
-        regularHours: 0,
-        overtimeHours: 0,
-        pendingEntries: 0,
-        approvedEntries: 0,
-        rejectedEntries: 0
-      }
-    );
+    const employeeSet = new Set<string>();
+    let totalHours = 0;
+    let regularHours = 0;
+    let overtimeHours = 0;
+    let pendingEntries = 0;
+    let approvedEntries = 0;
+    let rejectedEntries = 0;
+
+    filteredAndSortedData.forEach(item => {
+      employeeSet.add(item.employee_id);
+      totalHours += item.total_hours;
+      regularHours += item.regular_hours;
+      overtimeHours += item.overtime_hours;
+      if (item.status === 'pending') pendingEntries += 1;
+      if (item.status === 'approved') approvedEntries += 1;
+      if (item.status === 'rejected') rejectedEntries += 1;
+    });
+
+    const stats = {
+      totalEmployees: employeeSet.size,
+      totalHours,
+      regularHours,
+      overtimeHours,
+      pendingEntries,
+      approvedEntries,
+      rejectedEntries
+    };
     
     return {
       ...stats,
-      totalEmployees: stats.totalEmployees.size,
-      averageHoursPerEmployee: stats.totalEmployees.size > 0 ? stats.totalHours / stats.totalEmployees.size : 0
+      averageHoursPerEmployee: stats.totalEmployees > 0 ? stats.totalHours / stats.totalEmployees : 0
     };
   }, [filteredAndSortedData]);
 
@@ -214,7 +220,7 @@ export default function EnhancedTimecardGrid({
         notes: item.notes || ''
       }));
 
-      const filename = exportUtils.generateFilename(
+      const filename = exportUtils.generateExportFilename(
         `enhanced_timecard_grid_${new Date().toISOString().split('T')[0]}`,
         format
       );
@@ -244,10 +250,10 @@ export default function EnhancedTimecardGrid({
   };
 
   // Get status badge variant
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
     switch (status) {
-      case 'approved': return 'success';
-      case 'pending': return 'warning';
+      case 'approved': return 'default';
+      case 'pending': return 'outline';
       case 'rejected': return 'destructive';
       default: return 'secondary';
     }

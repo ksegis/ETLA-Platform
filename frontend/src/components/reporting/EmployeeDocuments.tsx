@@ -244,7 +244,7 @@ export default function EmployeeDocuments({
 
     exportUtils.exportEmployeeDocuments(
       exportData,
-      exportUtils.generateFilename(`employee_documents_${employeeName.replace(/\s+/g, '_')}`)
+      exportUtils.generateExportFilename(`employee_documents_${employeeName.replace(/\s+/g, '_')}`)
     );
   };
 

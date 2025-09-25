@@ -94,8 +94,8 @@ export default function EnhancedTaxRecordsWithLocalTax({
 
   // Get unique values for filters
   const filterOptions = useMemo(() => {
-    const states = [...new Set(data.map(item => item.state).filter(Boolean))].sort();
-    const departments = [...new Set(data.map(item => item.department).filter(Boolean))].sort();
+    const states = Array.from(new Set(data.map(item => item.state).filter(Boolean))).sort();
+    const departments = Array.from(new Set(data.map(item => item.department).filter(Boolean))).sort();
     return { states, departments };
   }, [data]);
 
@@ -117,50 +117,63 @@ export default function EnhancedTaxRecordsWithLocalTax({
 
   // Calculate tax summary statistics
   const taxSummary = useMemo(() => {
-    const summary = filteredData.reduce(
-      (acc, record) => ({
-        totalGrossPay: acc.totalGrossPay + record.gross_pay,
-        totalFederalTax: acc.totalFederalTax + record.federal_withholding,
-        totalStateTax: acc.totalStateTax + record.state_withholding,
-        totalLocalTax: acc.totalLocalTax + record.local_withholding,
-        totalSocialSecurity: acc.totalSocialSecurity + record.social_security,
-        totalMedicare: acc.totalMedicare + record.medicare,
-        totalUnemployment: acc.totalUnemployment + record.unemployment_tax,
-        totalWorkersComp: acc.totalWorkersComp + record.workers_comp,
-        totalOtherDeductions: acc.totalOtherDeductions + record.other_deductions,
-        totalNetPay: acc.totalNetPay + record.net_pay,
-        recordCount: acc.recordCount + 1,
-        employeeCount: new Set([...acc.employeeCount, record.employee_id]).size,
-        stateCount: new Set([...acc.stateCount, record.state]).size,
-        errorCount: acc.errorCount + (record.status === 'error' ? 1 : 0),
-        pendingCount: acc.pendingCount + (record.status === 'pending' ? 1 : 0)
-      }),
-      {
-        totalGrossPay: 0,
-        totalFederalTax: 0,
-        totalStateTax: 0,
-        totalLocalTax: 0,
-        totalSocialSecurity: 0,
-        totalMedicare: 0,
-        totalUnemployment: 0,
-        totalWorkersComp: 0,
-        totalOtherDeductions: 0,
-        totalNetPay: 0,
-        recordCount: 0,
-        employeeCount: new Set(),
-        stateCount: new Set(),
-        errorCount: 0,
-        pendingCount: 0
-      }
-    );
+    const employeeSet = new Set<string>();
+    const stateSet = new Set<string>();
+    let totalGrossPay = 0;
+    let totalFederalTax = 0;
+    let totalStateTax = 0;
+    let totalLocalTax = 0;
+    let totalSocialSecurity = 0;
+    let totalMedicare = 0;
+    let totalUnemployment = 0;
+    let totalWorkersComp = 0;
+    let totalOtherDeductions = 0;
+    let totalNetPay = 0;
+    let recordCount = 0;
+    let errorCount = 0;
+    let pendingCount = 0;
+
+    filteredData.forEach(record => {
+      totalGrossPay += record.gross_pay;
+      totalFederalTax += record.federal_withholding;
+      totalStateTax += record.state_withholding;
+      totalLocalTax += record.local_withholding;
+      totalSocialSecurity += record.social_security;
+      totalMedicare += record.medicare;
+      totalUnemployment += record.unemployment_tax;
+      totalWorkersComp += record.workers_comp;
+      totalOtherDeductions += record.other_deductions;
+      totalNetPay += record.net_pay;
+      recordCount += 1;
+      employeeSet.add(record.employee_id);
+      stateSet.add(record.state);
+      if (record.status === 'error') errorCount += 1;
+      if (record.status === 'pending') pendingCount += 1;
+    });
+
+    const summary = {
+      totalGrossPay,
+      totalFederalTax,
+      totalStateTax,
+      totalLocalTax,
+      totalSocialSecurity,
+      totalMedicare,
+      totalUnemployment,
+      totalWorkersComp,
+      totalOtherDeductions,
+      totalNetPay,
+      recordCount,
+      employeeCount: employeeSet.size,
+      stateCount: stateSet.size,
+      errorCount,
+      pendingCount
+    };
 
     const totalTaxes = summary.totalFederalTax + summary.totalStateTax + summary.totalLocalTax + 
                       summary.totalSocialSecurity + summary.totalMedicare;
     
     return {
       ...summary,
-      employeeCount: summary.employeeCount.size,
-      stateCount: summary.stateCount.size,
       totalTaxes,
       effectiveTaxRate: summary.totalGrossPay > 0 ? (totalTaxes / summary.totalGrossPay) * 100 : 0,
       averageGrossPerEmployee: summary.employeeCount > 0 ? summary.totalGrossPay / summary.employeeCount : 0
@@ -198,7 +211,7 @@ export default function EnhancedTaxRecordsWithLocalTax({
         status: record.status
       }));
 
-      const filename = exportUtils.generateFilename(
+      const filename = exportUtils.generateExportFilename(
         `enhanced_tax_records_${new Date().toISOString().split('T')[0]}`,
         format
       );
@@ -574,8 +587,8 @@ export default function EnhancedTaxRecordsWithLocalTax({
                   <td className="py-3 px-4">
                     <Badge 
                       variant={
-                        record.status === 'processed' ? 'success' :
-                        record.status === 'pending' ? 'warning' : 'destructive'
+                        record.status === 'processed' ? 'default' :
+                        record.status === 'pending' ? 'outline' : 'destructive'
                       }
                     >
                       {record.status}

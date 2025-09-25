@@ -330,24 +330,7 @@ export async function exportToPDF<T extends object>(
   console.log('PDF export: Generated HTML version. For true PDF, integrate a PDF library like jsPDF or Puppeteer.');
 }
 
-// Excel Export Function (simplified - creates CSV with .xlsx extension)
-// For full Excel functionality, you would need a library like xlsx or exceljs
-export function exportToExcel<T extends object>(
-  data: T[],
-  filename?: string,
-  options: ExportOptions = {}
-): void {
-  if (!data || data.length === 0) {
-    console.warn('No data provided for Excel export');
-    return;
-  }
 
-  const finalFilename = filename || `export_${new Date().toISOString().split('T')[0]}.xlsx`;
-  
-  // For now, we'll create a CSV file with .xlsx extension
-  // In a production environment, you'd want to use a proper Excel library
-  exportToCSV(data, finalFilename.replace('.xlsx', '.csv'), options);
-}
 
 // Utility function to format data for export
 export function prepareDataForExport<T extends object>(
@@ -431,21 +414,7 @@ export function exportEmployeeDocuments(data: any[], filename?: string): void {
   exportToCSV(data, filename || 'employee_documents.csv');
 }
 
-// Export utilities object for backward compatibility
-export const exportUtils = {
-  exportToCSV,
-  exportToExcel,
-  generateFilename: (baseName: string, extension: string = 'csv', includeTimestamp: boolean = true) => {
-    const timestamp = includeTimestamp 
-      ? `_${new Date().toISOString().split('T')[0]}_${new Date().toTimeString().split(' ')[0].replace(/:/g, '-')}`
-      : '';
-    
-    return `${baseName}${timestamp}.${extension}`;
-  },
-  sanitizeFilename,
-  exportTimecardGrid,
-  exportEmployeeDocuments
-};
+
 
 // TimecardGridRow interface for timecard exports
 export interface TimecardGridRow {

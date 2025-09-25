@@ -1,0 +1,306 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "dynamicRoutes": [
+    {
+      "page": "/project-management/requests/[id]",
+      "regex": "^/project\\-management/requests/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/project\\-management/requests/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/questionnaires/analytics/[id]",
+      "regex": "^/questionnaires/analytics/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/questionnaires/analytics/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/questionnaires/respond/[id]",
+      "regex": "^/questionnaires/respond/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/questionnaires/respond/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/work-requests/[id]",
+      "regex": "^/work\\-requests/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/work\\-requests/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/work-requests/[id]/edit",
+      "regex": "^/work\\-requests/([^/]+?)/edit(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/work\\-requests/(?<nxtPid>[^/]+?)/edit(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/accept-invite",
+      "regex": "^/accept\\-invite(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/accept\\-invite(?:/)?$"
+    },
+    {
+      "page": "/access-control",
+      "regex": "^/access\\-control(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/access\\-control(?:/)?$"
+    },
+    {
+      "page": "/admin/access-control",
+      "regex": "^/admin/access\\-control(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/access\\-control(?:/)?$"
+    },
+    {
+      "page": "/admin/tenant-management",
+      "regex": "^/admin/tenant\\-management(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/tenant\\-management(?:/)?$"
+    },
+    {
+      "page": "/audit",
+      "regex": "^/audit(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/audit(?:/)?$"
+    },
+    {
+      "page": "/auth/callback",
+      "regex": "^/auth/callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/callback(?:/)?$"
+    },
+    {
+      "page": "/benefits",
+      "regex": "^/benefits(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/benefits(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/employees",
+      "regex": "^/employees(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/employees(?:/)?$"
+    },
+    {
+      "page": "/hr-analytics",
+      "regex": "^/hr\\-analytics(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hr\\-analytics(?:/)?$"
+    },
+    {
+      "page": "/job-details",
+      "regex": "^/job\\-details(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/job\\-details(?:/)?$"
+    },
+    {
+      "page": "/jobs",
+      "regex": "^/jobs(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/jobs(?:/)?$"
+    },
+    {
+      "page": "/jobs-enhanced",
+      "regex": "^/jobs\\-enhanced(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/jobs\\-enhanced(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/payroll",
+      "regex": "^/payroll(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/payroll(?:/)?$"
+    },
+    {
+      "page": "/profile",
+      "regex": "^/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/profile(?:/)?$"
+    },
+    {
+      "page": "/project-management",
+      "regex": "^/project\\-management(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/project\\-management(?:/)?$"
+    },
+    {
+      "page": "/project-management/resources",
+      "regex": "^/project\\-management/resources(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/project\\-management/resources(?:/)?$"
+    },
+    {
+      "page": "/project-management/schedule",
+      "regex": "^/project\\-management/schedule(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/project\\-management/schedule(?:/)?$"
+    },
+    {
+      "page": "/questionnaires",
+      "regex": "^/questionnaires(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/questionnaires(?:/)?$"
+    },
+    {
+      "page": "/questionnaires/builder",
+      "regex": "^/questionnaires/builder(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/questionnaires/builder(?:/)?$"
+    },
+    {
+      "page": "/rbac-test",
+      "regex": "^/rbac\\-test(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/rbac\\-test(?:/)?$"
+    },
+    {
+      "page": "/reporting",
+      "regex": "^/reporting(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reporting(?:/)?$"
+    },
+    {
+      "page": "/reset-password",
+      "regex": "^/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reset\\-password(?:/)?$"
+    },
+    {
+      "page": "/settings",
+      "regex": "^/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/settings(?:/)?$"
+    },
+    {
+      "page": "/talent",
+      "regex": "^/talent(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/talent(?:/)?$"
+    },
+    {
+      "page": "/talent/candidates",
+      "regex": "^/talent/candidates(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/talent/candidates(?:/)?$"
+    },
+    {
+      "page": "/talent/interviews",
+      "regex": "^/talent/interviews(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/talent/interviews(?:/)?$"
+    },
+    {
+      "page": "/talent/jobs",
+      "regex": "^/talent/jobs(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/talent/jobs(?:/)?$"
+    },
+    {
+      "page": "/talent/offers",
+      "regex": "^/talent/offers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/talent/offers(?:/)?$"
+    },
+    {
+      "page": "/talent/pipeline",
+      "regex": "^/talent/pipeline(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/talent/pipeline(?:/)?$"
+    },
+    {
+      "page": "/upload",
+      "regex": "^/upload(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/upload(?:/)?$"
+    },
+    {
+      "page": "/validation",
+      "regex": "^/validation(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/validation(?:/)?$"
+    },
+    {
+      "page": "/validation-rules",
+      "regex": "^/validation\\-rules(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/validation\\-rules(?:/)?$"
+    },
+    {
+      "page": "/work-requests",
+      "regex": "^/work\\-requests(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/work\\-requests(?:/)?$"
+    },
+    {
+      "page": "/work-requests/new",
+      "regex": "^/work\\-requests/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/work\\-requests/new(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "RSC",
+    "varyHeader": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch",
+    "prefetchHeader": "Next-Router-Prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "Next-Router-Segment-Prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  },
+  "rewrites": []
+}

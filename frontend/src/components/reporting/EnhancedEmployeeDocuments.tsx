@@ -141,7 +141,7 @@ export default function EnhancedEmployeeDocuments({
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [previewDocument, setPreviewDocument] = useState<EmployeeDocument | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'type' | 'size'>('date');
+  const [sortBy, setSortBy] = useState<'document_name' | 'upload_date' | 'document_type' | 'file_size'>('upload_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentViewMode, setCurrentViewMode] = useState(viewMode);
 
@@ -171,8 +171,8 @@ export default function EnhancedEmployeeDocuments({
 
   // Get unique values for filters
   const filterOptions = useMemo(() => {
-    const departments = [...new Set(documents.map(doc => doc.department).filter(Boolean))].sort();
-    const types = [...new Set(documents.map(doc => doc.document_type))].sort();
+    const departments = Array.from(new Set(documents.map(doc => doc.department).filter(Boolean))).sort();
+    const types = Array.from(new Set(documents.map(doc => doc.document_type))).sort();
     return { departments, types };
   }, [documents]);
 
@@ -207,18 +207,29 @@ export default function EnhancedEmployeeDocuments({
 
     // Sort documents
     filtered.sort((a, b) => {
-      let aValue: any = a[sortBy];
-      let bValue: any = b[sortBy];
+      let aValue: any;
+      let bValue: any;
       
-      if (sortBy === 'date') {
-        aValue = new Date(a.upload_date);
-        bValue = new Date(b.upload_date);
-      } else if (sortBy === 'name') {
-        aValue = a.document_name.toLowerCase();
-        bValue = b.document_name.toLowerCase();
-      } else if (sortBy === 'size') {
-        aValue = a.file_size;
-        bValue = b.file_size;
+      switch (sortBy) {
+        case 'document_name':
+          aValue = a.document_name.toLowerCase();
+          bValue = b.document_name.toLowerCase();
+          break;
+        case 'upload_date':
+          aValue = new Date(a.upload_date);
+          bValue = new Date(b.upload_date);
+          break;
+        case 'document_type':
+          aValue = a.document_type;
+          bValue = b.document_type;
+          break;
+        case 'file_size':
+          aValue = a.file_size;
+          bValue = b.file_size;
+          break;
+        default:
+          aValue = a.upload_date;
+          bValue = b.upload_date;
       }
       
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -231,33 +242,36 @@ export default function EnhancedEmployeeDocuments({
 
   // Calculate document statistics
   const documentStats = useMemo(() => {
-    const stats = filteredAndSortedDocuments.reduce(
-      (acc, doc) => ({
-        totalDocuments: acc.totalDocuments + 1,
-        totalSize: acc.totalSize + doc.file_size,
-        confidentialCount: acc.confidentialCount + (doc.is_confidential ? 1 : 0),
-        expiredCount: acc.expiredCount + (doc.status === 'expired' ? 1 : 0),
-        pendingCount: acc.pendingCount + (doc.status === 'pending_review' ? 1 : 0),
-        employeeCount: new Set([...acc.employeeCount, doc.employee_id]).size,
-        typeBreakdown: {
-          ...acc.typeBreakdown,
-          [doc.document_type]: (acc.typeBreakdown[doc.document_type] || 0) + 1
-        }
-      }),
-      {
-        totalDocuments: 0,
-        totalSize: 0,
-        confidentialCount: 0,
-        expiredCount: 0,
-        pendingCount: 0,
-        employeeCount: new Set(),
-        typeBreakdown: {} as Record<string, number>
-      }
-    );
+    const employeeSet = new Set<string>();
+    const typeBreakdown: Record<string, number> = {};
+    let totalDocuments = 0;
+    let totalSize = 0;
+    let confidentialCount = 0;
+    let expiredCount = 0;
+    let pendingCount = 0;
+
+    filteredAndSortedDocuments.forEach(doc => {
+      totalDocuments += 1;
+      totalSize += doc.file_size;
+      if (doc.is_confidential) confidentialCount += 1;
+      if (doc.status === 'expired') expiredCount += 1;
+      if (doc.status === 'pending_review') pendingCount += 1;
+      employeeSet.add(doc.employee_id);
+      typeBreakdown[doc.document_type] = (typeBreakdown[doc.document_type] || 0) + 1;
+    });
+
+    const stats = {
+      totalDocuments,
+      totalSize,
+      confidentialCount,
+      expiredCount,
+      pendingCount,
+      employeeCount: employeeSet.size,
+      typeBreakdown
+    };
     
     return {
       ...stats,
-      employeeCount: stats.employeeCount.size,
       averageSizePerDocument: stats.totalDocuments > 0 ? stats.totalSize / stats.totalDocuments : 0
     };
   }, [filteredAndSortedDocuments]);
@@ -623,7 +637,7 @@ export default function EnhancedEmployeeDocuments({
                 {permissions.canDownloadDocuments && (
                   <Button
                     variant="outline"
-                    size="sm"
+                   
                     onClick={() => handleBulkAction('download')}
                   >
                     <Download className="h-4 w-4 mr-2" />
@@ -632,7 +646,7 @@ export default function EnhancedEmployeeDocuments({
                 )}
                 <Button
                   variant="outline"
-                  size="sm"
+                 
                   onClick={() => handleBulkAction('archive')}
                 >
                   <Archive className="h-4 w-4 mr-2" />
@@ -645,7 +659,7 @@ export default function EnhancedEmployeeDocuments({
             {permissions.canUploadDocuments && onUploadDocument && (
               <Button
                 variant="outline"
-                size="sm"
+               
                 onClick={onUploadDocument}
                 className="flex items-center gap-2"
               >
@@ -658,7 +672,7 @@ export default function EnhancedEmployeeDocuments({
             <div className="flex items-center border border-gray-300 rounded-md">
               <Button
                 variant={currentViewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
+               
                 onClick={() => setCurrentViewMode('list')}
                 className="rounded-r-none"
               >
@@ -666,7 +680,7 @@ export default function EnhancedEmployeeDocuments({
               </Button>
               <Button
                 variant={currentViewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
+               
                 onClick={() => setCurrentViewMode('grid')}
                 className="rounded-l-none"
               >
@@ -770,7 +784,7 @@ export default function EnhancedEmployeeDocuments({
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
-                          size="sm"
+                         
                           onClick={() => handlePreviewDocument(document)}
                           className="h-8 w-8 p-0"
                         >
@@ -779,7 +793,7 @@ export default function EnhancedEmployeeDocuments({
                         {permissions.canDownloadDocuments && (
                           <Button
                             variant="ghost"
-                            size="sm"
+                           
                             onClick={() => handleDownloadDocument(document)}
                             className="h-8 w-8 p-0"
                           >
@@ -788,7 +802,7 @@ export default function EnhancedEmployeeDocuments({
                         )}
                         <Button
                           variant="ghost"
-                          size="sm"
+                         
                           className="h-8 w-8 p-0"
                         >
                           <MoreHorizontal className="h-4 w-4" />
@@ -831,10 +845,10 @@ export default function EnhancedEmployeeDocuments({
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <Badge className={DOCUMENT_TYPE_COLORS[document.document_type]} size="sm">
+                  <Badge className={DOCUMENT_TYPE_COLORS[document.document_type]}>
                     {DOCUMENT_TYPE_LABELS[document.document_type]}
                   </Badge>
-                  <Badge className={STATUS_COLORS[document.status]} size="sm">
+                  <Badge className={STATUS_COLORS[document.status]}>
                     {document.status.replace('_', ' ')}
                   </Badge>
                 </div>
@@ -847,7 +861,7 @@ export default function EnhancedEmployeeDocuments({
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
+                   
                     onClick={() => handlePreviewDocument(document)}
                     className="flex-1"
                   >
@@ -857,7 +871,7 @@ export default function EnhancedEmployeeDocuments({
                   {permissions.canDownloadDocuments && (
                     <Button
                       variant="outline"
-                      size="sm"
+                     
                       onClick={() => handleDownloadDocument(document)}
                     >
                       <Download className="h-3 w-3" />
