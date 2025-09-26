@@ -207,13 +207,13 @@ export default function AccessControlPage() {
   }, [selectedUserId, draftChanges])
 
   const handleApplyChanges = async () => {
-    if (changeQueue.length === 0 || !selectedTenant) return
+    if (changeQueue.length === 0 || !selectedTenant || !currentUserId) return
     
     setLoading(true)
     try {
       const request: RBACApplyChangesRequest = {
         tenantId: selectedTenant.id,
-        actorUserId: currentUserId,
+        actorUserId: currentUserId as string, // Explicitly cast to string after null- to satisfy TypeScript
         changes: changeQueue
       }
       
