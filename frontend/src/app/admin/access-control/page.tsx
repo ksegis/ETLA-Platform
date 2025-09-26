@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
@@ -348,3 +349,4 @@ export default function AccessControlPage() {
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic'
+
