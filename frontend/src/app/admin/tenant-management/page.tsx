@@ -557,3 +557,4 @@ export default function TenantManagementPage() {
   )
 }
 
+export const dynamic = "force-dynamic"

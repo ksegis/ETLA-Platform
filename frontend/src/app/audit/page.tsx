@@ -428,3 +428,4 @@ export default function AuditTrailPage() {
   )
 }
 
+export const dynamic = "force-dynamic"

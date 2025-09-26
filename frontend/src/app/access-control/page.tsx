@@ -876,3 +876,4 @@ export default function AccessControlPage() {
   )
 }
 
+export const dynamic = "force-dynamic"

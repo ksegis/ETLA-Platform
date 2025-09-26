@@ -387,3 +387,6 @@ export default function AccessControlPage() {
   )
 }
 
+
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic'
