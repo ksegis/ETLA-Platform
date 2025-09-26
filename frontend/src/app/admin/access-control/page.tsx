@@ -130,7 +130,7 @@ export default function AccessControlPage() {
   const handleCellClick = (userId: string, permissionId: string) => {
     // Determine the current effective state for this cell
     const userToUpdate = users.find(u => u.userId === userId);
-    const currentCell = userToUpdate?.cells.find(cell => cell.permissionId === permissionId);
+    const currentCell = userToUpdate?.cells?.find(cell => cell.permissionId === permissionId);
     const currentValue = draftChanges.get(`${userId}:${permissionId}`) || currentCell?.state || 'none';
 
     let newValue: 'allow' | 'deny' | 'none';
