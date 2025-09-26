@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit', 'talent-management', 'enhanced-reporting'])
   const router = useRouter()
   const pathname = usePathname()
 
@@ -131,6 +131,38 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       ]
     },
     {
+      id: 'talent-management',
+      title: 'Talent Management',
+      icon: Users2,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-600',
+      hoverColor: 'hover:bg-emerald-50',
+      textColor: 'text-emerald-900',
+      items: [
+        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3 },
+        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase },
+        { name: 'Candidates', href: '/talent/candidates', icon: Users },
+        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp },
+        { name: 'Interviews', href: '/talent/interviews', icon: Calendar },
+        { name: 'Offers', href: '/talent/offers', icon: FileText }
+      ]
+    },
+    {
+      id: 'enhanced-reporting',
+      title: 'Enhanced Reporting',
+      icon: PieChart,
+      color: 'text-cyan-600',
+      bgColor: 'bg-cyan-600',
+      hoverColor: 'hover:bg-cyan-50',
+      textColor: 'text-cyan-900',
+      items: [
+        { name: 'Employee Documents', href: '/reporting/employee-documents', icon: FileText },
+        { name: 'Tax Records', href: '/reporting/tax-records', icon: DollarSign },
+        { name: 'Timecard Reports', href: '/reporting/timecards', icon: Clock },
+        { name: 'Custom Reports', href: '/reporting/custom', icon: Settings }
+      ]
+    },
+    {
       id: 'administration',
       title: 'Administration',
       icon: Shield,
@@ -139,7 +171,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       hoverColor: 'hover:bg-orange-50',
       textColor: 'text-orange-900',
       items: [
-        { name: 'Access Control', href: '/access-control', icon: Shield },
+        { name: 'Access Control', href: '/admin/access-control', icon: Shield },
         { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
         { name: 'Employee Directory', href: '/employee-directory', icon: Users },
         { name: 'Benefits Management', href: '/benefits', icon: Building },
