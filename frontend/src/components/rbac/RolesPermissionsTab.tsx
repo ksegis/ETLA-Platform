@@ -46,7 +46,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
   // Load roles data
   useEffect(() => {
     loadRoles();
-  }, [selectedTenantId]);
+  }, []);
 
   const loadRoles = async () => {
     setLoading(true);
@@ -60,8 +60,8 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
           name: 'Host Admin',
           description: 'Full system administrator with all privileges',
           isSystemRole: true,
-          permissionCount: 0, // Will be calculated below
-          userCount: 0, // Will be calculated below
+          permissionCount: 0,
+          userCount: 0,
           permissions: Object.values(FEATURES).flatMap(feature => 
             Object.values(PERMISSIONS).map(permission => ({
               feature,
@@ -75,8 +75,8 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
           name: 'Client Admin',
           description: 'Tenant administrator with full tenant privileges',
           isSystemRole: true,
-          permissionCount: 0, // Will be calculated below
-          userCount: 0, // Will be calculated below
+          permissionCount: 0,
+          userCount: 0,
           permissions: Object.values(FEATURES).flatMap(feature => 
             Object.values(PERMISSIONS).map(permission => ({
               feature,
@@ -90,8 +90,8 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
           name: 'Program Manager',
           description: 'Project and program management with team oversight',
           isSystemRole: true,
-          permissionCount: 0, // Will be calculated below
-          userCount: 0, // Will be calculated below
+          permissionCount: 0,
+          userCount: 0,
           permissions: Object.values(FEATURES).flatMap(feature => 
             Object.values(PERMISSIONS).map(permission => {
               const projectFeatures = ['project-management', 'work-requests', 'project-charter', 'risk-management', 'resource-management'];
@@ -115,8 +115,8 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
           name: 'Client User',
           description: 'Standard user with basic access to work requests and reporting',
           isSystemRole: true,
-          permissionCount: 0, // Will be calculated below
-          userCount: 0, // Will be calculated below
+          permissionCount: 0,
+          userCount: 0,
           permissions: Object.values(FEATURES).flatMap(feature => 
             Object.values(PERMISSIONS).map(permission => {
               const userFeatures = ['work-requests', 'reporting', 'dashboards', 'benefits-management', 'file-upload'];
@@ -136,32 +136,11 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
         }
       ];
 
-      // Get user counts for each role if tenant is selected
-      let rolesWithCounts = systemRoles;
-      if (selectedTenantId) {
-        try {
-          const { users } = await RBACAdminService.listTenantUsers(selectedTenantId, { limit: 1000 });
-          
-          rolesWithCounts = systemRoles.map(role => ({
-            ...role,
-            userCount: users.filter(user => user.role === role.id).length,
-            permissionCount: role.permissions.filter(p => p.granted).length
-          }));
-        } catch (err) {
-          console.error('Error loading user counts:', err);
-          rolesWithCounts = systemRoles.map(role => ({
-            ...role,
-            userCount: 0,
-            permissionCount: role.permissions.filter(p => p.granted).length
-          }));
-        }
-      } else {
-        rolesWithCounts = systemRoles.map(role => ({
-          ...role,
-          userCount: 0,
-          permissionCount: role.permissions.filter(p => p.granted).length
-        }));
-      }
+      const rolesWithCounts = systemRoles.map(role => ({
+        ...role,
+        userCount: 0, // Hardcoded for debugging
+        permissionCount: role.permissions.filter(p => p.granted).length
+      }));
 
       setRoles(rolesWithCounts);
     } catch (err) {
