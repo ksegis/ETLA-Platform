@@ -272,11 +272,6 @@ export default function JobsPage() {
     });
   };
 
-  const handleJobAction = (jobId: string, action: string) => {
-    console.log(`Action ${action} for job ${jobId}`);
-    // Implement job actions (edit, archive, duplicate, etc.)
-  };
-
   if (loading) {
     return (
       <DashboardLayout>
@@ -478,7 +473,7 @@ export default function JobsPage() {
                   }
                 </p>
                 <Button 
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={handlePostNewJob}
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
