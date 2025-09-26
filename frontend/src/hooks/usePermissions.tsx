@@ -59,21 +59,7 @@ export const SCOPES = {
 const DEFAULT_ROLE_PERMISSIONS: Record<string, RolePermissions> = {
   host_admin: {
     role: 'host_admin',
-    permissions: [
-      // Full system access
-      { feature: FEATURES.USER_MANAGEMENT, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.ACCESS_CONTROL, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.TENANT_MANAGEMENT, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.SYSTEM_SETTINGS, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.AUDIT_LOGS, permission: PERMISSIONS.VIEW },
-      
-      // All business features
-      { feature: FEATURES.PROJECT_MANAGEMENT, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.REPORTING, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.MIGRATION_WORKBENCH, permission: PERMISSIONS.MANAGE },
-      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: PERMISSIONS.MANAGE }
-    ]
+    permissions: Object.values(FEATURES).map(feature => ({ feature, permission: PERMISSIONS.MANAGE }))
   },
   
   program_manager: {
@@ -353,6 +339,14 @@ export function usePermissions() {
            canAccessFeature(FEATURES.SYSTEM_SETTINGS)
   }
 
+  const isSuperAdmin = (): boolean => {
+    if (!isAuthenticated || !tenantUser) {
+      return false
+    }
+    
+    return tenantUser.role === 'host_admin' || tenantUser.role === 'client_admin'
+  }
+
   // Get comprehensive permissions summary
   const getUserPermissions = () => {
     return {
@@ -421,7 +415,8 @@ export function usePermissions() {
     // Current user info
     currentRole: tenantUser?.role,
     currentUserId: user?.id,
-    currentTenantId: tenantUser?.tenant_id
+    currentTenantId: tenantUser?.tenant_id,
+    isSuperAdmin
   }
 }
 
@@ -488,3 +483,4 @@ export function RoleGuard({ roles, fallback = null, children }: RoleGuardProps) 
 
 export default usePermissions
 
+// Permission guard component

@@ -62,9 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                      process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
                      process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') ||
                      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://your-project.supabase.co'
-  const isAuthenticated = !!user || !!session || isDemoMode
-  const currentUserId = user?.id || tenantUser?.user_id || null
-  const currentTenantId = tenant?.id || null
+  const isAuthenticated = !!user && !!session && !loading
+  const currentUserId = user?.id || null
+  const currentTenantId = tenantUser?.tenant_id || null
   const currentUserRole = tenantUser?.role || null
 
   // Helper function to update service auth context
@@ -78,6 +78,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const loadTenantUser = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tenant_users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching tenant user:', error);
+        setTenantUser(null);
+      } else if (data) {
+        setTenantUser(data);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching tenant user:', error);
+      setTenantUser(null);
+    }
+  };
+
   // Initialize authentication state
   useEffect(() => {
     console.log('🔐 AuthProvider: Initializing authentication state')
@@ -88,66 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (error) {
           console.error('❌ AuthProvider: Error getting session:', error)
-          // Fall back to demo mode
-          setUser({
-            id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
-            email: 'demo.hostmanager@democompany.com',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            confirmation_sent_at: new Date().toISOString()
-          } as unknown as User)
-          
-          setTenantUser({
-            id: 'demo-tenant-user-id',
-            tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-            user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
-            role: 'client_admin',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          setUser(null)
+          setSession(null)
+          setTenantUser(null)
         } else if (initialSession) {
           console.log('✅ AuthProvider: Found existing session')
           setSession(initialSession)
           setUser(initialSession.user)
-          
-          // Set tenant user for authenticated user
-          setTenantUser({
-            id: 'demo-tenant-user-id',
-            tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-            user_id: initialSession.user.id,
-            role: 'client_admin',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          await loadTenantUser(initialSession.user.id)
         } else {
-          console.log('⚠️ AuthProvider: No existing session, using demo user')
-          // Fallback to demo user for stability
-          setUser({
-            id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
-            email: 'demo.hostmanager@democompany.com',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            confirmation_sent_at: new Date().toISOString()
-          } as unknown as User)
-          
-          // Set demo tenant user
-          setTenantUser({
-            id: 'demo-tenant-user-id',
-            tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
-            user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563', // Use actual demo host manager profile ID
-            role: 'host_admin', // Give demo user admin access to see all tenants
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          console.log('⚠️ AuthProvider: No existing session')
+          setUser(null)
+          setSession(null)
+          setTenantUser(null)
         }
         
         setLoading(false)
@@ -157,18 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
       } catch (error) {
         console.error('❌ AuthProvider: Unexpected error during initialization:', error)
-        // Ensure we always have a stable state
         setUser(null)
         setSession(null)
-        setTenantUser({
-          id: 'demo-tenant-user-id',
-          tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-          user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
-          role: 'client_admin',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        setTenantUser(null)
         setLoading(false)
         setIsStable(true)
         updateServiceAuthContext()
@@ -185,42 +149,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (newSession) {
           setSession(newSession)
           setUser(newSession.user)
-          
-          // Set tenant user for authenticated user
-          setTenantUser({
-            id: 'demo-tenant-user-id',
-            tenant_id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
-            user_id: newSession.user.id,
-            role: 'client_admin',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          await loadTenantUser(newSession.user.id)
         } else {
-          console.log('⚠️ AuthProvider: User signed out, falling back to demo user')
-          // Fallback to demo user for stability
-          setUser({
-            id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
-            email: 'demo@company.com',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            confirmation_sent_at: new Date().toISOString()
-          } as unknown as User)
+          console.log('⚠️ AuthProvider: User signed out')
+          setUser(null)
           setSession(null)
-          
-          // Set demo tenant user
-          setTenantUser({
-            id: 'demo-tenant-user-id',
-            tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
-            user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
-            role: 'host_admin', // Give demo user admin access to see all tenants
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          setTenantUser(null)
         }
         
         setLoading(false)
@@ -264,19 +198,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('🔐 AuthProvider: Signing out')
     try {
       await supabase.auth.signOut()
-      
-      // Reset to demo state
       setUser(null)
       setSession(null)
-      setTenantUser({
-        id: 'demo-tenant-user-id',
-        tenant_id: 'demo-tenant-id', // Will be managed by TenantContext
-        user_id: 'b224935f-732f-4b09-a4a0-16492c5ae563',
-        role: 'host_admin', // Give demo user admin access
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      setTenantUser(null)
       setLoading(false)
       setIsStable(true)
       updateServiceAuthContext()
@@ -296,8 +220,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshTenant = async () => {
     console.log('🔄 AuthProvider: Refreshing tenant information')
-    // In a real implementation, this would fetch fresh tenant data
-    // For now, we maintain the demo state
+    if (user) {
+      await loadTenantUser(user.id);
+    }
   }
 
   const refreshSession = async () => {
@@ -310,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session)
         if (session?.user) {
           setUser(session.user)
+          await loadTenantUser(session.user.id);
         }
       }
     } catch (error) {
