@@ -167,6 +167,7 @@ export default function AccessControlPage() {
     const changeOperation: RBACChangeOperation = {
       id: `${Date.now()}`,
       type: 'permission_change',
+      op: newValue === 'none' ? 'clearOverride' : 'setOverride',
       userId,
       permissionId,
       oldValue: currentValue as 'allow' | 'deny' | 'none',
