@@ -420,6 +420,7 @@ export interface RBACUserDetail {
 }
 
 export interface RBACChangeOperation {
+  id: string;
   op: 'assignRole' | 'removeRole' | 'setOverride' | 'clearOverride';
   userId: string;
   permissionId?: string;
