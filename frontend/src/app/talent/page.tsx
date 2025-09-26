@@ -46,16 +46,16 @@ interface RecentActivity {
 }
 
 export default function TalentDashboard() {
-  const { currentTenant } = useTenant();
+  const { selectedTenant } = useTenant();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentTenant?.id) {
+    if (selectedTenant?.id) {
       loadDashboardData();
     }
-  }, [currentTenant?.id]);
+  }, [selectedTenant?.id]);
 
   const loadDashboardData = async () => {
     try {
