@@ -217,7 +217,7 @@ export default function AccessControlPage() {
         changes: changeQueue
       }
       
-      await RBACAdminService.applyPermissionChanges(request)
+      await RBACAdminService.applyChanges(request) // Corrected method name
       
       // Clear draft changes and queue
       setDraftChanges(new Map())
