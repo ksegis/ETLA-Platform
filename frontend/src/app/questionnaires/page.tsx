@@ -45,10 +45,30 @@ interface Questionnaire {
 
 export default function QuestionnaireDashboard() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+
+  const handleClone = (id: string) => {
+    console.log(`Cloning questionnaire with ID: ${id}`);
+    // In a real application, this would involve an API call to duplicate the questionnaire
+    const questionnaireToClone = questionnaires.find(q => q.id === id);
+    if (questionnaireToClone) {
+      const newQuestionnaire = { ...questionnaireToClone, id: String(questionnaires.length + 1), title: `${questionnaireToClone.title} (Copy)`, status: 'draft', created_date: new Date().toISOString(), updated_date: new Date().toISOString(), response_count: 0, completion_rate: 0 };
+      setQuestionnaires(prev => [...prev, newQuestionnaire]);
+      alert(`Questionnaire '${questionnaireToClone.title}' cloned successfully as a draft!`);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this questionnaire?")) {
+      console.log(`Deleting questionnaire with ID: ${id}`);
+      // In a real application, this would involve an API call to delete the questionnaire
+      setQuestionnaires(prev => prev.filter(q => q.id !== id));
+      alert("Questionnaire deleted successfully!");
+    }
+  };
 
   // Mock data for demonstration
   useEffect(() => {
@@ -219,7 +239,7 @@ export default function QuestionnaireDashboard() {
           <p className="text-gray-600">Create, manage, and analyze questionnaires and surveys</p>
         </div>
         <div className="flex gap-3">
-          <Link href="/questionnaires/templates">
+          <Link href="/questionnaires/builder">
             <Button variant="outline">
               <FileText className="h-4 w-4 mr-2" />
               Templates
@@ -397,7 +417,7 @@ export default function QuestionnaireDashboard() {
                 </div>
 
                 <div className="flex gap-2 ml-4">
-                  <Link href={`/questionnaires/responses/${questionnaire.id}`}>
+                  <Link href={`/questionnaires/respond/${questionnaire.id}`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4 mr-1" />
                       View
@@ -409,11 +429,11 @@ export default function QuestionnaireDashboard() {
                       Edit
                     </Button>
                   </Link>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => handleClone(questionnaire.id)}>
                     <Copy className="h-4 w-4 mr-1" />
                     Clone
                   </Button>
-                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(questionnaire.id)}>
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
                   </Button>
