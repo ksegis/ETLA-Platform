@@ -213,6 +213,7 @@ export default function AccessControlPage() {
     try {
       const request: RBACApplyChangesRequest = {
         tenantId: selectedTenant.id,
+        actorUserId: currentUserId,
         changes: changeQueue
       }
       
