@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Building, Users, Plus, Edit, Trash2, UserPlus, Search, AlertCircle } from 'lucide-react'
 import { Tenant, User } from '@/types'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface ExtendedTenant extends Tenant {
   code?: string
@@ -274,7 +275,8 @@ export default function TenantManagementPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Tenant Management</h1>
@@ -515,7 +517,8 @@ export default function TenantManagementPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
 
