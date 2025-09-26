@@ -1,600 +1,270 @@
-'use client';
+'use client'
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  FileText, 
-  Download, 
-  Eye, 
-  Search, 
-  Filter, 
-  Calendar, 
-  User, 
-  Building,
-  Shield,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  X
-} from 'lucide-react';
-import { useCustomerBranding } from '@/services/brandingService';
-import { exportToCSV, exportToExcel } from '@/utils/exportUtils';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Input } from '@/components/ui/Input'
+import { FileText, Download, Search, User, Building, Calendar } from 'lucide-react'
+import { useCustomerBranding } from '@/services/brandingService'
+import { exportToCSV, exportToExcel } from '@/utils/exportUtils'
 
 interface EmployeeDocument {
-  id: string;
-  document_id: string;
-  employee_id: string;
-  employee_name: string;
-  document_name: string;
-  document_type: string;
-  document_category: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  upload_date: string;
-  uploaded_by: string;
-  uploaded_by_profile?: {
-    full_name: string;
-  };
-  document_status: string;
-  access_level: string;
-  retention_date?: string;
-  tags?: string[];
-  description?: string;
-  tenant_id: string;
+  id: string
+  employee_id: string
+  employee_name: string
+  employee_code: string
+  document_type: string
+  document_name: string
+  file_path: string
+  upload_date: string
+  document_status: string
+  expiration_date?: string
+  department: string
+  tenant_id: string
 }
 
 interface EnhancedEmployeeDocumentsProps {
-  documents: EmployeeDocument[];
-  tenantId?: string;
-  userRole?: string;
-  userId?: string;
+  documents?: EmployeeDocument[]
+  tenantId?: string
 }
 
-export default function EnhancedEmployeeDocuments({ 
-  documents, 
-  tenantId, 
-  userRole = 'user',
-  userId 
-}: EnhancedEmployeeDocumentsProps) {
-  const { branding } = useCustomerBranding(tenantId);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [selectedAccessLevel, setSelectedAccessLevel] = useState<string>('');
-  const [previewDocument, setPreviewDocument] = useState<EmployeeDocument | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+export default function EnhancedEmployeeDocuments({ documents = [], tenantId }: EnhancedEmployeeDocumentsProps) {
+  const [filteredDocuments, setFilteredDocuments] = useState<EmployeeDocument[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const branding = useCustomerBranding()
 
-  // Check if user has access to a document based on RBAC
-  const hasDocumentAccess = (document: EmployeeDocument): boolean => {
-    // Admin and HR roles have access to all documents
-    if (userRole === 'admin' || userRole === 'hr') {
-      return true;
+  // Mock data for demonstration
+  const mockDocuments: EmployeeDocument[] = [
+    {
+      id: '1',
+      employee_id: 'EMP001',
+      employee_name: 'John Smith',
+      employee_code: 'JS001',
+      document_type: 'I-9 Form',
+      document_name: 'I9_John_Smith_2024.pdf',
+      file_path: '/documents/i9/I9_John_Smith_2024.pdf',
+      upload_date: '2024-01-15',
+      document_status: 'Active',
+      expiration_date: '2027-01-15',
+      department: 'Engineering',
+      tenant_id: tenantId || 'default'
+    },
+    {
+      id: '2',
+      employee_id: 'EMP002',
+      employee_name: 'Sarah Johnson',
+      employee_code: 'SJ002',
+      document_type: 'W-4 Form',
+      document_name: 'W4_Sarah_Johnson_2024.pdf',
+      file_path: '/documents/w4/W4_Sarah_Johnson_2024.pdf',
+      upload_date: '2024-02-01',
+      document_status: 'Active',
+      department: 'Marketing',
+      tenant_id: tenantId || 'default'
+    },
+    {
+      id: '3',
+      employee_id: 'EMP003',
+      employee_name: 'Mike Davis',
+      employee_code: 'MD003',
+      document_type: 'Direct Deposit Form',
+      document_name: 'DirectDeposit_Mike_Davis.pdf',
+      file_path: '/documents/dd/DirectDeposit_Mike_Davis.pdf',
+      upload_date: '2024-01-20',
+      document_status: 'Active',
+      department: 'Sales',
+      tenant_id: tenantId || 'default'
     }
+  ]
 
-    // Managers can access documents for their direct reports
-    if (userRole === 'manager') {
-      // This would need to be enhanced with actual manager-employee relationships
-      return document.access_level !== 'confidential';
-    }
+  const dataToUse = documents.length > 0 ? documents : mockDocuments
 
-    // Employees can only access their own documents (non-confidential)
-    if (userRole === 'employee') {
-      return document.employee_id === userId && document.access_level === 'public';
-    }
-
-    // Default deny
-    return false;
-  };
-
-  // Filter documents based on RBAC
-  const accessibleDocuments = useMemo(() => {
-    return documents.filter(doc => hasDocumentAccess(doc));
-  }, [documents, userRole, userId]);
-
-  // Get unique values for filters
-  const employees = useMemo(() => {
-    const uniqueEmployees = new Map();
-    accessibleDocuments.forEach(doc => {
-      if (!uniqueEmployees.has(doc.employee_id)) {
-        uniqueEmployees.set(doc.employee_id, {
-          id: doc.employee_id,
-          name: doc.employee_name
-        });
-      }
-    });
-    return Array.from(uniqueEmployees.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [accessibleDocuments]);
-
-  const documentTypes = useMemo(() => {
-    return Array.from(new Set(accessibleDocuments.map(doc => doc.document_type))).sort();
-  }, [accessibleDocuments]);
-
-  const categories = useMemo(() => {
-    return Array.from(new Set(accessibleDocuments.map(doc => doc.document_category))).sort();
-  }, [accessibleDocuments]);
-
-  const statuses = useMemo(() => {
-    return Array.from(new Set(accessibleDocuments.map(doc => doc.document_status))).sort();
-  }, [accessibleDocuments]);
-
-  const accessLevels = useMemo(() => {
-    return Array.from(new Set(accessibleDocuments.map(doc => doc.access_level))).sort();
-  }, [accessibleDocuments]);
-
-  // Filter documents
-  const filteredDocuments = useMemo(() => {
-    let filtered = accessibleDocuments;
+  useEffect(() => {
+    let filtered = dataToUse
 
     if (searchTerm) {
-      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(doc =>
-        doc.employee_name.toLowerCase().includes(term) ||
-        doc.document_name.toLowerCase().includes(term) ||
-        doc.document_type.toLowerCase().includes(term) ||
-        doc.document_category.toLowerCase().includes(term) ||
-        doc.description?.toLowerCase().includes(term)
-      );
+        doc.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.employee_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.document_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.document_name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     }
 
-    if (selectedEmployee) {
-      filtered = filtered.filter(doc => doc.employee_id === selectedEmployee);
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(doc => doc.document_status.toLowerCase() === statusFilter)
     }
 
-    if (selectedDocumentType) {
-      filtered = filtered.filter(doc => doc.document_type === selectedDocumentType);
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(doc => doc.document_type.toLowerCase().includes(typeFilter.toLowerCase()))
     }
 
-    if (selectedCategory) {
-      filtered = filtered.filter(doc => doc.document_category === selectedCategory);
-    }
+    setFilteredDocuments(filtered)
+  }, [searchTerm, statusFilter, typeFilter, dataToUse])
 
-    if (selectedStatus) {
-      filtered = filtered.filter(doc => doc.document_status === selectedStatus);
-    }
-
-    if (selectedAccessLevel) {
-      filtered = filtered.filter(doc => doc.access_level === selectedAccessLevel);
-    }
-
-    return filtered.sort((a, b) => new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime());
-  }, [
-    accessibleDocuments, 
-    searchTerm, 
-    selectedEmployee, 
-    selectedDocumentType, 
-    selectedCategory, 
-    selectedStatus, 
-    selectedAccessLevel
-  ]);
-
-  // Format file size
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // Get status badge variant
-  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
-    switch (status.toLowerCase()) {
-      case 'active':
-      case 'approved':
-        return 'default';
-      case 'pending':
-      case 'review':
-        return 'secondary';
-      case 'expired':
-      case 'rejected':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
-
-  // Get access level badge variant
-  const getAccessLevelVariant = (level: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
-    switch (level.toLowerCase()) {
-      case 'public':
-        return 'default';
-      case 'internal':
-        return 'secondary';
-      case 'confidential':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
-
-  // Preview document
-  const handlePreview = async (employeeDocument: EmployeeDocument) => {
-    if (!hasDocumentAccess(employeeDocument)) {
-      alert('You do not have permission to view this document.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Generate signed URL for document preview
-      const { data, error } = await supabase.storage
-        .from('employee-documents')
-        .createSignedUrl(employeeDocument.file_path, 3600); // 1 hour expiry
-
-      if (error) throw error;
-
-      setPreviewDocument(employeeDocument);
-      setPreviewUrl(data.signedUrl);
-    } catch (error) {
-      console.error('Error generating preview URL:', error);
-      alert('Unable to preview document. Please try downloading instead.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Download document
-  const handleDownload = async (employeeDocument: EmployeeDocument) => {
-    if (!hasDocumentAccess(employeeDocument)) {
-      alert('You do not have permission to download this document.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Generate signed URL for download
-      const { data, error } = await supabase.storage
-        .from('employee-documents')
-        .createSignedUrl(employeeDocument.file_path, 300); // 5 minute expiry
-
-      if (error) throw error;
-
-      // Trigger download
-      const link = document.createElement('a');
-      link.href = data.signedUrl;
-      link.download = employeeDocument.document_name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Error downloading document:', error);
-      alert('Unable to download document. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Export functions
   const exportToCSVHandler = () => {
     const exportData = filteredDocuments.map(doc => ({
+      'Employee ID': doc.employee_id,
       'Employee Name': doc.employee_name,
-      'Document Name': doc.document_name,
+      'Employee Code': doc.employee_code,
       'Document Type': doc.document_type,
-      'Category': doc.document_category,
-      'File Size': formatFileSize(doc.file_size),
-      'Upload Date': new Date(doc.upload_date).toLocaleDateString(),
-      'Uploaded By': doc.uploaded_by_profile?.full_name || doc.uploaded_by,
+      'Document Name': doc.document_name,
+      'Upload Date': doc.upload_date,
       'Status': doc.document_status,
-      'Access Level': doc.access_level,
-      'Description': doc.description || ''
-    }));
+      'Expiration Date': doc.expiration_date || 'N/A',
+      'Department': doc.department
+    }))
 
-    exportToCSV(exportData, `${branding?.legalName || 'ETLA'}_Employee_Documents_${new Date().toISOString().split('T')[0]}.csv`);
-  };
+    exportToCSV(exportData, `${branding?.branding?.legalName || 'ETLA'}_Employee_Documents_${new Date().toISOString().split('T')[0]}.csv`)
+  }
 
   const exportToExcelHandler = () => {
     const exportData = filteredDocuments.map(doc => ({
+      'Employee ID': doc.employee_id,
       'Employee Name': doc.employee_name,
-      'Document Name': doc.document_name,
+      'Employee Code': doc.employee_code,
       'Document Type': doc.document_type,
-      'Category': doc.document_category,
-      'File Size': formatFileSize(doc.file_size),
-      'Upload Date': new Date(doc.upload_date).toLocaleDateString(),
-      'Uploaded By': doc.uploaded_by_profile?.full_name || doc.uploaded_by,
+      'Document Name': doc.document_name,
+      'Upload Date': doc.upload_date,
       'Status': doc.document_status,
-      'Access Level': doc.access_level,
-      'Description': doc.description || ''
-    }));
+      'Expiration Date': doc.expiration_date || 'N/A',
+      'Department': doc.department
+    }))
 
-    exportToExcel(exportData, `${branding?.legalName || 'ETLA'}_Employee_Documents_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
+    exportToExcel(exportData, `${branding?.branding?.legalName || 'ETLA'}_Employee_Documents_${new Date().toISOString().split('T')[0]}.xlsx`)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active': return 'bg-green-100 text-green-800'
+      case 'expired': return 'bg-red-100 text-red-800'
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header with branding */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {branding?.legalName || 'ETLA Platform'} - Employee Documents
-          </h2>
-          <p className="text-gray-600">Secure document management with role-based access control</p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={exportToCSVHandler} variant="outline" size="sm">
-            <FileText className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-          <Button onClick={exportToExcelHandler} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export Excel
-          </Button>
-        </div>
-      </div>
-
-      {/* RBAC Notice */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="pt-4">
-          <div className="flex items-center gap-2 text-blue-800">
-            <Shield className="h-4 w-4" />
-            <span className="text-sm font-medium">
-              Access Level: {userRole} | Showing {filteredDocuments.length} of {documents.length} documents based on your permissions
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
+            <FileText className="h-5 w-5" />
+            Employee Documents
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-              <Input
-                placeholder="Document name, employee..."
-                value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search by employee name, code, or document type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-              <select 
-                value={selectedEmployee} 
-                onChange={(e) => setSelectedEmployee(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All employees</option>
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
-              <select 
-                value={selectedDocumentType} 
-                onChange={(e) => setSelectedDocumentType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All types</option>
-                {documentTypes.map(type => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select 
-                value={selectedCategory} 
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All categories</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select 
-                value={selectedStatus} 
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All statuses</option>
-                {statuses.map(status => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Access Level</label>
-              <select 
-                value={selectedAccessLevel} 
-                onChange={(e) => setSelectedAccessLevel(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All levels</option>
-                {accessLevels.map(level => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="pending">Pending</option>
+            </select>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="all">All Types</option>
+              <option value="i-9">I-9 Forms</option>
+              <option value="w-4">W-4 Forms</option>
+              <option value="direct">Direct Deposit</option>
+            </select>
+            <div className="flex gap-2">
+              <Button onClick={exportToCSVHandler} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                CSV
+              </Button>
+              <Button onClick={exportToExcelHandler} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
             </div>
           </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3 font-medium">Employee</th>
+                  <th className="text-left p-3 font-medium">Document Type</th>
+                  <th className="text-left p-3 font-medium">Document Name</th>
+                  <th className="text-left p-3 font-medium">Upload Date</th>
+                  <th className="text-left p-3 font-medium">Status</th>
+                  <th className="text-left p-3 font-medium">Expiration</th>
+                  <th className="text-left p-3 font-medium">Department</th>
+                  <th className="text-left p-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDocuments.map((doc) => (
+                  <tr key={doc.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3">
+                      <div>
+                        <div className="font-medium">{doc.employee_name}</div>
+                        <div className="text-sm text-gray-500">{doc.employee_code}</div>
+                      </div>
+                    </td>
+                    <td className="p-3">{doc.document_type}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-gray-400" />
+                        {doc.document_name}
+                      </div>
+                    </td>
+                    <td className="p-3">{new Date(doc.upload_date).toLocaleDateString()}</td>
+                    <td className="p-3">
+                      <Badge className={getStatusColor(doc.document_status)}>
+                        {doc.document_status}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      {doc.expiration_date ? new Date(doc.expiration_date).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="p-3">{doc.department}</td>
+                    <td className="p-3">
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          View
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          Download
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredDocuments.length === 0 && (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
+              <p className="text-gray-600">Try adjusting your filters to see more results.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Documents List */}
-      <div className="grid gap-4">
-        {filteredDocuments.map((doc) => (
-          <Card key={doc.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <FileText className="h-5 w-5 text-gray-500" />
-                    <h3 className="font-medium text-gray-900">{doc.document_name}</h3>
-                    <Badge variant="outline" className="text-xs">
-                      {doc.document_type}
-                    </Badge>
-                    <Badge variant={getStatusVariant(doc.document_status)} className="text-xs">
-                      {doc.document_status}
-                    </Badge>
-                    <Badge variant={getAccessLevelVariant(doc.access_level)} className="text-xs">
-                      {doc.access_level}
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
-                    <div className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      <span>{doc.employee_name}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Building className="h-4 w-4" />
-                      <span>{doc.document_category}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(doc.upload_date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FileText className="h-4 w-4" />
-                      <span>{formatFileSize(doc.file_size)}</span>
-                    </div>
-                  </div>
-
-                  {doc.description && (
-                    <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
-                  )}
-
-                  {/* Facsimile Label for simulated documents */}
-                  {doc.tags?.includes('facsimile') && (
-                    <div className="mt-2">
-                      <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
-                        Facsimile Document
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 ml-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePreview(doc)}
-                    disabled={loading}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Preview
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(doc)}
-                    disabled={loading}
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    Download
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredDocuments.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
-            <p className="text-gray-600">Try adjusting your filters or check your access permissions.</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Document Preview Modal */}
-      <Dialog open={!!previewDocument} onOpenChange={() => {
-        setPreviewDocument(null);
-        setPreviewUrl(null);
-      }}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {previewDocument?.document_name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-auto">
-            {previewUrl && previewDocument && (
-              <div className="space-y-4">
-                {/* Document metadata */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <strong>Employee:</strong> {previewDocument.employee_name}
-                    </div>
-                    <div>
-                      <strong>Type:</strong> {previewDocument.document_type}
-                    </div>
-                    <div>
-                      <strong>Category:</strong> {previewDocument.document_category}
-                    </div>
-                    <div>
-                      <strong>Upload Date:</strong> {new Date(previewDocument.upload_date).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Document preview */}
-                <div className="border rounded-lg overflow-hidden">
-                  {previewDocument.mime_type.startsWith('image/') ? (
-                    <img 
-                      src={previewUrl} 
-                      alt={previewDocument.document_name}
-                      className="w-full h-auto max-h-96 object-contain"
-                    />
-                  ) : previewDocument.mime_type === 'application/pdf' ? (
-                    <iframe
-                      src={previewUrl}
-                      className="w-full h-96"
-                      title={previewDocument.document_name}
-                    />
-                  ) : (
-                    <div className="p-8 text-center text-gray-500">
-                      <FileText className="h-12 w-12 mx-auto mb-4" />
-                      <p>Preview not available for this file type.</p>
-                      <p className="text-sm">Use the download button to view the document.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
-  );
+  )
 }
