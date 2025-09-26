@@ -161,7 +161,7 @@ export default function RBACMatrixGrid({
                 userId={row.original.userId}
                 resource={group.resource}
                 permissions={group.permissions}
-                userCells={row.original.cells}
+                userCells={row.original.cells || []}
                 onBulkChange={(effect: any) => {
                   group.permissions.forEach((permission: any) => {
                     onCellClick(row.original.userId, permission.permissionId)
@@ -188,7 +188,8 @@ export default function RBACMatrixGrid({
               ),
               size: 80,
               cell: ({ row }) => {
-                const cell = row.original.cells.find((c: any) => c.permissionId === permission.permissionId)
+                                const cell = (row.original.cells || []).find((c: any) => c.permissionId === permission.permissionId)
+
                 const draftKey = `${row.original.userId}:${permission.permissionId}`
                 const draftState = draftChanges.get(draftKey)
                 
@@ -352,7 +353,7 @@ interface BulkPermissionCellProps {
   userId: string
   resource: string
   permissions: RBACPermissionCatalog[]
-  userCells: RBACPermissionCell[]
+  userCells?: RBACPermissionCell[]
   onBulkChange: (effect: 'allow' | 'deny' | 'none') => void
 }
 
@@ -363,7 +364,7 @@ function BulkPermissionCell({
   userCells, 
   onBulkChange 
 }: BulkPermissionCellProps) {
-  const resourceCells = userCells.filter((cell: any) => 
+    const resourceCells = (userCells || []).filter((cell: any) => 
     permissions.some((p: any) => p.permissionId === cell.permissionId)
   )
 
