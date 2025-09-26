@@ -55,7 +55,7 @@ export default function QuestionnaireDashboard() {
     // In a real application, this would involve an API call to duplicate the questionnaire
     const questionnaireToClone = questionnaires.find(q => q.id === id);
     if (questionnaireToClone) {
-      const newQuestionnaire = { ...questionnaireToClone, id: String(questionnaires.length + 1), title: `${questionnaireToClone.title} (Copy)`, status: 'draft', created_date: new Date().toISOString(), updated_date: new Date().toISOString(), response_count: 0, completion_rate: 0 };
+      const newQuestionnaire: Questionnaire = { ...questionnaireToClone, id: String(questionnaires.length + 1), title: `${questionnaireToClone.title} (Copy)`, status: 'draft', created_date: new Date().toISOString(), updated_date: new Date().toISOString(), response_count: 0, completion_rate: 0 };
       setQuestionnaires(prev => [...prev, newQuestionnaire]);
       alert(`Questionnaire '${questionnaireToClone.title}' cloned successfully as a draft!`);
     }
