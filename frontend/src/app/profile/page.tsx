@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -12,8 +12,14 @@ export default function ProfilePage() {
   const { isDemoMode, isAuthenticated } = useAuth()
 
   // Redirect if not authenticated and not in demo mode
+  useEffect(() => {
+    if (!isAuthenticated && !isDemoMode) {
+      router.push('/login')
+    }
+  }, [isAuthenticated, isDemoMode, router])
+
+  // Show loading or return null during redirect
   if (!isAuthenticated && !isDemoMode) {
-    router.push('/login')
     return null
   }
 
