@@ -387,7 +387,7 @@ export interface RBACMatrixRowUser {
   display_name?: string;
   role: string;
   is_active: boolean;
-  cells: RBACPermissionCell[];
+  cells?: RBACPermissionCell[];
 }
 
 export interface RBACMatrixRowRole {
@@ -395,7 +395,7 @@ export interface RBACMatrixRowRole {
   roleName: string;
   description?: string;
   userCount: number;
-  cells: RBACPermissionCell[];
+  cells?: RBACPermissionCell[];
 }
 
 export interface RBACPermissionCatalog {
