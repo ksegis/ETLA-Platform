@@ -421,6 +421,7 @@ export interface RBACUserDetail {
 
 export interface RBACChangeOperation {
   id: string;
+  type: 'permission_change' | 'role_assignment'; // Add this line
   op: 'assignRole' | 'removeRole' | 'setOverride' | 'clearOverride';
   userId: string;
   permissionId?: string;
