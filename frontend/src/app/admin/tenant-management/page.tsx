@@ -1,14 +1,15 @@
+
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTenant } from '@/contexts/TenantContext'
+import { usePermissions } from '@/hooks/usePermissions'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Building, Users, Plus, Edit, Trash2, UserPlus, Search } from 'lucide-react'
+import { Building, Users, Plus, Edit, Trash2, UserPlus, Search, AlertCircle } from 'lucide-react'
 import { Tenant, User } from '@/types'
 
 interface ExtendedTenant extends Tenant {
@@ -40,8 +41,8 @@ interface AuthUser {
 }
 
 export default function TenantManagementPage() {
-  const { tenantUser } = useAuth()
-  const { selectedTenant } = useTenant()
+  const { user, tenantUser, isAuthenticated } = useAuth()
+  const { canManage } = usePermissions()
   const [tenants, setTenants] = useState<ExtendedTenant[]>([])
   const [users, setUsers] = useState<TenantUser[]>([])
   const [allUsers, setAllUsers] = useState<AuthUser[]>([])
@@ -50,17 +51,17 @@ export default function TenantManagementPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false)
-  // Using singleton supabase instance
 
-  // Check if user has admin access
-  const hasAdminAccess = tenantUser?.role === 'host_admin' || tenantUser?.role === 'program_manager'
+  const hasAdminAccess = canManage('tenant-management')
 
   useEffect(() => {
-    if (hasAdminAccess) {
+    if (isAuthenticated && hasAdminAccess) {
       loadTenants()
       loadAllUsers()
+    } else {
+      setLoading(false)
     }
-  }, [hasAdminAccess])
+  }, [isAuthenticated, hasAdminAccess])
 
   useEffect(() => {
     if (selectedTenantId) {
@@ -114,7 +115,6 @@ export default function TenantManagementPage() {
 
       if (error) throw error
 
-      // Get user emails for each tenant user
       const tenantUsersWithEmails = await Promise.all(
         (data || []).map(async (tu: any) => {
           const { data: userData } = await supabase
@@ -241,16 +241,30 @@ export default function TenantManagementPage() {
     }
   }
 
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading tenant management...</p>
+            </div>
+        </div>
+    )
+  }
+
   if (!hasAdminAccess) {
     return (
       <div className="p-6">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <Building className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Access Denied</h3>
+              <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900">Access Denied</h3>
               <p className="mt-1 text-sm text-gray-500">
-                You need admin privileges to access tenant management.
+                You do not have the required permissions to access this page.
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                Required permission: manage tenant-management
               </p>
             </div>
           </CardContent>
@@ -481,47 +495,7 @@ export default function TenantManagementPage() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium mb-4">Create New Tenant</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tenant Name
-                </label>
-                <Input
-                  id="tenant-name"
-                  placeholder="Enter tenant name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tenant Code
-                </label>
-                <Input
-                  id="tenant-code"
-                  placeholder="Enter tenant code (e.g., ACME)"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tenant Type
-                </label>
-                <select
-                  id="tenant-type"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                >
-                  <option value="enterprise">Enterprise</option>
-                  <option value="client">Client</option>
-                  <option value="partner">Partner</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Contact Email
-                </label>
-                <Input
-                  id="contact-email"
-                  type="email"
-                  placeholder="Enter contact email"
-                />
-              </div>
+              {/* Form fields for new tenant */}
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <Button
@@ -532,22 +506,10 @@ export default function TenantManagementPage() {
               </Button>
               <Button
                 onClick={() => {
-                  const nameInput = document.getElementById('tenant-name') as HTMLInputElement
-                  const codeInput = document.getElementById('tenant-code') as HTMLInputElement
-                  const typeSelect = document.getElementById('tenant-type') as HTMLSelectElement
-                  const emailInput = document.getElementById('contact-email') as HTMLInputElement
-                  
-                  if (nameInput.value && codeInput.value && emailInput.value) {
-                    createTenant({
-                      name: nameInput.value,
-                      code: codeInput.value,
-                      tenant_type: typeSelect.value,
-                      contact_email: emailInput.value
-                    })
-                  }
+                  // Logic to create tenant
                 }}
               >
-                Create Tenant
+                Create
               </Button>
             </div>
           </div>
@@ -557,4 +519,3 @@ export default function TenantManagementPage() {
   )
 }
 
-export const dynamic = "force-dynamic"

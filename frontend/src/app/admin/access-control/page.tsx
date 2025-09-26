@@ -280,7 +280,7 @@ export default function AccessControlPage() {
                 )}
               </TabsContent>
               <TabsContent value="roles">
-                <RolesPermissionsTab />
+                <RolesPermissionsTab selectedTenantId={selectedTenant?.id} />
               </TabsContent>
               <TabsContent value="invitations">Invitations content here.</TabsContent>
               <TabsContent value="notifications">Notifications content here.</TabsContent>
