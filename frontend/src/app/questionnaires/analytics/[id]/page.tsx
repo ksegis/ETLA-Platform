@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   BarChart3,
   PieChart,
@@ -324,7 +325,8 @@ export default function QuestionnaireAnalytics() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-4">
@@ -655,6 +657,7 @@ export default function QuestionnaireAnalytics() {
           </CardContent>
         )}
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

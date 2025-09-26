@@ -189,6 +189,12 @@
       "namedRegex": "^/questionnaires(?:/)?$"
     },
     {
+      "page": "/questionnaires/active",
+      "regex": "^/questionnaires/active(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/questionnaires/active(?:/)?$"
+    },
+    {
       "page": "/questionnaires/builder",
       "regex": "^/questionnaires/builder(?:/)?$",
       "routeKeys": {},
