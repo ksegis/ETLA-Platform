@@ -445,6 +445,7 @@ export interface RBACApplyChangesRequest {
     effect: 'allow' | 'deny' | null; // null to clear override
   }>;
   auditNote?: string;
+  changes?: RBACChangeOperation[];
 }
 
 // ============================================================================
