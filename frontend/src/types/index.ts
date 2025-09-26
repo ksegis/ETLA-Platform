@@ -429,6 +429,7 @@ export interface RBACChangeOperation {
   permissionId?: string;
   effect?: 'allow' | 'deny';
   roleId?: string;
+  timestamp?: string;
 }
 
 export interface RBACApplyChangesRequest {
