@@ -10,6 +10,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { useRouter } from 'next/navigation';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/dialog';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
@@ -76,12 +78,65 @@ const WORK_MODE_LABELS = {
 
 export default function JobsPage() {
   const { currentTenant } = useTenant();
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<string | null>(null);
+
+  const handlePostNewJob = () => {
+    router.push('/talent/jobs/new'); // Assuming a new job creation page
+  };
+
+  const handleJobAction = (jobId: string, action: 'view' | 'edit' | 'archive' | 'duplicate' | 'delete') => {
+    switch (action) {
+      case 'view':
+        router.push(`/talent/jobs/${jobId}`); // Assuming a job details page
+        break;
+      case 'edit':
+        router.push(`/talent/jobs/${jobId}/edit`); // Assuming a job edit page
+        break;
+      case 'archive':
+        // Implement archive logic (e.g., update job status to 'closed')
+        console.log(`Archiving job ${jobId}`);
+        setJobs(prevJobs => prevJobs.map(job => job.id === jobId ? { ...job, status: 'closed' } : job));
+        alert(`Job ${jobId} archived.`);
+        break;
+      case 'duplicate':
+        const jobToDuplicate = jobs.find(job => job.id === jobId);
+        if (jobToDuplicate) {
+          const newJob: Job = {
+            ...jobToDuplicate,
+            id: String(jobs.length + 1), // Simple ID generation for mock data
+            title: `${jobToDuplicate.title} (Copy)`,
+            status: 'draft',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            applications_count: 0,
+          };
+          setJobs(prevJobs => [...prevJobs, newJob]);
+          alert(`Job '${jobToDuplicate.title}' duplicated successfully as a draft.`);
+        }
+        break;
+      case 'delete':
+        setJobToDelete(jobId);
+        break;
+      default:
+        console.warn(`Unknown action: ${action} for job ${jobId}`);
+    }
+  };
+
+  const confirmDeleteJob = () => {
+    if (jobToDelete) {
+      console.log(`Deleting job ${jobToDelete}`);
+      setJobs(prevJobs => prevJobs.filter(job => job.id !== jobToDelete));
+      setJobToDelete(null);
+      alert(`Job ${jobToDelete} deleted.`);
+    }
+  };
 
   useEffect(() => {
     if (currentTenant?.id) {
@@ -249,7 +304,7 @@ export default function JobsPage() {
             <p className="text-gray-600">Manage your job postings and requirements</p>
           </div>
           <Button 
-            onClick={() => setShowCreateModal(true)}
+            onClick={handlePostNewJob}
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -383,12 +438,29 @@ export default function JobsPage() {
                     Edit
                   </Button>
 
-                  <div className="relative">
-                    <Button variant="outline" size="sm">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                    {/* Dropdown menu would go here */}
-                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Job Actions</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Select an action for this job posting.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="flex flex-col gap-2">
+                        <Button variant="outline" onClick={() => handleJobAction(job.id, 'archive')}>Archive</Button>
+                        <Button variant="outline" onClick={() => handleJobAction(job.id, 'duplicate')}>Duplicate</Button>
+                        <Button variant="destructive" onClick={() => handleJobAction(job.id, 'delete')}>Delete</Button>
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </Card>
@@ -447,6 +519,22 @@ export default function JobsPage() {
             </div>
           </div>
         </Card>
+
+        <AlertDialog open={!!jobToDelete} onOpenChange={() => setJobToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the job posting 
+                and remove its data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteJob}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
