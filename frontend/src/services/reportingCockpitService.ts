@@ -337,7 +337,6 @@ export class ReportingCockpitService {
       let query = supabase
         .from('employees')
         .select('*')
-        .in('status', ['active', 'Active'])
         .order('full_name')
 
       if (tenantId) {
@@ -375,9 +374,7 @@ export class ReportingCockpitService {
       let query = supabase
         .from('employees')
         .select('*')
-        .in('status', ['active', 'Active'])
-        .ilike('full_name', `%${searchTerm}%`)
-        .or(`employee_id.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+        .or(`full_name.ilike.%${searchTerm}%,employee_id.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
         .order('full_name');
 
       if (tenantId) {
