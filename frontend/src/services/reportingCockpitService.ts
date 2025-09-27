@@ -1,4 +1,5 @@
 import { supabase, isSupabaseDemoMode } from '@/lib/supabase'
+import Papa from 'papaparse';
 
 // Types based on the actual database schema
 export interface Employee {
@@ -662,9 +663,101 @@ class ReportingCockpitService {
       return isDemoMode ? [] : []
     }
   }
+
+  /**
+   * Get employee job history records
+   */
+  async getEmployeeJobHistory(employeeId?: string, tenantId?: string): Promise<EmployeeJobHistory[]> {
+    try {
+      // Return mock data in demo mode
+      if (isDemoMode) {
+        return [
+          {
+            id: 'job1',
+            employee_id: 'emp1',
+            job_code: 'SSE',
+            job_title: 'Senior Software Engineer',
+            department: 'Engineering',
+            start_date: '2023-01-15',
+            end_date: '2024-01-14',
+            salary: 120000,
+            reason_for_change: 'Promotion',
+            is_current: false,
+            created_at: '2023-01-15T00:00:00Z'
+          },
+          {
+            id: 'job2',
+            employee_id: 'emp1',
+            job_code: 'LDSSE',
+            job_title: 'Lead Software Engineer',
+            department: 'Engineering',
+            start_date: '2024-01-15',
+            salary: 140000,
+            is_current: true,
+            created_at: '2024-01-15T00:00:00Z'
+          }
+        ];
+      }
+
+      let query = supabase
+        .from('employee_job_history')
+        .select('*')
+
+      if (employeeId) {
+        query = query.eq('employee_id', employeeId)
+      }
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching employee job history:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getEmployeeJobHistory:', error)
+      return isDemoMode ? [] : []
+    }
+  }
 }
 
 export const reportingCockpitService = new ReportingCockpitService()
+
+/**
+ * Generic method to export data to CSV
+ */
+export function exportToCSV<T>(data: T[], filename: string): void {
+  if (typeof window === 'undefined') {
+    console.warn('exportToCSV can only be called in a browser environment.');
+    return;
+  }
+
+  // Dynamically import PapaParse to avoid server-side issues and reduce bundle size
+  // PapaParse is imported here to ensure it's only loaded client-side when needed
+  import('papaparse').then(Papa => {
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) { // feature detection
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${filename}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      console.error('Browser does not support HTML5 download attribute. Cannot export CSV.');
+    }
+  }).catch(error => {
+    console.error('Error loading PapaParse for CSV export:', error);
+  });
+}
 
 
 // Additional interfaces for Phase 3 - Interactive Data Grids
@@ -775,4 +868,3 @@ export interface EmployeeJobHistory {
   is_current: boolean
   created_at: string
 }
-

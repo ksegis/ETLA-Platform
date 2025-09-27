@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import reportingCockpitService, { TimecardRecord } from '@/services/reportingCockpitService'
+import { reportingCockpitService, TimecardRecord, exportToCSV } from '@/services/reportingCockpitService'
 import { Clock, Download, Loader2, AlertCircle } from 'lucide-react'
 
 interface TimecardsGridProps {
@@ -100,7 +100,7 @@ const TimecardsGrid: React.FC<TimecardsGridProps> = ({
 
   const exportTimecards = () => {
     if (timecards.length > 0) {
-      reportingCockpitService.exportToCSV(
+      exportToCSV(
         timecards,
         `timecards_${employeeId}_${new Date().toISOString().split('T')[0]}`
       )

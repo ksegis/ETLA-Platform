@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, BenefitRecord } from '@/services/reportingCockpitService'
+import { reportingCockpitService, BenefitRecord, exportToCSV } from '@/services/reportingCockpitService'
 import { Building, Download, Loader2, AlertCircle } from 'lucide-react'
 
 interface BenefitsGridProps {
@@ -102,7 +102,7 @@ const BenefitsGrid: React.FC<BenefitsGridProps> = ({
 
   const exportBenefits = () => {
     if (benefits.length > 0) {
-      reportingCockpitService.exportToCSV(
+      exportToCSV(
         benefits,
         `benefits_${employeeId}_${new Date().toISOString().split('T')[0]}`
       )

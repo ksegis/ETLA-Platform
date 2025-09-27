@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import reportingCockpitService, { EmployeeJobHistory } from '@/services/reportingCockpitService'
+import { reportingCockpitService, EmployeeJobHistory, exportToCSV } from '@/services/reportingCockpitService'
 import { Briefcase, Download, Loader2, AlertCircle, TrendingUp } from 'lucide-react'
 
 interface JobHistoryGridProps {
@@ -124,7 +124,7 @@ const JobHistoryGrid: React.FC<JobHistoryGridProps> = ({
 
   const exportJobHistory = () => {
     if (jobHistory.length > 0) {
-      reportingCockpitService.exportToCSV(
+      exportToCSV(
         jobHistory,
         `job_history_${employeeId}_${new Date().toISOString().split('T')[0]}`
       )
