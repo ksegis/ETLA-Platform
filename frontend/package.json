@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-collapsible": "^1.1.12",
     "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.0.0",
