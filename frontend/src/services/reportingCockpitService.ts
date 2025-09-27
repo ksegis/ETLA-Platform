@@ -683,6 +683,7 @@ class ReportingCockpitService {
             salary: 120000,
             reason_for_change: 'Promotion',
             is_current: false,
+            status: 'inactive',
             created_at: '2023-01-15T00:00:00Z'
           },
           {
@@ -694,6 +695,7 @@ class ReportingCockpitService {
             start_date: '2024-01-15',
             salary: 140000,
             is_current: true,
+            status: 'active',
             created_at: '2024-01-15T00:00:00Z'
           }
         ];
@@ -866,5 +868,6 @@ export interface EmployeeJobHistory {
   salary: number
   reason_for_change?: string
   is_current: boolean
+  status: string; // Added status property
   created_at: string
 }
