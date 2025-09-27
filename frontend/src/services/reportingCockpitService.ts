@@ -150,6 +150,7 @@ export interface BenefitRecord {
   coverage_type?: string; // Added coverage_type property
   start_date: string;
   end_date?: string;
+  termination_date?: string; // Added termination_date property
   status: string;
   employee_contribution: number;
   employer_contribution: number;
@@ -702,6 +703,7 @@ class ReportingCockpitService {
             coverage_type: 'Medical',
             start_date: '2023-01-01',
             end_date: '2024-12-31',
+            termination_date: '2024-12-31',
             status: 'Active',
             employee_contribution: 150,
             employer_contribution: 450,
@@ -720,6 +722,7 @@ class ReportingCockpitService {
             coverage_type: 'Dental',
             start_date: '2023-01-01',
             end_date: '2024-12-31',
+            termination_date: '2024-12-31',
             status: 'Active',
             employee_contribution: 30,
             employer_contribution: 70,
