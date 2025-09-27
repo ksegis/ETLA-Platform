@@ -928,6 +928,32 @@ class ReportingCockpitService {
       return isDemoMode ? [] : []
     }
   }
+
+  async getDepartments(tenantId?: string): Promise<string[]> {
+    try {
+      if (isDemoMode) {
+        return ['Engineering', 'Marketing', 'Sales', 'Human Resources'];
+      }
+
+      const { data, error } = await supabase
+        .from('employees')
+        .select('department')
+        .not('department', 'is', null)
+        .eq('tenant_id', tenantId);
+
+      if (error) {
+        console.error('Error fetching departments:', error);
+        throw error;
+      }
+
+      const departments = [...new Set(data.map(d => d.department))];
+
+      return departments;
+    } catch (error) {
+      console.error('Error in getDepartments:', error);
+      return isDemoMode ? ['Engineering', 'Marketing', 'Sales', 'Human Resources'] : [];
+    }
+  }
 }
 
 export const reportingCockpitService = new ReportingCockpitService();
