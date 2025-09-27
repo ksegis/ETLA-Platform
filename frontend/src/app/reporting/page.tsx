@@ -160,11 +160,14 @@ export default function ReportingPage() {
   }, [])
 
   // Load initial data on component mount
+  const { isStable: isAuthStable } = useAuth()
+  const { isLoading: isTenantLoading } = useTenant()
+
   useEffect(() => {
-    if (mounted) {
+    if (mounted && isAuthStable && !isTenantLoading && user) {
       loadInitialData()
     }
-  }, [accessibleTenantIds.join(','), mounted])
+  }, [accessibleTenantIds.join(","), mounted, isAuthStable, isTenantLoading, user])
 
   const loadInitialData = async () => {
     if (!user) {
