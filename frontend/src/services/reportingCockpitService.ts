@@ -83,6 +83,47 @@ export interface EmployeeDocumentCount {
   document_count: number
 }
 
+export interface PayStatement {
+  id: string;
+  check_number: string;
+  employee_id: string;
+  employee_name: string;
+  pay_date: string;
+  pay_period_start: string;
+  pay_period_end: string;
+  gross_pay: number;
+  net_pay: number;
+  regular_hours: number;
+  overtime_hours: number;
+  regular_pay: number;
+  overtime_pay: number;
+  federal_tax_withheld: number;
+  state_tax_withheld: number;
+  social_security_tax: number;
+  medicare_tax: number;
+  ytd_gross: number;
+  ytd_net: number;
+  check_status: string;
+  tenant_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface EmployeeJobHistory {
+  id: string
+  employee_id: string
+  job_code: string
+  job_title: string
+  department: string
+  start_date: string
+  end_date?: string
+  salary: number
+  reason_for_change?: string
+  is_current: boolean
+  status: string; // Added status property
+  created_at: string
+}
+
 export interface EnhancedEmployeeData {
   employee: Employee
   demographics?: EmployeeDemographics
@@ -500,10 +541,7 @@ class ReportingCockpitService {
         return []
       }
 
-      // Get unique departments
-      const uniqueDepartments = new Set(data?.map((item: any) => item.department).filter(Boolean))
-      const departments = Array.from(uniqueDepartments) as string[]
-      return departments.sort()
+      return data.map(d => d.department) || []
     } catch (error) {
       console.error('Error in getDepartments:', error)
       return isDemoMode ? ['Engineering', 'Marketing', 'Sales', 'Finance', 'HR', 'Operations'] : []
@@ -511,129 +549,124 @@ class ReportingCockpitService {
   }
 
   /**
-   * Search employees by name or employee ID
+   * Get pay statements for an employee within a date range
    */
-  async searchEmployees(searchTerm: string, tenantId?: string): Promise<Employee[]> {
-    try {
-      // Return mock data in demo mode
-      if (isDemoMode) {
-        return mockEmployees.filter(emp => 
-          emp.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (emp.employee_code && emp.employee_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (emp.email && emp.email.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-      }
-      
-      let query = supabase
-        .from('employees')
-        .select('*')
-        .in('status', ['active', 'Active'])
-
-      if (tenantId) {
-        query = query.eq('tenant_id', tenantId)
-      }
-
-      // Search in multiple fields
-      query = query.or(`
-        full_name.ilike.%${searchTerm}%,
-        first_name.ilike.%${searchTerm}%,
-        last_name.ilike.%${searchTerm}%,
-        employee_id.ilike.%${searchTerm}%,
-        employee_code.ilike.%${searchTerm}%,
-        email.ilike.%${searchTerm}%
-      `)
-
-      query = query.order('full_name').limit(50)
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error searching employees:', error)
-        throw error
-      }
-
-      return data || []
-    } catch (error) {
-      console.error('Error in searchEmployees:', error)
-      return isDemoMode ? mockEmployees : []
-    }
-  }
-
-  /**
-   * Calculate age from birth date
-   */
-  calculateAge(birthDate: string | null | undefined): number | null {
-    if (!birthDate) return null
-    
-    const birth = new Date(birthDate)
-    const today = new Date()
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--
-    }
-    
-    return age
-  }
-
-  /**
-   * Format currency values
-   */
-  formatCurrency(amount: number | null | undefined): string {
-    if (amount === null || amount === undefined) return '$0'
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
-  }
-
-  /**
-   * Format hours
-   */
-  formatHours(hours: number | null | undefined): string {
-    if (hours === null || hours === undefined) return '0'
-    return hours.toLocaleString('en-US', { maximumFractionDigits: 1 })
-  }
-
-  /**
-   * Get benefit records for an employee
-   */
-  async getBenefitRecords(employeeId?: string, tenantId?: string): Promise<BenefitRecord[]> {
+  async getPayStatements(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<PayStatement[]> {
     try {
       // Return mock data in demo mode
       if (isDemoMode) {
         return [
           {
-            id: 'ben1',
-            employee_id: 'emp1',
-            benefit_type: 'Health Insurance',
-            plan_name: 'PPO Gold',
-            coverage_type: 'Family',
-            enrollment_date: '2023-01-15',
-            effective_date: '2023-02-01',
-            employee_contribution: 250,
-            employer_contribution: 500,
-            coverage_amount: 10000,
-            status: 'active',
-            created_at: '2023-01-15T00:00:00Z'
+            id: 'ps1',
+            check_number: '1001',
+            employee_id: employeeId,
+            employee_name: 'John Doe',
+            pay_date: '2024-03-15',
+            pay_period_start: '2024-03-01',
+            pay_period_end: '2024-03-14',
+            gross_pay: 2500,
+            net_pay: 1800,
+            regular_hours: 80,
+            overtime_hours: 0,
+            regular_pay: 2000,
+            overtime_pay: 0,
+            federal_tax_withheld: 200,
+            state_tax_withheld: 50,
+            social_security_tax: 100,
+            medicare_tax: 25,
+            ytd_gross: 15000,
+            ytd_net: 10800,
+            check_status: 'Paid'
           },
           {
-            id: 'ben2',
-            employee_id: 'emp1',
-            benefit_type: '401k',
-            plan_name: 'Retirement Plus',
-            coverage_type: 'N/A',
-            enrollment_date: '2023-01-15',
-            effective_date: '2023-02-01',
-            employee_contribution: 500,
-            employer_contribution: 250,
-            coverage_amount: 0,
-            status: 'active',
-            created_at: '2023-01-15T00:00:00Z'
+            id: 'ps2',
+            check_number: '1002',
+            employee_id: employeeId,
+            employee_name: 'John Doe',
+            pay_date: '2024-03-29',
+            pay_period_start: '2024-03-15',
+            pay_period_end: '2024-03-28',
+            gross_pay: 2500,
+            net_pay: 1800,
+            regular_hours: 80,
+            overtime_hours: 0,
+            regular_pay: 2000,
+            overtime_pay: 0,
+            federal_tax_withheld: 200,
+            state_tax_withheld: 50,
+            social_security_tax: 100,
+            medicare_tax: 25,
+            ytd_gross: 17500,
+            ytd_net: 12600,
+            check_status: 'Paid'
+          }
+        ];
+      }
+
+      let query = supabase
+        .from('pay_statements')
+        .select('*')
+        .eq('employee_id', employeeId)
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+      if (startDate) {
+        query = query.gte('pay_date', startDate)
+      }
+      if (endDate) {
+        query = query.lte('pay_date', endDate)
+      }
+
+      query = query.order('pay_date', { ascending: false })
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching pay statements:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getPayStatements:', error)
+      return isDemoMode ? [] : []
+    }
+  }
+
+  /**
+   * Get benefit records for an employee
+   */
+  async getBenefitRecords(employeeId: string, tenantId?: string): Promise<any[]> {
+    try {
+      // Return mock data in demo mode
+      if (isDemoMode) {
+        return [
+          {
+            id: 'b1',
+            employee_id: employeeId,
+            benefit_type: 'Health Insurance',
+            provider: 'Blue Cross Blue Shield',
+            start_date: '2023-01-01',
+            end_date: '2024-12-31',
+            status: 'Active',
+            employee_contribution: 150,
+            employer_contribution: 450,
+            coverage_level: 'Family',
+            created_at: '2023-01-01T00:00:00Z'
+          },
+          {
+            id: 'b2',
+            employee_id: employeeId,
+            benefit_type: 'Dental Insurance',
+            provider: 'Delta Dental',
+            start_date: '2023-01-01',
+            end_date: '2024-12-31',
+            status: 'Active',
+            employee_contribution: 30,
+            employer_contribution: 70,
+            coverage_level: 'Individual',
+            created_at: '2023-01-01T00:00:00Z'
           }
         ];
       }
@@ -641,10 +674,7 @@ class ReportingCockpitService {
       let query = supabase
         .from('benefits')
         .select('*')
-
-      if (employeeId) {
-        query = query.eq('employee_id', employeeId)
-      }
+        .eq('employee_id', employeeId)
 
       if (tenantId) {
         query = query.eq('tenant_id', tenantId)
@@ -665,18 +695,18 @@ class ReportingCockpitService {
   }
 
   /**
-   * Get employee job history records
+   * Get employee job history
    */
-  async getEmployeeJobHistory(employeeId?: string, tenantId?: string): Promise<EmployeeJobHistory[]> {
+  async getEmployeeJobHistory(employeeId: string, tenantId?: string): Promise<EmployeeJobHistory[]> {
     try {
       // Return mock data in demo mode
       if (isDemoMode) {
         return [
           {
             id: 'job1',
-            employee_id: 'emp1',
+            employee_id: employeeId,
             job_code: 'SSE',
-            job_title: 'Senior Software Engineer',
+            job_title: 'Software Engineer',
             department: 'Engineering',
             start_date: '2023-01-15',
             end_date: '2024-01-14',
@@ -688,7 +718,7 @@ class ReportingCockpitService {
           },
           {
             id: 'job2',
-            employee_id: 'emp1',
+            employee_id: employeeId,
             job_code: 'LDSSE',
             job_title: 'Lead Software Engineer',
             department: 'Engineering',
@@ -702,21 +732,20 @@ class ReportingCockpitService {
       }
 
       let query = supabase
-        .from('employee_job_history')
+        .from('job_history')
         .select('*')
-
-      if (employeeId) {
-        query = query.eq('employee_id', employeeId)
-      }
+        .eq('employee_id', employeeId)
 
       if (tenantId) {
         query = query.eq('tenant_id', tenantId)
       }
 
+      query = query.order('start_date', { ascending: false })
+
       const { data, error } = await query
 
       if (error) {
-        console.error('Error fetching employee job history:', error)
+        console.error('Error fetching job history:', error)
         throw error
       }
 
@@ -726,148 +755,152 @@ class ReportingCockpitService {
       return isDemoMode ? [] : []
     }
   }
+
+  /**
+   * Get tax records for an employee
+   */
+  async getTaxRecords(employeeId: string, tenantId?: string): Promise<any[]> {
+    try {
+      // Return mock data in demo mode
+      if (isDemoMode) {
+        return [
+          {
+            id: 't1',
+            employee_id: employeeId,
+            tax_year: 2023,
+            form_type: 'W-2',
+            document_url: '#',
+            federal_wages: 120000,
+            federal_tax_withheld: 15000,
+            state_wages: 120000,
+            state_tax_withheld: 5000,
+            local_wages: 120000,
+            local_tax_withheld: 1000,
+            created_at: '2024-01-20T00:00:00Z'
+          },
+          {
+            id: 't2',
+            employee_id: employeeId,
+            tax_year: 2022,
+            form_type: 'W-2',
+            document_url: '#',
+            federal_wages: 110000,
+            federal_tax_withheld: 13000,
+            state_wages: 110000,
+            state_tax_withheld: 4500,
+            local_wages: 110000,
+            local_tax_withheld: 900,
+            created_at: '2023-01-20T00:00:00Z'
+          }
+        ];
+      }
+
+      let query = supabase
+        .from('tax_records')
+        .select('*')
+        .eq('employee_id', employeeId)
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      query = query.order('tax_year', { ascending: false })
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching tax records:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getTaxRecords:', error)
+      return isDemoMode ? [] : []
+    }
+  }
+
+  /**
+   * Get timecard records for an employee within a date range
+   */
+  async getTimecards(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<any[]> {
+    try {
+      // Return mock data in demo mode
+      if (isDemoMode) {
+        return [
+          {
+            id: 'tc1',
+            employee_id: employeeId,
+            work_date: '2024-03-10',
+            hours_worked: 8,
+            project: 'Project Alpha',
+            task: 'Development',
+            status: 'Approved',
+            created_at: '2024-03-10T00:00:00Z'
+          },
+          {
+            id: 'tc2',
+            employee_id: employeeId,
+            work_date: '2024-03-11',
+            hours_worked: 8.5,
+            project: 'Project Alpha',
+            task: 'Testing',
+            status: 'Approved',
+            created_at: '2024-03-11T00:00:00Z'
+          }
+        ];
+      }
+
+      let query = supabase
+        .from('timecards')
+        .select('*')
+        .eq('employee_id', employeeId)
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+      if (startDate) {
+        query = query.gte('work_date', startDate)
+      }
+      if (endDate) {
+        query = query.lte('work_date', endDate)
+      }
+
+      query = query.order('work_date', { ascending: false })
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching timecards:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getTimecards:', error)
+      return isDemoMode ? [] : []
+    }
+  }
 }
 
-export const reportingCockpitService = new ReportingCockpitService()
+export const reportingCockpitService = new ReportingCockpitService();
 
-/**
- * Generic method to export data to CSV
- */
-export function exportToCSV<T>(data: T[], filename: string): void {
-  if (typeof window === 'undefined') {
-    console.warn('exportToCSV can only be called in a browser environment.');
+export const exportToCSV = <T>(data: T[], filename: string) => {
+  if (data.length === 0) {
+    console.warn('No data to export.');
     return;
   }
 
-  // Dynamically import PapaParse to avoid server-side issues and reduce bundle size
-  // PapaParse is imported here to ensure it's only loaded client-side when needed
-  import('papaparse').then(Papa => {
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.download !== undefined) { // feature detection
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${filename}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      console.error('Browser does not support HTML5 download attribute. Cannot export CSV.');
-    }
-  }).catch(error => {
-    console.error('Error loading PapaParse for CSV export:', error);
-  });
-}
-
-
-// Additional interfaces for Phase 3 - Interactive Data Grids
-export interface PayStatement {
-  id: string
-  check_number: string
-  employee_id: string
-  employee_name: string
-  pay_date: string
-  pay_period_start: string
-  pay_period_end: string
-  gross_pay: number
-  net_pay: number
-  regular_hours: number
-  overtime_hours: number
-  regular_pay: number
-  overtime_pay: number
-  bonus_amount?: number
-  commission_amount?: number
-  federal_tax_withheld: number
-  state_tax_withheld: number
-  social_security_tax: number
-  medicare_tax: number
-  pretax_deductions_total?: number
-  posttax_deductions_total?: number
-  ytd_gross: number
-  ytd_net: number
-  check_status: string
-}
-
-export interface TaxRecord {
-  id: string
-  tax_record_id: string
-  employee_id: string
-  tax_year: number
-  form_type: string
-  wages_tips_compensation: number
-  federal_income_tax_withheld: number
-  social_security_wages: number
-  social_security_tax_withheld: number
-  medicare_wages: number
-  medicare_tax_withheld: number
-  state_wages: number
-  state_income_tax: number
-  document_status: string
-  issue_date: string
-  created_at: string
-}
-
-export interface BenefitRecord {
-  id: string
-  employee_id: string
-  benefit_type: string
-  plan_name: string
-  coverage_type: string
-  enrollment_date: string
-  effective_date: string
-  termination_date?: string
-  employee_contribution: number
-  employer_contribution: number
-  coverage_amount: number
-  status: string
-  created_at: string
-}
-
-export interface TimecardRecord {
-  id: string
-  employee_id: string
-  work_date: string
-  clock_in: string
-  clock_out: string
-  break_minutes: number
-  regular_hours: number
-  overtime_hours: number
-  total_hours: number
-  hourly_rate: number
-  total_pay: number
-  status: string
-  created_at: string
-}
-
-export interface JobPosition {
-  id: string
-  job_code: string
-  job_title: string
-  department: string
-  job_family: string
-  job_level: string
-  pay_grade: string
-  min_salary: number
-  max_salary: number
-  job_description: string
-  requirements: string[]
-  status: string
-  created_at: string
-}
-
-export interface EmployeeJobHistory {
-  id: string
-  employee_id: string
-  job_code: string
-  job_title: string
-  department: string
-  start_date: string
-  end_date?: string
-  salary: number
-  reason_for_change?: string
-  is_current: boolean
-  status: string; // Added status property
-  created_at: string
-}
+  const csv = Papa.unparse(data);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
