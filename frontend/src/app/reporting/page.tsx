@@ -55,7 +55,7 @@ export default function ReportingPage() {
       // If we have a tenant, filter the results
       let filteredData = data || []
       if (selectedTenant?.id) {
-        filteredData = (data || []).filter(emp => emp.tenant_id === selectedTenant.id)
+        filteredData = (data || []).filter((emp: any) => emp.tenant_id === selectedTenant.id)
         console.log(`🎯 Filtered to ${filteredData.length} employees for tenant ${selectedTenant.id}`)
       } else {
         console.log('⚠️ No tenant selected, showing all employees')
