@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/Badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { useTenant } from '@/contexts/TenantContext'
+import { useTenant, useAccessibleTenantIds } from '@/contexts/TenantContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 import { 
   Search, 
@@ -132,6 +133,7 @@ interface ReportingCockpitState {
 export default function ReportingPage() {
   const { selectedTenant } = useTenant()
   const { user } = useAuth()
+  const accessibleTenantIds = useAccessibleTenantIds()
   const [mounted, setMounted] = useState(false)
   const [state, setState] = useState<ReportingCockpitState>({
     selectedEmployee: null,
@@ -159,28 +161,64 @@ export default function ReportingPage() {
 
   // Load initial data on component mount
   useEffect(() => {
-    if (mounted && selectedTenant) {
+    if (mounted) {
       loadInitialData()
     }
-  }, [selectedTenant, mounted])
+  }, [accessibleTenantIds.join(','), mounted])
 
   const loadInitialData = async () => {
-    if (!mounted) return
+    const tenantIds = accessibleTenantIds
+    
+    if (!tenantIds || tenantIds.length === 0) {
+      console.log('No accessible tenants, skipping load')
+      setState(prev => ({ ...prev, loading: false }))
+      return
+    }
     
     setState(prev => ({ ...prev, loading: true, error: null }))
     
     try {
-      const tenantId = selectedTenant?.id
+      console.log('Loading employee data for tenants:', tenantIds)
       
-      // Dynamically import service to avoid SSR issues
-      const { ReportingCockpitService } = await import('@/services/reportingCockpitService')
-      const reportingService = new ReportingCockpitService()
-      
-      // Load employees and departments in parallel
-      const [employees, departments] = await Promise.all([
-        reportingService.getEmployees(tenantId),
-        reportingService.getDepartments(tenantId)
-      ])
+      // Load employees with error handling
+      let employees: Employee[] = []
+      try {
+        const { data: employeesData, error: employeesError } = await supabase
+          .from('employees')
+          .select('*')
+          .in('tenant_id', tenantIds)
+          .order('created_at', { ascending: false })
+        
+        if (employeesError) {
+          console.error('Employees query error:', employeesError)
+          employees = []
+        } else {
+          employees = employeesData || []
+        }
+      } catch (err) {
+        console.error('Employees query error:', err)
+        employees = []
+      }
+
+      // Load departments with error handling
+      let departments: Department[] = []
+      try {
+        const { data: departmentsData, error: departmentsError } = await supabase
+          .from('departments')
+          .select('*')
+          .in('tenant_id', tenantIds)
+          .order('name', { ascending: true })
+        
+        if (departmentsError) {
+          console.error('Departments query error:', departmentsError)
+          departments = []
+        } else {
+          departments = departmentsData || []
+        }
+      } catch (err) {
+        console.error('Departments query error:', err)
+        departments = []
+      }
       
       console.log('✅ Loaded employees:', employees.length)
       console.log('✅ Loaded departments:', departments.length)
