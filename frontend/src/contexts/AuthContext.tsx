@@ -57,11 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantUser, setTenantUser] = useState<TenantUser | null>(null)
 
   // Computed properties for RBAC
-  const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                     process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://your-project.supabase.co'
+  const isDemoMode = false // Disable demo mode - use real authentication
   const isAuthenticated = !!user && !!session && !loading
   const currentUserId = user?.id || null
   const currentTenantId = tenantUser?.tenant_id || null
