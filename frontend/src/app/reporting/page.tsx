@@ -27,9 +27,10 @@ export default function ReportingPage() {
   const [searchTerm, setSearchTerm] = useState('')
 
   const loadEmployees = async () => {
-    console.log('🔍 Loading employees...')
-    console.log('User:', user)
-    console.log('Selected Tenant:', selectedTenant)
+    alert('Load Employees function called!')
+    console.log('🚀 Starting employee load process...')
+    console.log('👤 Current user:', user)
+    console.log('🏢 Selected tenant:', selectedTenant)
     
     setLoading(true)
     try {
