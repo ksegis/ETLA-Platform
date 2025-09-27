@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit', 'talent-management', 'enhanced-reporting'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit', 'talent-management', 'administration'])
   const router = useRouter()
   const pathname = usePathname()
 
@@ -82,8 +82,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       items: [
         { name: 'Work Requests', href: '/work-requests', icon: FileText },
         { name: 'Project Management', href: '/project-management', icon: Calendar },
-        { name: 'Reporting', href: '/reporting', icon: TrendingUp },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true }
+        { name: 'Reporting Cockpit', href: '/reporting', icon: TrendingUp, isNew: true },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart }
       ]
     },
     {
@@ -147,21 +147,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'Offers', href: '/talent/offers', icon: FileText }
       ]
     },
-    {
-      id: 'enhanced-reporting',
-      title: 'Enhanced Reporting',
-      icon: PieChart,
-      color: 'text-cyan-600',
-      bgColor: 'bg-cyan-600',
-      hoverColor: 'hover:bg-cyan-50',
-      textColor: 'text-cyan-900',
-      items: [
-        { name: 'Employee Documents', href: '/reporting/employee-documents', icon: FileText },
-        { name: 'Tax Records', href: '/reporting/tax-records', icon: DollarSign },
-        { name: 'Timecard Reports', href: '/reporting/timecards', icon: Clock },
-        { name: 'Custom Reports', href: '/reporting/custom', icon: Settings }
-      ]
-    },
+
     {
       id: 'administration',
       title: 'Administration',
