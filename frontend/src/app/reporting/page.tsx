@@ -27,7 +27,6 @@ export default function ReportingPage() {
   const [searchTerm, setSearchTerm] = useState('')
 
   const loadEmployees = async () => {
-    alert('Load Employees function called!')
     console.log('🚀 Starting employee load process...')
     console.log('👤 Current user:', user)
     console.log('🏢 Selected tenant:', selectedTenant)
@@ -72,6 +71,14 @@ export default function ReportingPage() {
     }
   }
 
+  // Automatically load employees when user and tenant are available
+  useEffect(() => {
+    if (user && selectedTenant) {
+      console.log('🔄 Auto-loading employees on page load...')
+      loadEmployees()
+    }
+  }, [user, selectedTenant])
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50 p-6">
@@ -86,9 +93,9 @@ export default function ReportingPage() {
                 Unified employee reporting and document management
               </p>
             </div>
-            <Button onClick={loadEmployees} disabled={loading}>
+            <Button onClick={loadEmployees} disabled={loading} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
-              {loading ? 'Loading...' : 'Load Employees'}
+              {loading ? 'Refreshing...' : 'Refresh'}
             </Button>
           </div>
         </div>
@@ -172,12 +179,14 @@ export default function ReportingPage() {
                 <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
                 <p className="text-gray-500 mb-4">
-                  Click "Load Employees" to fetch employee data from the database.
+                  {loading ? 'Loading employees...' : 'No employees found for the current tenant.'}
                 </p>
-                <Button onClick={loadEmployees} disabled={loading}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {loading ? 'Loading...' : 'Load Employees'}
-                </Button>
+                {!loading && (
+                  <Button onClick={loadEmployees} disabled={loading} variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
