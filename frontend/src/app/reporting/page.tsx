@@ -1,674 +1,645 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/Badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { useTenant, useAccessibleTenantIds } from '@/contexts/TenantContext'
-import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
-
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  FileText, 
-  User, 
-  Calendar, 
-  DollarSign,
-  Clock,
-  Building,
+import {
   Users,
+  Building,
+  FileText,
+  Clock,
+  DollarSign,
+  Search,
+  Filter,
+  Download,
   Eye,
-  Settings,
-  RefreshCw,
-  BarChart3,
-  PieChart,
-  TrendingUp,
-  Database,
-  Briefcase,
-  Loader2,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
+  LayoutGrid,
+  List,
+  User,
+  Calendar,
   MapPin,
   Phone,
   Mail,
-  CreditCard
+  Briefcase,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  RefreshCw
 } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Badge } from '@/components/ui/Badge'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useAuth } from '@/contexts/AuthContext'
+import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
+import { supabase } from '@/lib/supabase'
 
+// Employee interface matching the database schema
 interface Employee {
   id: string
+  tenant_id: string
   employee_id: string
-  employee_code?: string
-  full_name: string
-  first_name?: string
-  last_name?: string
+  first_name: string
+  last_name: string
   email?: string
-  job_title?: string
-  department?: string
-  position?: string
-  hire_date?: string
-  status?: string
-  employment_status?: string
-  employment_type?: string
-  work_location?: string
-  manager_supervisor?: string
-  annual_salary?: number
-  pay_type?: string
-  pay_frequency?: string
-  tenant_id?: string
-  created_at?: string
-  updated_at?: string
-}
-
-interface Department {
-  id: string
-  name: string
-  tenant_id?: string
-  created_at?: string
-  updated_at?: string
-}
-
-interface EmployeeDemographics {
-  id?: string
-  employee_id?: string
   date_of_birth?: string
-  phone_mobile?: string
+  hire_date: string
+  termination_date?: string
+  status?: string
+  department?: string
+  job_title?: string
+  pay_frequency?: string
+  pay_type?: string
+  base_pay_rate?: number
+  annual_salary?: number
   address_line1?: string
   address_line2?: string
   city?: string
   state?: string
   zip_code?: string
   country?: string
-  emergency_contact_name?: string
-  emergency_contact_phone?: string
-  marital_status?: string
-  gender?: string
-  ethnicity?: string
-  veteran_status?: string
-  disability_status?: string
-  tenant_id?: string
-  created_at?: string
-  updated_at?: string
+  employment_status?: string
+  employment_type?: string
+  work_location?: string
+  position?: string
+  home_department?: string
+  employee_code?: string
+  employee_name?: string
+  full_name?: string
+  preferred_name?: string
+  cost_center?: string
+  division?: string
+  location_branch?: string
+  job_code?: string
+  flsa_status?: string
+  manager_supervisor?: string
+  hr_business_partner?: string
+  home_address?: string
+  union_status?: string
+  eeo_categories?: string
+  created_at: string
+  updated_at: string
 }
 
-interface PayrollSummary {
-  employee_id?: string
-  ytd_gross?: number
-  ytd_net?: number
-  total_hours_ytd?: number
-  latest_pay_date?: string
-  total_statements?: number
+// Department interface
+interface Department {
+  id: string
+  tenant_id: string
+  name: string
+  description?: string
+  manager?: string
+  budget?: number
+  created_at: string
+  updated_at: string
 }
 
-interface EnhancedEmployeeData {
-  employee: Employee
-  demographics?: EmployeeDemographics
-  payrollSummary?: PayrollSummary
-  documentCount?: number
+// Statistics interface
+interface EmployeeStats {
+  totalEmployees: number
+  activeEmployees: number
+  departments: number
+  selectedEmployee: string | null
 }
 
-interface ReportingCockpitState {
-  selectedEmployee: Employee | null
-  enhancedEmployeeData: EnhancedEmployeeData | null
-  dateRange: {
-    start: string
-    end: string
-  }
-  departmentFilter: string
-  searchTerm: string
-  loading: boolean
-  loadingEnhancedData: boolean
-  employees: Employee[]
-  departments: Department[]
-  error: string | null
+// Data type tabs
+type DataType = 'pay_statements' | 'timecards' | 'tax_records' | 'benefits' | 'job_history' | 'documents'
+
+const dataTypeConfig = {
+  pay_statements: { label: 'Pay Statements', shortLabel: 'Pay', icon: DollarSign, color: 'bg-green-100 text-green-700' },
+  timecards: { label: 'Timecards', shortLabel: 'Time', icon: Clock, color: 'bg-blue-100 text-blue-700' },
+  tax_records: { label: 'Tax Records', shortLabel: 'Tax', icon: FileText, color: 'bg-red-100 text-red-700' },
+  benefits: { label: 'Benefits', shortLabel: 'Benefits', icon: CheckCircle, color: 'bg-purple-100 text-purple-700' },
+  job_history: { label: 'Job History', shortLabel: 'History', icon: TrendingUp, color: 'bg-orange-100 text-orange-700' },
+  documents: { label: 'Documents', shortLabel: 'Docs', icon: FileText, color: 'bg-gray-100 text-gray-700' }
 }
 
-export default function ReportingPage() {
+export default function ReportingCockpitPage() {
+  const { user } = useAuth()
   const { selectedTenant } = useTenant()
-  const { user } = useAuth() // Re-add user here
   const accessibleTenantIds = useAccessibleTenantIds()
-  const [mounted, setMounted] = useState(false)
+  const { isMultiTenant, availableTenants } = useMultiTenantMode()
 
-  const [state, setState] = useState<ReportingCockpitState>({
-    selectedEmployee: null,
-    enhancedEmployeeData: null,
-    dateRange: {
-      start: '',
-      end: ''
-    },
-    departmentFilter: '',
-    searchTerm: '',
-    loading: true,
-    loadingEnhancedData: false,
-    employees: [],
-    departments: [],
-    error: null
+  // State management
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [activeDataType, setActiveDataType] = useState<DataType>('pay_statements')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('')
+  const [departmentFilter, setDepartmentFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+  
+  // View mode
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+
+  // Statistics
+  const [stats, setStats] = useState<EmployeeStats>({
+    totalEmployees: 0,
+    activeEmployees: 0,
+    departments: 0,
+    selectedEmployee: null
   })
 
-  const [activeDataTab, setActiveDataTab] = useState('pay-statements')
-  const [filtersOpen, setFiltersOpen] = useState(false)
-
-  // Ensure component only renders on client side
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Load initial data on component mount
-  const { isStable: isAuthStable } = useAuth()
-  const { isLoading: isTenantLoading } = useTenant()
-
-  useEffect(() => {
-    console.log("ReportingPage useEffect triggered:", {
-      mounted,
-      isAuthStable,
-      isTenantLoading,
-      user: !!user,
-      accessibleTenantIds: accessibleTenantIds.join(","),
-    })
-    if (mounted && isAuthStable && !isTenantLoading && user) {
-      console.log("Calling loadInitialData...")
-      loadInitialData()
-    } else if (mounted && isAuthStable && !isTenantLoading && !user) {
-      console.log("Auth stable, tenant not loading, but user is null. Not loading data.")
-    } else if (mounted && isAuthStable && !isTenantLoading && user && accessibleTenantIds.length === 0) {
-      console.log("Auth stable, tenant not loading, user present, but accessibleTenantIds is empty. Not loading data.")
-    }
-  }, [accessibleTenantIds.join(","), mounted, isAuthStable, isTenantLoading, user])
-
-  const loadInitialData = async () => {
-    if (!user) {
-      console.log("User not authenticated, skipping data load.")
-      setState(prev => ({ ...prev, loading: false }))
-      return
-    }
-
+  // Load data using proven pattern from Project Management and Work Requests
+  const loadData = async () => {
     const tenantIds = accessibleTenantIds
     
     if (!tenantIds || tenantIds.length === 0) {
-      console.log("No accessible tenants, skipping data load.")
-      setState(prev => ({ ...prev, loading: false }))
+      console.log('No accessible tenants, skipping load')
+      setLoading(false)
       return
     }
     
-    setState(prev => ({ ...prev, loading: true, error: null }))
+    setLoading(true)
+    setError(null)
     
     try {
-      console.log("Loading employee data for tenants:", tenantIds)
+      console.log('Loading employee data for tenants:', tenantIds)
       
       // Load employees with error handling
-      let employees: Employee[] = []
       try {
         const { data: employeesData, error: employeesError } = await supabase
-          .from("employees")
-          .select("*")
-          .in("tenant_id", tenantIds)
-          .order("created_at", { ascending: false })
+          .from('employees')
+          .select('*')
+          .in('tenant_id', tenantIds)
+          .order('created_at', { ascending: false })
         
         if (employeesError) {
-          console.error("Employees query error:", employeesError)
-          employees = []
+          console.error('Employees query error:', employeesError)
+          setEmployees([])
         } else {
-          employees = employeesData || []
+          console.log('✅ Loaded employees:', employeesData?.length || 0)
+          setEmployees(employeesData || [])
         }
       } catch (err) {
-        console.error("Employees query error:", err)
-        employees = []
+        console.error('Employees query error:', err)
+        setEmployees([])
       }
 
       // Load departments with error handling
-      let departments: Department[] = []
       try {
         const { data: departmentsData, error: departmentsError } = await supabase
-          .from("departments")
-          .select("*")
-          .in("tenant_id", tenantIds)
-          .order("name", { ascending: true })
+          .from('departments')
+          .select('*')
+          .in('tenant_id', tenantIds)
+          .order('name', { ascending: true })
         
         if (departmentsError) {
-          console.error("Departments query error:", departmentsError)
-          departments = []
+          console.error('Departments query error:', departmentsError)
+          setDepartments([])
         } else {
-          departments = departmentsData || []
+          console.log('✅ Loaded departments:', departmentsData?.length || 0)
+          setDepartments(departmentsData || [])
         }
       } catch (err) {
-        console.error("Departments query error:", err)
-        departments = []
+        console.error('Departments query error:', err)
+        setDepartments([])
       }
-      
-      console.log("✅ Loaded employees:", employees.length)
-      console.log("✅ Loaded departments:", departments.length)
-      
-      setState(prev => ({ 
-        ...prev, 
-        employees,
-        departments,
-        loading: false 
-      }))
+
     } catch (error) {
-      console.error("Error loading initial data:", error)
-      setState(prev => ({ 
-        ...prev, 
-        loading: false,
-        error: "Failed to load employee data. Please try again."
-      }))
+      console.error('Error loading data:', error)
+      setError('Failed to load employee data. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleEmployeeSelect = (employee: Employee) => {
-    setState(prev => ({ ...prev, selectedEmployee: employee }))
-  }
+  // Load data on component mount using proven dependency pattern
+  useEffect(() => {
+    loadData()
+  }, [accessibleTenantIds.join(',')])
 
-  const refreshData = () => {
-    loadInitialData()
-  }
+  // Calculate statistics
+  useEffect(() => {
+    const totalEmployees = employees.length
+    const activeEmployees = employees.filter(emp => 
+      emp.status === 'active' || emp.employment_status === 'Active'
+    ).length
+    const departmentCount = departments.length
 
-  // Helper functions
-  const calculateAge = (dateOfBirth: string): number => {
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
+    setStats({
+      totalEmployees,
+      activeEmployees,
+      departments: departmentCount,
+      selectedEmployee: selectedEmployee ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}` : null
+    })
+  }, [employees, departments, selectedEmployee])
+
+  // Filter employees
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = !searchTerm || 
+      `${employee.first_name} ${employee.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (employee.employee_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (employee.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (employee.job_title || '').toLowerCase().includes(searchTerm.toLowerCase())
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--
-    }
+    const matchesDepartment = !departmentFilter || 
+      employee.department === departmentFilter || 
+      employee.home_department === departmentFilter
     
-    return age
+    const matchesStatus = !statusFilter || 
+      employee.status === statusFilter || 
+      employee.employment_status === statusFilter
+    
+    return matchesSearch && matchesDepartment && matchesStatus
+  })
+
+  // Get employee display name
+  const getEmployeeName = (employee: Employee) => {
+    return employee.full_name || 
+           employee.employee_name || 
+           `${employee.first_name} ${employee.last_name}` ||
+           employee.preferred_name ||
+           `Employee ${employee.employee_id}`
   }
 
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
-  }
-
-  // Show loading state until component is mounted on client
-  if (!mounted) {
+  // Get employee status badge
+  const getStatusBadge = (employee: Employee) => {
+    const status = employee.status || employee.employment_status || 'unknown'
+    const isActive = status.toLowerCase() === 'active'
+    
     return (
-      <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-            <p className="text-gray-600">Loading reporting cockpit...</p>
-          </div>
-        </div>
-      </DashboardLayout>
+      <Badge variant={isActive ? 'default' : 'secondary'} className={isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}>
+        {status}
+      </Badge>
     )
   }
 
+  // Handle employee selection
+  const handleEmployeeSelect = (employee: Employee) => {
+    setSelectedEmployee(employee)
+  }
+
+  // Handle refresh
+  const handleRefresh = () => {
+    loadData()
+  }
+
+  // Statistics cards
+  const statisticsCards = [
+    {
+      title: 'Total Employees',
+      value: stats.totalEmployees,
+      icon: Users,
+      color: 'bg-blue-50 text-blue-700'
+    },
+    {
+      title: 'Active',
+      value: stats.activeEmployees,
+      icon: CheckCircle,
+      color: 'bg-green-50 text-green-700'
+    },
+    {
+      title: 'Departments',
+      value: stats.departments,
+      icon: Building,
+      color: 'bg-purple-50 text-purple-700'
+    },
+    {
+      title: 'Selected',
+      value: stats.selectedEmployee || 'None',
+      icon: User,
+      color: 'bg-orange-50 text-orange-700'
+    }
+  ]
+
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-                Operations Reporting Cockpit
-              </h1>
-              <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                Unified employee reporting and document management
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" onClick={refreshData}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Data
-              </Button>
+      <div className="p-6 space-y-6">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="flex items-center space-x-2">
+              <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="text-lg text-gray-600">Loading employees...</span>
             </div>
           </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{state.employees.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {state.employees.filter(e => e.status === 'active').length}
+        ) : (
+          <>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Operations Reporting Cockpit</h1>
+                <p className="text-gray-600">Unified employee reporting and document management</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Departments</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {new Set(state.employees.map(e => e.department).filter(Boolean)).size}
+              <div className="flex items-center space-x-2">
+                <Button onClick={handleRefresh} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh Data
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Selected</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {state.selectedEmployee ? '1' : '0'}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {statisticsCards.map((card, index) => (
+                <Card key={index}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{card.title}</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
+                        </p>
+                      </div>
+                      <div className={`p-2 rounded-lg ${card.color}`}>
+                        <card.icon className="h-6 w-6" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-        {/* Function Bar - Moved to Top */}
-        <Card className="mb-4 sm:mb-6">
-          <CardContent className="p-3 sm:p-4">
-            <Tabs value={activeDataTab} onValueChange={setActiveDataTab} className="w-full">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="overflow-x-auto">
-                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1 min-w-max">
-                    <TabsTrigger value="pay-statements" className="text-xs sm:text-sm whitespace-nowrap">
-                      <DollarSign className="h-4 w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Pay Statements</span>
-                      <span className="sm:hidden">Pay</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="timecards" className="text-xs sm:text-sm whitespace-nowrap">
-                      <Clock className="h-4 w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Timecards</span>
-                      <span className="sm:hidden">Time</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="tax-records" className="text-xs sm:text-sm whitespace-nowrap">
-                      <FileText className="h-4 w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Tax Records</span>
-                      <span className="sm:hidden">Tax</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="benefits" className="text-xs sm:text-sm whitespace-nowrap">
-                      <Building className="h-4 w-4 mr-1 sm:mr-2" />
-                      Benefits
-                    </TabsTrigger>
-                    <TabsTrigger value="job-history" className="text-xs sm:text-sm whitespace-nowrap">
-                      <Briefcase className="h-4 w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Job History</span>
-                      <span className="sm:hidden">Jobs</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="documents" className="text-xs sm:text-sm whitespace-nowrap">
-                      <Database className="h-4 w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">All Documents</span>
-                      <span className="sm:hidden">Docs</span>
-                    </TabsTrigger>
-                  </TabsList>
+            {/* Function Bar - Data Type Tabs */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(dataTypeConfig).map(([key, config]) => (
+                    <Button
+                      key={key}
+                      variant={activeDataType === key ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveDataType(key as DataType)}
+                      className={`flex items-center space-x-2 ${activeDataType === key ? config.color : ''}`}
+                    >
+                      <config.icon className="h-4 w-4" />
+                      <span className="hidden sm:inline">{config.label}</span>
+                      <span className="sm:hidden">{config.shortLabel}</span>
+                    </Button>
+                  ))}
                 </div>
-                
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
-                    <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" />
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">Generate Report</span>
                     <span className="sm:hidden">Report</span>
                   </Button>
-                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
-                    <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">View Facsimile</span>
                     <span className="sm:hidden">View</span>
                   </Button>
-                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
-                    <Download className="h-4 w-4 mr-1 sm:mr-2" />
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">Export Selected</span>
                     <span className="sm:hidden">Export</span>
                   </Button>
                 </div>
-              </div>
-            </Tabs>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Collapsible Search/Filter Bar */}
-        <Card className="mb-4 sm:mb-6">
-          <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors p-3 sm:p-4">
+            {/* Search & Filters */}
+            <Card>
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Filter className="h-5 w-5 text-gray-600" />
-                    <CardTitle className="text-base sm:text-lg">Search & Filters</CardTitle>
-                    {state.selectedEmployee && (
-                      <Badge variant="secondary" className="text-xs">
-                        {state.selectedEmployee.full_name}
-                      </Badge>
-                    )}
-                  </div>
-                  {filtersOpen ? (
-                    <ChevronUp className="h-5 w-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
-                  )}
+                  <CardTitle className="text-lg">Search & Filters</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    {showFilters ? 'Hide' : 'Show'} Filters
+                  </Button>
                 </div>
               </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-0 p-3 sm:p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Employee Search & Selector */}
-                  <div className="space-y-2 sm:col-span-2">
-                    <label className="text-sm font-medium text-gray-700">Employee Search</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search by name, ID, or email..."
-                        value={state.searchTerm}
-                        onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-                        className="pl-10"
-                      />
-                    </div>
-                    {state.employees.length > 0 && (
-                      <Select 
-                        value={state.selectedEmployee?.id || ''} 
-                        onValueChange={(value) => {
-                          const employee = state.employees.find(emp => emp.id === value)
-                          if (employee) handleEmployeeSelect(employee)
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an employee..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {state.employees
-                            .filter(employee => 
-                              state.searchTerm === '' || 
-                              employee.full_name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-                              employee.employee_id.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-                              employee.email?.toLowerCase().includes(state.searchTerm.toLowerCase())
-                            )
-                            .map((employee) => (
-                            <SelectItem key={employee.id} value={employee.id}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{employee.full_name}</span>
-                                <div className="text-xs text-gray-500 space-x-2">
-                                  <span>{employee.employee_id}</span>
-                                  {employee.department && (
-                                    <span>{employee.department}</span>
-                                  )}
-                                </div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-
-                  {/* Department Filter */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Department</label>
-                    <Select 
-                      value={state.departmentFilter} 
-                      onValueChange={(value) => setState(prev => ({ ...prev, departmentFilter: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All departments" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Departments</SelectItem>
-                        {state.departments.map((department) => (
-                          <SelectItem key={department.id} value={department.name.toLowerCase()}>
-                            {department.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Actions</label>
-                    <div className="flex flex-col space-y-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={refreshData}
-                        className="w-full"
-                      >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-
-        {/* Employee List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Employees ({state.employees.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {state.loading ? (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-                <p className="text-gray-600">Loading employees...</p>
-              </div>
-            ) : state.employees.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
-                <p className="text-gray-500 mb-4">
-                  {state.error || 'No employees found for the current tenant.'}
-                </p>
-                <Button onClick={refreshData} variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {state.employees
-                  .filter(employee => 
-                    state.searchTerm === '' || 
-                    employee.full_name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-                    employee.employee_id.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-                    employee.email?.toLowerCase().includes(state.searchTerm.toLowerCase())
-                  )
-                  .filter(employee =>
-                    state.departmentFilter === '' ||
-                    employee.department?.toLowerCase() === state.departmentFilter
-                  )
-                  .map((employee) => (
-                    <div 
-                      key={employee.id} 
-                      className={`border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                        state.selectedEmployee?.id === employee.id ? 'border-blue-500 bg-blue-50' : ''
-                      }`}
-                      onClick={() => handleEmployeeSelect(employee)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-medium text-gray-900">{employee.full_name}</h3>
-                          <p className="text-sm text-gray-500">
-                            {employee.employee_id} • {employee.department || 'No Department'}
-                          </p>
-                          {employee.job_title && (
-                            <p className="text-sm text-gray-600">{employee.job_title}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            employee.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {employee.status || 'Unknown'}
-                          </span>
-                          <Button size="sm" variant="outline">
-                            View Reports
-                          </Button>
-                        </div>
+              {showFilters && (
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Search Employees</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Name, ID, email, or title..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
                       </div>
                     </div>
-                  ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                      <select
+                        value={departmentFilter}
+                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">All Departments</option>
+                        {departments.map(dept => (
+                          <option key={dept.id} value={dept.name}>{dept.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="Active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="terminated">Terminated</option>
+                      </select>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
 
-        {/* Selected Employee Details */}
-        {state.selectedEmployee && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                {state.selectedEmployee.full_name} - Employee Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Basic Information</h4>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="font-medium">Employee ID:</span> {state.selectedEmployee.employee_id}</div>
-                    <div><span className="font-medium">Email:</span> {state.selectedEmployee.email || 'N/A'}</div>
-                    <div><span className="font-medium">Department:</span> {state.selectedEmployee.department || 'N/A'}</div>
-                    <div><span className="font-medium">Job Title:</span> {state.selectedEmployee.job_title || 'N/A'}</div>
+            {/* Employee List */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Employees ({filteredEmployees.length})</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Employment Details</h4>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="font-medium">Status:</span> {state.selectedEmployee.status || 'N/A'}</div>
-                    <div><span className="font-medium">Hire Date:</span> {state.selectedEmployee.hire_date ? new Date(state.selectedEmployee.hire_date).toLocaleDateString() : 'N/A'}</div>
-                    <div><span className="font-medium">Employment Type:</span> {state.selectedEmployee.employment_type || 'N/A'}</div>
-                    <div><span className="font-medium">Work Location:</span> {state.selectedEmployee.work_location || 'N/A'}</div>
+              </CardHeader>
+              <CardContent>
+                {error && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                      <span className="text-red-700">{error}</span>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Compensation</h4>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="font-medium">Annual Salary:</span> {state.selectedEmployee.annual_salary ? formatCurrency(state.selectedEmployee.annual_salary) : 'N/A'}</div>
-                    <div><span className="font-medium">Pay Type:</span> {state.selectedEmployee.pay_type || 'N/A'}</div>
-                    <div><span className="font-medium">Pay Frequency:</span> {state.selectedEmployee.pay_frequency || 'N/A'}</div>
-                    <div><span className="font-medium">Manager:</span> {state.selectedEmployee.manager_supervisor || 'N/A'}</div>
+                )}
+
+                {filteredEmployees.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
+                    <p className="text-gray-600">
+                      {employees.length === 0 
+                        ? "No employees found for the current tenant." 
+                        : "No employees match your current filters."}
+                    </p>
+                    {employees.length === 0 && (
+                      <Button onClick={handleRefresh} className="mt-4" variant="outline">
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Try Again
+                      </Button>
+                    )}
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                ) : (
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-2'}>
+                    {filteredEmployees.map((employee) => (
+                      <div
+                        key={employee.id}
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          selectedEmployee?.id === employee.id 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => handleEmployeeSelect(employee)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{getEmployeeName(employee)}</h4>
+                            <p className="text-sm text-gray-600">{employee.employee_id}</p>
+                            {employee.job_title && (
+                              <p className="text-sm text-gray-600">{employee.job_title}</p>
+                            )}
+                            {employee.department && (
+                              <p className="text-sm text-gray-500">{employee.department}</p>
+                            )}
+                            {employee.email && (
+                              <p className="text-sm text-gray-500">{employee.email}</p>
+                            )}
+                          </div>
+                          <div className="ml-4">
+                            {getStatusBadge(employee)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Selected Employee Details */}
+            {selectedEmployee && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Employee Details</CardTitle>
+                  <CardDescription>
+                    Detailed information for {getEmployeeName(selectedEmployee)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Personal Information */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 text-gray-400 mr-2" />
+                          <span className="text-sm">{getEmployeeName(selectedEmployee)}</span>
+                        </div>
+                        {selectedEmployee.email && (
+                          <div className="flex items-center">
+                            <Mail className="h-4 w-4 text-gray-400 mr-2" />
+                            <span className="text-sm">{selectedEmployee.email}</span>
+                          </div>
+                        )}
+                        {selectedEmployee.date_of_birth && (
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                            <span className="text-sm">Born: {new Date(selectedEmployee.date_of_birth).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Employment Information */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Employment</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <Briefcase className="h-4 w-4 text-gray-400 mr-2" />
+                          <span className="text-sm">{selectedEmployee.job_title || 'No title'}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Building className="h-4 w-4 text-gray-400 mr-2" />
+                          <span className="text-sm">{selectedEmployee.department || 'No department'}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                          <span className="text-sm">Hired: {new Date(selectedEmployee.hire_date).toLocaleDateString()}</span>
+                        </div>
+                        {selectedEmployee.annual_salary && (
+                          <div className="flex items-center">
+                            <DollarSign className="h-4 w-4 text-gray-400 mr-2" />
+                            <span className="text-sm">Salary: ${selectedEmployee.annual_salary.toLocaleString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Contact</h4>
+                      <div className="space-y-2">
+                        {selectedEmployee.home_address && (
+                          <div className="flex items-start">
+                            <MapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
+                            <span className="text-sm">{selectedEmployee.home_address}</span>
+                          </div>
+                        )}
+                        {(selectedEmployee.city || selectedEmployee.state) && (
+                          <div className="flex items-center">
+                            <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                            <span className="text-sm">
+                              {[selectedEmployee.city, selectedEmployee.state, selectedEmployee.zip_code].filter(Boolean).join(', ')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Data Type Content */}
+                  <div className="mt-6 pt-6 border-t">
+                    <h4 className="font-medium text-gray-900 mb-4">
+                      {dataTypeConfig[activeDataType].label} for {getEmployeeName(selectedEmployee)}
+                    </h4>
+                    <div className="bg-gray-50 rounded-lg p-6 text-center">
+                      {React.createElement(dataTypeConfig[activeDataType].icon, { className: "h-12 w-12 text-gray-400 mx-auto mb-4" })}
+                      <p className="text-gray-600">
+                        {dataTypeConfig[activeDataType].label} data will be displayed here.
+                      </p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        This section will show detailed {dataTypeConfig[activeDataType].label.toLowerCase()} information for the selected employee.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </DashboardLayout>
