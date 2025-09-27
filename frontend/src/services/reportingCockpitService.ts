@@ -136,6 +136,7 @@ export interface TaxRecord {
   state_tax_withheld: number;
   local_wages: number;
   local_tax_withheld: number;
+  document_status?: string; // Added document_status property
   tenant_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -504,7 +505,7 @@ class ReportingCockpitService {
         return null
       }
 
-      // Get additional data in parallel
+      // Fetch demographics, payroll summary, and document count in parallel
       const [demographics, payrollSummary, documentCount] = await Promise.all([
         this.getEmployeeDemographics(employee.employee_code || employee.employee_id, tenantId),
         this.getPayrollSummary(employeeId, tenantId),
@@ -515,97 +516,53 @@ class ReportingCockpitService {
         employee,
         demographics: demographics || undefined,
         payrollSummary: payrollSummary || undefined,
-        documentCount
+        documentCount: documentCount || undefined
       }
     } catch (error) {
       console.error('Error in getEnhancedEmployeeData:', error)
-      
-      if (isDemoMode) {
-        const employee = mockEmployees.find(emp => emp.id === employeeId) || mockEmployees[0];
-        return {
-          employee,
-          demographics: {
-            id: 'demo1',
-            employee_code: employee.employee_code || employee.employee_id,
-            customer_id: 'cust1',
-            first_name: employee.first_name,
-            last_name: employee.last_name,
-            gender: 'Male',
-            marital_status: 'Married',
-            birth_date: '1985-06-15',
-            ethnic_background: 'Caucasian',
-            veteran_status: false,
-            has_disability: false,
-            work_authorization_status: 'Citizen',
-            citizenship_country: 'United States',
-            address_line1: '123 Main St',
-            city: 'Austin',
-            state: 'TX',
-            postal_code: '78701',
-            country: 'USA',
-            phone_mobile: '512-555-1234',
-            email: employee.email,
-            job_title: employee.job_title,
-            department: employee.department,
-            created_at: '2023-01-15T00:00:00Z',
-            updated_at: '2023-01-15T00:00:00Z'
-          },
-          payrollSummary: {
-            employee_id: employeeId,
-            ytd_gross: 85000,
-            ytd_net: 62000,
-            total_hours_ytd: 1520,
-            latest_pay_date: '2023-09-15',
-            total_statements: 18
-          },
-          documentCount: 12
-        };
-      }
-      
-      return null
+      return isDemoMode ? {
+        employee: mockEmployees.find(emp => emp.id === employeeId) || mockEmployees[0],
+        demographics: {
+          id: 'demo1',
+          employee_code: 'EMP001',
+          customer_id: 'cust1',
+          first_name: 'John',
+          last_name: 'Smith',
+          gender: 'Male',
+          marital_status: 'Married',
+          birth_date: '1985-06-15',
+          ethnic_background: 'Caucasian',
+          veteran_status: false,
+          has_disability: false,
+          work_authorization_status: 'Citizen',
+          citizenship_country: 'United States',
+          address_line1: '123 Main St',
+          city: 'Austin',
+          state: 'TX',
+          postal_code: '78701',
+          country: 'USA',
+          phone_mobile: '512-555-1234',
+          email: 'john.smith@company.com',
+          job_title: 'Senior Software Engineer',
+          department: 'Engineering',
+          created_at: '2023-01-15T00:00:00Z',
+          updated_at: '2023-01-15T00:00:00Z'
+        },
+        payrollSummary: {
+          employee_id: employeeId,
+          ytd_gross: 85000,
+          ytd_net: 62000,
+          total_hours_ytd: 1520,
+          latest_pay_date: '2023-09-15',
+          total_statements: 18
+        },
+        documentCount: 12
+      } : null
     }
   }
 
-  /**
-   * Get departments for filtering
-   */
-  async getDepartments(tenantId?: string): Promise<string[]> {
-    try {
-      // Return mock data in demo mode
-      if (isDemoMode) {
-        return ['Engineering', 'Marketing', 'Sales', 'Finance', 'HR', 'Operations'];
-      }
-      
-      let query = supabase
-        .from('employees')
-        .select('department')
-        .not('department', 'is', null)
-        .in('status', ['active', 'Active'])
-
-      if (tenantId) {
-        query = query.eq('tenant_id', tenantId)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching departments:', error)
-        return []
-      }
-
-      return data.map(d => d.department) || []
-    } catch (error) {
-      console.error('Error in getDepartments:', error)
-      return isDemoMode ? ['Engineering', 'Marketing', 'Sales', 'Finance', 'HR', 'Operations'] : []
-    }
-  }
-
-  /**
-   * Get pay statements for an employee within a date range
-   */
   async getPayStatements(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<PayStatement[]> {
     try {
-      // Return mock data in demo mode
       if (isDemoMode) {
         return [
           {
@@ -613,44 +570,46 @@ class ReportingCockpitService {
             check_number: '1001',
             employee_id: employeeId,
             employee_name: 'John Doe',
-            pay_date: '2024-03-15',
-            pay_period_start: '2024-03-01',
-            pay_period_end: '2024-03-14',
+            pay_date: '2023-09-15',
+            pay_period_start: '2023-09-01',
+            pay_period_end: '2023-09-15',
             gross_pay: 2500,
             net_pay: 1800,
             regular_hours: 80,
             overtime_hours: 0,
-            regular_pay: 2000,
+            regular_pay: 2500,
             overtime_pay: 0,
             federal_tax_withheld: 200,
             state_tax_withheld: 50,
             social_security_tax: 100,
             medicare_tax: 25,
-            ytd_gross: 15000,
-            ytd_net: 10800,
-            check_status: 'Paid'
+            ytd_gross: 45000,
+            ytd_net: 32000,
+            check_status: 'Paid',
+            created_at: '2023-09-15T00:00:00Z'
           },
           {
             id: 'ps2',
             check_number: '1002',
             employee_id: employeeId,
             employee_name: 'John Doe',
-            pay_date: '2024-03-29',
-            pay_period_start: '2024-03-15',
-            pay_period_end: '2024-03-28',
+            pay_date: '2023-08-31',
+            pay_period_start: '2023-08-16',
+            pay_period_end: '2023-08-31',
             gross_pay: 2500,
             net_pay: 1800,
             regular_hours: 80,
             overtime_hours: 0,
-            regular_pay: 2000,
+            regular_pay: 2500,
             overtime_pay: 0,
             federal_tax_withheld: 200,
             state_tax_withheld: 50,
             social_security_tax: 100,
             medicare_tax: 25,
-            ytd_gross: 17500,
-            ytd_net: 12600,
-            check_status: 'Paid'
+            ytd_gross: 42500,
+            ytd_net: 30200,
+            check_status: 'Paid',
+            created_at: '2023-08-31T00:00:00Z'
           }
         ];
       }
@@ -686,9 +645,6 @@ class ReportingCockpitService {
     }
   }
 
-  /**
-   * Get benefit records for an employee
-   */
   async getBenefitRecords(employeeId: string, tenantId?: string): Promise<BenefitRecord[]> {
     try {
       // Return mock data in demo mode
@@ -758,45 +714,42 @@ class ReportingCockpitService {
     }
   }
 
-  /**
-   * Get employee job history
-   */
   async getEmployeeJobHistory(employeeId: string, tenantId?: string): Promise<EmployeeJobHistory[]> {
     try {
-      // Return mock data in demo mode
       if (isDemoMode) {
         return [
           {
-            id: 'job1',
+            id: 'jh1',
             employee_id: employeeId,
-            job_code: 'SSE',
+            job_code: 'SWE001',
             job_title: 'Software Engineer',
             department: 'Engineering',
-            start_date: '2023-01-15',
-            end_date: '2024-01-14',
-            salary: 120000,
+            start_date: '2022-01-01',
+            end_date: '2023-06-30',
+            salary: 100000,
             reason_for_change: 'Promotion',
             is_current: false,
             status: 'inactive',
-            created_at: '2023-01-15T00:00:00Z'
+            created_at: '2022-01-01T00:00:00Z'
           },
           {
-            id: 'job2',
+            id: 'jh2',
             employee_id: employeeId,
-            job_code: 'LDSSE',
-            job_title: 'Lead Software Engineer',
+            job_code: 'SSWE001',
+            job_title: 'Senior Software Engineer',
             department: 'Engineering',
-            start_date: '2024-01-15',
-            salary: 140000,
+            start_date: '2023-07-01',
+            salary: 120000,
+            reason_for_change: 'Promotion',
             is_current: true,
             status: 'active',
-            created_at: '2024-01-15T00:00:00Z'
+            created_at: '2023-07-01T00:00:00Z'
           }
         ];
       }
 
       let query = supabase
-        .from('job_history')
+        .from('employee_job_history')
         .select('*')
         .eq('employee_id', employeeId)
 
@@ -809,7 +762,7 @@ class ReportingCockpitService {
       const { data, error } = await query
 
       if (error) {
-        console.error('Error fetching job history:', error)
+        console.error('Error fetching employee job history:', error)
         throw error
       }
 
@@ -820,40 +773,38 @@ class ReportingCockpitService {
     }
   }
 
-  /**
-   * Get tax records for an employee
-   */
-  async getTaxRecords(employeeId: string, tenantId?: string): Promise<TaxRecord[]> {
+  async getTaxRecords(employeeId: string, tenantId?: string, taxYear?: number): Promise<TaxRecord[]> {
     try {
-      // Return mock data in demo mode
       if (isDemoMode) {
         return [
           {
-            id: 't1',
+            id: 'tr1',
             employee_id: employeeId,
             tax_year: 2023,
             form_type: 'W-2',
-            document_url: '#',
+            document_url: '/documents/w2_2023.pdf',
             federal_wages: 120000,
             federal_tax_withheld: 15000,
             state_wages: 120000,
             state_tax_withheld: 5000,
-            local_wages: 120000,
-            local_tax_withheld: 1000,
+            local_wages: 0,
+            local_tax_withheld: 0,
+            document_status: 'Final',
             created_at: '2024-01-20T00:00:00Z'
           },
           {
-            id: 't2',
+            id: 'tr2',
             employee_id: employeeId,
             tax_year: 2022,
             form_type: 'W-2',
-            document_url: '#',
+            document_url: '/documents/w2_2022.pdf',
             federal_wages: 110000,
-            federal_tax_withheld: 13000,
+            federal_tax_withheld: 14000,
             state_wages: 110000,
             state_tax_withheld: 4500,
-            local_wages: 110000,
-            local_tax_withheld: 900,
+            local_wages: 0,
+            local_tax_withheld: 0,
+            document_status: 'Final',
             created_at: '2023-01-20T00:00:00Z'
           }
         ];
@@ -866,6 +817,9 @@ class ReportingCockpitService {
 
       if (tenantId) {
         query = query.eq('tenant_id', tenantId)
+      }
+      if (taxYear) {
+        query = query.eq('tax_year', taxYear)
       }
 
       query = query.order('tax_year', { ascending: false })
@@ -884,33 +838,29 @@ class ReportingCockpitService {
     }
   }
 
-  /**
-   * Get timecard records for an employee within a date range
-   */
-  async getTimecards(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<TimecardRecord[]> {
+  async getTimecardRecords(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<TimecardRecord[]> {
     try {
-      // Return mock data in demo mode
       if (isDemoMode) {
         return [
           {
             id: 'tc1',
             employee_id: employeeId,
-            work_date: '2024-03-10',
+            work_date: '2023-09-18',
             hours_worked: 8,
             project: 'Project Alpha',
             task: 'Development',
             status: 'Approved',
-            created_at: '2024-03-10T00:00:00Z'
+            created_at: '2023-09-18T08:00:00Z'
           },
           {
             id: 'tc2',
             employee_id: employeeId,
-            work_date: '2024-03-11',
-            hours_worked: 8.5,
+            work_date: '2023-09-17',
+            hours_worked: 7.5,
             project: 'Project Alpha',
-            task: 'Testing',
+            task: 'Code Review',
             status: 'Approved',
-            created_at: '2024-03-11T00:00:00Z'
+            created_at: '2023-09-17T08:00:00Z'
           }
         ];
       }
@@ -935,68 +885,55 @@ class ReportingCockpitService {
       const { data, error } = await query
 
       if (error) {
-        console.error('Error fetching timecards:', error)
+        console.error('Error fetching timecard records:', error)
         throw error
       }
 
       return data || []
     } catch (error) {
-      console.error('Error in getTimecards:', error)
+      console.error('Error in getTimecardRecords:', error)
       return isDemoMode ? [] : []
     }
   }
 
-  /**
-   * Search employees by name, ID, or email
-   */
-  async searchEmployees(searchTerm: string, tenantId?: string): Promise<Employee[]> {
+  async searchEmployees(query: string, tenantId?: string): Promise<Employee[]> {
     try {
-      // Return mock data in demo mode
       if (isDemoMode) {
-        const lowerCaseSearchTerm = searchTerm.toLowerCase();
-        return mockEmployees.filter(employee =>
-          employee.full_name.toLowerCase().includes(lowerCaseSearchTerm) ||
-          employee.employee_id.toLowerCase().includes(lowerCaseSearchTerm) ||
-          (employee.email && employee.email.toLowerCase().includes(lowerCaseSearchTerm))
+        return mockEmployees.filter(emp =>
+          emp.full_name.toLowerCase().includes(query.toLowerCase()) ||
+          emp.employee_id.toLowerCase().includes(query.toLowerCase())
         );
       }
 
-      let query = supabase
+      let dbQuery = supabase
         .from('employees')
         .select('*')
-        .in('status', ['active', 'Active']);
+        .ilike('full_name', `%${query}%`)
+        .or(`employee_id.ilike.%${query}%,email.ilike.%${query}%`)
 
       if (tenantId) {
-        query = query.eq('tenant_id', tenantId);
+        dbQuery = dbQuery.eq('tenant_id', tenantId)
       }
 
-      // Supabase doesn't directly support OR in filter for RLS, so we'll do a broader search and filter client-side if needed
-      // For now, we'll search across multiple fields using `ilike` for case-insensitive search
-      query = query.or(
-        `full_name.ilike.%${searchTerm}%`,
-        `employee_id.ilike.%${searchTerm}%`,
-        `email.ilike.%${searchTerm}%`
-      );
-
-      const { data, error } = await query;
+      const { data, error } = await dbQuery
 
       if (error) {
-        console.error('Error searching employees:', error);
-        throw error;
+        console.error('Error searching employees:', error)
+        throw error
       }
 
-      return data || [];
+      return data || []
     } catch (error) {
-      console.error('Error in searchEmployees:', error);
-      return isDemoMode ? [] : [];
+      console.error('Error in searchEmployees:', error)
+      return isDemoMode ? [] : []
     }
   }
 }
 
 export const reportingCockpitService = new ReportingCockpitService();
 
-export const exportToCSV = <T>(data: T[], filename: string) => {
-  if (data.length === 0) {
+export function exportToCSV<T>(data: T[], filename: string) {
+  if (!data || data.length === 0) {
     console.warn('No data to export.');
     return;
   }
@@ -1004,17 +941,13 @@ export const exportToCSV = <T>(data: T[], filename: string) => {
   const csv = Papa.unparse(data);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
-  if (link.download !== undefined) {
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
+  if (link.download !== undefined) { // feature detection
+    link.setAttribute('href', URL.createObjectURL(blob));
     link.setAttribute('download', `${filename}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }
-};
-
-
-// Added a comment to trigger a new commit
+}
 
