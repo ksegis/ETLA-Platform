@@ -14,9 +14,9 @@ import { Badge } from '@/components/ui/Badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTenant } from '@/contexts/TenantContext'
 // Import types only to avoid SSR issues
-import type { 
-  Employee, 
-  EmployeeDemographics, 
+import type {
+  Employee,
+  EmployeeDemographics,
   EnhancedEmployeeData,
   PayStatement,
   TaxRecord,
@@ -130,7 +130,8 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import service to avoid SSR issues
-      const { default: reportingService } = await import('@/services/reportingCockpitService')
+      const { ReportingCockpitService } = await import('@/services/reportingCockpitService')
+      const reportingService = new ReportingCockpitService()
       
       // Load employees and departments in parallel
       const [employees, departments] = await Promise.all([
@@ -161,10 +162,12 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import services to avoid SSR issues
-      const [{ default: reportingService }, { default: documentService }] = await Promise.all([
-        import('@/services/reportingCockpitService'),
-        import('@/services/documentRepositoryService')
+      const [{ ReportingCockpitService }, documentServiceModule] = await Promise.all([
+        import("@/services/reportingCockpitService"),
+        import("@/services/documentRepositoryService")
       ])
+      const reportingService = new ReportingCockpitService()
+      const documentService = documentServiceModule.default
       
       // Load enhanced employee data and document information in parallel
       const [enhancedData, documents, docStats] = await Promise.all([
@@ -208,7 +211,8 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import service to avoid SSR issues
-      const { default: reportingService } = await import('@/services/reportingCockpitService')
+      const { ReportingCockpitService } = await import('@/services/reportingCockpitService')
+      const reportingService = new ReportingCockpitService()
       const employees = await reportingService.searchEmployees(searchTerm, tenantId)
       
       setState(prev => ({ 

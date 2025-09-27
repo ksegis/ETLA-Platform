@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import { ReportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
 import type { PayStatement } from '@/types/reporting'
 import { DollarSign, Download, Loader2, AlertCircle } from 'lucide-react'
 
@@ -38,7 +38,8 @@ const PayStatementsGrid: React.FC<PayStatementsGridProps> = ({
     setError(null)
 
     try {
-      const data = await reportingCockpitService.getPayStatements(
+      const reportingService = new ReportingCockpitService()
+      const data = await reportingService.getPayStatements(
         employeeId,
         tenantId,
         startDate,

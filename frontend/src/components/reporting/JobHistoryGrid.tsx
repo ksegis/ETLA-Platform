@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import { ReportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
 import type { EmployeeJobHistory } from '@/types/reporting'
 import { Briefcase, Download, Loader2, AlertCircle, TrendingUp } from 'lucide-react'
 
@@ -34,7 +34,8 @@ const JobHistoryGrid: React.FC<JobHistoryGridProps> = ({
     setError(null)
 
     try {
-      const data = await reportingCockpitService.getEmployeeJobHistory(employeeId, tenantId)
+      const reportingService = new ReportingCockpitService()
+      const data = await reportingService.getEmployeeJobHistory(employeeId, tenantId)
       setJobHistory(data)
     } catch (err) {
       console.error('Error loading job history:', err)

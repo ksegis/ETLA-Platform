@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import { ReportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
 import type { TaxRecord } from '@/types/reporting'
 import { FileText, Download, Loader2, AlertCircle } from 'lucide-react'
 
@@ -34,7 +34,8 @@ const TaxRecordsGrid: React.FC<TaxRecordsGridProps> = ({
     setError(null)
 
     try {
-      const data = await reportingCockpitService.getTaxRecords(employeeId, tenantId)
+      const reportingService = new ReportingCockpitService()
+      const data = await reportingService.getTaxRecords(employeeId, tenantId)
       setTaxRecords(data)
     } catch (err) {
       console.error('Error loading tax records:', err)
@@ -166,7 +167,7 @@ const TaxRecordsGrid: React.FC<TaxRecordsGridProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span>Federal Tax:</span>
-                    <span>{formatCurrency(record.federal_income_tax_withheld)}</span>
+                    <span>{formatCurrency(record.federal_tax_withheld)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>SS Wages:</span>
@@ -207,7 +208,7 @@ const TaxRecordsGrid: React.FC<TaxRecordsGridProps> = ({
               <div className="text-xs text-gray-600 grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div className="text-center">
                   <div className="font-medium">Total Federal</div>
-                  <div className="text-sm">{formatCurrency(record.federal_income_tax_withheld)}</div>
+                  <div className="text-sm">{formatCurrency(record.federal_tax_withheld)}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-medium">Total FICA</div>
@@ -221,7 +222,7 @@ const TaxRecordsGrid: React.FC<TaxRecordsGridProps> = ({
                   <div className="font-medium">Total Withheld</div>
                   <div className="text-sm font-bold">
                     {formatCurrency(
-                      (record.federal_income_tax_withheld || 0) +
+                      (record.federal_tax_withheld || 0) +
                       (record.social_security_tax_withheld || 0) +
                       (record.medicare_tax_withheld || 0) +
                       (record.state_income_tax || 0)

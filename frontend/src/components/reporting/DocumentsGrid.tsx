@@ -3,7 +3,8 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { FileText, Download, Loader2, AlertCircle, Eye, ExternalLink } from 'lucide-react'
-import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import { exportToCSV } from '@/services/reportingCockpitService'
+import documentRepositoryService from '@/services/documentRepositoryService'
 import type { DocumentRecord } from '@/types/reporting'
 
 interface DocumentsGridProps {
@@ -34,7 +35,7 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
     setError(null)
 
     try {
-      const data = await reportingCockpitService.getEmployeeDocuments(employeeId, tenantId)
+      const data = await documentRepositoryService.getEmployeeDocuments(employeeId, tenantId)
       setDocuments(data)
     } catch (err) {
       console.error('Error loading documents:', err)

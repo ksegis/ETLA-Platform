@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import { ReportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
 import type { BenefitRecord } from '@/types/reporting'
 import { Building, Download, Loader2, AlertCircle } from 'lucide-react'
 
@@ -34,7 +34,8 @@ const BenefitsGrid: React.FC<BenefitsGridProps> = ({
     setError(null)
 
     try {
-      const data = await reportingCockpitService.getBenefitRecords(employeeId, tenantId)
+      const reportingService = new ReportingCockpitService()
+      const data = await reportingService.getBenefitRecords(employeeId, tenantId)
       setBenefits(data)
     } catch (err) {
       console.error('Error loading benefits:', err)

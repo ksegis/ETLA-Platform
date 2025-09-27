@@ -1,4 +1,4 @@
-import { supabase, isSupabaseDemoMode } from '@/lib/supabase'
+import { supabase, isSupabaseDemoMode } from '@/lib/supabase';
 import Papa from 'papaparse';
 import {
   Employee,
@@ -298,10 +298,10 @@ const mockDocuments: DocumentRecord[] = [
     status: 'Approved',
     employee_id: 'emp1',
     tenant_id: 'tenant1',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-01T00:00:00Z',
+    created_by: 'HR Dept',
     last_accessed: '2023-09-27T10:00:00Z',
-    metadata: { version: '1.0', author: 'HR Dept' }
+    metadata: { version: '1.0', author: 'HR Dept' },
+    is_confidential: false
   },
   {
     id: 'doc2',
@@ -316,8 +316,8 @@ const mockDocuments: DocumentRecord[] = [
     status: 'Pending Approval',
     employee_id: 'emp1',
     tenant_id: 'tenant1',
-    created_at: '2023-09-10T00:00:00Z',
-    updated_at: '2023-09-10T00:00:00Z',
+    created_by: 'Manager',
+    is_confidential: true,
     last_accessed: '2023-09-26T14:30:00Z',
     metadata: { quarter: 'Q3', year: '2023' }
   }
@@ -499,62 +499,34 @@ export class ReportingCockpitService {
         throw error
       }
 
-      if (!data || data.length === 0) {
-        return null
+      // Aggregate the data to get the latest YTD values and total statements
+      if (data && data.length > 0) {
+        const latestStatement = data[0]; // Assuming data is ordered by pay_date DESC
+        return {
+          employee_id: employeeId,
+          ytd_gross: latestStatement.ytd_gross,
+          ytd_net: latestStatement.ytd_net,
+          total_hours_ytd: data.reduce((sum: number, s: any) => sum + (s.regular_hours || 0) + (s.overtime_hours || 0), 0),
+          latest_pay_date: latestStatement.pay_date,
+          total_statements: data.length
+        };
       }
-
-      // Get the most recent pay statement for YTD totals
-      const latestStatement = data[0]
-      
-      // Calculate total hours from all statements
-      const totalHours = data.reduce((sum: number, statement: any) => {
-        return sum + (statement.regular_hours || 0) + (statement.overtime_hours || 0)
-      }, 0)
-
-      return {
+      return null;
+    } catch (error) {
+      console.error('Error in getPayrollSummary:', error);
+      return isDemoMode ? {
         employee_id: employeeId,
-        ytd_gross: latestStatement.ytd_gross || 0,
-        ytd_net: latestStatement.ytd_net || 0,
-        total_hours_ytd: totalHours,
-        latest_pay_date: latestStatement.pay_date,
-        total_statements: data.length
-      }
-    } catch (error) {
-      console.error('Error in getPayrollSummary:', error)
-      return null
+        ytd_gross: 85000,
+        ytd_net: 62000,
+        total_hours_ytd: 1520,
+        latest_pay_date: '2023-09-15',
+        total_statements: 18
+      } : null;
     }
   }
 
   /**
-   * Get document count for an employee
-   * Note: This is a placeholder - actual implementation depends on document storage system
-   */
-  async getEmployeeDocumentCount(employeeId: string, tenantId?: string): Promise<number> {
-    try {
-      // Return mock data in demo mode
-      if (isDemoMode) {
-        return 12;
-      }
-      
-      // For now, return a calculated count based on related records
-      const promises = [
-        this.getPayStatements(employeeId, tenantId),
-        this.getTaxRecords(employeeId, tenantId),
-        this.getEmployeeDocuments(employeeId, tenantId) // Assuming this will be implemented
-      ];
-
-      const [payStatements, taxRecords, documents] = await Promise.all(promises);
-
-      return (payStatements?.length || 0) + (taxRecords?.length || 0) + (documents?.length || 0);
-
-    } catch (error) {
-      console.error('Error in getEmployeeDocumentCount:', error);
-      return isDemoMode ? 12 : 0;
-    }
-  }
-
-  /**
-   * Get pay statements for an employee
+   * Get pay statements for an employee within a date range
    */
   async getPayStatements(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<PayStatement[]> {
     try {
@@ -593,9 +565,9 @@ export class ReportingCockpitService {
   }
 
   /**
-   * Get tax records for an employee
+   * Get tax records for an employee by tax year or date range
    */
-  async getTaxRecords(employeeId: string, tenantId?: string): Promise<TaxRecord[]> {
+  async getTaxRecords(employeeId: string, tenantId?: string, taxYear?: number): Promise<TaxRecord[]> {
     try {
       if (isDemoMode) {
         return mockTaxRecords.filter(tr => tr.employee_id === employeeId);
@@ -609,6 +581,9 @@ export class ReportingCockpitService {
 
       if (tenantId) {
         query = query.eq('tenant_id', tenantId);
+      }
+      if (taxYear) {
+        query = query.eq('tax_year', taxYear);
       }
 
       const { data, error } = await query;
@@ -659,7 +634,7 @@ export class ReportingCockpitService {
   }
 
   /**
-   * Get timecard records for an employee
+   * Get timecard records for an employee within a date range
    */
   async getTimecardRecords(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<TimecardRecord[]> {
     try {
@@ -707,7 +682,7 @@ export class ReportingCockpitService {
       }
 
       let query = supabase
-        .from('employee_job_history')
+        .from('job_history')
         .select('*')
         .eq('employee_id', employeeId)
         .order('start_date', { ascending: false });
@@ -719,7 +694,7 @@ export class ReportingCockpitService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching employee job history:', error);
+        console.error('Error fetching job history:', error);
         throw error;
       }
 
@@ -727,6 +702,112 @@ export class ReportingCockpitService {
     } catch (error) {
       console.error('Error in getEmployeeJobHistory:', error);
       return isDemoMode ? mockJobHistory.filter(jh => jh.employee_id === employeeId) : [];
+    }
+  }
+
+  /**
+   * Get enhanced employee data (employee, demographics, payroll summary, document count)
+   */
+  async getEnhancedEmployeeData(employeeId: string, tenantId?: string): Promise<EnhancedEmployeeData | null> {
+    try {
+      if (isDemoMode) {
+        const employee = mockEmployees.find(emp => emp.id === employeeId);
+        if (!employee) return null;
+        return {
+          employee,
+          demographics: {
+            id: 'demo1',
+            employee_code: employee.employee_id,
+            customer_id: 'cust1',
+            first_name: employee.first_name,
+            last_name: employee.last_name,
+            gender: 'Male',
+            marital_status: 'Married',
+            birth_date: '1985-06-15',
+            ethnic_background: 'Caucasian',
+            veteran_status: false,
+            has_disability: false,
+            work_authorization_status: 'Citizen',
+            citizenship_country: 'United States',
+            address_line1: '123 Main St',
+            city: 'Austin',
+            state: 'TX',
+            postal_code: '78701',
+            country: 'USA',
+            phone_mobile: '512-555-1234',
+            email: employee.email,
+            job_title: employee.job_title,
+            department: employee.department,
+            created_at: '2023-01-15T00:00:00Z',
+            updated_at: '2023-01-15T00:00:00Z'
+          },
+          payrollSummary: {
+            employee_id: employeeId,
+            ytd_gross: 85000,
+            ytd_net: 62000,
+            total_hours_ytd: 1520,
+            latest_pay_date: '2023-09-15',
+            total_statements: 18
+          },
+          documentCount: 2
+        };
+      }
+
+      const [employee, demographics, payrollSummary, documentCount] = await Promise.all([
+        this.getEmployees(tenantId).then(emps => emps.find(emp => emp.id === employeeId) || null),
+        this.getEmployeeDemographics(employeeId, tenantId),
+        this.getPayrollSummary(employeeId, tenantId),
+        supabase.from('documents').select('count', { count: 'exact' }).eq('employee_id', employeeId).eq('tenant_id', tenantId).then((res: any) => res.count)
+      ]);
+
+      if (!employee) return null;
+
+      return {
+        employee,
+        demographics: demographics || undefined,
+        payrollSummary: payrollSummary || undefined,
+        documentCount: documentCount || 0
+      };
+    } catch (error) {
+      console.error('Error in getEnhancedEmployeeData:', error);
+      return isDemoMode ? {
+        employee: mockEmployees[0],
+        demographics: {
+          id: 'demo1',
+          employee_code: mockEmployees[0].employee_id,
+          customer_id: 'cust1',
+          first_name: mockEmployees[0].first_name,
+          last_name: mockEmployees[0].last_name,
+          gender: 'Male',
+          marital_status: 'Married',
+          birth_date: '1985-06-15',
+          ethnic_background: 'Caucasian',
+          veteran_status: false,
+          has_disability: false,
+          work_authorization_status: 'Citizen',
+          citizenship_country: 'United States',
+          address_line1: '123 Main St',
+          city: 'Austin',
+          state: 'TX',
+          postal_code: '78701',
+          country: 'USA',
+          phone_mobile: '512-555-1234',
+          email: mockEmployees[0].email,
+          job_title: mockEmployees[0].job_title,
+          department: mockEmployees[0].department,
+          created_at: '2023-01-15T00:00:00Z',
+          updated_at: '2023-01-15T00:00:00Z'
+        },
+        payrollSummary: {
+          employee_id: employeeId,
+          ytd_gross: 85000,
+          ytd_net: 62000,
+          total_hours_ytd: 1520,
+          latest_pay_date: '2023-09-15',
+          total_statements: 18
+        },
+        documentCount: 2
+      } : null;
     }
   }
 
@@ -740,9 +821,10 @@ export class ReportingCockpitService {
       }
 
       let query = supabase
-        .from('departments')
-        .select('*')
-        .order('name', { ascending: true });
+        .from('employees') // Assuming departments are derived from employees table
+        .select('department')
+        .not('department', 'is', null)
+        .distinct('department');
 
       if (tenantId) {
         query = query.eq('tenant_id', tenantId);
@@ -755,64 +837,41 @@ export class ReportingCockpitService {
         throw error;
       }
 
-      return data || [];
+      // Map distinct department names to Department interface
+      return data ? data.map((d: any) => ({ 
+        id: d.department.toLowerCase().replace(/\s/g, '-'), // Generate a simple ID
+        name: d.department,
+        tenant_id: tenantId || 'unknown',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })) : [];
     } catch (error) {
       console.error('Error in getDepartments:', error);
       return isDemoMode ? mockDepartments : [];
     }
   }
-
-  /**
-   * Get employee documents
-   */
-  async getEmployeeDocuments(employeeId: string, tenantId?: string): Promise<DocumentRecord[]> {
-    try {
-      if (isDemoMode) {
-        return mockDocuments.filter(doc => doc.employee_id === employeeId);
-      }
-
-      let query = supabase
-        .from('documents')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .order('upload_date', { ascending: false });
-
-      if (tenantId) {
-        query = query.eq('tenant_id', tenantId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching employee documents:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getEmployeeDocuments:', error);
-      return isDemoMode ? mockDocuments.filter(doc => doc.employee_id === employeeId) : [];
-    }
-  }
 }
 
-// Utility function for CSV export
-export function exportToCSV<T>(data: T[], filename: string) {
-  if (data.length === 0) {
-    console.warn('No data to export.');
-    return;
-  }
-
-  const csv = Papa.unparse(data);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.setAttribute('download', `${filename}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+export const exportToCSV = (data: any[], filename: string) => {
+  if (!data.length) return
+  
+  const headers = Object.keys(data[0])
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+  ].join('\n')
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', `${filename}.csv`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
-const reportingCockpitService = new ReportingCockpitService();
-export default reportingCockpitService;
+
+// Force refresh: Ensure Department type is recognized
 
