@@ -183,17 +183,43 @@ export default function ReportingPage() {
       // Load employees with error handling
       let employees: Employee[] = []
       try {
-        const { data: employeesData, error: employeesError } = await supabase
+        console.log('Attempting to query employees table...')
+        
+        // First try to get all employees to see if the table exists
+        const { data: allEmployeesData, error: allEmployeesError } = await supabase
           .from('employees')
           .select('*')
-          .in('tenant_id', tenantIds)
-          .order('created_at', { ascending: false })
+          .limit(50)
         
-        if (employeesError) {
-          console.error('Employees query error:', employeesError)
+        console.log('All employees query result:', { data: allEmployeesData, error: allEmployeesError })
+        
+        if (allEmployeesError) {
+          console.error('All employees query error:', allEmployeesError)
           employees = []
         } else {
-          employees = employeesData || []
+          // If we got data, check if tenant_id field exists
+          const hasTenantId = allEmployeesData && allEmployeesData.length > 0 && 'tenant_id' in allEmployeesData[0]
+          console.log('Employees have tenant_id field:', hasTenantId)
+          
+          if (hasTenantId) {
+            // Filter by tenant if tenant_id exists
+            const { data: employeesData, error: employeesError } = await supabase
+              .from('employees')
+              .select('*')
+              .in('tenant_id', tenantIds)
+              .order('created_at', { ascending: false })
+            
+            if (employeesError) {
+              console.error('Filtered employees query error:', employeesError)
+              employees = allEmployeesData || []
+            } else {
+              employees = employeesData || []
+            }
+          } else {
+            // Use all employees if no tenant_id field
+            console.log('Using all employees (no tenant filtering)')
+            employees = allEmployeesData || []
+          }
         }
       } catch (err) {
         console.error('Employees query error:', err)
