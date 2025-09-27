@@ -60,7 +60,7 @@ const TaxRecordsGrid: React.FC<TaxRecordsGridProps> = ({
     })
   }
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string | undefined) => {
     switch (status?.toLowerCase()) {
       case 'issued':
         return 'default'
