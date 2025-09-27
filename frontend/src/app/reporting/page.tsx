@@ -12,8 +12,21 @@ import { useTenant } from '@/contexts/TenantContext'
 import reportingCockpitService, { 
   Employee, 
   EmployeeDemographics, 
-  EnhancedEmployeeData 
+  EnhancedEmployeeData,
+  PayStatement,
+  TaxRecord,
+  BenefitRecord,
+  TimecardRecord,
+  EmployeeJobHistory
 } from '@/services/reportingCockpitService'
+
+// Grid Components (will be defined below)
+import PayStatementsGrid from '@/components/reporting/PayStatementsGrid'
+import TimecardsGrid from '@/components/reporting/TimecardsGrid'
+import TaxRecordsGrid from '@/components/reporting/TaxRecordsGrid'
+import BenefitsGrid from '@/components/reporting/BenefitsGrid'
+import DocumentsGrid from '@/components/reporting/DocumentsGrid'
+import JobHistoryGrid from '@/components/reporting/JobHistoryGrid'
 import { 
   Search, 
   Filter, 
@@ -185,15 +198,14 @@ export default function ReportingCockpit() {
     if (!state.selectedEmployee) return
     
     // TODO: Implement comprehensive export functionality
-    console.log('Exporting all data for employee:', state.selectedEmployee.full_name)
-    
-    // This would export:
-    // - Employee demographics
-    // - Pay statements
-    // - Tax records
-    // - Benefits information
-    // - Timecard data
-    // - Documents
+    console.log('Exporting all data for:', state.selectedEmployee.full_name)
+  }
+
+  // Helper function to get data for the currently active tab (for export functionality)
+  const getActiveTabData = (): any[] => {
+    // This will be populated by the individual grid components
+    // For now, return empty array - each grid component will handle its own export
+    return []
   }
 
   const refreshData = () => {
@@ -631,59 +643,92 @@ export default function ReportingCockpit() {
           {/* Quadrant 3: Interactive Data Grid */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Database className="h-5 w-5 mr-2" />
-                Interactive Data Grid
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Database className="h-5 w-5 mr-2" />
+                  Interactive Data Grid
+                </div>
+                {state.selectedEmployee && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const tabData = getActiveTabData()
+                      if (tabData.length > 0) {
+                        reportingCockpitService.exportToCSV(
+                          tabData, 
+                          `${state.selectedEmployee?.full_name}_${activeDataTab}_${new Date().toISOString().split('T')[0]}`
+                        )
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs value={activeDataTab} onValueChange={setActiveDataTab}>
-                <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 text-xs">
-                  <TabsTrigger value="pay-statements">Pay</TabsTrigger>
-                  <TabsTrigger value="timecards">Time</TabsTrigger>
-                  <TabsTrigger value="tax-records">Tax</TabsTrigger>
-                  <TabsTrigger value="benefits">Benefits</TabsTrigger>
-                  <TabsTrigger value="documents">Docs</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-6">
+                  <TabsTrigger value="pay-statements" className="text-xs">Pay</TabsTrigger>
+                  <TabsTrigger value="timecards" className="text-xs">Time</TabsTrigger>
+                  <TabsTrigger value="tax-records" className="text-xs">Tax</TabsTrigger>
+                  <TabsTrigger value="benefits" className="text-xs">Benefits</TabsTrigger>
+                  <TabsTrigger value="documents" className="text-xs">Docs</TabsTrigger>
+                  <TabsTrigger value="job-history" className="text-xs">Jobs</TabsTrigger>
                 </TabsList>
                 
+                {/* Pay Statements Tab */}
                 <TabsContent value="pay-statements" className="mt-4">
-                  <div className="text-center py-8 text-gray-500">
-                    <DollarSign className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">Pay statements will appear here</p>
-                    <p className="text-xs text-gray-400">Select an employee to view data</p>
-                  </div>
+                  <PayStatementsGrid 
+                    employeeId={state.selectedEmployee?.id}
+                    tenantId={selectedTenant?.id}
+                    startDate={state.dateRange.start}
+                    endDate={state.dateRange.end}
+                  />
                 </TabsContent>
                 
+                {/* Timecards Tab */}
                 <TabsContent value="timecards" className="mt-4">
-                  <div className="text-center py-8 text-gray-500">
-                    <Clock className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">Timecard data will appear here</p>
-                    <p className="text-xs text-gray-400">Select an employee to view data</p>
-                  </div>
+                  <TimecardsGrid 
+                    employeeId={state.selectedEmployee?.id}
+                    tenantId={selectedTenant?.id}
+                    startDate={state.dateRange.start}
+                    endDate={state.dateRange.end}
+                  />
                 </TabsContent>
                 
+                {/* Tax Records Tab */}
                 <TabsContent value="tax-records" className="mt-4">
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">Tax records will appear here</p>
-                    <p className="text-xs text-gray-400">Select an employee to view data</p>
-                  </div>
+                  <TaxRecordsGrid 
+                    employeeId={state.selectedEmployee?.id}
+                    tenantId={selectedTenant?.id}
+                  />
                 </TabsContent>
                 
+                {/* Benefits Tab */}
                 <TabsContent value="benefits" className="mt-4">
-                  <div className="text-center py-8 text-gray-500">
-                    <Building className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">Benefits data will appear here</p>
-                    <p className="text-xs text-gray-400">Select an employee to view data</p>
-                  </div>
+                  <BenefitsGrid 
+                    employeeId={state.selectedEmployee?.id}
+                    tenantId={selectedTenant?.id}
+                  />
                 </TabsContent>
                 
+                {/* Documents Tab */}
                 <TabsContent value="documents" className="mt-4">
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">Employee documents will appear here</p>
-                    <p className="text-xs text-gray-400">Select an employee to view data</p>
-                  </div>
+                  <DocumentsGrid 
+                    employeeId={state.selectedEmployee?.id}
+                    tenantId={selectedTenant?.id}
+                  />
+                </TabsContent>
+
+                {/* Job History Tab */}
+                <TabsContent value="job-history" className="mt-4">
+                  <JobHistoryGrid 
+                    employeeId={state.selectedEmployee?.id}
+                    tenantId={selectedTenant?.id}
+                  />
                 </TabsContent>
               </Tabs>
             </CardContent>

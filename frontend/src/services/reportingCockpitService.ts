@@ -396,4 +396,465 @@ class ReportingCockpitService {
 }
 
 export const reportingCockpitService = new ReportingCockpitService()
-export default reportingCockpitService
+
+
+// Additional interfaces for Phase 3 - Interactive Data Grids
+export interface PayStatement {
+  id: string
+  check_number: string
+  employee_id: string
+  employee_name: string
+  pay_date: string
+  pay_period_start: string
+  pay_period_end: string
+  gross_pay: number
+  net_pay: number
+  regular_hours: number
+  overtime_hours: number
+  regular_pay: number
+  overtime_pay: number
+  bonus_amount?: number
+  commission_amount?: number
+  federal_tax_withheld: number
+  state_tax_withheld: number
+  social_security_tax: number
+  medicare_tax: number
+  pretax_deductions_total?: number
+  posttax_deductions_total?: number
+  ytd_gross: number
+  ytd_net: number
+  check_status: string
+}
+
+export interface TaxRecord {
+  id: string
+  tax_record_id: string
+  employee_id: string
+  tax_year: number
+  form_type: string
+  wages_tips_compensation: number
+  federal_income_tax_withheld: number
+  social_security_wages: number
+  social_security_tax_withheld: number
+  medicare_wages: number
+  medicare_tax_withheld: number
+  state_wages: number
+  state_income_tax: number
+  document_status: string
+  issue_date: string
+  created_at: string
+}
+
+export interface BenefitRecord {
+  id: string
+  employee_id: string
+  benefit_type: string
+  plan_name: string
+  coverage_type: string
+  enrollment_date: string
+  effective_date: string
+  termination_date?: string
+  employee_contribution: number
+  employer_contribution: number
+  coverage_amount: number
+  status: string
+  created_at: string
+}
+
+export interface TimecardRecord {
+  id: string
+  employee_id: string
+  work_date: string
+  clock_in: string
+  clock_out: string
+  break_minutes: number
+  regular_hours: number
+  overtime_hours: number
+  total_hours: number
+  hourly_rate: number
+  total_pay: number
+  status: string
+  created_at: string
+}
+
+export interface JobPosition {
+  id: string
+  job_code: string
+  job_title: string
+  department: string
+  job_family: string
+  job_level: string
+  pay_grade: string
+  min_salary: number
+  max_salary: number
+  job_description: string
+  requirements: string[]
+  status: string
+  created_at: string
+}
+
+export interface EmployeeJobHistory {
+  id: string
+  employee_id: string
+  job_code: string
+  job_title: string
+  department: string
+  start_date: string
+  end_date?: string
+  salary: number
+  reason_for_change: string
+  status: string
+}
+
+// Extend the ReportingCockpitService class with Phase 3 methods
+class ReportingCockpitServiceExtended extends ReportingCockpitService {
+  
+  /**
+   * Get pay statements for an employee with optional date filtering
+   */
+  async getPayStatements(
+    employeeId: string, 
+    tenantId?: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<PayStatement[]> {
+    try {
+      let query = supabase
+        .from('pay_statements')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('pay_date', { ascending: false })
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      if (startDate) {
+        query = query.gte('pay_date', startDate)
+      }
+
+      if (endDate) {
+        query = query.lte('pay_date', endDate)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching pay statements:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getPayStatements:', error)
+      return []
+    }
+  }
+
+  /**
+   * Get tax records for an employee with optional year filtering
+   */
+  async getTaxRecords(
+    employeeId: string,
+    tenantId?: string,
+    taxYear?: number
+  ): Promise<TaxRecord[]> {
+    try {
+      let query = supabase
+        .from('tax_records')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('tax_year', { ascending: false })
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      if (taxYear) {
+        query = query.eq('tax_year', taxYear)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching tax records:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getTaxRecords:', error)
+      return []
+    }
+  }
+
+  /**
+   * Get benefit records for an employee
+   */
+  async getBenefitRecords(
+    employeeId: string,
+    tenantId?: string,
+    activeOnly: boolean = false
+  ): Promise<BenefitRecord[]> {
+    try {
+      let query = supabase
+        .from('benefits')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('enrollment_date', { ascending: false })
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      if (activeOnly) {
+        query = query.eq('status', 'active')
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching benefit records:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getBenefitRecords:', error)
+      return []
+    }
+  }
+
+  /**
+   * Get timecard records for an employee with date filtering
+   */
+  async getTimecardRecords(
+    employeeId: string,
+    tenantId?: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<TimecardRecord[]> {
+    try {
+      // Note: Assuming timecards table exists - may need to be created
+      let query = supabase
+        .from('timecards')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('work_date', { ascending: false })
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      if (startDate) {
+        query = query.gte('work_date', startDate)
+      }
+
+      if (endDate) {
+        query = query.lte('work_date', endDate)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching timecard records:', error)
+        // If timecards table doesn't exist, return empty array
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getTimecardRecords:', error)
+      return []
+    }
+  }
+
+  /**
+   * Get job catalog/positions
+   */
+  async getJobCatalog(tenantId?: string): Promise<JobPosition[]> {
+    try {
+      // Note: Assuming job_positions table exists - may need to be created
+      let query = supabase
+        .from('job_positions')
+        .select('*')
+        .eq('status', 'active')
+        .order('job_title')
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching job catalog:', error)
+        // Return mock data if table doesn't exist
+        return this.getMockJobCatalog()
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getJobCatalog:', error)
+      return this.getMockJobCatalog()
+    }
+  }
+
+  /**
+   * Get employee job history
+   */
+  async getEmployeeJobHistory(
+    employeeId: string,
+    tenantId?: string
+  ): Promise<EmployeeJobHistory[]> {
+    try {
+      // Note: Assuming employee_job_history table exists
+      let query = supabase
+        .from('employee_job_history')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('start_date', { ascending: false })
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching employee job history:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getEmployeeJobHistory:', error)
+      return []
+    }
+  }
+
+  /**
+   * Mock job catalog data (fallback if table doesn't exist)
+   */
+  private getMockJobCatalog(): JobPosition[] {
+    return [
+      {
+        id: '1',
+        job_code: 'ENG001',
+        job_title: 'Senior Software Engineer',
+        department: 'Engineering',
+        job_family: 'Technology',
+        job_level: 'Senior',
+        pay_grade: 'L5',
+        min_salary: 120000,
+        max_salary: 180000,
+        job_description: 'Design and develop software applications',
+        requirements: ['Bachelor\'s degree', '5+ years experience', 'JavaScript/TypeScript'],
+        status: 'active',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '2',
+        job_code: 'MKT001',
+        job_title: 'Marketing Manager',
+        department: 'Marketing',
+        job_family: 'Marketing',
+        job_level: 'Manager',
+        pay_grade: 'M3',
+        min_salary: 80000,
+        max_salary: 120000,
+        job_description: 'Lead marketing campaigns and strategy',
+        requirements: ['Bachelor\'s degree', '3+ years experience', 'Digital marketing'],
+        status: 'active',
+        created_at: new Date().toISOString()
+      }
+    ]
+  }
+
+  /**
+   * Export data to CSV format
+   */
+  exportToCSV(data: any[], filename: string): void {
+    if (!data || data.length === 0) {
+      console.warn('No data to export')
+      return
+    }
+
+    const headers = Object.keys(data[0])
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header]
+          // Handle values that might contain commas or quotes
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+            return `"${value.replace(/"/g, '""')}"`
+          }
+          return value || ''
+        }).join(',')
+      )
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `${filename}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  /**
+   * Format date for display
+   */
+  formatDate(dateString: string | null | undefined): string {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  /**
+   * Format date and time for display
+   */
+  formatDateTime(dateString: string | null | undefined): string {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  /**
+   * Calculate total compensation from pay statement
+   */
+  calculateTotalCompensation(payStatement: PayStatement): number {
+    return (payStatement.gross_pay || 0) + 
+           (payStatement.overtime_pay || 0) + 
+           (payStatement.bonus_amount || 0) + 
+           (payStatement.commission_amount || 0)
+  }
+
+  /**
+   * Calculate total deductions from pay statement
+   */
+  calculateTotalDeductions(payStatement: PayStatement): number {
+    return (payStatement.federal_tax_withheld || 0) +
+           (payStatement.state_tax_withheld || 0) +
+           (payStatement.social_security_tax || 0) +
+           (payStatement.medicare_tax || 0) +
+           (payStatement.pretax_deductions_total || 0) +
+           (payStatement.posttax_deductions_total || 0)
+  }
+}
+
+// Export the extended service
+export const reportingCockpitServiceExtended = new ReportingCockpitServiceExtended()
+export default reportingCockpitServiceExtended
