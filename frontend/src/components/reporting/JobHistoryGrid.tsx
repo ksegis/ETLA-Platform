@@ -92,7 +92,8 @@ const JobHistoryGrid: React.FC<JobHistoryGridProps> = ({
     }
   }
 
-  const getChangeReasonColor = (reason: string) => {
+  const getChangeReasonColor = (reason: string | undefined) => {
+    if (!reason) return 'bg-gray-100 text-gray-800';
     switch (reason?.toLowerCase()) {
       case 'promotion':
         return 'bg-green-100 text-green-800'
