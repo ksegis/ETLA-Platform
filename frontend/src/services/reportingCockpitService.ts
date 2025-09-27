@@ -154,6 +154,9 @@ export interface BenefitRecord {
   employee_contribution: number;
   employer_contribution: number;
   coverage_level: string;
+  enrollment_date?: string; // Added enrollment_date property
+  effective_date?: string; // Added effective_date property
+  coverage_amount?: number; // Added coverage_amount property
   tenant_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -703,6 +706,9 @@ class ReportingCockpitService {
             employee_contribution: 150,
             employer_contribution: 450,
             coverage_level: 'Family',
+            enrollment_date: '2022-12-01',
+            effective_date: '2023-01-01',
+            coverage_amount: 50000,
             created_at: '2023-01-01T00:00:00Z'
           },
           {
@@ -718,6 +724,9 @@ class ReportingCockpitService {
             employee_contribution: 30,
             employer_contribution: 70,
             coverage_level: 'Individual',
+            enrollment_date: '2022-12-01',
+            effective_date: '2023-01-01',
+            coverage_amount: 0,
             created_at: '2023-01-01T00:00:00Z'
           }
         ];
