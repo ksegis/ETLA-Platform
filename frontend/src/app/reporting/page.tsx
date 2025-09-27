@@ -167,10 +167,16 @@ export default function ReportingPage() {
   }, [accessibleTenantIds.join(','), mounted])
 
   const loadInitialData = async () => {
+    if (!user) {
+      console.log("User not authenticated, skipping data load.")
+      setState(prev => ({ ...prev, loading: false }))
+      return
+    }
+
     const tenantIds = accessibleTenantIds
     
     if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping load')
+      console.log("No accessible tenants, skipping data load.")
       setState(prev => ({ ...prev, loading: false }))
       return
     }
@@ -178,51 +184,25 @@ export default function ReportingPage() {
     setState(prev => ({ ...prev, loading: true, error: null }))
     
     try {
-      console.log('Loading employee data for tenants:', tenantIds)
+      console.log("Loading employee data for tenants:", tenantIds)
       
       // Load employees with error handling
       let employees: Employee[] = []
       try {
-        console.log('Attempting to query employees table...')
+        const { data: employeesData, error: employeesError } = await supabase
+          .from("employees")
+          .select("*")
+          .in("tenant_id", tenantIds)
+          .order("created_at", { ascending: false })
         
-        // First try to get all employees to see if the table exists
-        const { data: allEmployeesData, error: allEmployeesError } = await supabase
-          .from('employees')
-          .select('*')
-          .limit(50)
-        
-        console.log('All employees query result:', { data: allEmployeesData, error: allEmployeesError })
-        
-        if (allEmployeesError) {
-          console.error('All employees query error:', allEmployeesError)
+        if (employeesError) {
+          console.error("Employees query error:", employeesError)
           employees = []
         } else {
-          // If we got data, check if tenant_id field exists
-          const hasTenantId = allEmployeesData && allEmployeesData.length > 0 && 'tenant_id' in allEmployeesData[0]
-          console.log('Employees have tenant_id field:', hasTenantId)
-          
-          if (hasTenantId) {
-            // Filter by tenant if tenant_id exists
-            const { data: employeesData, error: employeesError } = await supabase
-              .from('employees')
-              .select('*')
-              .in('tenant_id', tenantIds)
-              .order('created_at', { ascending: false })
-            
-            if (employeesError) {
-              console.error('Filtered employees query error:', employeesError)
-              employees = allEmployeesData || []
-            } else {
-              employees = employeesData || []
-            }
-          } else {
-            // Use all employees if no tenant_id field
-            console.log('Using all employees (no tenant filtering)')
-            employees = allEmployeesData || []
-          }
+          employees = employeesData || []
         }
       } catch (err) {
-        console.error('Employees query error:', err)
+        console.error("Employees query error:", err)
         employees = []
       }
 
@@ -230,24 +210,24 @@ export default function ReportingPage() {
       let departments: Department[] = []
       try {
         const { data: departmentsData, error: departmentsError } = await supabase
-          .from('departments')
-          .select('*')
-          .in('tenant_id', tenantIds)
-          .order('name', { ascending: true })
+          .from("departments")
+          .select("*")
+          .in("tenant_id", tenantIds)
+          .order("name", { ascending: true })
         
         if (departmentsError) {
-          console.error('Departments query error:', departmentsError)
+          console.error("Departments query error:", departmentsError)
           departments = []
         } else {
           departments = departmentsData || []
         }
       } catch (err) {
-        console.error('Departments query error:', err)
+        console.error("Departments query error:", err)
         departments = []
       }
       
-      console.log('✅ Loaded employees:', employees.length)
-      console.log('✅ Loaded departments:', departments.length)
+      console.log("✅ Loaded employees:", employees.length)
+      console.log("✅ Loaded departments:", departments.length)
       
       setState(prev => ({ 
         ...prev, 
@@ -256,11 +236,11 @@ export default function ReportingPage() {
         loading: false 
       }))
     } catch (error) {
-      console.error('Error loading initial data:', error)
+      console.error("Error loading initial data:", error)
       setState(prev => ({ 
         ...prev, 
         loading: false,
-        error: 'Failed to load employee data. Please try again.'
+        error: "Failed to load employee data. Please try again."
       }))
     }
   }
