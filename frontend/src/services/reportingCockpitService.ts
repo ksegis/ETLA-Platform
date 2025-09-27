@@ -147,6 +147,7 @@ export interface BenefitRecord {
   benefit_type: string;
   provider: string;
   plan_name?: string; // Added plan_name property
+  coverage_type?: string; // Added coverage_type property
   start_date: string;
   end_date?: string;
   status: string;
@@ -695,6 +696,7 @@ class ReportingCockpitService {
             benefit_type: 'Health Insurance',
             provider: 'Blue Cross Blue Shield',
             plan_name: 'PPO Gold',
+            coverage_type: 'Medical',
             start_date: '2023-01-01',
             end_date: '2024-12-31',
             status: 'Active',
@@ -709,6 +711,7 @@ class ReportingCockpitService {
             benefit_type: 'Dental Insurance',
             provider: 'Delta Dental',
             plan_name: 'Dental PPO',
+            coverage_type: 'Dental',
             start_date: '2023-01-01',
             end_date: '2024-12-31',
             status: 'Active',
