@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxMjM0NTYsImV4cCI6MTk2MDY5OTQ1Nn0.placeholder-key-for-build-only';
+const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxMjM0NTYsImV4cCI6MTk2MDY5OTQ1Nn0.dummySignatureForBuildTime';
 
 // Determine if we should use the mock client
 // This happens if:
@@ -10,7 +10,7 @@ const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TO
 // 2. OR, if the Supabase URL or Anon Key are explicitly set to placeholder/demo values
 const useMockClient = (
   NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' ||
-  NEXT_PUBLIC_SUPABASE_ANON_TOKEN.includes('placeholder-key-for-build-only') ||
+  NEXT_PUBLIC_SUPABASE_ANON_TOKEN.includes('dummySignatureForBuildTime') ||
   NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
   NEXT_PUBLIC_SUPABASE_ANON_TOKEN === 'demo_anon_key'
 );
@@ -75,12 +75,26 @@ const createMockClient = () => ({
   }
 });
 
-// Initialize the Supabase client conditionally
-export const supabase = useMockClient 
-  ? createMockClient() as any 
-  : (NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_TOKEN 
-      ? createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_TOKEN)
-      : createMockClient() as any); // Fallback to mock client if env vars are missing
+// Initialize the Supabase client conditionally with error handling
+let supabaseClient: any;
+
+try {
+  if (useMockClient) {
+    console.log('🔧 Using mock Supabase client (demo mode)');
+    supabaseClient = createMockClient();
+  } else if (NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_TOKEN) {
+    console.log('🔗 Initializing real Supabase client');
+    supabaseClient = createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_TOKEN);
+  } else {
+    console.warn('⚠️ Missing Supabase environment variables, falling back to mock client');
+    supabaseClient = createMockClient();
+  }
+} catch (error) {
+  console.error('❌ Error initializing Supabase client, using mock client:', error);
+  supabaseClient = createMockClient();
+}
+
+export const supabase = supabaseClient;
 
 // Export a function to check if the client is in demo mode
 export const isSupabaseDemoMode = useMockClient;
