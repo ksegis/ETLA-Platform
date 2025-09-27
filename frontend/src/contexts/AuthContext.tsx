@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -177,11 +177,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (error) {
       console.error('❌ AuthProvider: Sign in error:', error)
-      return { error }
+      return { error: error as AuthError }
     }
   }
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (error) {
       console.error('❌ AuthProvider: Sign up error:', error)
-      return { error }
+      return { error: error as AuthError }
     }
   }
 

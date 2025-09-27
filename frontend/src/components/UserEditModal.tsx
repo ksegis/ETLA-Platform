@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase, Save } from 'lucide-react'
-import { userManagement, type UserUpdateData } from "@/lib/supabase"
+import { userManagement, type UserUpdateData } from "@/services/userManagementService"
 
 interface User {
   id: string

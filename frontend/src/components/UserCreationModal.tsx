@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase } from 'lucide-react'
-import { userManagement, type UserCreationData } from "@/lib/supabase"
+import { userManagement, type UserCreationData } from "@/services/userManagementService"
 
 interface UserCreationModalProps {
   isOpen: boolean
