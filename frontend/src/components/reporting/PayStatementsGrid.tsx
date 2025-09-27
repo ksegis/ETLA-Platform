@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, PayStatement, exportToCSV } from '@/services/reportingCockpitService'
+import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import type { PayStatement } from '@/types/reporting'
 import { DollarSign, Download, Loader2, AlertCircle } from 'lucide-react'
 
 interface PayStatementsGridProps {
@@ -69,7 +70,7 @@ const PayStatementsGrid: React.FC<PayStatementsGridProps> = ({
     })
   }
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string | undefined) => {
     switch (status?.toLowerCase()) {
       case 'paid':
         return 'default'
@@ -239,3 +240,4 @@ const PayStatementsGrid: React.FC<PayStatementsGridProps> = ({
 }
 
 export default PayStatementsGrid
+

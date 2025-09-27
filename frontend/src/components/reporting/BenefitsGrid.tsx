@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, BenefitRecord, exportToCSV } from '@/services/reportingCockpitService'
+import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import type { BenefitRecord } from '@/types/reporting'
 import { Building, Download, Loader2, AlertCircle } from 'lucide-react'
 
 interface BenefitsGridProps {
@@ -60,7 +61,7 @@ const BenefitsGrid: React.FC<BenefitsGridProps> = ({
     })
   }
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string | undefined) => {
     switch (status?.toLowerCase()) {
       case 'active':
         return 'default'
@@ -75,7 +76,7 @@ const BenefitsGrid: React.FC<BenefitsGridProps> = ({
     }
   }
 
-  const getBenefitTypeColor = (type: string) => {
+  const getBenefitTypeColor = (type: string | undefined) => {
     switch (type?.toLowerCase()) {
       case 'health':
         return 'bg-blue-100 text-blue-800'
@@ -264,3 +265,4 @@ const BenefitsGrid: React.FC<BenefitsGridProps> = ({
 }
 
 export default BenefitsGrid
+

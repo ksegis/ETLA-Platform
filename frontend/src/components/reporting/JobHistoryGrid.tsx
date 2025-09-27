@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, EmployeeJobHistory, exportToCSV } from '@/services/reportingCockpitService'
+import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import type { EmployeeJobHistory } from '@/types/reporting'
 import { Briefcase, Download, Loader2, AlertCircle, TrendingUp } from 'lucide-react'
 
 interface JobHistoryGridProps {
@@ -79,7 +80,7 @@ const JobHistoryGrid: React.FC<JobHistoryGridProps> = ({
     }
   }
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string | undefined) => {
     switch (status?.toLowerCase()) {
       case 'active':
         return 'default'
@@ -296,3 +297,4 @@ const JobHistoryGrid: React.FC<JobHistoryGridProps> = ({
 }
 
 export default JobHistoryGrid
+

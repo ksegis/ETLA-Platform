@@ -1,188 +1,19 @@
 import { supabase, isSupabaseDemoMode } from '@/lib/supabase'
 import Papa from 'papaparse';
-
-// Types based on the actual database schema
-export interface Employee {
-  id: string
-  employee_id: string
-  employee_code?: string
-  full_name: string
-  first_name: string
-  last_name: string
-  email?: string
-  job_title?: string
-  department?: string
-  position?: string
-  hire_date: string
-  termination_date?: string
-  status: string
-  employment_status?: string
-  employment_type?: string
-  work_location?: string
-  manager_supervisor?: string
-  annual_salary?: number
-  hourly_rate?: number
-  pay_type?: string
-  pay_frequency?: string
-  tenant_id: string
-  created_at: string
-  updated_at: string
-}
-
-export interface EmployeeDemographics {
-  id: string
-  employee_code: string
-  customer_id: string
-  tenant_id?: string
-  first_name?: string
-  last_name?: string
-  gender?: string
-  marital_status?: string
-  birth_date?: string
-  date_of_birth?: string
-  ethnic_background?: string
-  ethnicity?: string
-  race?: string
-  veteran_status?: boolean
-  has_disability?: boolean
-  disability_category?: string
-  work_authorization_status?: string
-  citizenship_country?: string
-  address_line1?: string
-  city?: string
-  state?: string
-  postal_code?: string
-  country?: string
-  phone_mobile?: string
-  email?: string
-  languages?: string[]
-  education_level?: string
-  job_title?: string
-  department?: string
-  location?: string
-  manager_id?: string
-  emergency_contact_name?: string
-  emergency_contact_phone?: string
-  emergency_contact_relationship?: string
-  dependent_count?: number
-  created_at: string
-  updated_at: string
-}
-
-export interface PayStatementSummary {
-  employee_id: string
-  ytd_gross?: number
-  ytd_net?: number
-  total_hours_ytd?: number
-  latest_pay_date?: string
-  total_statements?: number
-}
-
-export interface EmployeeDocumentCount {
-  employee_id: string
-  document_count: number
-}
-
-export interface PayStatement {
-  id: string;
-  check_number: string;
-  employee_id: string;
-  employee_name: string;
-  pay_date: string;
-  pay_period_start: string;
-  pay_period_end: string;
-  gross_pay: number;
-  net_pay: number;
-  regular_hours: number;
-  overtime_hours: number;
-  regular_pay: number;
-  overtime_pay: number;
-  federal_tax_withheld: number;
-  state_tax_withheld: number;
-  social_security_tax: number;
-  medicare_tax: number;
-  ytd_gross: number;
-  ytd_net: number;
-  check_status: string;
-  tenant_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface EmployeeJobHistory {
-  id: string
-  employee_id: string
-  job_code: string
-  job_title: string
-  department: string
-  start_date: string
-  end_date?: string
-  salary: number
-  reason_for_change?: string
-  is_current: boolean
-  status: string; // Added status property
-  created_at: string
-}
-
-export interface TaxRecord {
-  id: string;
-  employee_id: string;
-  tax_year: number;
-  form_type: string;
-  document_url?: string;
-  federal_wages: number;
-  federal_tax_withheld: number;
-  state_wages: number;
-  state_tax_withheld: number;
-  local_wages: number;
-  local_tax_withheld: number;
-  document_status?: string; // Added document_status property
-  tenant_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface BenefitRecord {
-  id: string;
-  employee_id: string;
-  benefit_type: string;
-  provider: string;
-  plan_name?: string; // Added plan_name property
-  coverage_type?: string; // Added coverage_type property
-  start_date: string;
-  end_date?: string;
-  termination_date?: string; // Added termination_date property
-  status: string;
-  employee_contribution: number;
-  employer_contribution: number;
-  coverage_level: string;
-  enrollment_date?: string; // Added enrollment_date property
-  effective_date?: string; // Added effective_date property
-  coverage_amount?: number; // Added coverage_amount property
-  tenant_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface TimecardRecord {
-  id: string;
-  employee_id: string;
-  work_date: string;
-  hours_worked: number;
-  project?: string;
-  task?: string;
-  status: string;
-  tenant_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface EnhancedEmployeeData {
-  employee: Employee
-  demographics?: EmployeeDemographics
-  payrollSummary?: PayStatementSummary
-  documentCount?: number
-}
+import {
+  Employee,
+  EmployeeDemographics,
+  PayStatementSummary,
+  EmployeeDocumentCount,
+  PayStatement,
+  EmployeeJobHistory,
+  TaxRecord,
+  BenefitRecord,
+  TimecardRecord,
+  EnhancedEmployeeData,
+  Department,
+  DocumentRecord
+} from '@/types/reporting';
 
 const isDemoMode = isSupabaseDemoMode;
 
@@ -238,7 +69,261 @@ const mockEmployees: Employee[] = [
   }
 ];
 
-class ReportingCockpitService {
+const mockPayStatements: PayStatement[] = [
+  {
+    id: 'ps1',
+    check_number: 'CHK001',
+    employee_id: 'emp1',
+    employee_name: 'John Smith',
+    pay_date: '2023-09-15',
+    pay_period_start: '2023-09-01',
+    pay_period_end: '2023-09-15',
+    gross_pay: 2500,
+    net_pay: 1800,
+    regular_hours: 80,
+    overtime_hours: 0,
+    regular_pay: 2500,
+    overtime_pay: 0,
+    federal_tax_withheld: 300,
+    state_tax_withheld: 100,
+    social_security_tax: 150,
+    medicare_tax: 30,
+    ytd_gross: 85000,
+    ytd_net: 62000,
+    check_status: 'Issued',
+    tenant_id: 'tenant1',
+    created_at: '2023-09-15T00:00:00Z',
+    updated_at: '2023-09-15T00:00:00Z'
+  },
+  {
+    id: 'ps2',
+    check_number: 'CHK002',
+    employee_id: 'emp1',
+    employee_name: 'John Smith',
+    pay_date: '2023-08-31',
+    pay_period_start: '2023-08-16',
+    pay_period_end: '2023-08-31',
+    gross_pay: 2500,
+    net_pay: 1800,
+    regular_hours: 80,
+    overtime_hours: 0,
+    regular_pay: 2500,
+    overtime_pay: 0,
+    federal_tax_withheld: 300,
+    state_tax_withheld: 100,
+    social_security_tax: 150,
+    medicare_tax: 30,
+    ytd_gross: 82500,
+    ytd_net: 60200,
+    check_status: 'Issued',
+    tenant_id: 'tenant1',
+    created_at: '2023-08-31T00:00:00Z',
+    updated_at: '2023-08-31T00:00:00Z'
+  }
+];
+
+const mockTaxRecords: TaxRecord[] = [
+  {
+    id: 'tr1',
+    employee_id: 'emp1',
+    tax_year: 2022,
+    form_type: 'W-2',
+    document_url: '/documents/w2_john_2022.pdf',
+    federal_wages: 80000,
+    federal_tax_withheld: 8000,
+    state_wages: 80000,
+    state_tax_withheld: 4000,
+    local_wages: 0,
+    local_tax_withheld: 0,
+    document_status: 'Issued',
+    issue_date: '2023-01-20',
+    tax_record_id: 'W2-EMP001-2022',
+    wages_tips_compensation: 80000,
+    social_security_wages: 80000,
+    social_security_tax_withheld: 4960,
+    medicare_wages: 80000,
+    medicare_tax_withheld: 1160,
+    state_income_tax: 4000,
+    tenant_id: 'tenant1',
+    created_at: '2023-01-20T00:00:00Z',
+    updated_at: '2023-01-20T00:00:00Z'
+  },
+  {
+    id: 'tr2',
+    employee_id: 'emp1',
+    tax_year: 2021,
+    form_type: 'W-2',
+    document_url: '/documents/w2_john_2021.pdf',
+    federal_wages: 75000,
+    federal_tax_withheld: 7500,
+    state_wages: 75000,
+    state_tax_withheld: 3750,
+    local_wages: 0,
+    local_tax_withheld: 0,
+    document_status: 'Issued',
+    issue_date: '2022-01-20',
+    tax_record_id: 'W2-EMP001-2021',
+    wages_tips_compensation: 75000,
+    social_security_wages: 75000,
+    social_security_tax_withheld: 4650,
+    medicare_wages: 75000,
+    medicare_tax_withheld: 1087.5,
+    state_income_tax: 3750,
+    tenant_id: 'tenant1',
+    created_at: '2022-01-20T00:00:00Z',
+    updated_at: '2022-01-20T00:00:00Z'
+  }
+];
+
+const mockBenefits: BenefitRecord[] = [
+  {
+    id: 'b1',
+    employee_id: 'emp1',
+    benefit_type: 'Health Insurance',
+    provider: 'Blue Cross Blue Shield',
+    plan_name: 'PPO Platinum',
+    coverage_type: 'Family',
+    start_date: '2023-01-01',
+    end_date: '2023-12-31',
+    termination_date: undefined,
+    status: 'Active',
+    employee_contribution: 150,
+    employer_contribution: 450,
+    coverage_level: 'High',
+    enrollment_date: '2022-11-15',
+    effective_date: '2023-01-01',
+    coverage_amount: 100000,
+    tenant_id: 'tenant1',
+    created_at: '2022-11-15T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z'
+  },
+  {
+    id: 'b2',
+    employee_id: 'emp1',
+    benefit_type: 'Dental Insurance',
+    provider: 'Delta Dental',
+    plan_name: 'PPO Basic',
+    coverage_type: 'Individual',
+    start_date: '2023-01-01',
+    end_date: '2023-12-31',
+    termination_date: undefined,
+    status: 'Active',
+    employee_contribution: 30,
+    employer_contribution: 50,
+    coverage_level: 'Medium',
+    enrollment_date: '2022-11-15',
+    effective_date: '2023-01-01',
+    coverage_amount: 1500,
+    tenant_id: 'tenant1',
+    created_at: '2022-11-15T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z'
+  }
+];
+
+const mockTimecards: TimecardRecord[] = [
+  {
+    id: 'tc1',
+    employee_id: 'emp1',
+    work_date: '2023-09-15',
+    hours_worked: 8,
+    project: 'Project Alpha',
+    task: 'Development',
+    status: 'Approved',
+    tenant_id: 'tenant1',
+    created_at: '2023-09-15T17:00:00Z',
+    updated_at: '2023-09-15T17:00:00Z'
+  },
+  {
+    id: 'tc2',
+    employee_id: 'emp1',
+    work_date: '2023-09-14',
+    hours_worked: 8.5,
+    project: 'Project Alpha',
+    task: 'Code Review',
+    status: 'Approved',
+    tenant_id: 'tenant1',
+    created_at: '2023-09-14T17:30:00Z',
+    updated_at: '2023-09-14T17:30:00Z'
+  }
+];
+
+const mockJobHistory: EmployeeJobHistory[] = [
+  {
+    id: 'jh1',
+    employee_id: 'emp1',
+    job_code: 'SSE',
+    job_title: 'Senior Software Engineer',
+    department: 'Engineering',
+    start_date: '2023-01-15',
+    end_date: undefined,
+    salary: 120000,
+    reason_for_change: 'Promotion',
+    is_current: true,
+    status: 'Active',
+    created_at: '2023-01-15T00:00:00Z'
+  },
+  {
+    id: 'jh2',
+    employee_id: 'emp1',
+    job_code: 'JSE',
+    job_title: 'Junior Software Engineer',
+    department: 'Engineering',
+    start_date: '2021-06-01',
+    end_date: '2023-01-14',
+    salary: 90000,
+    reason_for_change: 'Initial Hire',
+    is_current: false,
+    status: 'Inactive',
+    created_at: '2021-06-01T00:00:00Z'
+  }
+];
+
+const mockDepartments: Department[] = [
+  { id: 'dpt1', name: 'Engineering', tenant_id: 'tenant1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'dpt2', name: 'Marketing', tenant_id: 'tenant1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'dpt3', name: 'Sales', tenant_id: 'tenant1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+];
+
+const mockDocuments: DocumentRecord[] = [
+  {
+    id: 'doc1',
+    document_name: 'Employee Handbook',
+    document_type: 'pdf',
+    document_category: 'HR Documents',
+    file_path: '/documents/employee_handbook.pdf',
+    file_size: 102400,
+    upload_date: '2023-01-01',
+    tags: ['handbook', 'policy'],
+    access_level: 'public',
+    status: 'Approved',
+    employee_id: 'emp1',
+    tenant_id: 'tenant1',
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z',
+    last_accessed: '2023-09-27T10:00:00Z',
+    metadata: { version: '1.0', author: 'HR Dept' }
+  },
+  {
+    id: 'doc2',
+    document_name: 'Q3 Performance Review',
+    document_type: 'doc',
+    document_category: 'Performance',
+    file_path: '/documents/q3_review_john.doc',
+    file_size: 51200,
+    upload_date: '2023-09-10',
+    tags: ['review', 'performance'],
+    access_level: 'restricted',
+    status: 'Pending Approval',
+    employee_id: 'emp1',
+    tenant_id: 'tenant1',
+    created_at: '2023-09-10T00:00:00Z',
+    updated_at: '2023-09-10T00:00:00Z',
+    last_accessed: '2023-09-26T14:30:00Z',
+    metadata: { quarter: 'Q3', year: '2023' }
+  }
+];
+
+export class ReportingCockpitService {
   /**
    * Get all active employees with basic information
    */
@@ -270,6 +355,46 @@ class ReportingCockpitService {
     } catch (error) {
       console.error('Error in getEmployees:', error)
       return isDemoMode ? mockEmployees : []
+    }
+  }
+
+  /**
+   * Search employees by name, ID, or email
+   */
+  async searchEmployees(searchTerm: string, tenantId?: string): Promise<Employee[]> {
+    try {
+      if (isDemoMode) {
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+        return mockEmployees.filter(employee =>
+          employee.full_name.toLowerCase().includes(lowerCaseSearchTerm) ||
+          employee.employee_id.toLowerCase().includes(lowerCaseSearchTerm) ||
+          employee.email?.toLowerCase().includes(lowerCaseSearchTerm)
+        );
+      }
+
+      let query = supabase
+        .from('employees')
+        .select('*')
+        .in('status', ['active', 'Active'])
+        .ilike('full_name', `%${searchTerm}%`)
+        .or(`employee_id.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+        .order('full_name');
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error searching employees:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in searchEmployees:', error);
+      return isDemoMode ? mockEmployees.filter(emp => emp.full_name.toLowerCase().includes(searchTerm.toLowerCase())) : [];
     }
   }
 
@@ -413,553 +538,267 @@ class ReportingCockpitService {
       
       // For now, return a calculated count based on related records
       const promises = [
-        // Count pay statements
-        supabase
-          .from('pay_statements')
-          .select('id', { count: 'exact', head: true })
-          .eq('employee_id', employeeId)
-          .then(({ count }: { count: number | null }) => count || 0),
-        
-        // Count tax records
-        supabase
-          .from('tax_records')
-          .select('id', { count: 'exact', head: true })
-          .eq('employee_id', employeeId)
-          .then(({ count }: { count: number | null }) => count || 0),
-        
-        // Count benefits records
-        supabase
-          .from('benefits')
-          .select('id', { count: 'exact', head: true })
-          .eq('employee_id', employeeId)
-          .then(({ count }: { count: number | null }) => count || 0)
-      ]
+        this.getPayStatements(employeeId, tenantId),
+        this.getTaxRecords(employeeId, tenantId),
+        this.getEmployeeDocuments(employeeId, tenantId) // Assuming this will be implemented
+      ];
 
-      const counts = await Promise.all(promises)
-      return counts.reduce((sum, count) => sum + count, 0)
+      const [payStatements, taxRecords, documents] = await Promise.all(promises);
+
+      return (payStatements?.length || 0) + (taxRecords?.length || 0) + (documents?.length || 0);
+
     } catch (error) {
-      console.error('Error in getEmployeeDocumentCount:', error)
-      return isDemoMode ? 12 : 0
+      console.error('Error in getEmployeeDocumentCount:', error);
+      return isDemoMode ? 12 : 0;
     }
   }
 
   /**
-   * Get enhanced employee data with demographics, payroll summary, and document count
+   * Get pay statements for an employee
    */
-  async getEnhancedEmployeeData(employeeId: string, tenantId?: string): Promise<EnhancedEmployeeData | null> {
-    try {
-      // Return mock data in demo mode
-      if (isDemoMode) {
-        const employee = mockEmployees.find(emp => emp.id === employeeId) || mockEmployees[0];
-        return {
-          employee,
-          demographics: {
-            id: 'demo1',
-            employee_code: employee.employee_code || employee.employee_id,
-            customer_id: 'cust1',
-            first_name: employee.first_name,
-            last_name: employee.last_name,
-            gender: 'Male',
-            marital_status: 'Married',
-            birth_date: '1985-06-15',
-            ethnic_background: 'Caucasian',
-            veteran_status: false,
-            has_disability: false,
-            work_authorization_status: 'Citizen',
-            citizenship_country: 'United States',
-            address_line1: '123 Main St',
-            city: 'Austin',
-            state: 'TX',
-            postal_code: '78701',
-            country: 'USA',
-            phone_mobile: '512-555-1234',
-            email: employee.email,
-            job_title: employee.job_title,
-            department: employee.department,
-            created_at: '2023-01-15T00:00:00Z',
-            updated_at: '2023-01-15T00:00:00Z'
-          },
-          payrollSummary: {
-            employee_id: employeeId,
-            ytd_gross: 85000,
-            ytd_net: 62000,
-            total_hours_ytd: 1520,
-            latest_pay_date: '2023-09-15',
-            total_statements: 18
-          },
-          documentCount: 12
-        };
-      }
-
-      // First get the employee record
-      let employeeQuery = supabase
-        .from('employees')
-        .select('*')
-        .eq('id', employeeId)
-        .single()
-
-      const { data: employee, error: employeeError } = await employeeQuery
-
-      if (employeeError || !employee) {
-        console.error('Error fetching employee:', employeeError)
-        return null
-      }
-
-      // Fetch demographics, payroll summary, and document count in parallel
-      const [demographics, payrollSummary, documentCount] = await Promise.all([
-        this.getEmployeeDemographics(employee.employee_code || employee.employee_id, tenantId),
-        this.getPayrollSummary(employeeId, tenantId),
-        this.getEmployeeDocumentCount(employeeId, tenantId)
-      ])
-
-      return {
-        employee,
-        demographics: demographics || undefined,
-        payrollSummary: payrollSummary || undefined,
-        documentCount: documentCount || undefined
-      }
-    } catch (error) {
-      console.error('Error in getEnhancedEmployeeData:', error)
-      return isDemoMode ? {
-        employee: mockEmployees.find(emp => emp.id === employeeId) || mockEmployees[0],
-        demographics: {
-          id: 'demo1',
-          employee_code: 'EMP001',
-          customer_id: 'cust1',
-          first_name: 'John',
-          last_name: 'Smith',
-          gender: 'Male',
-          marital_status: 'Married',
-          birth_date: '1985-06-15',
-          ethnic_background: 'Caucasian',
-          veteran_status: false,
-          has_disability: false,
-          work_authorization_status: 'Citizen',
-          citizenship_country: 'United States',
-          address_line1: '123 Main St',
-          city: 'Austin',
-          state: 'TX',
-          postal_code: '78701',
-          country: 'USA',
-          phone_mobile: '512-555-1234',
-          email: 'john.smith@company.com',
-          job_title: 'Senior Software Engineer',
-          department: 'Engineering',
-          created_at: '2023-01-15T00:00:00Z',
-          updated_at: '2023-01-15T00:00:00Z'
-        },
-        payrollSummary: {
-          employee_id: employeeId,
-          ytd_gross: 85000,
-          ytd_net: 62000,
-          total_hours_ytd: 1520,
-          latest_pay_date: '2023-09-15',
-          total_statements: 18
-        },
-        documentCount: 12
-      } : null
-    }
-  }
-
   async getPayStatements(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<PayStatement[]> {
     try {
       if (isDemoMode) {
-        return [
-          {
-            id: 'ps1',
-            check_number: '1001',
-            employee_id: employeeId,
-            employee_name: 'John Doe',
-            pay_date: '2023-09-15',
-            pay_period_start: '2023-09-01',
-            pay_period_end: '2023-09-15',
-            gross_pay: 2500,
-            net_pay: 1800,
-            regular_hours: 80,
-            overtime_hours: 0,
-            regular_pay: 2500,
-            overtime_pay: 0,
-            federal_tax_withheld: 200,
-            state_tax_withheld: 50,
-            social_security_tax: 100,
-            medicare_tax: 25,
-            ytd_gross: 45000,
-            ytd_net: 32000,
-            check_status: 'Paid',
-            created_at: '2023-09-15T00:00:00Z'
-          },
-          {
-            id: 'ps2',
-            check_number: '1002',
-            employee_id: employeeId,
-            employee_name: 'John Doe',
-            pay_date: '2023-08-31',
-            pay_period_start: '2023-08-16',
-            pay_period_end: '2023-08-31',
-            gross_pay: 2500,
-            net_pay: 1800,
-            regular_hours: 80,
-            overtime_hours: 0,
-            regular_pay: 2500,
-            overtime_pay: 0,
-            federal_tax_withheld: 200,
-            state_tax_withheld: 50,
-            social_security_tax: 100,
-            medicare_tax: 25,
-            ytd_gross: 42500,
-            ytd_net: 30200,
-            check_status: 'Paid',
-            created_at: '2023-08-31T00:00:00Z'
-          }
-        ];
+        return mockPayStatements.filter(ps => ps.employee_id === employeeId);
       }
 
       let query = supabase
         .from('pay_statements')
         .select('*')
         .eq('employee_id', employeeId)
+        .order('pay_date', { ascending: false });
 
       if (tenantId) {
-        query = query.eq('tenant_id', tenantId)
+        query = query.eq('tenant_id', tenantId);
       }
       if (startDate) {
-        query = query.gte('pay_date', startDate)
+        query = query.gte('pay_date', startDate);
       }
       if (endDate) {
-        query = query.lte('pay_date', endDate)
+        query = query.lte('pay_date', endDate);
       }
 
-      query = query.order('pay_date', { ascending: false })
-
-      const { data, error } = await query
+      const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching pay statements:', error)
-        throw error
+        console.error('Error fetching pay statements:', error);
+        throw error;
       }
 
-      return data || []
+      return data || [];
     } catch (error) {
-      console.error('Error in getPayStatements:', error)
-      return isDemoMode ? [] : []
+      console.error('Error in getPayStatements:', error);
+      return isDemoMode ? mockPayStatements.filter(ps => ps.employee_id === employeeId) : [];
     }
   }
 
-  async getBenefitRecords(employeeId: string, tenantId?: string): Promise<BenefitRecord[]> {
-    try {
-      // Return mock data in demo mode
-      if (isDemoMode) {
-        return [
-          {
-            id: 'b1',
-            employee_id: employeeId,
-            benefit_type: 'Health Insurance',
-            provider: 'Blue Cross Blue Shield',
-            plan_name: 'PPO Gold',
-            coverage_type: 'Medical',
-            start_date: '2023-01-01',
-            end_date: '2024-12-31',
-            termination_date: '2024-12-31',
-            status: 'Active',
-            employee_contribution: 150,
-            employer_contribution: 450,
-            coverage_level: 'Family',
-            enrollment_date: '2022-12-01',
-            effective_date: '2023-01-01',
-            coverage_amount: 50000,
-            created_at: '2023-01-01T00:00:00Z'
-          },
-          {
-            id: 'b2',
-            employee_id: employeeId,
-            benefit_type: 'Dental Insurance',
-            provider: 'Delta Dental',
-            plan_name: 'Dental PPO',
-            coverage_type: 'Dental',
-            start_date: '2023-01-01',
-            end_date: '2024-12-31',
-            termination_date: '2024-12-31',
-            status: 'Active',
-            employee_contribution: 30,
-            employer_contribution: 70,
-            coverage_level: 'Individual',
-            enrollment_date: '2022-12-01',
-            effective_date: '2023-01-01',
-            coverage_amount: 0,
-            created_at: '2023-01-01T00:00:00Z'
-          }
-        ];
-      }
-
-      let query = supabase
-        .from('benefits')
-        .select('*')
-        .eq('employee_id', employeeId)
-
-      if (tenantId) {
-        query = query.eq('tenant_id', tenantId)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching benefit records:', error)
-        throw error
-      }
-
-      return data || []
-    } catch (error) {
-      console.error('Error in getBenefitRecords:', error)
-      return isDemoMode ? [] : []
-    }
-  }
-
-  async getEmployeeJobHistory(employeeId: string, tenantId?: string): Promise<EmployeeJobHistory[]> {
+  /**
+   * Get tax records for an employee
+   */
+  async getTaxRecords(employeeId: string, tenantId?: string): Promise<TaxRecord[]> {
     try {
       if (isDemoMode) {
-        return [
-          {
-            id: 'jh1',
-            employee_id: employeeId,
-            job_code: 'SWE001',
-            job_title: 'Software Engineer',
-            department: 'Engineering',
-            start_date: '2022-01-01',
-            end_date: '2023-06-30',
-            salary: 100000,
-            reason_for_change: 'Promotion',
-            is_current: false,
-            status: 'inactive',
-            created_at: '2022-01-01T00:00:00Z'
-          },
-          {
-            id: 'jh2',
-            employee_id: employeeId,
-            job_code: 'SSWE001',
-            job_title: 'Senior Software Engineer',
-            department: 'Engineering',
-            start_date: '2023-07-01',
-            salary: 120000,
-            reason_for_change: 'Promotion',
-            is_current: true,
-            status: 'active',
-            created_at: '2023-07-01T00:00:00Z'
-          }
-        ];
-      }
-
-      let query = supabase
-        .from('employee_job_history')
-        .select('*')
-        .eq('employee_id', employeeId)
-
-      if (tenantId) {
-        query = query.eq('tenant_id', tenantId)
-      }
-
-      query = query.order('start_date', { ascending: false })
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching employee job history:', error)
-        throw error
-      }
-
-      return data || []
-    } catch (error) {
-      console.error('Error in getEmployeeJobHistory:', error)
-      return isDemoMode ? [] : []
-    }
-  }
-
-  async getTaxRecords(employeeId: string, tenantId?: string, taxYear?: number): Promise<TaxRecord[]> {
-    try {
-      if (isDemoMode) {
-        return [
-          {
-            id: 'tr1',
-            employee_id: employeeId,
-            tax_year: 2023,
-            form_type: 'W-2',
-            document_url: '/documents/w2_2023.pdf',
-            federal_wages: 120000,
-            federal_tax_withheld: 15000,
-            state_wages: 120000,
-            state_tax_withheld: 5000,
-            local_wages: 0,
-            local_tax_withheld: 0,
-            document_status: 'Final',
-            created_at: '2024-01-20T00:00:00Z'
-          },
-          {
-            id: 'tr2',
-            employee_id: employeeId,
-            tax_year: 2022,
-            form_type: 'W-2',
-            document_url: '/documents/w2_2022.pdf',
-            federal_wages: 110000,
-            federal_tax_withheld: 14000,
-            state_wages: 110000,
-            state_tax_withheld: 4500,
-            local_wages: 0,
-            local_tax_withheld: 0,
-            document_status: 'Final',
-            created_at: '2023-01-20T00:00:00Z'
-          }
-        ];
+        return mockTaxRecords.filter(tr => tr.employee_id === employeeId);
       }
 
       let query = supabase
         .from('tax_records')
         .select('*')
         .eq('employee_id', employeeId)
+        .order('tax_year', { ascending: false });
 
       if (tenantId) {
-        query = query.eq('tenant_id', tenantId)
-      }
-      if (taxYear) {
-        query = query.eq('tax_year', taxYear)
+        query = query.eq('tenant_id', tenantId);
       }
 
-      query = query.order('tax_year', { ascending: false })
-
-      const { data, error } = await query
+      const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching tax records:', error)
-        throw error
+        console.error('Error fetching tax records:', error);
+        throw error;
       }
 
-      return data || []
+      return data || [];
     } catch (error) {
-      console.error('Error in getTaxRecords:', error)
-      return isDemoMode ? [] : []
+      console.error('Error in getTaxRecords:', error);
+      return isDemoMode ? mockTaxRecords.filter(tr => tr.employee_id === employeeId) : [];
     }
   }
 
+  /**
+   * Get benefit records for an employee
+   */
+  async getBenefitRecords(employeeId: string, tenantId?: string): Promise<BenefitRecord[]> {
+    try {
+      if (isDemoMode) {
+        return mockBenefits.filter(b => b.employee_id === employeeId);
+      }
+
+      let query = supabase
+        .from('benefits')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('start_date', { ascending: false });
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching benefit records:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getBenefitRecords:', error);
+      return isDemoMode ? mockBenefits.filter(b => b.employee_id === employeeId) : [];
+    }
+  }
+
+  /**
+   * Get timecard records for an employee
+   */
   async getTimecardRecords(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<TimecardRecord[]> {
     try {
       if (isDemoMode) {
-        return [
-          {
-            id: 'tc1',
-            employee_id: employeeId,
-            work_date: '2023-09-18',
-            hours_worked: 8,
-            project: 'Project Alpha',
-            task: 'Development',
-            status: 'Approved',
-            created_at: '2023-09-18T08:00:00Z'
-          },
-          {
-            id: 'tc2',
-            employee_id: employeeId,
-            work_date: '2023-09-17',
-            hours_worked: 7.5,
-            project: 'Project Alpha',
-            task: 'Code Review',
-            status: 'Approved',
-            created_at: '2023-09-17T08:00:00Z'
-          }
-        ];
+        return mockTimecards.filter(tc => tc.employee_id === employeeId);
       }
 
       let query = supabase
         .from('timecards')
         .select('*')
         .eq('employee_id', employeeId)
+        .order('work_date', { ascending: false });
 
       if (tenantId) {
-        query = query.eq('tenant_id', tenantId)
+        query = query.eq('tenant_id', tenantId);
       }
       if (startDate) {
-        query = query.gte('work_date', startDate)
+        query = query.gte('work_date', startDate);
       }
       if (endDate) {
-        query = query.lte('work_date', endDate)
+        query = query.lte('work_date', endDate);
       }
 
-      query = query.order('work_date', { ascending: false })
-
-      const { data, error } = await query
+      const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching timecard records:', error)
-        throw error
+        console.error('Error fetching timecard records:', error);
+        throw error;
       }
 
-      return data || []
+      return data || [];
     } catch (error) {
-      console.error('Error in getTimecardRecords:', error)
-      return isDemoMode ? [] : []
+      console.error('Error in getTimecardRecords:', error);
+      return isDemoMode ? mockTimecards.filter(tc => tc.employee_id === employeeId) : [];
     }
   }
 
-  async searchEmployees(query: string, tenantId?: string): Promise<Employee[]> {
+  /**
+   * Get employee job history
+   */
+  async getEmployeeJobHistory(employeeId: string, tenantId?: string): Promise<EmployeeJobHistory[]> {
     try {
       if (isDemoMode) {
-        return mockEmployees.filter(emp =>
-          emp.full_name.toLowerCase().includes(query.toLowerCase()) ||
-          emp.employee_id.toLowerCase().includes(query.toLowerCase())
-        );
+        return mockJobHistory.filter(jh => jh.employee_id === employeeId);
       }
 
-      let dbQuery = supabase
-        .from('employees')
+      let query = supabase
+        .from('employee_job_history')
         .select('*')
-        .ilike('full_name', `%${query}%`)
-        .or(`employee_id.ilike.%${query}%,email.ilike.%${query}%`)
+        .eq('employee_id', employeeId)
+        .order('start_date', { ascending: false });
 
       if (tenantId) {
-        dbQuery = dbQuery.eq('tenant_id', tenantId)
+        query = query.eq('tenant_id', tenantId);
       }
 
-      const { data, error } = await dbQuery
+      const { data, error } = await query;
 
       if (error) {
-        console.error('Error searching employees:', error)
-        throw error
+        console.error('Error fetching employee job history:', error);
+        throw error;
       }
 
-      return data || []
+      return data || [];
     } catch (error) {
-      console.error('Error in searchEmployees:', error)
-      return isDemoMode ? [] : []
+      console.error('Error in getEmployeeJobHistory:', error);
+      return isDemoMode ? mockJobHistory.filter(jh => jh.employee_id === employeeId) : [];
     }
   }
 
-  async getDepartments(tenantId?: string): Promise<string[]> {
+  /**
+   * Get all departments
+   */
+  async getDepartments(tenantId?: string): Promise<Department[]> {
     try {
       if (isDemoMode) {
-        return ['Engineering', 'Marketing', 'Sales', 'Human Resources'];
+        return mockDepartments;
       }
 
-      const { data, error } = await supabase
-        .from('employees')
-        .select('department')
-        .not('department', 'is', null)
-        .eq('tenant_id', tenantId);
+      let query = supabase
+        .from('departments')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching departments:', error);
         throw error;
       }
 
-      const departments = [...new Set(data.map(d => d.department))];
-
-      return departments;
+      return data || [];
     } catch (error) {
       console.error('Error in getDepartments:', error);
-      return isDemoMode ? ['Engineering', 'Marketing', 'Sales', 'Human Resources'] : [];
+      return isDemoMode ? mockDepartments : [];
+    }
+  }
+
+  /**
+   * Get employee documents
+   */
+  async getEmployeeDocuments(employeeId: string, tenantId?: string): Promise<DocumentRecord[]> {
+    try {
+      if (isDemoMode) {
+        return mockDocuments.filter(doc => doc.employee_id === employeeId);
+      }
+
+      let query = supabase
+        .from('documents')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('upload_date', { ascending: false });
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching employee documents:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getEmployeeDocuments:', error);
+      return isDemoMode ? mockDocuments.filter(doc => doc.employee_id === employeeId) : [];
     }
   }
 }
 
-export const reportingCockpitService = new ReportingCockpitService();
-
+// Utility function for CSV export
 export function exportToCSV<T>(data: T[], filename: string) {
-  if (!data || data.length === 0) {
+  if (data.length === 0) {
     console.warn('No data to export.');
     return;
   }
@@ -967,13 +806,13 @@ export function exportToCSV<T>(data: T[], filename: string) {
   const csv = Papa.unparse(data);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
-  if (link.download !== undefined) { // feature detection
-    link.setAttribute('href', URL.createObjectURL(blob));
-    link.setAttribute('download', `${filename}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', `${filename}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
+
+const reportingCockpitService = new ReportingCockpitService();
+export default reportingCockpitService;
 

@@ -1,55 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
-
-// Document Repository Configuration Interface
-export interface DocumentRepositoryConfig {
-  id: string
-  tenant_id: string
-  repository_type: 'local' | 'aws_s3' | 'azure_blob' | 'google_cloud' | 'sharepoint'
-  repository_name: string
-  connection_string: string
-  access_key?: string
-  secret_key?: string
-  bucket_name?: string
-  base_path: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-// Document Record Interface (enhanced from DocumentsGrid)
-export interface DocumentRecord {
-  id: string
-  employee_id: string
-  tenant_id: string
-  document_name: string
-  document_type: string
-  file_path: string
-  file_size: number
-  upload_date: string
-  document_category: string
-  status: string
-  tags: string[]
-  metadata?: Record<string, any>
-  thumbnail_path?: string
-  is_confidential: boolean
-  access_level: 'public' | 'restricted' | 'confidential'
-  created_by: string
-  last_accessed?: string
-}
-
-// Document Search Filters
-export interface DocumentSearchFilters {
-  employeeId?: string
-  documentCategory?: string
-  documentType?: string
-  tags?: string[]
-  dateRange?: {
-    start: string
-    end: string
-  }
-  searchTerm?: string
-  accessLevel?: string
-}
+import type { DocumentRepositoryConfig, DocumentRecord, DocumentSearchFilters } from '@/types/reporting'
+import { exportToCSV } from './reportingCockpitService'
 
 class DocumentRepositoryService {
   private supabase = createClient(
@@ -347,45 +298,18 @@ class DocumentRepositoryService {
       document_name: doc.document_name,
       document_type: doc.document_type,
       document_category: doc.document_category,
-      file_size: this.formatFileSize(doc.file_size),
-      upload_date: new Date(doc.upload_date).toLocaleDateString(),
+      file_size: doc.file_size,
+      upload_date: doc.upload_date,
       status: doc.status,
       access_level: doc.access_level,
       tags: doc.tags.join(', '),
       is_confidential: doc.is_confidential ? 'Yes' : 'No'
     }))
 
-    const csvContent = [
-      Object.keys(exportData[0]).join(','),
-      ...exportData.map(row => 
-        Object.values(row).map(value => 
-          typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-        ).join(',')
-      )
-    ].join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `${filename}.csv`)
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
-
-  /**
-   * Format file size helper
-   */
-  private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    exportToCSV(exportData, filename)
   }
 }
 
 export const documentRepositoryService = new DocumentRepositoryService()
 export default documentRepositoryService
+

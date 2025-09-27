@@ -3,19 +3,8 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { FileText, Download, Loader2, AlertCircle, Eye, ExternalLink } from 'lucide-react'
-
-interface DocumentRecord {
-  id: string
-  employee_id: string
-  document_name: string
-  document_type: string
-  file_path: string
-  file_size: number
-  upload_date: string
-  document_category: string
-  status: string
-  tags: string[]
-}
+import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import type { DocumentRecord } from '@/types/reporting'
 
 interface DocumentsGridProps {
   employeeId?: string
@@ -45,51 +34,8 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
     setError(null)
 
     try {
-      // TODO: Implement actual document repository integration
-      // For now, simulate document loading
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock documents - replace with actual API call
-      const mockDocuments: DocumentRecord[] = [
-        {
-          id: '1',
-          employee_id: employeeId,
-          document_name: 'W-4 Form 2024',
-          document_type: 'PDF',
-          file_path: '/documents/w4_2024.pdf',
-          file_size: 245760,
-          upload_date: '2024-01-15T10:30:00Z',
-          document_category: 'Tax Forms',
-          status: 'active',
-          tags: ['tax', 'w4', '2024']
-        },
-        {
-          id: '2',
-          employee_id: employeeId,
-          document_name: 'Employment Agreement',
-          document_type: 'PDF',
-          file_path: '/documents/employment_agreement.pdf',
-          file_size: 512000,
-          upload_date: '2023-12-01T09:00:00Z',
-          document_category: 'HR Documents',
-          status: 'active',
-          tags: ['employment', 'contract', 'hr']
-        },
-        {
-          id: '3',
-          employee_id: employeeId,
-          document_name: 'Direct Deposit Form',
-          document_type: 'PDF',
-          file_path: '/documents/direct_deposit.pdf',
-          file_size: 128000,
-          upload_date: '2024-01-10T14:20:00Z',
-          document_category: 'Payroll',
-          status: 'active',
-          tags: ['payroll', 'banking', 'direct-deposit']
-        }
-      ]
-      
-      setDocuments(mockDocuments)
+      const data = await reportingCockpitService.getEmployeeDocuments(employeeId, tenantId)
+      setDocuments(data)
     } catch (err) {
       console.error('Error loading documents:', err)
       setError('Failed to load documents')
@@ -191,25 +137,10 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
         tags: doc.tags.join(', ')
       }))
       
-      // Use the CSV export from the service
-      const csvContent = [
-        Object.keys(exportData[0]).join(','),
-        ...exportData.map(row => 
-          Object.values(row).map(value => 
-            typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-          ).join(',')
-        )
-      ].join('\n')
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      link.setAttribute('download', `documents_${employeeId}_${new Date().toISOString().split('T')[0]}.csv`)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      exportToCSV(
+        exportData,
+        `documents_${employeeId}_${new Date().toISOString().split('T')[0]}`
+      )
     }
   }
 
@@ -278,8 +209,8 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
                   <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(document.document_category)}`}>
                     {document.document_category}
                   </span>
-                  <Badge variant={getStatusBadgeVariant(document.status)}>
-                    {document.status}
+                  <Badge variant={getStatusBadgeVariant(document.document_status || document.status)}>
+                    {document.document_status || document.status || 'Unknown'}
                   </Badge>
                 </div>
                 <div className="font-medium mb-1">{document.document_name}</div>
@@ -354,3 +285,4 @@ const DocumentsGrid: React.FC<DocumentsGridProps> = ({
 }
 
 export default DocumentsGrid
+

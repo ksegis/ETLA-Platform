@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -22,7 +23,7 @@ import type {
   BenefitRecord,
   TimecardRecord,
   EmployeeJobHistory
-} from '@/services/reportingCockpitService'
+} from '@/types/reporting'
 
 // Grid Components - Temporarily disabled to fix build
 // import PayStatementsGrid from '@/components/reporting/PayStatementsGrid'
@@ -128,7 +129,7 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import service to avoid SSR issues
-      const { reportingCockpitService: reportingService } = await import('@/services/reportingCockpitService')
+      const { default: reportingService } = await import('@/services/reportingCockpitService')
       
       // Load employees and departments in parallel
       const [employees, departments] = await Promise.all([
@@ -159,7 +160,7 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import services to avoid SSR issues
-      const [{ reportingCockpitService: reportingService }, { documentRepositoryService: documentService }] = await Promise.all([
+      const [{ default: reportingService }, { default: documentService }] = await Promise.all([
         import('@/services/reportingCockpitService'),
         import('@/services/documentRepositoryService')
       ])
@@ -206,7 +207,7 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import service to avoid SSR issues
-      const { reportingCockpitService: reportingService } = await import('@/services/reportingCockpitService')
+      const { default: reportingService } = await import('@/services/reportingCockpitService')
       const employees = await reportingService.searchEmployees(searchTerm, tenantId)
       
       setState(prev => ({ 
@@ -473,16 +474,10 @@ export default function ReportingCockpit() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1"
                     onClick={refreshData}
-                    disabled={state.loading}
                   >
-                    <RefreshCw className={`h-4 w-4 mr-1 ${state.loading ? 'animate-spin' : ''}`} />
-                    View
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Settings className="h-4 w-4 mr-1" />
-                    Config
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
                   </Button>
                 </div>
               </div>
@@ -490,537 +485,112 @@ export default function ReportingCockpit() {
           </CardContent>
         </Card>
 
-        {/* 4-Quadrant Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Quadrant 1: Employee Overview & Demographics */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Employee Overview & Demographics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {state.loadingEnhancedData ? (
-                <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-500 animate-spin" />
-                  <p className="text-gray-500">Loading employee details...</p>
-                </div>
-              ) : state.selectedEmployee && state.enhancedEmployeeData ? (
-                <div className="space-y-4">
-                  {/* Employee Basic Info */}
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white">
-                      <span className="text-lg font-semibold">
-                        {state.selectedEmployee.first_name?.[0]}{state.selectedEmployee.last_name?.[0]}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold">{state.selectedEmployee.full_name}</h3>
-                      <p className="text-gray-600">
-                        {state.selectedEmployee.job_title || state.selectedEmployee.position || 'N/A'}
-                      </p>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <span>{state.selectedEmployee.employee_id}</span>
-                        {state.selectedEmployee.employee_code && (
-                          <>
-                            <span>•</span>
-                            <span>{state.selectedEmployee.employee_code}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+        {/* Employee Detail View */}
+        {state.selectedEmployee && state.enhancedEmployeeData && (
+          <Card className="mb-6 bg-white shadow-lg">
+            <CardHeader className="bg-gray-100 p-4 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <User className="h-8 w-8 text-gray-600" />
+                  <div>
+                    <CardTitle className="text-xl font-bold text-gray-900">
+                      {state.enhancedEmployeeData.employee.full_name}
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">
+                      {state.enhancedEmployeeData.employee.job_title} - {state.enhancedEmployeeData.employee.department}
+                    </p>
                   </div>
-
-                  {/* Demographics Section */}
-                  {state.enhancedEmployeeData.demographics && (
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                        <Users className="h-4 w-4 mr-2" />
-                        Demographics
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        {state.enhancedEmployeeData.demographics.date_of_birth && (
-                          <div>
-                            <span className="font-medium text-gray-700">Age:</span>
-                            <p>{calculateAge(state.enhancedEmployeeData.demographics.date_of_birth)} years</p>
-                          </div>
-                        )}
-                        {state.enhancedEmployeeData.demographics.gender && (
-                          <div>
-                            <span className="font-medium text-gray-700">Gender:</span>
-                            <p>{state.enhancedEmployeeData.demographics.gender}</p>
-                          </div>
-                        )}
-                        {state.enhancedEmployeeData.demographics.ethnicity && (
-                          <div>
-                            <span className="font-medium text-gray-700">Ethnicity:</span>
-                            <p>{state.enhancedEmployeeData.demographics.ethnicity}</p>
-                          </div>
-                        )}
-                        {state.enhancedEmployeeData.demographics.veteran_status !== undefined && (
-                          <div>
-                            <span className="font-medium text-gray-700">Veteran:</span>
-                            <p>{state.enhancedEmployeeData.demographics.veteran_status ? 'Yes' : 'No'}</p>
-                          </div>
-                        )}
-                        {state.enhancedEmployeeData.demographics.has_disability !== undefined && (
-                          <div>
-                            <span className="font-medium text-gray-700">Disability:</span>
-                            <p>{state.enhancedEmployeeData.demographics.has_disability ? 'Yes' : 'No'}</p>
-                          </div>
-                        )}
-                        {state.enhancedEmployeeData.demographics.marital_status && (
-                          <div>
-                            <span className="font-medium text-gray-700">Marital Status:</span>
-                            <p>{state.enhancedEmployeeData.demographics.marital_status}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Employment Details */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-700">Department:</span>
-                      <p>{state.selectedEmployee.department || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Hire Date:</span>
-                      <p>{new Date(state.selectedEmployee.hire_date).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Manager:</span>
-                      <p>{state.selectedEmployee.manager_supervisor || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Location:</span>
-                      <p>{state.selectedEmployee.work_location || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Employment Type:</span>
-                      <p>{state.selectedEmployee.employment_type || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Pay Type:</span>
-                      <p>{state.selectedEmployee.pay_type || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  {/* Quick Stats with Real Data */}
-                  <div className="grid grid-cols-3 gap-2 pt-4 border-t">
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-blue-600">
-                        {state.enhancedEmployeeData.payrollSummary?.ytd_gross 
-                          ? formatCurrency(state.enhancedEmployeeData.payrollSummary.ytd_gross)
-                          : '$0'
-                        }
-                      </div>
-                      <div className="text-xs text-gray-500">YTD Earnings</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-green-600">
-                        {state.enhancedEmployeeData.payrollSummary?.total_hours_ytd 
-                          ? formatHours(state.enhancedEmployeeData.payrollSummary.total_hours_ytd)
-                          : '0'
-                        }
-                      </div>
-                      <div className="text-xs text-gray-500">Hours Worked</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-purple-600">
-                        {state.enhancedEmployeeData.documentCount || 0}
-                      </div>
-                      <div className="text-xs text-gray-500">Documents</div>
-                    </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  {state.enhancedEmployeeData.demographics && (
-                    <div className="pt-4 border-t">
-                      <h4 className="font-medium text-gray-900 mb-2">Contact Information</h4>
-                      <div className="grid grid-cols-1 gap-2 text-sm">
-                        {state.selectedEmployee.email && (
-                          <div>
-                            <span className="font-medium text-gray-700">Email:</span>
-                            <p className="text-blue-600">{state.selectedEmployee.email}</p>
-                          </div>
-                        )}
-                        {state.enhancedEmployeeData.demographics.phone_mobile && (
-                          <div>
-                            <span className="font-medium text-gray-700">Mobile:</span>
-                            <p>{state.enhancedEmployeeData.demographics.phone_mobile}</p>
-                          </div>
-                        )}
-                        {state.enhancedEmployeeData.demographics.address_line1 && (
-                          <div>
-                            <span className="font-medium text-gray-700">Address:</span>
-                            <p>
-                              {state.enhancedEmployeeData.demographics.address_line1}
-                              {state.enhancedEmployeeData.demographics.city && `, ${state.enhancedEmployeeData.demographics.city}`}
-                              {state.enhancedEmployeeData.demographics.state && `, ${state.enhancedEmployeeData.demographics.state}`}
-                              {state.enhancedEmployeeData.demographics.postal_code && ` ${state.enhancedEmployeeData.demographics.postal_code}`}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
-              ) : state.selectedEmployee ? (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="h-8 w-8 mx-auto mb-4 text-orange-400" />
-                  <p>Employee details not available</p>
-                  <Button variant="outline" size="sm" className="mt-2" onClick={() => loadEnhancedEmployeeData(state.selectedEmployee!.id)}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Retry
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Select an employee to view details</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Quadrant 2: Report Generation & Job Catalog Hub */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BarChart3 className="h-5 w-5 mr-2" />
-                Report Generation & Job Catalog
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Quick Report Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" className="justify-start">
+                <div className="flex items-center space-x-4">
+                  <Badge variant={state.enhancedEmployeeData.employee.status === 'active' ? 'default' : 'destructive'}>
+                    {state.enhancedEmployeeData.employee.status}
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={handleOpenDocumentBrowser}>
                     <FileText className="h-4 w-4 mr-2" />
-                    Pay Statement
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Timecard Report
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    Tax Records
-                  </Button>
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <Building className="h-4 w-4 mr-2" />
-                    Benefits Report
+                    Document Repository
                   </Button>
                 </div>
-
-                {/* Job Catalog Section */}
-                <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-2 flex items-center">
-                    <Briefcase className="h-4 w-4 mr-2" />
-                    Job Catalog
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="p-2 border rounded text-sm">
-                      <div className="font-medium">Senior Developer</div>
-                      <div className="text-gray-500">Engineering • $80,000-$120,000</div>
-                    </div>
-                    <div className="p-2 border rounded text-sm">
-                      <div className="font-medium">Marketing Manager</div>
-                      <div className="text-gray-500">Marketing • $70,000-$90,000</div>
-                    </div>
-                  </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Demographics */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">Demographics</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p><strong>Email:</strong> {state.enhancedEmployeeData.demographics?.email}</p>
+                  <p><strong>Phone:</strong> {state.enhancedEmployeeData.demographics?.phone_mobile}</p>
+                  <p><strong>Location:</strong> {`${state.enhancedEmployeeData.demographics?.city}, ${state.enhancedEmployeeData.demographics?.state}`}</p>
+                  <p><strong>Age:</strong> {state.enhancedEmployeeData.demographics?.birth_date ? calculateAge(state.enhancedEmployeeData.demographics.birth_date) : 'N/A'}</p>
                 </div>
-
-                {/* Export Options */}
-                <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-2">Export Formats</h4>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">PDF</Button>
-                    <Button variant="outline" size="sm">Excel</Button>
-                    <Button variant="outline" size="sm">CSV</Button>
-                  </div>
+              </div>
+              {/* Employment Details */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">Employment</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p><strong>Hire Date:</strong> {state.enhancedEmployeeData.employee.hire_date}</p>
+                  <p><strong>Type:</strong> {state.enhancedEmployeeData.employee.employment_type}</p>
+                  <p><strong>Manager:</strong> {state.enhancedEmployeeData.employee.manager_supervisor}</p>
+                  <p><strong>Salary:</strong> {formatCurrency(state.enhancedEmployeeData.employee.annual_salary || 0)}</p>
+                </div>
+              </div>
+              {/* Payroll Summary */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">YTD Payroll</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p><strong>Gross Pay:</strong> {formatCurrency(state.enhancedEmployeeData.payrollSummary?.ytd_gross || 0)}</p>
+                  <p><strong>Net Pay:</strong> {formatCurrency(state.enhancedEmployeeData.payrollSummary?.ytd_net || 0)}</p>
+                  <p><strong>Total Hours:</strong> {formatHours(state.enhancedEmployeeData.payrollSummary?.total_hours_ytd || 0)}</p>
+                  <p><strong>Last Pay Date:</strong> {state.enhancedEmployeeData.payrollSummary?.latest_pay_date}</p>
+                </div>
+              </div>
+              {/* Document Stats */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">Documents</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p><strong>Total Documents:</strong> {documentStats.totalDocuments}</p>
+                  <p><strong>Pay Statements:</strong> {documentStats.documentsByCategory['Payroll'] || 0}</p>
+                  <p><strong>Tax Forms:</strong> {documentStats.documentsByCategory['Tax'] || 0}</p>
+                  <p><strong>Benefits:</strong> {documentStats.documentsByCategory['Benefits'] || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+        )}
 
-          {/* Quadrant 3: Interactive Data Grid */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Database className="h-5 w-5 mr-2" />
-                  Interactive Data Grid
-                </div>
-                {state.selectedEmployee && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      const tabData = getActiveTabData()
-                      if (tabData.length > 0) {
-                        exportToCSV(
-                          tabData, 
-                          `${state.selectedEmployee?.full_name}_${activeDataTab}_${new Date().toISOString().split('T')[0]}`
-                        )
-                      }
-                    }}
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    Export
-                  </Button>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeDataTab} onValueChange={setActiveDataTab}>
-                <TabsList className="grid w-full grid-cols-6">
-                  <TabsTrigger value="pay-statements" className="text-xs">Pay</TabsTrigger>
-                  <TabsTrigger value="timecards" className="text-xs">Time</TabsTrigger>
-                  <TabsTrigger value="tax-records" className="text-xs">Tax</TabsTrigger>
-                  <TabsTrigger value="benefits" className="text-xs">Benefits</TabsTrigger>
-                  <TabsTrigger value="documents" className="text-xs">Docs</TabsTrigger>
-                  <TabsTrigger value="job-history" className="text-xs">Jobs</TabsTrigger>
+        {/* Data Grids */}
+        <Card className="bg-white shadow-lg">
+          <CardContent className="p-0">
+            <Tabs value={activeDataTab} onValueChange={setActiveDataTab} className="w-full">
+              <div className="flex items-center justify-between p-4 border-b">
+                <TabsList>
+                  <TabsTrigger value="pay-statements">Pay Statements</TabsTrigger>
+                  <TabsTrigger value="timecards">Timecards</TabsTrigger>
+                  <TabsTrigger value="tax-records">Tax Records</TabsTrigger>
+                  <TabsTrigger value="benefits">Benefits</TabsTrigger>
+                  <TabsTrigger value="job-history">Job History</TabsTrigger>
+                  <TabsTrigger value="documents">All Documents</TabsTrigger>
                 </TabsList>
                 
-                {/* Pay Statements Tab */}
-                <TabsContent value="pay-statements" className="mt-4">
-                  <div className="p-4 text-center text-gray-500">
-                    Pay Statements Grid - Coming Soon
-                    <p className="text-sm mt-2">Real database integration in progress</p>
-                  </div>
-                </TabsContent>
-                
-                {/* Timecards Tab */}
-                <TabsContent value="timecards" className="mt-4">
-                  <div className="p-4 text-center text-gray-500">
-                    Timecards Grid - Coming Soon
-                    <p className="text-sm mt-2">Real database integration in progress</p>
-                  </div>
-                </TabsContent>
-                
-                {/* Tax Records Tab */}
-                <TabsContent value="tax-records" className="mt-4">
-                  <div className="p-4 text-center text-gray-500">
-                    Tax Records Grid - Coming Soon
-                    <p className="text-sm mt-2">Real database integration in progress</p>
-                  </div>
-                </TabsContent>
-                
-                {/* Benefits Tab */}
-                <TabsContent value="benefits" className="mt-4">
-                  <div className="p-4 text-center text-gray-500">
-                    Benefits Grid - Coming Soon
-                    <p className="text-sm mt-2">Real database integration in progress</p>
-                  </div>
-                </TabsContent>
-                
-                {/* Documents Tab */}
-                <TabsContent value="documents" className="mt-4">
-                  <div className="p-4 text-center text-gray-500">
-                    Documents Grid - Coming Soon
-                    <p className="text-sm mt-2">Real database integration in progress</p>
-                  </div>
-                </TabsContent>
-
-                {/* Job History Tab */}
-                <TabsContent value="job-history" className="mt-4">
-                  <div className="p-4 text-center text-gray-500">
-                    Job History Grid - Coming Soon
-                    <p className="text-sm mt-2">Real database integration in progress</p>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          {/* Quadrant 4: Document Viewer & Repository */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Eye className="h-5 w-5 mr-2" />
-                Document Viewer & Repository
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Document Repository Status */}
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-blue-900">Document Repository</div>
-                      <div className="text-sm text-blue-700">
-                        {state.selectedEmployee ? 
-                          `${state.selectedEmployee.full_name} - ${documentStats.totalDocuments} documents found` : 
-                          'Select employee to view documents'
-                        }
-                      </div>
-                      {state.selectedEmployee && documentStats.recentDocuments > 0 && (
-                        <div className="text-xs text-blue-600 mt-1">
-                          {documentStats.recentDocuments} new documents (last 30 days)
-                        </div>
-                      )}
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      disabled={!state.selectedEmployee}
-                      onClick={handleOpenDocumentBrowser}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Browse
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Document Statistics */}
-                {state.selectedEmployee && documentStats.totalDocuments > 0 && (
-                  <div className="space-y-3">
-                    <div className="text-sm font-medium">Document Categories:</div>
-                    <div className="space-y-2">
-                      {Object.entries(documentStats.documentsByCategory).slice(0, 4).map(([category, count]) => (
-                        <div key={category} className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">{category}</span>
-                          <Badge variant="secondary">{count}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Document Preview Area */}
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">
-                  {selectedDocument ? (
-                    <div className="space-y-2">
-                      <FileText className="h-8 w-8 mx-auto text-blue-500" />
-                      <p className="text-sm font-medium">{selectedDocument.document_name}</p>
-                      <p className="text-xs text-gray-500">{selectedDocument.document_category}</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setDocumentViewerOpen(true)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Document
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-gray-500 mb-2">Document preview area</p>
-                      <p className="text-sm text-gray-400">
-                        {state.selectedEmployee ? 
-                          'Browse documents to preview them here' : 
-                          'Select an employee to view documents'
-                        }
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Document Actions */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={!selectedDocument}
-                    onClick={() => selectedDocument && console.log('Download:', selectedDocument.document_name)}
-                  >
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Facsimile
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
                     <Download className="h-4 w-4 mr-2" />
-                    Download
+                    Export Selected
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={!state.selectedEmployee}
-                    onClick={handleOpenDocumentBrowser}
-                  >
-                    <Database className="h-4 w-4 mr-2" />
-                    Repository
+                  <Button size="sm" disabled={!state.selectedEmployee}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Save View
                   </Button>
                 </div>
-
-                {/* Facsimile Options */}
-                <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-2">Facsimile Generation</h4>
-                  <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start" 
-                      disabled={!state.selectedEmployee}
-                      onClick={() => console.log('Generate pay stub for:', state.selectedEmployee?.full_name)}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Generate Pay Stub
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start" 
-                      disabled={!state.selectedEmployee}
-                      onClick={() => console.log('Generate tax form for:', state.selectedEmployee?.full_name)}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Generate Tax Form
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start" 
-                      disabled={!state.selectedEmployee}
-                      onClick={() => console.log('Generate employment verification for:', state.selectedEmployee?.full_name)}
-                    >
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      Employment Verification
-                    </Button>
-                  </div>
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Action Bar */}
-        <Card className="mt-6">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline">
-                  {state.selectedEmployee ? 
-                    `Viewing: ${state.selectedEmployee.full_name}` : 
-                    'No employee selected'
-                  }
-                </Badge>
-                {state.dateRange.start && state.dateRange.end && (
-                  <Badge variant="outline">
-                    {state.dateRange.start} to {state.dateRange.end}
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
-                <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Facsimile
-                </Button>
-                <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Selected
-                </Button>
-                <Button size="sm" disabled={!state.selectedEmployee}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Save View
-                </Button>
-              </div>
-            </div>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -1046,3 +616,4 @@ export default function ReportingCockpit() {
     </DashboardLayout>
   )
 }
+

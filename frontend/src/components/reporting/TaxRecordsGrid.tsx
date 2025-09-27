@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, TaxRecord, exportToCSV } from '@/services/reportingCockpitService'
+import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import type { TaxRecord } from '@/types/reporting'
 import { FileText, Download, Loader2, AlertCircle } from 'lucide-react'
 
 interface TaxRecordsGridProps {
@@ -237,3 +238,4 @@ const TaxRecordsGrid: React.FC<TaxRecordsGridProps> = ({
 }
 
 export default TaxRecordsGrid
+

@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { DocumentRecord } from '@/services/documentRepositoryService'
-import { 
-  ZoomIn, 
-  ZoomOut, 
-  RotateCw, 
-  Download, 
-  Maximize, 
+import type { DocumentRecord } from '@/types/reporting'
+import {
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Download,
+  Maximize,
   Minimize,
   ChevronLeft,
   ChevronRight,
@@ -372,3 +372,4 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 }
 
 export default DocumentViewer
+

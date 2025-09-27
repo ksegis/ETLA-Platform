@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { reportingCockpitService, TimecardRecord, exportToCSV } from '@/services/reportingCockpitService'
+import { reportingCockpitService, exportToCSV } from '@/services/reportingCockpitService'
+import type { TimecardRecord } from '@/types/reporting'
 import { Clock, Download, Loader2, AlertCircle } from 'lucide-react'
 
 interface TimecardsGridProps {
@@ -77,7 +78,7 @@ const TimecardsGrid: React.FC<TimecardsGridProps> = ({
     }).format(amount)
   }
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string | undefined) => {
     switch (status?.toLowerCase()) {
       case 'approved':
         return 'default'
@@ -271,3 +272,4 @@ const TimecardsGrid: React.FC<TimecardsGridProps> = ({
 }
 
 export default TimecardsGrid
+

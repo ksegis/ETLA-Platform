@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import documentRepositoryService, { DocumentRecord, DocumentSearchFilters } from '@/services/documentRepositoryService'
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Eye, 
-  FileText, 
+import documentRepositoryService from '@/services/documentRepositoryService'
+import type { DocumentRecord, DocumentSearchFilters } from '@/types/reporting'
+import {
+  Search,
+  Filter,
+  Download,
+  Eye,
+  FileText,
   Calendar,
   Tag,
   Shield,
@@ -147,7 +148,7 @@ const DocumentBrowserModal: React.FC<DocumentBrowserModalProps> = ({
     setShowFilters(false)
   }
 
-  const handleDocumentView = async (document: DocumentRecord) => {
+  const handleViewDocument = async (document: DocumentRecord) => {
     try {
       await documentRepositoryService.updateDocumentAccess(document.id, tenantId)
       if (onDocumentSelect) {
@@ -160,7 +161,7 @@ const DocumentBrowserModal: React.FC<DocumentBrowserModalProps> = ({
     }
   }
 
-  const handleDocumentDownload = async (document: DocumentRecord) => {
+  const handleDownloadDocument = async (document: DocumentRecord) => {
     try {
       const downloadUrl = await documentRepositoryService.getDocumentDownloadUrl(document.id, tenantId)
       if (downloadUrl) {
@@ -440,14 +441,20 @@ const DocumentBrowserModal: React.FC<DocumentBrowserModalProps> = ({
                           <span className="text-xs">Uploaded {formatDate(document.upload_date)}</span>
                         </div>
                         {document.last_accessed && (
-                          <div className="text-xs text-gray-500">
-                            Last accessed: {formatDate(document.last_accessed)}
+                          <div className="flex items-center text-gray-600">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            <span className="text-xs">Last Accessed {formatDate(document.last_accessed)}</span>
                           </div>
                         )}
-                        {document.is_confidential && (
-                          <Badge variant="destructive" className="text-xs">
-                            Confidential
-                          </Badge>
+                        {document.metadata && Object.keys(document.metadata).length > 0 && (
+                          <div className="text-xs text-gray-600 mt-2">
+                            <span className="font-medium">Metadata:</span>
+                            <ul className="list-disc list-inside ml-2">
+                              {Object.entries(document.metadata).map(([key, value]) => (
+                                <li key={key}>{key}: {String(value)}</li>
+                              ))}
+                            </ul>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -457,7 +464,7 @@ const DocumentBrowserModal: React.FC<DocumentBrowserModalProps> = ({
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleDocumentView(document)}
+                        onClick={() => handleViewDocument(document)}
                         className="w-full"
                       >
                         <Eye className="h-4 w-4 mr-1" />
@@ -466,7 +473,7 @@ const DocumentBrowserModal: React.FC<DocumentBrowserModalProps> = ({
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleDocumentDownload(document)}
+                        onClick={() => handleDownloadDocument(document)}
                         className="w-full"
                       >
                         <Download className="h-4 w-4 mr-1" />
@@ -476,42 +483,22 @@ const DocumentBrowserModal: React.FC<DocumentBrowserModalProps> = ({
                   </div>
                 </Card>
               ))}
-
-              {/* Load More Button */}
-              {hasMore && (
-                <div className="text-center py-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={loadMore}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      'Load More Documents'
-                    )}
-                  </Button>
-                </div>
-              )}
             </div>
           )}
-        </div>
 
-        {/* Footer */}
-        <div className="border-t pt-4 flex justify-between items-center text-sm text-gray-600">
-          <div>
-            {documents.length > 0 && (
-              <span>{documents.length} document{documents.length !== 1 ? 's' : ''} found</span>
-            )}
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-          </div>
+          {hasMore && !loading && documents.length > 0 && (
+            <div className="text-center py-4">
+              <Button variant="outline" onClick={loadMore}>
+                Load More
+              </Button>
+            </div>
+          )}
+
+          {loading && documents.length > 0 && (
+            <div className="text-center py-4">
+              <Loader2 className="h-6 w-6 mx-auto animate-spin text-blue-500" />
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -519,3 +506,4 @@ const DocumentBrowserModal: React.FC<DocumentBrowserModalProps> = ({
 }
 
 export default DocumentBrowserModal
+
