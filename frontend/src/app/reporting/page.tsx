@@ -3,7 +3,6 @@
 // Force dynamic rendering to avoid SSR issues with Supabase
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-export const revalidate = 0
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
