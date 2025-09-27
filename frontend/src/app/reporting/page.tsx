@@ -22,7 +22,8 @@ import type {
   TaxRecord,
   BenefitRecord,
   TimecardRecord,
-  EmployeeJobHistory
+  EmployeeJobHistory,
+  Department
 } from '@/types/reporting'
 
 // Grid Components - Temporarily disabled to fix build
@@ -72,7 +73,7 @@ interface ReportingCockpitState {
   loading: boolean
   loadingEnhancedData: boolean
   employees: Employee[]
-  departments: string[]
+  departments: Department[]
   error: string | null
 }
 
@@ -459,8 +460,8 @@ export default function ReportingCockpit() {
                   <SelectContent>
                     <SelectItem value="">All Departments</SelectItem>
                     {state.departments.map((department) => (
-                      <SelectItem key={department} value={department.toLowerCase()}>
-                        {department}
+                      <SelectItem key={department.id} value={department.name.toLowerCase()}>
+                        {department.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
