@@ -27,20 +27,39 @@ export default function ReportingPage() {
   const [searchTerm, setSearchTerm] = useState('')
 
   const loadEmployees = async () => {
-    if (!selectedTenant?.id) return
+    console.log('🔍 Loading employees...')
+    console.log('User:', user)
+    console.log('Selected Tenant:', selectedTenant)
+    
+    if (!selectedTenant?.id) {
+      console.log('❌ No tenant selected')
+      alert('No tenant selected. Please ensure you are logged in and have a tenant selected.')
+      return
+    }
     
     setLoading(true)
     try {
+      console.log(`🔍 Querying employees for tenant: ${selectedTenant.id}`)
+      
       const { data, error } = await supabase
         .from('employees')
         .select('id, employee_id, full_name, email, department, status')
         .eq('tenant_id', selectedTenant.id)
         .order('full_name')
       
-      if (error) throw error
+      console.log('📊 Supabase response:', { data, error })
+      
+      if (error) {
+        console.error('❌ Supabase error:', error)
+        alert(`Database error: ${error.message}`)
+        throw error
+      }
+      
+      console.log(`✅ Successfully loaded ${data?.length || 0} employees`)
       setEmployees(data || [])
     } catch (err: any) {
-      console.error('Error loading employees:', err)
+      console.error('❌ Error loading employees:', err)
+      alert(`Failed to load employees: ${err.message}`)
     } finally {
       setLoading(false)
     }
