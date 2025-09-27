@@ -96,7 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize authentication state
   useEffect(() => {
-    console.log('🔐 AuthProvider: Initializing authentication state')
+    console.log("🔐 AuthProvider: Initializing authentication state. Current user:", user?.id, "isStable:", isStable, "loading:", loading)
+
     
     const getInitialSession = async () => {
       try {
