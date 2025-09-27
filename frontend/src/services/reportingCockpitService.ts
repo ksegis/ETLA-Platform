@@ -124,6 +124,52 @@ export interface EmployeeJobHistory {
   created_at: string
 }
 
+export interface TaxRecord {
+  id: string;
+  employee_id: string;
+  tax_year: number;
+  form_type: string;
+  document_url?: string;
+  federal_wages: number;
+  federal_tax_withheld: number;
+  state_wages: number;
+  state_tax_withheld: number;
+  local_wages: number;
+  local_tax_withheld: number;
+  tenant_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BenefitRecord {
+  id: string;
+  employee_id: string;
+  benefit_type: string;
+  provider: string;
+  start_date: string;
+  end_date?: string;
+  status: string;
+  employee_contribution: number;
+  employer_contribution: number;
+  coverage_level: string;
+  tenant_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TimecardRecord {
+  id: string;
+  employee_id: string;
+  work_date: string;
+  hours_worked: number;
+  project?: string;
+  task?: string;
+  status: string;
+  tenant_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface EnhancedEmployeeData {
   employee: Employee
   demographics?: EmployeeDemographics
@@ -637,7 +683,7 @@ class ReportingCockpitService {
   /**
    * Get benefit records for an employee
    */
-  async getBenefitRecords(employeeId: string, tenantId?: string): Promise<any[]> {
+  async getBenefitRecords(employeeId: string, tenantId?: string): Promise<BenefitRecord[]> {
     try {
       // Return mock data in demo mode
       if (isDemoMode) {
@@ -759,7 +805,7 @@ class ReportingCockpitService {
   /**
    * Get tax records for an employee
    */
-  async getTaxRecords(employeeId: string, tenantId?: string): Promise<any[]> {
+  async getTaxRecords(employeeId: string, tenantId?: string): Promise<TaxRecord[]> {
     try {
       // Return mock data in demo mode
       if (isDemoMode) {
@@ -823,7 +869,7 @@ class ReportingCockpitService {
   /**
    * Get timecard records for an employee within a date range
    */
-  async getTimecards(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<any[]> {
+  async getTimecards(employeeId: string, tenantId?: string, startDate?: string, endDate?: string): Promise<TimecardRecord[]> {
     try {
       // Return mock data in demo mode
       if (isDemoMode) {
@@ -881,6 +927,52 @@ class ReportingCockpitService {
       return isDemoMode ? [] : []
     }
   }
+
+  /**
+   * Search employees by name, ID, or email
+   */
+  async searchEmployees(searchTerm: string, tenantId?: string): Promise<Employee[]> {
+    try {
+      // Return mock data in demo mode
+      if (isDemoMode) {
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+        return mockEmployees.filter(employee =>
+          employee.full_name.toLowerCase().includes(lowerCaseSearchTerm) ||
+          employee.employee_id.toLowerCase().includes(lowerCaseSearchTerm) ||
+          (employee.email && employee.email.toLowerCase().includes(lowerCaseSearchTerm))
+        );
+      }
+
+      let query = supabase
+        .from('employees')
+        .select('*')
+        .in('status', ['active', 'Active']);
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+
+      // Supabase doesn't directly support OR in filter for RLS, so we'll do a broader search and filter client-side if needed
+      // For now, we'll search across multiple fields using `ilike` for case-insensitive search
+      query = query.or(
+        `full_name.ilike.%${searchTerm}%`,
+        `employee_id.ilike.%${searchTerm}%`,
+        `email.ilike.%${searchTerm}%`
+      );
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error searching employees:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in searchEmployees:', error);
+      return isDemoMode ? [] : [];
+    }
+  }
 }
 
 export const reportingCockpitService = new ReportingCockpitService();
@@ -904,3 +996,7 @@ export const exportToCSV = <T>(data: T[], filename: string) => {
     document.body.removeChild(link);
   }
 };
+
+
+// Added a comment to trigger a new commit
+
