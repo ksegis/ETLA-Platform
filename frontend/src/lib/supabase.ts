@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN;
+const NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxMjM0NTYsImV4cCI6MTk2MDY5OTQ1Nn0.placeholder-key-for-build-only';
 
 // Determine if we should use the mock client
 // This happens if:
@@ -9,9 +9,8 @@ const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TO
 //    the Supabase URL or Anon Key are NOT provided (indicating build time or missing env var in SSR)
 // 2. OR, if the Supabase URL or Anon Key are explicitly set to placeholder/demo values
 const useMockClient = (
-  (typeof window === 'undefined' && (!NEXT_PUBLIC_SUPABASE_URL || !NEXT_PUBLIC_SUPABASE_ANON_TOKEN)) ||
   NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' ||
-  NEXT_PUBLIC_SUPABASE_ANON_TOKEN === 'placeholder-key' ||
+  NEXT_PUBLIC_SUPABASE_ANON_TOKEN.includes('placeholder-key-for-build-only') ||
   NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
   NEXT_PUBLIC_SUPABASE_ANON_TOKEN === 'demo_anon_key'
 );

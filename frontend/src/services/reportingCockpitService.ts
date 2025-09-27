@@ -330,7 +330,7 @@ export class ReportingCockpitService {
   async getEmployees(tenantId?: string): Promise<Employee[]> {
     try {
       // Return mock data in demo mode
-      if (isDemoMode) {
+      if (isSupabaseDemoMode) {
         return mockEmployees;
       }
 
