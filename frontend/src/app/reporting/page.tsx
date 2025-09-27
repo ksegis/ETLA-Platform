@@ -8,6 +8,12 @@ import { Input } from '@/components/ui/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/Badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useTenant } from '@/contexts/TenantContext'
+import reportingCockpitService, { 
+  Employee, 
+  EmployeeDemographics, 
+  EnhancedEmployeeData 
+} from '@/services/reportingCockpitService'
 import { 
   Search, 
   Filter, 
@@ -26,109 +32,108 @@ import {
   PieChart,
   TrendingUp,
   Database,
-  Briefcase
+  Briefcase,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
-
-// Types for the cockpit data
-interface Employee {
-  id: string
-  employee_id: string
-  full_name: string
-  email: string
-  department: string
-  position: string
-  hire_date: string
-  status: 'active' | 'inactive' | 'terminated'
-  avatar_url?: string
-  manager_name?: string
-  location?: string
-}
-
-interface EmployeeDemographics {
-  age?: number
-  gender?: string
-  ethnicity?: string
-  veteran_status?: boolean
-  disability_status?: boolean
-}
 
 interface ReportingCockpitState {
   selectedEmployee: Employee | null
+  enhancedEmployeeData: EnhancedEmployeeData | null
   dateRange: {
     start: string
     end: string
   }
   departmentFilter: string
+  searchTerm: string
   loading: boolean
+  loadingEnhancedData: boolean
   employees: Employee[]
+  departments: string[]
+  error: string | null
 }
 
 export default function ReportingCockpit() {
+  const { selectedTenant } = useTenant()
   const [state, setState] = useState<ReportingCockpitState>({
     selectedEmployee: null,
+    enhancedEmployeeData: null,
     dateRange: {
       start: '',
       end: ''
     },
     departmentFilter: '',
+    searchTerm: '',
     loading: true,
-    employees: []
+    loadingEnhancedData: false,
+    employees: [],
+    departments: [],
+    error: null
   })
 
   const [activeDataTab, setActiveDataTab] = useState('pay-statements')
 
-  // Load employees on component mount
+  // Load initial data on component mount
   useEffect(() => {
-    loadEmployees()
-  }, [])
+    loadInitialData()
+  }, [selectedTenant])
 
-  const loadEmployees = async () => {
-    setState(prev => ({ ...prev, loading: true }))
+  // Load enhanced employee data when employee is selected
+  useEffect(() => {
+    if (state.selectedEmployee) {
+      loadEnhancedEmployeeData(state.selectedEmployee.id)
+    } else {
+      setState(prev => ({ ...prev, enhancedEmployeeData: null }))
+    }
+  }, [state.selectedEmployee])
+
+  const loadInitialData = async () => {
+    setState(prev => ({ ...prev, loading: true, error: null }))
     
     try {
-      // TODO: Replace with real Supabase query
-      // const { data: employees, error } = await supabase
-      //   .from('employees')
-      //   .select('*')
-      //   .eq('status', 'active')
-      //   .order('full_name')
+      const tenantId = selectedTenant?.id
       
-      // Mock data for now - will be replaced with real database connection
-      const mockEmployees: Employee[] = [
-        {
-          id: '1',
-          employee_id: 'EMP001',
-          full_name: 'John Smith',
-          email: 'john.smith@company.com',
-          department: 'Engineering',
-          position: 'Senior Developer',
-          hire_date: '2022-01-15',
-          status: 'active',
-          manager_name: 'Sarah Johnson',
-          location: 'New York'
-        },
-        {
-          id: '2',
-          employee_id: 'EMP002',
-          full_name: 'Jane Doe',
-          email: 'jane.doe@company.com',
-          department: 'Marketing',
-          position: 'Marketing Manager',
-          hire_date: '2021-06-10',
-          status: 'active',
-          manager_name: 'Mike Wilson',
-          location: 'California'
-        }
-      ]
+      // Load employees and departments in parallel
+      const [employees, departments] = await Promise.all([
+        reportingCockpitService.getEmployees(tenantId),
+        reportingCockpitService.getDepartments(tenantId)
+      ])
       
       setState(prev => ({ 
         ...prev, 
-        employees: mockEmployees,
+        employees,
+        departments,
         loading: false 
       }))
     } catch (error) {
-      console.error('Error loading employees:', error)
-      setState(prev => ({ ...prev, loading: false }))
+      console.error('Error loading initial data:', error)
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: 'Failed to load employee data. Please try again.'
+      }))
+    }
+  }
+
+  const loadEnhancedEmployeeData = async (employeeId: string) => {
+    setState(prev => ({ ...prev, loadingEnhancedData: true }))
+    
+    try {
+      const tenantId = selectedTenant?.id
+      const enhancedData = await reportingCockpitService.getEnhancedEmployeeData(employeeId, tenantId)
+      
+      setState(prev => ({ 
+        ...prev, 
+        enhancedEmployeeData: enhancedData,
+        loadingEnhancedData: false 
+      }))
+    } catch (error) {
+      console.error('Error loading enhanced employee data:', error)
+      setState(prev => ({ 
+        ...prev, 
+        loadingEnhancedData: false,
+        error: 'Failed to load employee details. Please try again.'
+      }))
     }
   }
 
@@ -136,18 +141,66 @@ export default function ReportingCockpit() {
     setState(prev => ({ ...prev, selectedEmployee: employee }))
   }
 
+  const handleSearch = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      // If search is cleared, reload all employees
+      loadInitialData()
+      return
+    }
+
+    setState(prev => ({ ...prev, loading: true, searchTerm }))
+    
+    try {
+      const tenantId = selectedTenant?.id
+      const employees = await reportingCockpitService.searchEmployees(searchTerm, tenantId)
+      
+      setState(prev => ({ 
+        ...prev, 
+        employees,
+        loading: false 
+      }))
+    } catch (error) {
+      console.error('Error searching employees:', error)
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: 'Failed to search employees. Please try again.'
+      }))
+    }
+  }
+
   const clearFilters = () => {
     setState(prev => ({
       ...prev,
       selectedEmployee: null,
+      enhancedEmployeeData: null,
       dateRange: { start: '', end: '' },
-      departmentFilter: ''
+      departmentFilter: '',
+      searchTerm: ''
     }))
+    loadInitialData()
   }
 
   const exportAllData = () => {
-    // TODO: Implement export functionality
-    console.log('Exporting all data for employee:', state.selectedEmployee?.full_name)
+    if (!state.selectedEmployee) return
+    
+    // TODO: Implement comprehensive export functionality
+    console.log('Exporting all data for employee:', state.selectedEmployee.full_name)
+    
+    // This would export:
+    // - Employee demographics
+    // - Pay statements
+    // - Tax records
+    // - Benefits information
+    // - Timecard data
+    // - Documents
+  }
+
+  const refreshData = () => {
+    loadInitialData()
+    if (state.selectedEmployee) {
+      loadEnhancedEmployeeData(state.selectedEmployee.id)
+    }
   }
 
   return (
@@ -184,34 +237,66 @@ export default function ReportingCockpit() {
         {/* Master Filter Bar */}
         <Card className="mb-6">
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Employee Selector */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Employee</label>
-                <Select 
-                  value={state.selectedEmployee?.id || ''} 
-                  onValueChange={(value) => {
-                    const employee = state.employees.find(emp => emp.id === value)
-                    if (employee) handleEmployeeSelect(employee)
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {state.employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4" />
-                          <span>{employee.full_name}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {employee.employee_id}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* Employee Search & Selector */}
+              <div className="space-y-2 lg:col-span-2">
+                <label className="text-sm font-medium text-gray-700">Employee Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by name, ID, or email..."
+                    value={state.searchTerm}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setState(prev => ({ ...prev, searchTerm: value }))
+                      
+                      // Debounced search
+                      clearTimeout((window as any).searchTimeout)
+                      ;(window as any).searchTimeout = setTimeout(() => {
+                        handleSearch(value)
+                      }, 300)
+                    }}
+                    className="pl-10"
+                  />
+                  {state.loading && (
+                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
+                  )}
+                </div>
+                
+                {/* Employee Dropdown */}
+                {state.employees.length > 0 && (
+                  <Select 
+                    value={state.selectedEmployee?.id || ''} 
+                    onValueChange={(value) => {
+                      const employee = state.employees.find(emp => emp.id === value)
+                      if (employee) handleEmployeeSelect(employee)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={`Select from ${state.employees.length} employees...`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {state.employees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center space-x-2">
+                              <User className="h-4 w-4" />
+                              <span className="font-medium">{employee.full_name}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-xs text-gray-500">
+                              <Badge variant="outline" className="text-xs">
+                                {employee.employee_id}
+                              </Badge>
+                              {employee.department && (
+                                <span>{employee.department}</span>
+                              )}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Date Range */}
@@ -226,6 +311,7 @@ export default function ReportingCockpit() {
                       dateRange: { ...prev.dateRange, start: e.target.value }
                     }))}
                     className="text-sm"
+                    placeholder="Start date"
                   />
                   <Input
                     type="date"
@@ -235,6 +321,7 @@ export default function ReportingCockpit() {
                       dateRange: { ...prev.dateRange, end: e.target.value }
                     }))}
                     className="text-sm"
+                    placeholder="End date"
                   />
                 </div>
               </div>
@@ -251,20 +338,27 @@ export default function ReportingCockpit() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Departments</SelectItem>
-                    <SelectItem value="engineering">Engineering</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="sales">Sales</SelectItem>
-                    <SelectItem value="hr">Human Resources</SelectItem>
+                    {state.departments.map((department) => (
+                      <SelectItem key={department} value={department.toLowerCase()}>
+                        {department}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Quick Actions */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Quick Actions</label>
+                <label className="text-sm font-medium text-gray-700">Actions</label>
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Eye className="h-4 w-4 mr-1" />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={refreshData}
+                    disabled={state.loading}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-1 ${state.loading ? 'animate-spin' : ''}`} />
                     View
                   </Button>
                   <Button variant="outline" size="sm" className="flex-1">
@@ -288,25 +382,90 @@ export default function ReportingCockpit() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {state.selectedEmployee ? (
+              {state.loadingEnhancedData ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-500 animate-spin" />
+                  <p className="text-gray-500">Loading employee details...</p>
+                </div>
+              ) : state.selectedEmployee && state.enhancedEmployeeData ? (
                 <div className="space-y-4">
                   {/* Employee Basic Info */}
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                      <User className="h-8 w-8 text-gray-500" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white">
+                      <span className="text-lg font-semibold">
+                        {state.selectedEmployee.first_name?.[0]}{state.selectedEmployee.last_name?.[0]}
+                      </span>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg font-semibold">{state.selectedEmployee.full_name}</h3>
-                      <p className="text-gray-600">{state.selectedEmployee.position}</p>
-                      <p className="text-sm text-gray-500">{state.selectedEmployee.employee_id}</p>
+                      <p className="text-gray-600">
+                        {state.selectedEmployee.job_title || state.selectedEmployee.position || 'N/A'}
+                      </p>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <span>{state.selectedEmployee.employee_id}</span>
+                        {state.selectedEmployee.employee_code && (
+                          <>
+                            <span>•</span>
+                            <span>{state.selectedEmployee.employee_code}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Demographics Section */}
+                  {state.enhancedEmployeeData.demographics && (
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                        <Users className="h-4 w-4 mr-2" />
+                        Demographics
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {state.enhancedEmployeeData.demographics.date_of_birth && (
+                          <div>
+                            <span className="font-medium text-gray-700">Age:</span>
+                            <p>{reportingCockpitService.calculateAge(state.enhancedEmployeeData.demographics.date_of_birth)} years</p>
+                          </div>
+                        )}
+                        {state.enhancedEmployeeData.demographics.gender && (
+                          <div>
+                            <span className="font-medium text-gray-700">Gender:</span>
+                            <p>{state.enhancedEmployeeData.demographics.gender}</p>
+                          </div>
+                        )}
+                        {state.enhancedEmployeeData.demographics.ethnicity && (
+                          <div>
+                            <span className="font-medium text-gray-700">Ethnicity:</span>
+                            <p>{state.enhancedEmployeeData.demographics.ethnicity}</p>
+                          </div>
+                        )}
+                        {state.enhancedEmployeeData.demographics.veteran_status !== undefined && (
+                          <div>
+                            <span className="font-medium text-gray-700">Veteran:</span>
+                            <p>{state.enhancedEmployeeData.demographics.veteran_status ? 'Yes' : 'No'}</p>
+                          </div>
+                        )}
+                        {state.enhancedEmployeeData.demographics.has_disability !== undefined && (
+                          <div>
+                            <span className="font-medium text-gray-700">Disability:</span>
+                            <p>{state.enhancedEmployeeData.demographics.has_disability ? 'Yes' : 'No'}</p>
+                          </div>
+                        )}
+                        {state.enhancedEmployeeData.demographics.marital_status && (
+                          <div>
+                            <span className="font-medium text-gray-700">Marital Status:</span>
+                            <p>{state.enhancedEmployeeData.demographics.marital_status}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Employment Details */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="font-medium text-gray-700">Department:</span>
-                      <p>{state.selectedEmployee.department}</p>
+                      <p>{state.selectedEmployee.department || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Hire Date:</span>
@@ -314,29 +473,90 @@ export default function ReportingCockpit() {
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Manager:</span>
-                      <p>{state.selectedEmployee.manager_name || 'N/A'}</p>
+                      <p>{state.selectedEmployee.manager_supervisor || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Location:</span>
-                      <p>{state.selectedEmployee.location || 'N/A'}</p>
+                      <p>{state.selectedEmployee.work_location || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Employment Type:</span>
+                      <p>{state.selectedEmployee.employment_type || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Pay Type:</span>
+                      <p>{state.selectedEmployee.pay_type || 'N/A'}</p>
                     </div>
                   </div>
 
-                  {/* Quick Stats */}
+                  {/* Quick Stats with Real Data */}
                   <div className="grid grid-cols-3 gap-2 pt-4 border-t">
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-blue-600">$0</div>
+                      <div className="text-lg font-semibold text-blue-600">
+                        {state.enhancedEmployeeData.payrollSummary?.ytd_gross 
+                          ? reportingCockpitService.formatCurrency(state.enhancedEmployeeData.payrollSummary.ytd_gross)
+                          : '$0'
+                        }
+                      </div>
                       <div className="text-xs text-gray-500">YTD Earnings</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-green-600">0</div>
+                      <div className="text-lg font-semibold text-green-600">
+                        {state.enhancedEmployeeData.payrollSummary?.total_hours_ytd 
+                          ? reportingCockpitService.formatHours(state.enhancedEmployeeData.payrollSummary.total_hours_ytd)
+                          : '0'
+                        }
+                      </div>
                       <div className="text-xs text-gray-500">Hours Worked</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-purple-600">0</div>
+                      <div className="text-lg font-semibold text-purple-600">
+                        {state.enhancedEmployeeData.documentCount || 0}
+                      </div>
                       <div className="text-xs text-gray-500">Documents</div>
                     </div>
                   </div>
+
+                  {/* Contact Information */}
+                  {state.enhancedEmployeeData.demographics && (
+                    <div className="pt-4 border-t">
+                      <h4 className="font-medium text-gray-900 mb-2">Contact Information</h4>
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        {state.selectedEmployee.email && (
+                          <div>
+                            <span className="font-medium text-gray-700">Email:</span>
+                            <p className="text-blue-600">{state.selectedEmployee.email}</p>
+                          </div>
+                        )}
+                        {state.enhancedEmployeeData.demographics.phone_mobile && (
+                          <div>
+                            <span className="font-medium text-gray-700">Mobile:</span>
+                            <p>{state.enhancedEmployeeData.demographics.phone_mobile}</p>
+                          </div>
+                        )}
+                        {state.enhancedEmployeeData.demographics.address_line1 && (
+                          <div>
+                            <span className="font-medium text-gray-700">Address:</span>
+                            <p>
+                              {state.enhancedEmployeeData.demographics.address_line1}
+                              {state.enhancedEmployeeData.demographics.city && `, ${state.enhancedEmployeeData.demographics.city}`}
+                              {state.enhancedEmployeeData.demographics.state && `, ${state.enhancedEmployeeData.demographics.state}`}
+                              {state.enhancedEmployeeData.demographics.postal_code && ` ${state.enhancedEmployeeData.demographics.postal_code}`}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : state.selectedEmployee ? (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-4 text-orange-400" />
+                  <p>Employee details not available</p>
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => loadEnhancedEmployeeData(state.selectedEmployee!.id)}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
