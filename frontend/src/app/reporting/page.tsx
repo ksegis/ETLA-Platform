@@ -31,21 +31,15 @@ export default function ReportingPage() {
     console.log('User:', user)
     console.log('Selected Tenant:', selectedTenant)
     
-    if (!selectedTenant?.id) {
-      console.log('❌ No tenant selected')
-      alert('No tenant selected. Please ensure you are logged in and have a tenant selected.')
-      return
-    }
-    
     setLoading(true)
     try {
-      console.log(`🔍 Querying employees for tenant: ${selectedTenant.id}`)
+      // First, try loading ALL employees to test basic database connection
+      console.log('🔍 Testing basic database connection...')
       
       const { data, error } = await supabase
         .from('employees')
-        .select('id, employee_id, full_name, email, department, status')
-        .eq('tenant_id', selectedTenant.id)
-        .order('full_name')
+        .select('id, employee_id, full_name, email, department, status, tenant_id')
+        .limit(10)
       
       console.log('📊 Supabase response:', { data, error })
       
@@ -56,7 +50,19 @@ export default function ReportingPage() {
       }
       
       console.log(`✅ Successfully loaded ${data?.length || 0} employees`)
-      setEmployees(data || [])
+      console.log('📋 Employee data:', data)
+      
+      // If we have a tenant, filter the results
+      let filteredData = data || []
+      if (selectedTenant?.id) {
+        filteredData = (data || []).filter(emp => emp.tenant_id === selectedTenant.id)
+        console.log(`🎯 Filtered to ${filteredData.length} employees for tenant ${selectedTenant.id}`)
+      } else {
+        console.log('⚠️ No tenant selected, showing all employees')
+      }
+      
+      setEmployees(filteredData)
+      alert(`Loaded ${filteredData.length} employees successfully!`)
     } catch (err: any) {
       console.error('❌ Error loading employees:', err)
       alert(`Failed to load employees: ${err.message}`)
