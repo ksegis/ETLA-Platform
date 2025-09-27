@@ -597,6 +597,71 @@ class ReportingCockpitService {
     if (hours === null || hours === undefined) return '0'
     return hours.toLocaleString('en-US', { maximumFractionDigits: 1 })
   }
+
+  /**
+   * Get benefit records for an employee
+   */
+  async getBenefitRecords(employeeId?: string, tenantId?: string): Promise<BenefitRecord[]> {
+    try {
+      // Return mock data in demo mode
+      if (isDemoMode) {
+        return [
+          {
+            id: 'ben1',
+            employee_id: 'emp1',
+            benefit_type: 'Health Insurance',
+            plan_name: 'PPO Gold',
+            coverage_type: 'Family',
+            enrollment_date: '2023-01-15',
+            effective_date: '2023-02-01',
+            employee_contribution: 250,
+            employer_contribution: 500,
+            coverage_amount: 10000,
+            status: 'active',
+            created_at: '2023-01-15T00:00:00Z'
+          },
+          {
+            id: 'ben2',
+            employee_id: 'emp1',
+            benefit_type: '401k',
+            plan_name: 'Retirement Plus',
+            coverage_type: 'N/A',
+            enrollment_date: '2023-01-15',
+            effective_date: '2023-02-01',
+            employee_contribution: 500,
+            employer_contribution: 250,
+            coverage_amount: 0,
+            status: 'active',
+            created_at: '2023-01-15T00:00:00Z'
+          }
+        ];
+      }
+
+      let query = supabase
+        .from('benefits')
+        .select('*')
+
+      if (employeeId) {
+        query = query.eq('employee_id', employeeId)
+      }
+
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching benefit records:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getBenefitRecords:', error)
+      return isDemoMode ? [] : []
+    }
+  }
 }
 
 export const reportingCockpitService = new ReportingCockpitService()
@@ -710,3 +775,4 @@ export interface EmployeeJobHistory {
   is_current: boolean
   created_at: string
 }
+
