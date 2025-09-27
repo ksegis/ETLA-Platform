@@ -174,8 +174,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
       } catch (error) {
-        console.log('Supabase not available, using demo user')
-        setUser({ email: 'demo@company.com' })
+        console.log('Supabase not available, user will remain null')
+        setUser(null)
       }
     }
 
@@ -367,7 +367,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.email || 'demo@company.com'}
+                  {user?.email || 'Loading...'}
                 </p>
                 <button
                   onClick={handleSignOut}
@@ -412,7 +412,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <div className="flex flex-col items-start">
                     <span className="text-xs text-gray-500 uppercase tracking-wide">Profile</span>
                     <span className="text-sm font-medium text-gray-900 truncate max-w-32">
-                      {user?.email || 'demo@company.com'}
+                      {user?.email || 'Loading...'}
                     </span>
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 ml-2" />
@@ -425,7 +425,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       {/* User Info Header */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {user?.email || 'demo@company.com'}
+                          {user?.email || 'Loading...'}
                         </p>
                         <p className="text-xs text-gray-500">
                           {user?.user_metadata?.full_name || 'User Account'}
