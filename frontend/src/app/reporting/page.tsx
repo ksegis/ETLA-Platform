@@ -128,7 +128,7 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import service to avoid SSR issues
-      const reportingService = await import('@/services/reportingCockpitService').then(m => m.default)
+      const { reportingCockpitService: reportingService } = await import('@/services/reportingCockpitService')
       
       // Load employees and departments in parallel
       const [employees, departments] = await Promise.all([
@@ -159,9 +159,9 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import services to avoid SSR issues
-      const [reportingService, documentService] = await Promise.all([
-        import('@/services/reportingCockpitService').then(m => m.default),
-        import('@/services/documentRepositoryService').then(m => m.default)
+      const [{ reportingCockpitService: reportingService }, { documentRepositoryService: documentService }] = await Promise.all([
+        import('@/services/reportingCockpitService'),
+        import('@/services/documentRepositoryService')
       ])
       
       // Load enhanced employee data and document information in parallel
@@ -206,7 +206,7 @@ export default function ReportingCockpit() {
       const tenantId = selectedTenant?.id
       
       // Dynamically import service to avoid SSR issues
-      const reportingService = await import('@/services/reportingCockpitService').then(m => m.default)
+      const { reportingCockpitService: reportingService } = await import('@/services/reportingCockpitService')
       const employees = await reportingService.searchEmployees(searchTerm, tenantId)
       
       setState(prev => ({ 

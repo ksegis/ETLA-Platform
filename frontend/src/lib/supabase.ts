@@ -1,14 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || 'placeholder-key';
+const NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN;
 
-// Check if we're in a build environment or demo mode
-const isBuildTime = typeof window === 'undefined' && !process.env.NEXT_PUBLIC_SUPABASE_URL;
-const isDemoMode = supabaseUrl === 'https://placeholder.supabase.co' || 
-                   supabaseAnonKey === 'placeholder-key' ||
-                   supabaseUrl === 'https://demo.supabase.co' ||
-                   supabaseAnonKey === 'demo_anon_key';
+// Determine if we should use the mock client
+// This happens if:
+// 1. We are in a server-side environment (typeof window === 'undefined') AND
+//    the Supabase URL or Anon Key are NOT provided (indicating build time or missing env var in SSR)
+// 2. OR, if the Supabase URL or Anon Key are explicitly set to placeholder/demo values
+const useMockClient = (
+  (typeof window === 'undefined' && (!NEXT_PUBLIC_SUPABASE_URL || !NEXT_PUBLIC_SUPABASE_ANON_TOKEN)) ||
+  NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' ||
+  NEXT_PUBLIC_SUPABASE_ANON_TOKEN === 'placeholder-key' ||
+  NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
+  NEXT_PUBLIC_SUPABASE_ANON_TOKEN === 'demo_anon_key'
+);
 
 // Create a mock client for build time or demo mode
 const createMockClient = () => ({
@@ -70,4 +76,10 @@ const createMockClient = () => ({
   }
 });
 
-export const supabase = (isBuildTime || isDemoMode) ? createMockClient() as any : createClient(supabaseUrl, supabaseAnonKey);
+// Initialize the Supabase client conditionally
+export const supabase = useMockClient 
+  ? createMockClient() as any 
+  : createClient(NEXT_PUBLIC_SUPABASE_URL!, NEXT_PUBLIC_SUPABASE_ANON_TOKEN!); // Use non-null assertion as useMockClient handles undefined cases
+
+// Export a function to check if the client is in demo mode
+export const isSupabaseDemoMode = useMockClient;
