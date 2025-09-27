@@ -132,9 +132,10 @@ interface ReportingCockpitState {
 
 export default function ReportingPage() {
   const { selectedTenant } = useTenant()
-  const { user } = useAuth()
+  const { user } = useAuth() // Re-add user here
   const accessibleTenantIds = useAccessibleTenantIds()
   const [mounted, setMounted] = useState(false)
+
   const [state, setState] = useState<ReportingCockpitState>({
     selectedEmployee: null,
     enhancedEmployeeData: null,
@@ -164,8 +165,20 @@ export default function ReportingPage() {
   const { isLoading: isTenantLoading } = useTenant()
 
   useEffect(() => {
+    console.log("ReportingPage useEffect triggered:", {
+      mounted,
+      isAuthStable,
+      isTenantLoading,
+      user: !!user,
+      accessibleTenantIds: accessibleTenantIds.join(","),
+    })
     if (mounted && isAuthStable && !isTenantLoading && user) {
+      console.log("Calling loadInitialData...")
       loadInitialData()
+    } else if (mounted && isAuthStable && !isTenantLoading && !user) {
+      console.log("Auth stable, tenant not loading, but user is null. Not loading data.")
+    } else if (mounted && isAuthStable && !isTenantLoading && user && accessibleTenantIds.length === 0) {
+      console.log("Auth stable, tenant not loading, user present, but accessibleTenantIds is empty. Not loading data.")
     }
   }, [accessibleTenantIds.join(","), mounted, isAuthStable, isTenantLoading, user])
 
