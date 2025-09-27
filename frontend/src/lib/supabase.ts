@@ -79,7 +79,9 @@ const createMockClient = () => ({
 // Initialize the Supabase client conditionally
 export const supabase = useMockClient 
   ? createMockClient() as any 
-  : createClient(NEXT_PUBLIC_SUPABASE_URL!, NEXT_PUBLIC_SUPABASE_ANON_TOKEN!); // Use non-null assertion as useMockClient handles undefined cases
+  : (NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_TOKEN 
+      ? createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_TOKEN)
+      : createMockClient() as any); // Fallback to mock client if env vars are missing
 
 // Export a function to check if the client is in demo mode
 export const isSupabaseDemoMode = useMockClient;

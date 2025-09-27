@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 
 // Force dynamic rendering to avoid SSR issues with Supabase
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -133,6 +134,11 @@ export default function ReportingCockpit() {
   }, [state.selectedEmployee])
 
   const loadInitialData = async () => {
+    // Skip during build time
+    if (typeof window === 'undefined') {
+      return
+    }
+    
     setState(prev => ({ ...prev, loading: true, error: null }))
     
     try {
@@ -165,6 +171,11 @@ export default function ReportingCockpit() {
   }
 
   const loadEnhancedEmployeeData = async (employeeId: string) => {
+    // Skip during build time
+    if (typeof window === 'undefined') {
+      return
+    }
+    
     setState(prev => ({ ...prev, loadingEnhancedData: true }))
     
     try {
@@ -620,11 +631,11 @@ export default function ReportingCockpit() {
                         </span>
                       </div>
                     )}
-                    {state.enhancedEmployeeData.demographics.phone_number && (
+                    {state.enhancedEmployeeData.demographics.phone_mobile && (
                       <div className="flex items-center space-x-2 text-sm">
                         <Phone className="h-4 w-4 text-gray-500" />
                         <span className="text-gray-600">Phone:</span>
-                        <span className="font-medium">{state.enhancedEmployeeData.demographics.phone_number}</span>
+                        <span className="font-medium">{state.enhancedEmployeeData.demographics.phone_mobile}</span>
                       </div>
                     )}
                     {state.selectedEmployee.email && (
@@ -634,11 +645,15 @@ export default function ReportingCockpit() {
                         <span className="font-medium text-blue-600">{state.selectedEmployee.email}</span>
                       </div>
                     )}
-                    {state.enhancedEmployeeData.demographics.address && (
+                    {state.enhancedEmployeeData.demographics.address_line1 && (
                       <div className="flex items-center space-x-2 text-sm">
                         <MapPin className="h-4 w-4 text-gray-500" />
                         <span className="text-gray-600">Address:</span>
-                        <span className="font-medium">{state.enhancedEmployeeData.demographics.address}</span>
+                        <span className="font-medium">
+                          {state.enhancedEmployeeData.demographics.address_line1}
+                          {state.enhancedEmployeeData.demographics.city && `, ${state.enhancedEmployeeData.demographics.city}`}
+                          {state.enhancedEmployeeData.demographics.state && `, ${state.enhancedEmployeeData.demographics.state}`}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -664,13 +679,13 @@ export default function ReportingCockpit() {
                         <div className="flex justify-between">
                           <span>Gross:</span>
                           <span className="font-medium text-green-600">
-                            {formatCurrency(state.enhancedEmployeeData.payrollSummary.ytd_gross)}
+                            {formatCurrency(state.enhancedEmployeeData.payrollSummary.ytd_gross || 0)}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Net:</span>
                           <span className="font-medium">
-                            {formatCurrency(state.enhancedEmployeeData.payrollSummary.ytd_net)}
+                            {formatCurrency(state.enhancedEmployeeData.payrollSummary.ytd_net || 0)}
                           </span>
                         </div>
                       </div>
