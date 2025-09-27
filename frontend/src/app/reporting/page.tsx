@@ -20,13 +20,18 @@ import reportingCockpitService, {
   EmployeeJobHistory
 } from '@/services/reportingCockpitService'
 
-// Grid Components (will be defined below)
+// Grid Components
 import PayStatementsGrid from '@/components/reporting/PayStatementsGrid'
 import TimecardsGrid from '@/components/reporting/TimecardsGrid'
 import TaxRecordsGrid from '@/components/reporting/TaxRecordsGrid'
 import BenefitsGrid from '@/components/reporting/BenefitsGrid'
 import DocumentsGrid from '@/components/reporting/DocumentsGrid'
 import JobHistoryGrid from '@/components/reporting/JobHistoryGrid'
+
+// Document Repository Components
+import DocumentBrowserModal from '@/components/reporting/DocumentBrowserModal'
+import DocumentViewer from '@/components/reporting/DocumentViewer'
+import documentRepositoryService, { DocumentRecord } from '@/services/documentRepositoryService'
 import { 
   Search, 
   Filter, 
@@ -85,6 +90,18 @@ export default function ReportingCockpit() {
   })
 
   const [activeDataTab, setActiveDataTab] = useState('pay-statements')
+  
+  // Document Repository State
+  const [documentBrowserOpen, setDocumentBrowserOpen] = useState(false)
+  const [documentViewerOpen, setDocumentViewerOpen] = useState(false)
+  const [selectedDocument, setSelectedDocument] = useState<DocumentRecord | null>(null)
+  const [employeeDocuments, setEmployeeDocuments] = useState<DocumentRecord[]>([])
+  const [documentStats, setDocumentStats] = useState({
+    totalDocuments: 0,
+    documentsByCategory: {} as Record<string, number>,
+    documentsByType: {} as Record<string, number>,
+    recentDocuments: 0
+  })
 
   // Load initial data on component mount
   useEffect(() => {
@@ -133,13 +150,22 @@ export default function ReportingCockpit() {
     
     try {
       const tenantId = selectedTenant?.id
-      const enhancedData = await reportingCockpitService.getEnhancedEmployeeData(employeeId, tenantId)
+      
+      // Load enhanced employee data and document information in parallel
+      const [enhancedData, documents, docStats] = await Promise.all([
+        reportingCockpitService.getEnhancedEmployeeData(employeeId, tenantId),
+        documentRepositoryService.getEmployeeDocuments(employeeId, tenantId),
+        documentRepositoryService.getDocumentStats(employeeId, tenantId)
+      ])
       
       setState(prev => ({ 
         ...prev, 
         enhancedEmployeeData: enhancedData,
         loadingEnhancedData: false 
       }))
+      
+      setEmployeeDocuments(documents)
+      setDocumentStats(docStats)
     } catch (error) {
       console.error('Error loading enhanced employee data:', error)
       setState(prev => ({ 
@@ -213,6 +239,26 @@ export default function ReportingCockpit() {
     if (state.selectedEmployee) {
       loadEnhancedEmployeeData(state.selectedEmployee.id)
     }
+  }
+
+  // Document Repository Handlers
+  const handleOpenDocumentBrowser = () => {
+    setDocumentBrowserOpen(true)
+  }
+
+  const handleDocumentSelect = (document: DocumentRecord) => {
+    setSelectedDocument(document)
+    setDocumentViewerOpen(true)
+    setDocumentBrowserOpen(false)
+  }
+
+  const handleDocumentViewerClose = () => {
+    setDocumentViewerOpen(false)
+    setSelectedDocument(null)
+  }
+
+  const handleDocumentChange = (document: DocumentRecord) => {
+    setSelectedDocument(document)
   }
 
   return (
@@ -751,36 +797,92 @@ export default function ReportingCockpit() {
                       <div className="font-medium text-blue-900">Document Repository</div>
                       <div className="text-sm text-blue-700">
                         {state.selectedEmployee ? 
-                          `${state.selectedEmployee.full_name} - 0 documents found` : 
+                          `${state.selectedEmployee.full_name} - ${documentStats.totalDocuments} documents found` : 
                           'Select employee to view documents'
                         }
                       </div>
+                      {state.selectedEmployee && documentStats.recentDocuments > 0 && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          {documentStats.recentDocuments} new documents (last 30 days)
+                        </div>
+                      )}
                     </div>
-                    <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      disabled={!state.selectedEmployee}
+                      onClick={handleOpenDocumentBrowser}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       Browse
                     </Button>
                   </div>
                 </div>
 
+                {/* Document Statistics */}
+                {state.selectedEmployee && documentStats.totalDocuments > 0 && (
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium">Document Categories:</div>
+                    <div className="space-y-2">
+                      {Object.entries(documentStats.documentsByCategory).slice(0, 4).map(([category, count]) => (
+                        <div key={category} className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">{category}</span>
+                          <Badge variant="secondary">{count}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Document Preview Area */}
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 mb-2">Document preview area</p>
-                  <p className="text-sm text-gray-400">
-                    Select a document to preview it here
-                  </p>
+                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">
+                  {selectedDocument ? (
+                    <div className="space-y-2">
+                      <FileText className="h-8 w-8 mx-auto text-blue-500" />
+                      <p className="text-sm font-medium">{selectedDocument.document_name}</p>
+                      <p className="text-xs text-gray-500">{selectedDocument.document_category}</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setDocumentViewerOpen(true)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Document
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-gray-500 mb-2">Document preview area</p>
+                      <p className="text-sm text-gray-400">
+                        {state.selectedEmployee ? 
+                          'Browse documents to preview them here' : 
+                          'Select an employee to view documents'
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Document Actions */}
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={!selectedDocument}
+                    onClick={() => selectedDocument && console.log('Download:', selectedDocument.document_name)}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Download
                   </Button>
-                  <Button variant="outline" size="sm" disabled={!state.selectedEmployee}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Generate
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={!state.selectedEmployee}
+                    onClick={handleOpenDocumentBrowser}
+                  >
+                    <Database className="h-4 w-4 mr-2" />
+                    Repository
                   </Button>
                 </div>
 
@@ -788,13 +890,35 @@ export default function ReportingCockpit() {
                 <div className="pt-4 border-t">
                   <h4 className="font-medium mb-2">Facsimile Generation</h4>
                   <div className="space-y-2">
-                    <Button variant="outline" size="sm" className="w-full justify-start" disabled={!state.selectedEmployee}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start" 
+                      disabled={!state.selectedEmployee}
+                      onClick={() => console.log('Generate pay stub for:', state.selectedEmployee?.full_name)}
+                    >
                       <FileText className="h-4 w-4 mr-2" />
                       Generate Pay Stub
                     </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start" disabled={!state.selectedEmployee}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start" 
+                      disabled={!state.selectedEmployee}
+                      onClick={() => console.log('Generate tax form for:', state.selectedEmployee?.full_name)}
+                    >
                       <FileText className="h-4 w-4 mr-2" />
                       Generate Tax Form
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start" 
+                      disabled={!state.selectedEmployee}
+                      onClick={() => console.log('Generate employment verification for:', state.selectedEmployee?.full_name)}
+                    >
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Employment Verification
                     </Button>
                   </div>
                 </div>
@@ -842,6 +966,25 @@ export default function ReportingCockpit() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Document Browser Modal */}
+        <DocumentBrowserModal
+          isOpen={documentBrowserOpen}
+          onClose={() => setDocumentBrowserOpen(false)}
+          employeeId={state.selectedEmployee?.id}
+          employeeName={state.selectedEmployee?.full_name}
+          tenantId={selectedTenant?.id}
+          onDocumentSelect={handleDocumentSelect}
+        />
+
+        {/* Document Viewer Modal */}
+        <DocumentViewer
+          isOpen={documentViewerOpen}
+          onClose={handleDocumentViewerClose}
+          document={selectedDocument}
+          documents={employeeDocuments}
+          onDocumentChange={handleDocumentChange}
+        />
       </div>
     </DashboardLayout>
   )

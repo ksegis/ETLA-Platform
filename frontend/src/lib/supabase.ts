@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || ''
 
 // Check if we're in demo mode (only when explicitly set to demo values)
 const isDemoMode = supabaseUrl === 'https://demo.supabase.co' ||
@@ -550,7 +550,7 @@ const getMockData = (table: string) => {
   }
 }
 
-export const supabase = isDemoMode ? createMockSupabaseClient() as any : createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = (isDemoMode || !supabaseUrl || !supabaseAnonKey) ? createMockSupabaseClient() as any : createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
 export interface WorkRequest {
