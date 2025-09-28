@@ -749,6 +749,38 @@ const EnhancedReportingPage: React.FC = () => {
           </Card>
         </div>
 
+        {/* Collapsible Analytics Dashboard */}
+        <Card className="mb-6">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Comprehensive Analytics Dashboard</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDashboardCollapsed(!isDashboardCollapsed)}
+                className="flex items-center gap-2"
+              >
+                {isDashboardCollapsed ? (
+                  <>
+                    <span className="text-sm">Show Dashboard</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">Hide Dashboard</span>
+                    <ChevronUp className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          {!isDashboardCollapsed && (
+            <div className="p-6">
+              <ComprehensiveDashboard />
+            </div>
+          )}
+        </Card>
+
         <Card className="p-4 md:p-6">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
