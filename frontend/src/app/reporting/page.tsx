@@ -465,7 +465,7 @@ const EnhancedReportingPage: React.FC = () => {
           />
         );
       case 'tax-records':
-        const filteredTaxRecords = filterDataBySearch(taxRecordData, filters.searchTerm);
+        const filteredTaxRecords = filterDataBySearch(taxData, filters.searchTerm);
         return (
           <TraditionalReportTable
             title="Tax Records"
