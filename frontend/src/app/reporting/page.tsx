@@ -1,4 +1,5 @@
-'use client';
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -858,8 +859,8 @@ const EnhancedReportingPage: React.FC = () => {
       const a = document.createElement('a');
       a.href = url;
       a.download = `${filename}_${new Date().toISOString().split('T')[0]}.xls`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+    a.click();
+    window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error generating Excel file:', error);
       alert('Error generating Excel report');
@@ -979,23 +980,106 @@ const EnhancedReportingPage: React.FC = () => {
           <option value="Operations">Operations</option>
         </select>
         
-        {/* Tenant Filter - Only show for multi-tenant users */}
-        {isMultiTenant && (
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md"
+          value={filters.employeeStatus}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, employeeStatus: e.target.value }))}
+        >
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="terminated">Terminated</option>
+          <option value="on_leave">On Leave</option>
+        </select>
+        
+        <Input
+          placeholder="Location"
+          value={filters.location}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+        />
+        
+        <Input
+          placeholder="Job Title"
+          value={filters.jobTitle}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, jobTitle: e.target.value }))}
+        />
+        
+        <Input
+          type="number"
+          placeholder="Min Salary"
+          value={filters.salaryMin}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, salaryMin: e.target.value }))}
+        />
+        
+        <Input
+          type="number"
+          placeholder="Max Salary"
+          value={filters.salaryMax}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, salaryMax: e.target.value }))}
+        />
+        
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md"
+          value={filters.payType}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, payType: e.target.value }))}
+        >
+          <option value="">All Pay Types</option>
+          <option value="salary">Salary</option>
+          <option value="hourly">Hourly</option>
+          <option value="commission">Commission</option>
+        </select>
+        
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md"
+          value={filters.flsaStatus}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, flsaStatus: e.target.value }))}
+        >
+          <option value="">All FLSA Statuses</option>
+          <option value="exempt">Exempt</option>
+          <option value="non-exempt">Non-Exempt</option>
+        </select>
+        
+        <Input
+          placeholder="Division"
+          value={filters.division}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, division: e.target.value }))}
+        />
+        
+        <Input
+          placeholder="Cost Center"
+          value={filters.costCenter}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, costCenter: e.target.value }))}
+        />
+        
+        <select
+          className="px-3 py-2 border border-gray-300 rounded-md"
+          value={filters.unionStatus}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, unionStatus: e.target.value }))}
+        >
+          <option value="">All Union Statuses</option>
+          <option value="union">Union</option>
+          <option value="non-union">Non-Union</option>
+        </select>
+        
+        <Input
+          placeholder="EEO Category"
+          value={filters.eeoCategory}
+          onChange={(e: any) => setFilters(prev => ({ ...prev, eeoCategory: e.target.value }))}
+        />
+        
+        {activeTab === 'timecards' && (
           <select
             className="px-3 py-2 border border-gray-300 rounded-md"
-            value={tenantFilter}
-            onChange={(e: any) => setTenantFilter(e.target.value)}
+            value={filters.approvalStatus}
+            onChange={(e: any) => setFilters(prev => ({ ...prev, approvalStatus: e.target.value }))}
           >
-            <option value="">All Tenants</option>
-            {availableTenants.map((tenant) => (
-              <option key={tenant.id} value={tenant.id}>
-                {tenant.name}
-              </option>
-            ))}
+            <option value="">All Approval Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
         )}
         
-        {/* Additional filters based on active tab */}
         {activeTab === 'tax-records' && (
           <>
             <select
@@ -1368,28 +1452,24 @@ const EnhancedReportingPage: React.FC = () => {
                       <p className="text-sm">{timecard.work_date}</p>
                     </div>
                     <div>
-                      <p><strong>Clock In:</strong> {timecard.clock_in}</p>
-                      <p><strong>Clock Out:</strong> {timecard.clock_out}</p>
                       <p><strong>Total Hours:</strong> {timecard.total_hours}</p>
-                    </div>
-                    <div>
                       <p><strong>Regular Hours:</strong> {timecard.regular_hours}</p>
                       <p><strong>Overtime Hours:</strong> {timecard.overtime_hours}</p>
-                      <p><strong>Holiday Hours:</strong> {timecard.holiday_hours}</p>
                     </div>
                     <div>
                       <p><strong>Department:</strong> {timecard.department}</p>
                       <p><strong>Supervisor:</strong> {timecard.supervisor}</p>
                       <p><strong>Status:</strong> <Badge variant={timecard.approval_status === 'approved' ? 'default' : 'secondary'}>{timecard.approval_status}</Badge></p>
-                      <div className="flex gap-2 mt-2">
-                        <Button 
-                          size="sm" 
-                          onClick={() => setSelectedTimecard(timecard as any)}
-                          variant="outline"
-                        >
-                          View Details
-                        </Button>
-                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => openFacsimile(timecard as any, 'timecard')}
+                        variant="outline"
+                      >
+                        View Details
+                      </Button>
+                      <Button size="sm" variant="outline">Export</Button>
                     </div>
                   </div>
                 </Card>
@@ -1409,18 +1489,17 @@ const EnhancedReportingPage: React.FC = () => {
       { key: 'job_code', label: 'Job Code', sortable: true },
       { key: 'job_title', label: 'Job Title', sortable: true },
       { key: 'job_family', label: 'Job Family', sortable: true },
-      { key: 'job_level', label: 'Level', sortable: true },
       { key: 'department', label: 'Department', sortable: true },
       { key: 'division', label: 'Division', sortable: true },
-      { key: 'flsa_classification', label: 'FLSA', sortable: true },
+      { key: 'location', label: 'Location', sortable: true },
       { key: 'min_pay_range', label: 'Min Pay', sortable: true, render: (job: JobRecord) => `$${job.min_pay_range?.toLocaleString()}` },
       { key: 'max_pay_range', label: 'Max Pay', sortable: true, render: (job: JobRecord) => `$${job.max_pay_range?.toLocaleString()}` },
-      { key: 'employee_count', label: 'Employees', sortable: true },
       { key: 'status', label: 'Status', sortable: true, render: (job: JobRecord) => (
         <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
           {job.status}
         </Badge>
-      )}
+      )},
+      { key: 'employee_count', label: 'Employees', sortable: true }
     ];
     
     return (
@@ -1435,6 +1514,12 @@ const EnhancedReportingPage: React.FC = () => {
             <Button onClick={() => downloadJSON(filteredData, 'job_catalog')} variant="outline">
               Export JSON
             </Button>
+            <Button onClick={() => downloadExcel(filteredData, 'job_catalog')} variant="outline">
+              Export Excel
+            </Button>
+            <Button onClick={() => downloadPDF(filteredData, 'job_catalog', 'Job Catalog Report')} variant="outline">
+              Export PDF
+            </Button>
           </div>
         </div>
         
@@ -1448,27 +1533,37 @@ const EnhancedReportingPage: React.FC = () => {
           />
         ) : (
           <div className="grid gap-4">
-            {filteredData.map((job: any) => (
-              <Card key={job.id} className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div>
-                    <h4 className="font-semibold">{job.job_title}</h4>
-                    <p className="text-sm text-gray-600">{job.job_code}</p>
-                    <p className="text-sm">{job.job_family} - {job.job_level}</p>
-                  </div>
-                  <div>
-                    <p><strong>Department:</strong> {job.department}</p>
-                    <p><strong>Division:</strong> {job.division}</p>
-                    <p><strong>FLSA:</strong> {job.flsa_classification}</p>
-                  </div>
-                  <div>
-                    <p><strong>Pay Range:</strong> ${job.min_pay_range?.toLocaleString()} - ${job.max_pay_range?.toLocaleString()}</p>
-                    <p><strong>Midpoint:</strong> ${job.midpoint_pay?.toLocaleString()}</p>
-                    <p><strong>Employees:</strong> {job.employee_count}</p>
-                  </div>
-                </div>
+            {filteredData.length === 0 ? (
+              <Card className="p-8 text-center">
+                <p className="text-gray-500">No job records found. The job catalog is ready for job descriptions and classifications.</p>
               </Card>
-            ))}
+            ) : (
+              filteredData.map((job: any) => (
+                <Card key={job.id} className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <h4 className="font-semibold">{job.job_title}</h4>
+                      <p className="text-sm text-gray-600">{job.job_code}</p>
+                      <p className="text-sm">{job.department}</p>
+                    </div>
+                    <div>
+                      <p><strong>Location:</strong> {job.location}</p>
+                      <p><strong>Pay Range:</strong> ${job.min_pay_range?.toLocaleString()} - ${job.max_pay_range?.toLocaleString()}</p>
+                      <p><strong>Status:</strong> <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>{job.status}</Badge></p>
+                    </div>
+                    <div>
+                      <p><strong>Employees:</strong> {job.employee_count}</p>
+                      <p><strong>FLSA:</strong> {job.flsa_classification}</p>
+                      <p><strong>Union:</strong> {job.union_code}</p>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="outline">View Details</Button>
+                      <Button size="sm" variant="outline">Export</Button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
         )}
       </div>
@@ -1480,23 +1575,22 @@ const EnhancedReportingPage: React.FC = () => {
     const currentViewMode = getViewMode('tax-records');
     
     const taxColumns = [
-      { key: 'tax_record_id', label: 'Tax Record ID', sortable: true },
+      { key: 'tax_record_id', label: 'Record ID', sortable: true },
       { key: 'employee_name', label: 'Employee', sortable: true },
       { key: 'tax_year', label: 'Tax Year', sortable: true },
       { key: 'form_type', label: 'Form Type', sortable: true },
-      { key: 'filing_status', label: 'Filing Status', sortable: true },
-      { key: 'wages_tips_compensation', label: 'Wages', sortable: true, render: (tax: TaxRecord) => `$${tax.wages_tips_compensation?.toLocaleString()}` },
-      { key: 'federal_income_tax_withheld', label: 'Federal Tax', sortable: true, render: (tax: TaxRecord) => `$${tax.federal_income_tax_withheld?.toLocaleString()}` },
-      { key: 'state_income_tax', label: 'State Tax', sortable: true, render: (tax: TaxRecord) => `$${tax.state_income_tax?.toLocaleString()}` },
-      { key: 'document_status', label: 'Status', sortable: true, render: (tax: TaxRecord) => (
-        <Badge variant={tax.document_status === 'issued' ? 'default' : 'secondary'}>
-          {tax.document_status}
+      { key: 'wages_tips_compensation', label: 'Wages', sortable: true, render: (record: TaxRecord) => `$${record.wages_tips_compensation?.toLocaleString()}` },
+      { key: 'federal_income_tax_withheld', label: 'Federal Tax', sortable: true, render: (record: TaxRecord) => `$${record.federal_income_tax_withheld?.toLocaleString()}` },
+      { key: 'state_income_tax', label: 'State Tax', sortable: true, render: (record: TaxRecord) => `$${record.state_income_tax?.toLocaleString()}` },
+      { key: 'document_status', label: 'Status', sortable: true, render: (record: TaxRecord) => (
+        <Badge variant={record.document_status === 'final' ? 'default' : 'secondary'}>
+          {record.document_status}
         </Badge>
       )},
-      { key: 'actions', label: 'Actions', sortable: false, render: (tax: TaxRecord) => (
+      { key: 'actions', label: 'Actions', sortable: false, render: (record: TaxRecord) => (
         <Button 
           size="sm" 
-          onClick={() => openFacsimile(tax as any, 'tax_w2')}
+          onClick={() => openFacsimile(record as any, 'tax_w2')}
           variant="outline"
         >
           View Details
@@ -1842,272 +1936,139 @@ const EnhancedReportingPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-screen">
-        {/* Sticky Header Section */}
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-          <div className="p-6 pb-0">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold">Enhanced Reporting System</h1>
-              <p className="text-gray-600 mt-2">
-                Comprehensive payroll and HR analytics with enhanced data extraction capabilities and flexible view options
-              </p>
-            </div>
-
-            {/* Enhanced Tab Navigation */}
-            <div className="flex flex-wrap gap-2 mb-6 border-b">
-              {tabs.map((tab: any) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white border-b-2 border-blue-500'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Enhanced Filters */}
-          <div className="px-6 pb-6">
-            {renderEnhancedFilters()}
-          </div>
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-gray-900">Operations Reporting Cockpit</h1>
+          <Badge variant="outline" className="bg-blue-100 text-blue-800">Unified employee reporting and document management</Badge>
         </div>
-
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            {/* Loading and Error States */}
-            {loading && (
-              <div className="flex justify-center items-center py-8">
-                <div className="text-lg">Loading enhanced data...</div>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {error}
-              </div>
-            )}
-
-            {/* Enhanced Content with List/Grid Views */}
-            {!loading && !error && (
-              <div>
-                {activeTab === 'employees' && renderEmployeeData()}
-                {activeTab === 'pay-statements' && renderPayStatementData()}
-                {activeTab === 'timecards' && renderTimecardData()}
-                {activeTab === 'jobs' && renderJobData()}
-                {activeTab === 'tax-records' && renderTaxData()}
-                {activeTab === 'benefits-deductions' && renderBenefitData()}
-                {activeTab === 'compliance' && renderComplianceData()}
-                {activeTab === 'all-reports' && renderAllReports()}
-              </div>
-            )}
-          </div>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading}>
+            <RefreshCcw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+            Refresh Data
+          </Button>
+          <Button variant="outline" onClick={() => console.log('Generate Report Clicked')} disabled={loading}>
+            <FileText className="w-4 h-4 mr-2" />
+            Generate Report
+          </Button>
+          <Button variant="outline" onClick={() => console.log('View Facsimile Clicked')} disabled={loading}>
+            <Eye className="w-4 h-4 mr-2" />
+            View Facsimile
+          </Button>
+          <Button variant="outline" onClick={() => console.log('Export Selected Clicked')} disabled={loading}>
+            <Download className="w-4 h-4 mr-2" />
+            Export Selected
+          </Button>
         </div>
-
-        {/* Pay Statement Detail Modal */}
-        {selectedPayStatement && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Pay Statement Detail</h2>
-                <Button onClick={() => setSelectedPayStatement(null)} variant="outline">
-                  Close
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Employee Information</h3>
-                  <p><strong>Name:</strong> {selectedPayStatement.employee_name}</p>
-                  <p><strong>Employee Code:</strong> {selectedPayStatement.employee_code}</p>
-                  <p><strong>Check Number:</strong> {selectedPayStatement.check_number}</p>
-                  <p><strong>Pay Period:</strong> {selectedPayStatement.pay_period_start} - {selectedPayStatement.pay_period_end}</p>
-                  <p><strong>Pay Date:</strong> {selectedPayStatement.pay_date}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Hours & Earnings</h3>
-                  <p><strong>Regular Hours:</strong> {selectedPayStatement.regular_hours}</p>
-                  <p><strong>Overtime Hours:</strong> {selectedPayStatement.overtime_hours}</p>
-                  <p><strong>Regular Pay:</strong> ${selectedPayStatement.regular_pay?.toLocaleString()}</p>
-                  <p><strong>Overtime Pay:</strong> ${selectedPayStatement.overtime_pay?.toLocaleString()}</p>
-                  <p><strong>Bonus:</strong> ${selectedPayStatement.bonus_amount?.toLocaleString()}</p>
-                  <p><strong>Gross Pay:</strong> ${selectedPayStatement.gross_pay?.toLocaleString()}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Taxes</h3>
-                  <p><strong>Federal Tax:</strong> ${selectedPayStatement.federal_tax_withheld?.toLocaleString()}</p>
-                  <p><strong>State Tax:</strong> ${selectedPayStatement.state_tax_withheld?.toLocaleString()}</p>
-                  <p><strong>Social Security:</strong> ${selectedPayStatement.social_security_tax?.toLocaleString()}</p>
-                  <p><strong>Medicare:</strong> ${selectedPayStatement.medicare_tax?.toLocaleString()}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Year-to-Date Totals</h3>
-                  <p><strong>YTD Gross:</strong> ${selectedPayStatement.ytd_gross?.toLocaleString()}</p>
-                  <p><strong>YTD Net:</strong> ${selectedPayStatement.ytd_net?.toLocaleString()}</p>
-                  <p><strong>YTD Federal Tax:</strong> ${selectedPayStatement.ytd_federal_tax?.toLocaleString()}</p>
-                  <p><strong>YTD Social Security:</strong> ${selectedPayStatement.ytd_social_security?.toLocaleString()}</p>
-                  <p><strong>Net Pay:</strong> ${selectedPayStatement.net_pay?.toLocaleString()}</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 mt-6">
-                <Button onClick={() => generatePayStatementPDF(selectedPayStatement)}>
-                  Generate PDF
-                </Button>
-                <Button variant="outline" onClick={() => setSelectedPayStatement(null)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Timecard Detail Modal */}
-        {selectedTimecard && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Timecard Detail</h2>
-                <Button onClick={() => setSelectedTimecard(null)} variant="outline">
-                  Close
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Employee Information</h3>
-                  <p><strong>Name:</strong> {selectedTimecard.employee_name}</p>
-                  <p><strong>Employee Code:</strong> {selectedTimecard.employee_code}</p>
-                  <p><strong>Department:</strong> {selectedTimecard.department}</p>
-                  <p><strong>Supervisor:</strong> {selectedTimecard.supervisor}</p>
-                  <p><strong>Work Date:</strong> {selectedTimecard.work_date}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Time Details</h3>
-                  <p><strong>Clock In:</strong> {selectedTimecard.clock_in}</p>
-                  <p><strong>Clock Out:</strong> {selectedTimecard.clock_out}</p>
-                  <p><strong>Break Duration:</strong> {selectedTimecard.break_duration} minutes</p>
-                  <p><strong>Total Hours:</strong> {selectedTimecard.total_hours}</p>
-                  <p><strong>Approval Status:</strong> <Badge variant={selectedTimecard.approval_status === 'approved' ? 'default' : 'secondary'}>{selectedTimecard.approval_status}</Badge></p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Hours Breakdown</h3>
-                  <p><strong>Regular Hours:</strong> {selectedTimecard.regular_hours}</p>
-                  <p><strong>Overtime Hours:</strong> {selectedTimecard.overtime_hours}</p>
-                  <p><strong>Holiday Hours:</strong> {selectedTimecard.holiday_hours}</p>
-                  <p><strong>Sick Hours:</strong> {selectedTimecard.sick_hours}</p>
-                  <p><strong>Vacation Hours:</strong> {selectedTimecard.vacation_hours}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Additional Information</h3>
-                  <p><strong>Job Code:</strong> {selectedTimecard.job_code}</p>
-                  <p><strong>Cost Center:</strong> {selectedTimecard.cost_center}</p>
-                  <p><strong>Pay Rate:</strong> ${selectedTimecard.pay_rate}</p>
-                  <p><strong>Notes:</strong> {selectedTimecard.notes || 'None'}</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 mt-6">
-                <Button variant="outline" onClick={() => setSelectedTimecard(null)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tax Record Detail Modal */}
-        {selectedTaxRecord && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Tax Record Detail - {selectedTaxRecord.form_type}</h2>
-                <Button onClick={() => setSelectedTaxRecord(null)} variant="outline">
-                  Close
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Employee Information</h3>
-                  <p><strong>Employee Name:</strong> {selectedTaxRecord.employee_name}</p>
-                  <p><strong>Employee ID:</strong> {selectedTaxRecord.employee_id}</p>
-                  <p><strong>SSN:</strong> {selectedTaxRecord.ssn}</p>
-                  <p><strong>Tax Year:</strong> {selectedTaxRecord.tax_year}</p>
-                  <p><strong>Form Type:</strong> {selectedTaxRecord.form_type}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Earnings & Compensation</h3>
-                  <p><strong>Wages, Tips & Compensation:</strong> ${selectedTaxRecord.wages_tips_compensation?.toLocaleString()}</p>
-                  <p><strong>Federal Income Tax Withheld:</strong> ${selectedTaxRecord.federal_income_tax_withheld?.toLocaleString()}</p>
-                  <p><strong>Social Security Wages:</strong> ${selectedTaxRecord.social_security_wages?.toLocaleString()}</p>
-                  <p><strong>Medicare Wages:</strong> ${selectedTaxRecord.medicare_wages?.toLocaleString()}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Tax Withholdings</h3>
-                  <p><strong>Social Security Tax:</strong> ${selectedTaxRecord.social_security_tax_withheld?.toLocaleString()}</p>
-                  <p><strong>Medicare Tax:</strong> ${selectedTaxRecord.medicare_tax_withheld?.toLocaleString()}</p>
-                  <p><strong>State Income Tax:</strong> ${selectedTaxRecord.state_income_tax?.toLocaleString()}</p>
-                  <p><strong>Local Tax:</strong> ${selectedTaxRecord.local_tax?.toLocaleString()}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold mb-2">Document Information</h3>
-                  <p><strong>Document Status:</strong> <Badge>{selectedTaxRecord.document_status}</Badge></p>
-                  <p><strong>Issue Date:</strong> {selectedTaxRecord.issue_date}</p>
-                  <p><strong>Filing Status:</strong> {selectedTaxRecord.filing_status}</p>
-                  <p><strong>Dependents:</strong> {selectedTaxRecord.dependents}</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 mt-6">
-                <Button variant="outline" onClick={() => setSelectedTaxRecord(null)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Facsimile Modal */}
-      {showFacsimileModal && facsimileData && facsimileType && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto w-full">
-            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold">Document Facsimile</h2>
-              <Button onClick={closeFacsimile} variant="outline" size="sm">
-                <X className="w-4 h-4" />
-              </Button>
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto p-4">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Employees</p>
+              <p className="text-2xl font-bold text-gray-900">{employeeData.length}</p>
             </div>
-            <div className="p-0">
-              <FacsimileDocument
-                templateKey={facsimileType}
-                data={facsimileData}
-                employee={selectedEmployee || undefined}
-              />
+            <Users className="w-8 h-8 text-blue-500" />
+          </Card>
+          <Card className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Active</p>
+              <p className="text-2xl font-bold text-gray-900">{employeeData.filter(e => e.employment_status === 'active').length}</p>
             </div>
-          </div>
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          </Card>
+          <Card className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Departments</p>
+              <p className="text-2xl font-bold text-gray-900">{new Set(employeeData.map(e => e.home_department)).size}</p>
+            </div>
+            <Building2 className="w-8 h-8 text-purple-500" />
+          </Card>
+          <Card className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Selected</p>
+              <p className="text-2xl font-bold text-gray-900">{selectedEmployee ? 1 : 0}</p>
+            </div>
+            <User className="w-8 h-8 text-orange-500" />
+          </Card>
         </div>
-      )}
+
+        {/* Search & Filters Section */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Search & Filters</h2>
+            <Button variant="outline" onClick={() => setShowSearchHelp(!showSearchHelp)}>
+              {showSearchHelp ? 'Hide Filters' : 'Show Filters'}
+            </Button>
+          </div>
+          {showSearchHelp && renderEnhancedFilters()}
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.id}
+              variant={activeTab === tab.id ? 'default' : 'outline'}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-2"
+            >
+              {tab.icon && <span className="text-lg">{tab.icon}</span>}
+              <span className="hidden md:inline">{tab.label}</span>
+              <span className="md:hidden">{tab.label.split(' ')[0]}</span>
+            </Button>
+          ))}
+        </div>
+
+        {/* Data Display Area */}
+        {loading && (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500 mr-2" />
+            <p className="text-lg text-gray-600">Loading data...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong className="font-bold">Error!</strong>
+            <span className="block sm:inline"> {error}</span>
+            <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
+              <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+            </span>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="mt-6">
+            {renderDataTypeContent()}
+          </div>
+        )}
+
+        {/* Facsimile Modal */}
+        {showFacsimileModal && facsimileData && facsimileType && selectedEmployee && (
+          <FacsimileDocument
+            isOpen={showFacsimileModal}
+            onClose={closeFacsimile}
+            data={facsimileData}
+            type={facsimileType}
+            employee={selectedEmployee}
+          />
+        )}
+      </div>
     </DashboardLayout>
   );
 };
 
 export default EnhancedReportingPage;
 
-// Trigger deployment Mon Sep  8 16:21:13 EDT 2025
+// Helper for conditional class names
+function cn(...classes: string[]) {
+  return classes.filter(Boolean).join(' ');
+}
+
+// Lucide icons for use in the header
+import { RefreshCcw, Eye, Download, CheckCircle, Building2, User, Loader2 } from 'lucide-react';
+
