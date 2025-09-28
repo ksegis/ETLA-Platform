@@ -87,10 +87,9 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
   const { 
     selectedTenant, 
     availableTenants, 
-    accessibleTenantIds, 
     isMultiTenant, 
     isDemoMode,
-    loading: tenantLoading 
+    isLoading: tenantLoading 
   } = useTenant();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -106,12 +105,10 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     
     if (isDemoMode) {
       tenantIds = ['99883779-9517-4ca9-a3f8-7fdc59051f0e']; // Demo tenant ID
-    } else if (isMultiTenant && availableTenants.length > 0) {
+    } else if (isMultiTenant() && availableTenants.length > 0) {
       tenantIds = availableTenants.map(t => t.id);
     } else if (selectedTenant) {
       tenantIds = [selectedTenant.id];
-    } else if (accessibleTenantIds.length > 0) {
-      tenantIds = accessibleTenantIds;
     }
 
     if (!tenantIds || tenantIds.length === 0) {
@@ -356,7 +353,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
   useEffect(() => {
     loadDashboardMetrics();
-  }, [selectedTenant, selectedTimeframe, tenantLoading, isDemoMode, isMultiTenant, availableTenants.length, accessibleTenantIds.length]);
+  }, [selectedTenant, selectedTimeframe, tenantLoading, isDemoMode, availableTenants.length]);
 
   if (loading) {
     return (
