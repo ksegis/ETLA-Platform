@@ -267,7 +267,7 @@ interface EnhancedFilters {
 }
 
 const EnhancedReportingPage: React.FC = () => {
-  const { selectedTenant, isDemoMode } = useTenant();
+  const { selectedTenant, isDemoMode, isLoading: tenantLoading } = useTenant();
   const accessibleTenantIds = useAccessibleTenantIds();
   const { isMultiTenant, availableTenants } = useMultiTenantMode();
   const [activeTab, setActiveTab] = useState<string>('employees');
@@ -521,14 +521,25 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const loadTabData = useCallback(async (tabId: string) => {
+    // Don't load if tenant context is still loading
+    if (tenantLoading) return;
+    
     setLoading(true);
     setError(null);
 
-    let tenantIds = accessibleTenantIds;
-    if (isMultiTenant && tenantFilter) {
+    // Get tenant IDs with proper fallback logic
+    let tenantIds: string[] = [];
+    
+    if (isDemoMode) {
+      tenantIds = ['99883779-9517-4ca9-a3f8-7fdc59051f0e']; // Demo tenant ID
+    } else if (isMultiTenant && tenantFilter) {
       tenantIds = [tenantFilter];
-    } else if (isMultiTenant && !tenantFilter) {
+    } else if (isMultiTenant && availableTenants.length > 0) {
       tenantIds = availableTenants.map(t => t.id);
+    } else if (selectedTenant) {
+      tenantIds = [selectedTenant.id];
+    } else if (accessibleTenantIds.length > 0) {
+      tenantIds = accessibleTenantIds;
     }
 
     if (!tenantIds || tenantIds.length === 0) {
@@ -591,11 +602,14 @@ const EnhancedReportingPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [accessibleTenantIds, isMultiTenant, tenantFilter, availableTenants]);
+  }, [tenantLoading, isDemoMode, isMultiTenant, tenantFilter, selectedTenant, availableTenants.length, accessibleTenantIds.length]);
 
   useEffect(() => {
-    loadTabData(activeTab);
-  }, [activeTab, loadTabData]);
+    // Only load data when tenant context is ready and not loading
+    if (!tenantLoading && (isDemoMode || selectedTenant || accessibleTenantIds.length > 0)) {
+      loadTabData(activeTab);
+    }
+  }, [activeTab, tenantLoading, isDemoMode, selectedTenant?.id, accessibleTenantIds.length, loadTabData]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -669,11 +683,11 @@ const EnhancedReportingPage: React.FC = () => {
               ))}
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading}>
-                <RefreshCcw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+              <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading || tenantLoading}>
+                <RefreshCcw className={cn("w-4 h-4 mr-2", (loading || tenantLoading) && "animate-spin")} />
                 Refresh Data
               </Button>
-              <Button variant="outline" onClick={() => console.log('Generate Report Clicked')} disabled={loading}>
+              <Button variant="outline" onClick={() => console.log('Generate Report Clicked')} disabled={loading || tenantLoading}>
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Generate Report
               </Button>
@@ -702,9 +716,26 @@ const EnhancedReportingPage: React.FC = () => {
               </div>
             )}
 
-            {loading && <div className="text-center py-8">Loading data...</div>}
-            {error && <div className="text-center py-8 text-red-500">Error: {error}</div>}
-            {!loading && !error && (
+            {tenantLoading && (
+              <div className="text-center py-8 text-gray-500">
+                <div className="animate-pulse">Loading tenant information...</div>
+              </div>
+            )}
+            {!tenantLoading && loading && (
+              <div className="text-center py-8 text-gray-500">
+                <div className="animate-pulse">Loading data...</div>
+              </div>
+            )}
+            {!tenantLoading && error && (
+              <div className="text-center py-8">
+                <div className="text-red-500 mb-4">Error: {error}</div>
+                <Button onClick={() => loadTabData(activeTab)} variant="outline">
+                  <RefreshCcw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            )}
+            {!tenantLoading && !loading && !error && (
               <div className="mt-6">
                 {renderDataTypeContent()}
               </div>
