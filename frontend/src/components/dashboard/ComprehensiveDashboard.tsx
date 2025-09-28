@@ -697,68 +697,6 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          <Button 
-            variant="outline" 
-            onClick={() => onCategoryClick?.('employees')}
-            className="flex flex-col items-center p-4 h-auto"
-          >
-            <span className="text-2xl mb-2">👥</span>
-            <span className="text-sm">View Employees</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => onCategoryClick?.('pay-statements')}
-            className="flex flex-col items-center p-4 h-auto"
-          >
-            <span className="text-2xl mb-2">💰</span>
-            <span className="text-sm">Pay Statements</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => onCategoryClick?.('timecards')}
-            className="flex flex-col items-center p-4 h-auto"
-          >
-            <span className="text-2xl mb-2">⏰</span>
-            <span className="text-sm">Timecards</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => onCategoryClick?.('jobs')}
-            className="flex flex-col items-center p-4 h-auto"
-          >
-            <span className="text-2xl mb-2">💼</span>
-            <span className="text-sm">Job Catalog</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => onCategoryClick?.('tax-records')}
-            className="flex flex-col items-center p-4 h-auto"
-          >
-            <span className="text-2xl mb-2">📋</span>
-            <span className="text-sm">Tax Records</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => onCategoryClick?.('benefits-deductions')}
-            className="flex flex-col items-center p-4 h-auto"
-          >
-            <span className="text-2xl mb-2">🏥</span>
-            <span className="text-sm">Benefits</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => onCategoryClick?.('compliance')}
-            className="flex flex-col items-center p-4 h-auto"
-          >
-            <span className="text-2xl mb-2">📊</span>
-            <span className="text-sm">Compliance</span>
-          </Button>
-        </div>
-      </Card>
     </div>
   );
 };
