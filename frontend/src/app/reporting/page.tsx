@@ -684,36 +684,70 @@ const EnhancedReportingPage: React.FC = () => {
           <p className="text-gray-600 mt-2">Generate, view, and manage comprehensive reports across all data categories.</p>
         </div>
         
-        <Card className="mb-6">
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Comprehensive Analytics Dashboard</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsDashboardCollapsed(!isDashboardCollapsed)}
-                className="flex items-center gap-2"
+        {/* Sticky Quick Actions Cards */}
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 pb-4 mb-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              <Button 
+                variant={activeTab === 'employees' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('employees')}
+                className="flex flex-col items-center p-4 h-auto"
               >
-                {isDashboardCollapsed ? (
-                  <>
-                    <span className="text-sm">Show Dashboard</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </>
-                ) : (
-                  <>
-                    <span className="text-sm">Hide Dashboard</span>
-                    <ChevronUp className="h-4 w-4" />
-                  </>
-                )}
+                <span className="text-2xl mb-2">👥</span>
+                <span className="text-sm">View Employees</span>
+              </Button>
+              <Button 
+                variant={activeTab === 'pay-statements' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('pay-statements')}
+                className="flex flex-col items-center p-4 h-auto"
+              >
+                <span className="text-2xl mb-2">💰</span>
+                <span className="text-sm">Pay Statements</span>
+              </Button>
+              <Button 
+                variant={activeTab === 'timecards' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('timecards')}
+                className="flex flex-col items-center p-4 h-auto"
+              >
+                <span className="text-2xl mb-2">⏰</span>
+                <span className="text-sm">Timecards</span>
+              </Button>
+              <Button 
+                variant={activeTab === 'jobs' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('jobs')}
+                className="flex flex-col items-center p-4 h-auto"
+              >
+                <span className="text-2xl mb-2">💼</span>
+                <span className="text-sm">Job Catalog</span>
+              </Button>
+              <Button 
+                variant={activeTab === 'tax-records' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('tax-records')}
+                className="flex flex-col items-center p-4 h-auto"
+              >
+                <span className="text-2xl mb-2">📋</span>
+                <span className="text-sm">Tax Records</span>
+              </Button>
+              <Button 
+                variant={activeTab === 'benefits-deductions' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('benefits-deductions')}
+                className="flex flex-col items-center p-4 h-auto"
+              >
+                <span className="text-2xl mb-2">🏥</span>
+                <span className="text-sm">Benefits</span>
+              </Button>
+              <Button 
+                variant={activeTab === 'compliance' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('compliance')}
+                className="flex flex-col items-center p-4 h-auto"
+              >
+                <span className="text-2xl mb-2">📊</span>
+                <span className="text-sm">Compliance</span>
               </Button>
             </div>
-          </div>
-          {!isDashboardCollapsed && (
-            <div className="p-6">
-              <ComprehensiveDashboard onCategoryClick={(category) => setActiveTab(category)} />
-            </div>
-          )}
-        </Card>
+          </Card>
+        </div>
 
         <Card className="p-4 md:p-6">
           <div className="flex justify-between items-center mb-6">
