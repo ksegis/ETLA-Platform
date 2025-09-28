@@ -431,8 +431,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'check_number', label: 'Check #' },
               { key: 'pay_period_start', label: 'Period Start' },
               { key: 'pay_period_end', label: 'Period End' },
-              { key: 'gross_pay', label: 'Gross Pay', render: (item) => `$${item.gross_pay.toFixed(2)}` },
-              { key: 'net_pay', label: 'Net Pay', render: (item) => `$${item.net_pay.toFixed(2)}` },
+              { key: 'gross_pay', label: 'Gross Pay', render: (item) => `$${(item.gross_pay || 0).toFixed(2)}` },
+              { key: 'net_pay', label: 'Net Pay', render: (item) => `$${(item.net_pay || 0).toFixed(2)}` },
               { key: 'check_status', label: 'Status' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimilePayStatement, 'pay_statement')}
@@ -470,8 +470,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'tax_year', label: 'Year' },
               { key: 'form_type', label: 'Form Type' },
-              { key: 'wages_tips_compensation', label: 'Wages', render: (item) => `$${item.wages_tips_compensation.toFixed(2)}` },
-              { key: 'federal_income_tax_withheld', label: 'Fed Tax', render: (item) => `$${item.federal_income_tax_withheld.toFixed(2)}` },
+              { key: 'wages_tips_compensation', label: 'Wages', render: (item) => `$${(item.wages_tips_compensation || 0).toFixed(2)}` },
+              { key: 'federal_income_tax_withheld', label: 'Fed Tax', render: (item) => `$${(item.federal_income_tax_withheld || 0).toFixed(2)}` },
               { key: 'document_status', label: 'Status' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimileTaxRecord, 'tax_w2')}
@@ -488,10 +488,10 @@ const EnhancedReportingPage: React.FC = () => {
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'deduction_type', label: 'Type' },
-              { key: 'amount', label: 'Amount', render: (item) => `$${item.amount.toFixed(2)}` },
+              { key: 'amount', label: 'Amount', render: (item) => `$${(item.amount || 0).toFixed(2)}` },
               { key: 'frequency', label: 'Frequency' },
               { key: 'effective_date', label: 'Effective Date' },
-              { key: 'employer_contribution', label: 'Employer Contrib.', render: (item) => `$${item.employer_contribution.toFixed(2)}` },
+              { key: 'employer_contribution', label: 'Employer Contrib.', render: (item) => `$${(item.employer_contribution || 0).toFixed(2)}` },
             ]}
             viewMode={getViewMode('benefits-deductions')}
             loading={loading}
@@ -595,10 +595,19 @@ const EnhancedReportingPage: React.FC = () => {
           setJobData(jobs || []);
           break;
         case 'tax-records':
-          query = supabase.from('tax_records_comprehensive_report').select('*').in('tenant_id', tenantIds);
-          const { data: taxes, error: taxError } = await query;
-          if (taxError) throw taxError;
-          setTaxData(taxes || []);
+          try {
+            query = supabase.from('tax_records_comprehensive_report').select('*').in('tenant_id', tenantIds);
+            const { data: taxes, error: taxError } = await query;
+            if (taxError) {
+              console.error('Tax records query error:', taxError);
+              throw taxError;
+            }
+            console.log('Tax records data:', taxes);
+            setTaxData(taxes || []);
+          } catch (taxErr) {
+            console.error('Tax records loading error:', taxErr);
+            setTaxData([]);
+          }
           break;
         case 'benefits-deductions':
           query = supabase.from('benefits').select('*').in('tenant_id', tenantIds);
