@@ -114,7 +114,7 @@ const dataTypeConfig = {
 }
 
 export default function ReportingCockpitPage() {
-  const { user } = useAuth()
+  const { user, tenantUser } = useAuth()
   const { selectedTenant } = useTenant()
   const accessibleTenantIds = useAccessibleTenantIds()
   const { isMultiTenant, availableTenants } = useMultiTenantMode()
@@ -211,7 +211,7 @@ export default function ReportingCockpitPage() {
   // Load data on component mount using proven dependency pattern
   useEffect(() => {
     loadData()
-  }, [accessibleTenantIds.join(',')])
+  }, [accessibleTenantIds.join(','), tenantUser?.role])
 
   // Calculate statistics
   useEffect(() => {
@@ -277,6 +277,265 @@ export default function ReportingCockpitPage() {
   // Handle refresh
   const handleRefresh = () => {
     loadData()
+  }
+
+  // Render data type specific content
+  const renderDataTypeContent = () => {
+    if (!selectedEmployee) return null
+
+    switch (activeDataType) {
+      case 'pay_statements':
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border rounded-lg">
+              <div className="px-4 py-3 border-b bg-gray-50">
+                <h5 className="font-medium">Recent Pay Statements</h5>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  {/* Sample pay statement data */}
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Pay Period: Dec 1-15, 2024</p>
+                      <p className="text-sm text-gray-600">Pay Date: Dec 20, 2024</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">${selectedEmployee.annual_salary ? (selectedEmployee.annual_salary / 26).toFixed(2) : '0.00'}</p>
+                      <p className="text-sm text-gray-600">Gross Pay</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Pay Period: Nov 16-30, 2024</p>
+                      <p className="text-sm text-gray-600">Pay Date: Dec 5, 2024</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">${selectedEmployee.annual_salary ? (selectedEmployee.annual_salary / 26).toFixed(2) : '0.00'}</p>
+                      <p className="text-sm text-gray-600">Gross Pay</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'timecards':
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border rounded-lg">
+              <div className="px-4 py-3 border-b bg-gray-50">
+                <h5 className="font-medium">Recent Timecards</h5>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Week of Dec 16-22, 2024</p>
+                      <p className="text-sm text-gray-600">Status: Approved</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">40.0 hours</p>
+                      <p className="text-sm text-gray-600">Regular Time</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Week of Dec 9-15, 2024</p>
+                      <p className="text-sm text-gray-600">Status: Approved</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">42.5 hours</p>
+                      <p className="text-sm text-gray-600">2.5 OT</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'tax_records':
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border rounded-lg">
+              <div className="px-4 py-3 border-b bg-gray-50">
+                <h5 className="font-medium">Tax Documents</h5>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">W-2 Form - 2023</p>
+                      <p className="text-sm text-gray-600">Tax Year: 2023</p>
+                    </div>
+                    <div className="text-right">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">1099 Form - 2023</p>
+                      <p className="text-sm text-gray-600">Tax Year: 2023</p>
+                    </div>
+                    <div className="text-right">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'benefits':
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border rounded-lg">
+              <div className="px-4 py-3 border-b bg-gray-50">
+                <h5 className="font-medium">Benefits Enrollment</h5>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Health Insurance</p>
+                      <p className="text-sm text-gray-600">Plan: Premium PPO</p>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="default" className="bg-green-100 text-green-700">Active</Badge>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Dental Insurance</p>
+                      <p className="text-sm text-gray-600">Plan: Standard</p>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="default" className="bg-green-100 text-green-700">Active</Badge>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">401(k) Plan</p>
+                      <p className="text-sm text-gray-600">Contribution: 6%</p>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="default" className="bg-green-100 text-green-700">Active</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'job_history':
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border rounded-lg">
+              <div className="px-4 py-3 border-b bg-gray-50">
+                <h5 className="font-medium">Employment History</h5>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 rounded">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{selectedEmployee.job_title || 'Current Position'}</p>
+                        <p className="text-sm text-gray-600">{selectedEmployee.department || 'Department'}</p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(selectedEmployee.hire_date).toLocaleDateString()} - Present
+                        </p>
+                      </div>
+                      <Badge variant="default" className="bg-blue-100 text-blue-700">Current</Badge>
+                    </div>
+                  </div>
+                  {selectedEmployee.annual_salary && (
+                    <div className="p-3 bg-gray-50 rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Salary Information</p>
+                          <p className="text-sm text-gray-600">Annual Salary: ${selectedEmployee.annual_salary.toLocaleString()}</p>
+                          <p className="text-sm text-gray-500">Pay Type: {selectedEmployee.pay_type || 'Salary'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'documents':
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border rounded-lg">
+              <div className="px-4 py-3 border-b bg-gray-50">
+                <h5 className="font-medium">Employee Documents</h5>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Employment Contract</p>
+                      <p className="text-sm text-gray-600">Uploaded: {new Date(selectedEmployee.hire_date).toLocaleDateString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">I-9 Form</p>
+                      <p className="text-sm text-gray-600">Status: Verified</p>
+                    </div>
+                    <div className="text-right">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">Performance Reviews</p>
+                      <p className="text-sm text-gray-600">Last Review: Annual 2023</p>
+                    </div>
+                    <div className="text-right">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      default:
+        const config = dataTypeConfig[activeDataType as keyof typeof dataTypeConfig]
+        return (
+          <div className="bg-gray-50 rounded-lg p-6 text-center">
+            {React.createElement(config.icon, { className: "h-12 w-12 text-gray-400 mx-auto mb-4" })}
+            <p className="text-gray-600">
+              {config.label} data will be displayed here.
+            </p>
+          </div>
+        )
+    }
   }
 
   // Statistics cards
@@ -626,15 +885,7 @@ export default function ReportingCockpitPage() {
                     <h4 className="font-medium text-gray-900 mb-4">
                       {dataTypeConfig[activeDataType].label} for {getEmployeeName(selectedEmployee)}
                     </h4>
-                    <div className="bg-gray-50 rounded-lg p-6 text-center">
-                      {React.createElement(dataTypeConfig[activeDataType].icon, { className: "h-12 w-12 text-gray-400 mx-auto mb-4" })}
-                      <p className="text-gray-600">
-                        {dataTypeConfig[activeDataType].label} data will be displayed here.
-                      </p>
-                      <p className="text-sm text-gray-500 mt-2">
-                        This section will show detailed {dataTypeConfig[activeDataType].label.toLowerCase()} information for the selected employee.
-                      </p>
-                    </div>
+                    {renderDataTypeContent()}
                   </div>
                 </CardContent>
               </Card>
