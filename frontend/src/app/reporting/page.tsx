@@ -13,7 +13,7 @@ import FacsimileDocument from '@/components/facsimile/FacsimileDocument';
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
 import { PayStatement as FacsimilePayStatement, Timecard as FacsimileTimecard, TaxRecord as FacsimileTaxRecord, Employee as FacsimileEmployee } from '@/types/facsimile';
-import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle, X, RefreshCcw } from 'lucide-react';
+import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle, X, RefreshCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 // Enhanced interfaces for the new database schema
@@ -274,6 +274,7 @@ const EnhancedReportingPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showSearchHelp, setShowSearchHelp] = useState<boolean>(false);
+  const [isDashboardCollapsed, setIsDashboardCollapsed] = useState<boolean>(false);
 
   // Enhanced data states
   const [employeeData, setEmployeeData] = useState<EnhancedEmployee[]>([]);
@@ -683,23 +684,39 @@ const EnhancedReportingPage: React.FC = () => {
           <p className="text-gray-600 mt-2">Generate, view, and manage comprehensive reports across all data categories.</p>
         </div>
         
-        <ComprehensiveDashboard onCategoryClick={(category) => setActiveTab(category)} />
-
-        <Card className="mt-6 p-4 md:p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-4 overflow-x-auto pb-2">
-              {reportTabs.map(tab => (
-                <Button
-                  key={tab.id}
-                  variant={activeTab === tab.id ? 'default' : 'outline'}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="flex-shrink-0"
-                >
-                  <tab.icon className="w-4 h-4 mr-2" />
-                  {tab.label}
-                </Button>
-              ))}
+        <Card className="mb-6">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Comprehensive Analytics Dashboard</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDashboardCollapsed(!isDashboardCollapsed)}
+                className="flex items-center gap-2"
+              >
+                {isDashboardCollapsed ? (
+                  <>
+                    <span className="text-sm">Show Dashboard</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">Hide Dashboard</span>
+                    <ChevronUp className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
             </div>
+          </div>
+          {!isDashboardCollapsed && (
+            <div className="p-6">
+              <ComprehensiveDashboard onCategoryClick={(category) => setActiveTab(category)} />
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-4 md:p-6">
+          <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
               <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading || tenantLoading}>
                 <RefreshCcw className={cn("w-4 h-4 mr-2", (loading || tenantLoading) && "animate-spin")} />
@@ -712,8 +729,8 @@ const EnhancedReportingPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-6 border-t pt-6">
-            <div className="flex justify-between items-center">
+          <div className="border-t pt-6">
+            <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Data for {reportTabs.find(t => t.id === activeTab)?.label}</h2>
               <div className="flex items-center gap-2">
                 <Input
