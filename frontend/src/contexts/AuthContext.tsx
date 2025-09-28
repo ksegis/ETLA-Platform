@@ -102,8 +102,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('🔐 AuthProvider: Initializing authentication state')
     
+    // Add timeout to prevent infinite loading
+    const initTimeout = setTimeout(() => {
+      console.log('⚠️ AuthProvider: Initialization timeout - forcing stable state')
+      setLoading(false)
+      setIsStable(true)
+      updateServiceAuthContext()
+    }, 10000) // 10 second timeout
+    
     const getInitialSession = async () => {
       try {
+        // In demo mode, skip Supabase session check and complete initialization quickly
+        if (isDemoMode) {
+          console.log('🎭 AuthProvider: Demo mode detected - skipping session check')
+          setUser(null)
+          setSession(null)
+          setTenantUser(null)
+          clearTimeout(initTimeout)
+          setLoading(false)
+          setIsStable(true)
+          updateServiceAuthContext()
+          console.log('✅ AuthProvider: Demo mode initialization completed')
+          return
+        }
+        
         const { data: { session: initialSession }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -123,6 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser(null)
         }
         
+        // Clear timeout since we completed successfully
+        clearTimeout(initTimeout)
         setLoading(false)
         setIsStable(true)
         updateServiceAuthContext()
@@ -133,6 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
         setSession(null)
         setTenantUser(null)
+        // Clear timeout since we completed (with error)
+        clearTimeout(initTimeout)
         setLoading(false)
         setIsStable(true)
         updateServiceAuthContext()
@@ -164,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     )
 
     return () => {
+      clearTimeout(initTimeout)
       subscription.unsubscribe()
     }
   }, [])
