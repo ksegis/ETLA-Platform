@@ -397,22 +397,35 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const renderDataTypeContent = () => {
-    if (!selectedEmployee) {
-      return (
-        <div className="text-center py-8 text-gray-500">
-          <p>Select an employee to view their detailed reports.</p>
-          <p>You can search for employees using the search bar above.</p>
-        </div>
-      );
-    }
-
     switch (activeTab) {
+      case 'employees':
+        return (
+          <TraditionalReportTable
+            title="Employees"
+            data={employeeData}
+            columns={[
+              { key: 'employee_name', label: 'Employee Name' },
+              { key: 'employee_code', label: 'Employee Code' },
+              { key: 'position', label: 'Position' },
+              { key: 'home_department', label: 'Department' },
+              { key: 'division', label: 'Division' },
+              { key: 'employment_status', label: 'Status' },
+              { key: 'hire_date', label: 'Hire Date' },
+              { key: 'pay_type', label: 'Pay Type' },
+            ]}
+            onRowClick={(row) => setSelectedEmployee(row as FacsimileEmployee)}
+            viewMode={getViewMode('employees')}
+            loading={loading}
+            error={error}
+          />
+        );
       case 'pay-statements':
         return (
           <TraditionalReportTable
             title="Pay Statements"
-            data={payStatementData.filter(ps => ps.employee_id === selectedEmployee.employee_id)}
+            data={payStatementData}
             columns={[
+              { key: 'employee_name', label: 'Employee Name' },
               { key: 'pay_date', label: 'Pay Date' },
               { key: 'check_number', label: 'Check #' },
               { key: 'pay_period_start', label: 'Period Start' },
@@ -431,12 +444,14 @@ const EnhancedReportingPage: React.FC = () => {
         return (
           <TraditionalReportTable
             title="Timecards"
-            data={timecardData.filter(tc => tc.employee_id === selectedEmployee.employee_id)}
+            data={timecardData}
             columns={[
+              { key: 'employee_name', label: 'Employee Name' },
               { key: 'work_date', label: 'Date' },
               { key: 'clock_in', label: 'Clock In' },
               { key: 'clock_out', label: 'Clock Out' },
               { key: 'total_hours', label: 'Total Hours' },
+              { key: 'department', label: 'Department' },
               { key: 'approval_status', label: 'Status' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimileTimecard, 'timecard')}
@@ -449,8 +464,9 @@ const EnhancedReportingPage: React.FC = () => {
         return (
           <TraditionalReportTable
             title="Tax Records"
-            data={taxData.filter(tr => tr.employee_id === selectedEmployee.employee_id)}
+            data={taxData}
             columns={[
+              { key: 'employee_name', label: 'Employee Name' },
               { key: 'tax_year', label: 'Year' },
               { key: 'form_type', label: 'Form Type' },
               { key: 'wages_tips_compensation', label: 'Wages', render: (item) => `$${item.wages_tips_compensation.toFixed(2)}` },
@@ -467,8 +483,9 @@ const EnhancedReportingPage: React.FC = () => {
         return (
           <TraditionalReportTable
             title="Benefits & Deductions"
-            data={benefitData.filter(bd => bd.employee_id === selectedEmployee.employee_id)}
+            data={benefitData}
             columns={[
+              { key: 'employee_name', label: 'Employee Name' },
               { key: 'deduction_type', label: 'Type' },
               { key: 'amount', label: 'Amount', render: (item) => `$${item.amount.toFixed(2)}` },
               { key: 'frequency', label: 'Frequency' },
@@ -503,8 +520,9 @@ const EnhancedReportingPage: React.FC = () => {
         return (
           <TraditionalReportTable
             title="Compliance Records"
-            data={complianceData.filter(cr => cr.employee_id === selectedEmployee.employee_id)}
+            data={complianceData}
             columns={[
+              { key: 'employee_name', label: 'Employee Name' },
               { key: 'compliance_type', label: 'Type' },
               { key: 'reporting_period', label: 'Period' },
               { key: 'status', label: 'Status' },
@@ -665,7 +683,7 @@ const EnhancedReportingPage: React.FC = () => {
           <p className="text-gray-600 mt-2">Generate, view, and manage comprehensive reports across all data categories.</p>
         </div>
         
-        <ComprehensiveDashboard />
+        <ComprehensiveDashboard onCategoryClick={(category) => setActiveTab(category)} />
 
         <Card className="mt-6 p-4 md:p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
