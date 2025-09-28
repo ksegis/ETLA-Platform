@@ -79,21 +79,61 @@ interface ComprehensiveDashboardProps {
   onCategoryClick?: (category: string) => void;
 }
 
+// Cache for dashboard metrics
+const metricsCache = new Map<string, { data: DashboardMetrics; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCategoryClick }) => {
-  const { selectedTenant } = useTenant();
+  const { 
+    selectedTenant, 
+    availableTenants, 
+    accessibleTenantIds, 
+    isMultiTenant, 
+    isDemoMode,
+    loading: tenantLoading 
+  } = useTenant();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('current_year');
 
   const loadDashboardMetrics = async () => {
-    if (!selectedTenant?.id) return;
+    // Don't load if tenant context is still loading
+    if (tenantLoading) return;
+
+    // Get tenant IDs with same logic as reporting page
+    let tenantIds: string[] = [];
+    
+    if (isDemoMode) {
+      tenantIds = ['99883779-9517-4ca9-a3f8-7fdc59051f0e']; // Demo tenant ID
+    } else if (isMultiTenant && availableTenants.length > 0) {
+      tenantIds = availableTenants.map(t => t.id);
+    } else if (selectedTenant) {
+      tenantIds = [selectedTenant.id];
+    } else if (accessibleTenantIds.length > 0) {
+      tenantIds = accessibleTenantIds;
+    }
+
+    if (!tenantIds || tenantIds.length === 0) {
+      setLoading(false);
+      setError("No tenant selected or accessible.");
+      return;
+    }
+
+    // Check cache first
+    const cacheKey = `${tenantIds.join(',')}-${selectedTimeframe}`;
+    const cached = metricsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      setMetrics(cached.data);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      // Load all data in parallel
+      // Load all data in parallel using same queries as reporting page
       const [
         employeesResult,
         payStatementsResult,
@@ -103,13 +143,13 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         benefitsResult,
         complianceResult
       ] = await Promise.all([
-        supabase.from('employee_comprehensive_report').select('*').eq('tenant_id', selectedTenant.id),
-        supabase.from('pay_statements_comprehensive_report').select('*').eq('tenant_id', selectedTenant.id),
-        supabase.from('timecards_comprehensive_report').select('*').eq('tenant_id', selectedTenant.id),
-        supabase.from('jobs_comprehensive_report').select('*').eq('tenant_id', selectedTenant.id),
-        supabase.from('tax_records_comprehensive_report').select('*').eq('tenant_id', selectedTenant.id),
-        supabase.from('benefits_deductions_comprehensive_report').select('*').eq('tenant_id', selectedTenant.id),
-        supabase.from('compliance_records_comprehensive_report').select('*').eq('tenant_id', selectedTenant.id)
+        supabase.from('employee_comprehensive_report').select('*').in('tenant_id', tenantIds),
+        supabase.from('pay_statements_comprehensive_report').select('*').in('tenant_id', tenantIds),
+        supabase.from('timecards_comprehensive_report').select('*').in('tenant_id', tenantIds),
+        supabase.from('jobs_comprehensive_report').select('*').in('tenant_id', tenantIds),
+        supabase.from('tax_records_comprehensive_report').select('*').in('tenant_id', tenantIds),
+        supabase.from('benefits').select('*').in('tenant_id', tenantIds), // Use same table as reporting
+        supabase.from('compliance_records').select('*').in('tenant_id', tenantIds) // Use same table as reporting
       ]);
 
       // Process employee metrics
@@ -275,7 +315,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         }).length
       };
 
-      setMetrics({
+      const finalMetrics = {
         employees: employeeMetrics,
         payStatements: payStatementMetrics,
         timecards: timecardMetrics,
@@ -283,7 +323,28 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         taxRecords: taxMetrics,
         benefits: benefitMetrics,
         compliance: complianceMetrics
+      };
+
+      // Cache the results
+      metricsCache.set(cacheKey, {
+        data: finalMetrics,
+        timestamp: Date.now()
       });
+
+      // Log for debugging
+      console.log('Dashboard metrics loaded:', {
+        employees: employees.length,
+        payStatements: payStatements.length,
+        timecards: timecards.length,
+        jobs: jobs.length,
+        taxRecords: taxRecords.length,
+        benefits: benefits.length,
+        compliance: compliance.length,
+        tenantIds,
+        cached: false
+      });
+
+      setMetrics(finalMetrics);
 
     } catch (err: any) {
       console.error('Error loading dashboard metrics:', err);
@@ -295,7 +356,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
   useEffect(() => {
     loadDashboardMetrics();
-  }, [selectedTenant, selectedTimeframe]);
+  }, [selectedTenant, selectedTimeframe, tenantLoading, isDemoMode, isMultiTenant, availableTenants.length, accessibleTenantIds.length]);
 
   if (loading) {
     return (
@@ -340,7 +401,14 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
             <option value="current_quarter">Current Quarter</option>
             <option value="last_quarter">Last Quarter</option>
           </select>
-          <Button onClick={loadDashboardMetrics} variant="outline">
+          <Button 
+            onClick={() => {
+              // Clear cache and reload
+              metricsCache.clear();
+              loadDashboardMetrics();
+            }} 
+            variant="outline"
+          >
             Refresh
           </Button>
         </div>
