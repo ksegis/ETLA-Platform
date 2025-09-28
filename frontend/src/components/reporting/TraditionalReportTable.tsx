@@ -19,6 +19,10 @@ interface TraditionalReportTableProps {
   onExportCSV?: () => void;
   onExportJSON?: () => void;
   filters?: React.ReactNode;
+  onRowClick?: (item: any) => void;
+  viewMode?: 'list' | 'grid';
+  loading?: boolean;
+  error?: string | null;
 }
 
 export default function TraditionalReportTable({
@@ -30,7 +34,11 @@ export default function TraditionalReportTable({
   totalRecords,
   onExportCSV,
   onExportJSON,
-  filters
+  filters,
+  onRowClick,
+  viewMode,
+  loading,
+  error
 }: TraditionalReportTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
@@ -167,7 +175,7 @@ export default function TraditionalReportTable({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {paginatedData.map((row, index: any) => (
-              <tr key={index} className="hover:bg-gray-50">
+              <tr key={index} className="hover:bg-gray-50 cursor-pointer" onClick={() => onRowClick?.(row)}>
                 {columns.map((column: any) => (
                   <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {column.render ? column.render(row) : (row[column.key as keyof typeof row] || '-')}

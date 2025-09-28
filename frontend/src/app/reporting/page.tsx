@@ -1,6 +1,7 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -12,7 +13,8 @@ import FacsimileDocument from '@/components/facsimile/FacsimileDocument';
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
 import { PayStatement as FacsimilePayStatement, Timecard as FacsimileTimecard, TaxRecord as FacsimileTaxRecord, Employee as FacsimileEmployee } from '@/types/facsimile';
-import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle, X } from 'lucide-react';
+import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3, Info, Search, HelpCircle, X, RefreshCcw } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 // Enhanced interfaces for the new database schema
 interface EnhancedEmployee {
@@ -329,7 +331,6 @@ const EnhancedReportingPage: React.FC = () => {
   // Tenant filter for multi-tenant users
   const [tenantFilter, setTenantFilter] = useState<string>('');
 
-  // Helper function to get searchable fields for each tab
   const getSearchableFields = (tabId: string): string[] => {
     switch (tabId) {
       case 'employees':
@@ -351,29 +352,24 @@ const EnhancedReportingPage: React.FC = () => {
     }
   };
 
-  // Helper function to get search placeholder text
   const getSearchPlaceholder = (tabId: string): string => {
     const fields = getSearchableFields(tabId);
     const examples = fields.slice(0, 2).join(', ');
     return `Search ${examples}...`;
   };
 
-  // Helper function to set view mode for specific tab
   const setViewMode = (tabId: string, mode: 'list' | 'grid') => {
     setViewModes(prev => ({ ...prev, [tabId]: mode }));
   };
 
-  // Helper function to get view mode for specific tab
   const getViewMode = (tabId: string): 'list' | 'grid' => {
     return viewModes[tabId] || 'list';
   };
 
-  // Facsimile modal functions
   const openFacsimile = async (data: any, type: 'pay_statement' | 'timecard' | 'tax_w2') => {
     setFacsimileData(data);
     setFacsimileType(type);
     
-    // Try to find employee data
     if (data.employee_id) {
       try {
         const { data: employee, error } = await supabase
@@ -400,1661 +396,327 @@ const EnhancedReportingPage: React.FC = () => {
     setSelectedEmployee(null);
   };
 
-  // Enhanced data loading functions (keeping existing implementation)
-  const loadEmployeeData = async () => {
-    const tenantIds = accessibleTenantIds;
-    
-    if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping employee data load');
-      setLoading(false);
-      return;
+  const renderDataTypeContent = () => {
+    if (!selectedEmployee) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <p>Select an employee to view their detailed reports.</p>
+          <p>You can search for employees using the search bar above.</p>
+        </div>
+      );
     }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Loading employee data for tenants:', tenantIds);
-      const { data, error } = await supabase
-        .from('employee_comprehensive_report')
-        .select('*')
-        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
-        .order('employee_name');
-      
-      if (error) throw error;
-      setEmployeeData(data || []);
-    } catch (err: any) {
-      console.error('Error loading employee data:', err);
-      setError(`Failed to load employee data: ${err.message}`);
-    } finally {
-      setLoading(false);
+
+    switch (activeTab) {
+      case 'pay-statements':
+        return (
+          <TraditionalReportTable
+            title="Pay Statements"
+            data={payStatementData.filter(ps => ps.employee_id === selectedEmployee.employee_id)}
+            columns={[
+              { key: 'pay_date', label: 'Pay Date' },
+              { key: 'check_number', label: 'Check #' },
+              { key: 'pay_period_start', label: 'Period Start' },
+              { key: 'pay_period_end', label: 'Period End' },
+              { key: 'gross_pay', label: 'Gross Pay', render: (item) => `$${item.gross_pay.toFixed(2)}` },
+              { key: 'net_pay', label: 'Net Pay', render: (item) => `$${item.net_pay.toFixed(2)}` },
+              { key: 'check_status', label: 'Status' },
+            ]}
+            onRowClick={(row) => openFacsimile(row as FacsimilePayStatement, 'pay_statement')}
+            viewMode={getViewMode('pay-statements')}
+            loading={loading}
+            error={error}
+          />
+        );
+      case 'timecards':
+        return (
+          <TraditionalReportTable
+            title="Timecards"
+            data={timecardData.filter(tc => tc.employee_id === selectedEmployee.employee_id)}
+            columns={[
+              { key: 'work_date', label: 'Date' },
+              { key: 'clock_in', label: 'Clock In' },
+              { key: 'clock_out', label: 'Clock Out' },
+              { key: 'total_hours', label: 'Total Hours' },
+              { key: 'approval_status', label: 'Status' },
+            ]}
+            onRowClick={(row) => openFacsimile(row as FacsimileTimecard, 'timecard')}
+            viewMode={getViewMode('timecards')}
+            loading={loading}
+            error={error}
+          />
+        );
+      case 'tax-records':
+        return (
+          <TraditionalReportTable
+            title="Tax Records"
+            data={taxData.filter(tr => tr.employee_id === selectedEmployee.employee_id)}
+            columns={[
+              { key: 'tax_year', label: 'Year' },
+              { key: 'form_type', label: 'Form Type' },
+              { key: 'wages_tips_compensation', label: 'Wages', render: (item) => `$${item.wages_tips_compensation.toFixed(2)}` },
+              { key: 'federal_income_tax_withheld', label: 'Fed Tax', render: (item) => `$${item.federal_income_tax_withheld.toFixed(2)}` },
+              { key: 'document_status', label: 'Status' },
+            ]}
+            onRowClick={(row) => openFacsimile(row as FacsimileTaxRecord, 'tax_w2')}
+            viewMode={getViewMode('tax-records')}
+            loading={loading}
+            error={error}
+          />
+        );
+      case 'benefits-deductions':
+        return (
+          <TraditionalReportTable
+            title="Benefits & Deductions"
+            data={benefitData.filter(bd => bd.employee_id === selectedEmployee.employee_id)}
+            columns={[
+              { key: 'deduction_type', label: 'Type' },
+              { key: 'amount', label: 'Amount', render: (item) => `$${item.amount.toFixed(2)}` },
+              { key: 'frequency', label: 'Frequency' },
+              { key: 'effective_date', label: 'Effective Date' },
+              { key: 'employer_contribution', label: 'Employer Contrib.', render: (item) => `$${item.employer_contribution.toFixed(2)}` },
+            ]}
+            viewMode={getViewMode('benefits-deductions')}
+            loading={loading}
+            error={error}
+          />
+        );
+      case 'jobs':
+        return (
+          <TraditionalReportTable
+            title="Job Records"
+            data={jobData}
+            columns={[
+              { key: 'job_title', label: 'Job Title' },
+              { key: 'job_code', label: 'Job Code' },
+              { key: 'department', label: 'Department' },
+              { key: 'division', label: 'Division' },
+              { key: 'effective_date', label: 'Start Date' },
+              { key: 'end_date', label: 'End Date' },
+              { key: 'status', label: 'Status' },
+            ]}
+            viewMode={getViewMode('jobs')}
+            loading={loading}
+            error={error}
+          />
+        );
+      case 'compliance':
+        return (
+          <TraditionalReportTable
+            title="Compliance Records"
+            data={complianceData.filter(cr => cr.employee_id === selectedEmployee.employee_id)}
+            columns={[
+              { key: 'compliance_type', label: 'Type' },
+              { key: 'reporting_period', label: 'Period' },
+              { key: 'status', label: 'Status' },
+              { key: 'due_date', label: 'Due Date' },
+            ]}
+            viewMode={getViewMode('compliance')}
+            loading={loading}
+            error={error}
+          />
+        );
+      default:
+        return null;
     }
   };
 
-  const loadPayStatementData = async () => {
-    const tenantIds = accessibleTenantIds;
-    
-    if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping pay statement data load');
-      setLoading(false);
-      return;
-    }
-    
+  const loadTabData = useCallback(async (tabId: string) => {
     setLoading(true);
     setError(null);
-    
-    try {
-      console.log('Loading pay statement data for tenants:', tenantIds);
-      const { data, error } = await supabase
-        .from('pay_statements_comprehensive_report')
-        .select('*')
-        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
-        .order('pay_date', { ascending: false });
-      
-      if (error) throw error;
-      setPayStatementData(data || []);
-    } catch (err: any) {
-      console.error('Error loading pay statement data:', err);
-      setError(`Failed to load pay statement data: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const loadTimecardData = async () => {
-    const tenantIds = accessibleTenantIds;
-    
+    let tenantIds = accessibleTenantIds;
+    if (isMultiTenant && tenantFilter) {
+      tenantIds = [tenantFilter];
+    } else if (isMultiTenant && !tenantFilter) {
+      tenantIds = availableTenants.map(t => t.id);
+    }
+
     if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping timecard data load');
       setLoading(false);
+      setError("No tenant selected or accessible.");
       return;
     }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Loading timecard data for tenants:', tenantIds);
-      const { data, error } = await supabase
-        .from('timecards_comprehensive_report')
-        .select('*')
-        .or(`tenant_id.in.(${tenantIds.join(',')}),tenant_id.is.null`)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Timecard query error:', error);
-        throw error;
-      }
-      console.log('Timecards loaded:', data?.length || 0, 'records');
-      setTimecardData(data || []);
-    } catch (err: any) {
-      console.error('Error loading timecard data:', err);
-      setError(`Failed to load timecard data: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const loadJobData = async () => {
-    const tenantIds = accessibleTenantIds;
-    
-    if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping job data load');
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
     try {
-      const { data, error } = await supabase
-        .from('jobs_comprehensive_report')
-        .select('*')
-        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
-        .order('job_title');
-      
-      if (error) throw error;
-      setJobData(data || []);
-    } catch (err: any) {
-      console.error('Error loading job data:', err);
-      setError(`Failed to load job data: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTaxData = async () => {
-    const tenantIds = accessibleTenantIds;
-    
-    if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping tax data load');
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Loading tax data for tenants:', tenantIds);
-      const { data, error } = await supabase
-        .from('tax_records_comprehensive_report')
-        .select('*')
-        .in('tenant_id', tenantIds) // Load from ALL accessible tenants
-        .order('tax_year', { ascending: false });
-      
-      if (error) {
-        console.error('Tax records query error:', error);
-        throw error;
-      }
-      console.log('Tax records loaded:', data?.length || 0, 'records');
-      setTaxData(data || []);
-    } catch (err: any) {
-      console.error('Error loading tax data:', err);
-      setError(`Failed to load tax data: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadBenefitData = async () => {
-    const tenantIds = accessibleTenantIds;
-    
-    if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping benefit data load');
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const { data: benefitData, error: benefitError } = await supabase
-        .from('benefits')
-        .select('*')
-        .in('tenant_id', tenantIds)
-        .order('effective_date', { ascending: false });
-      
-      if (benefitError) throw benefitError;
-      setBenefitData(benefitData || []);
-    } catch (err: any) {
-      console.error('Error loading benefit data:', err);
-      setError(`Failed to load benefit data: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadComplianceData = async () => {
-    const tenantIds = accessibleTenantIds;
-    
-    if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping compliance data load');
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Since compliance_records table doesn't exist, we'll create mock data or skip
-      // For now, let's set empty compliance data to avoid errors
-      setComplianceData([]);
-      console.log('Compliance data loading skipped - table not available');
-    } catch (err: any) {
-      console.error('Error loading compliance data:', err);
-      setError(`Failed to load compliance data: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load data based on active tab
-  const loadTabData = async (tabId: string) => {
-    if (!selectedTenant?.id) return;
-
-    setLoading(true);
-    
-    try {
+      let query;
       switch (tabId) {
         case 'employees':
-          await loadEmployeeData();
+          query = supabase.from('employee_comprehensive_report').select('*').in('tenant_id', tenantIds);
+          const { data: employees, error: empError } = await query;
+          if (empError) throw empError;
+          setEmployeeData(employees || []);
           break;
         case 'pay-statements':
-          await loadPayStatementData();
+          query = supabase.from('pay_statements_comprehensive_report').select('*').in('tenant_id', tenantIds);
+          const { data: payStatements, error: psError } = await query;
+          if (psError) throw psError;
+          setPayStatementData(payStatements || []);
           break;
         case 'timecards':
-          await loadTimecardData();
+          query = supabase.from('timecards_comprehensive_report').select('*').in('tenant_id', tenantIds);
+          const { data: timecards, error: tcError } = await query;
+          if (tcError) throw tcError;
+          setTimecardData(timecards || []);
           break;
         case 'jobs':
-          await loadJobData();
+          query = supabase.from('jobs_comprehensive_report').select('*').in('tenant_id', tenantIds);
+          const { data: jobs, error: jobError } = await query;
+          if (jobError) throw jobError;
+          setJobData(jobs || []);
           break;
         case 'tax-records':
-          await loadTaxData();
+          query = supabase.from('tax_records_comprehensive_report').select('*').in('tenant_id', tenantIds);
+          const { data: taxes, error: taxError } = await query;
+          if (taxError) throw taxError;
+          setTaxData(taxes || []);
           break;
         case 'benefits-deductions':
-          await loadBenefitData();
+          query = supabase.from('benefits').select('*').in('tenant_id', tenantIds);
+          const { data: benefits, error: benefitError } = await query;
+          if (benefitError) throw benefitError;
+          setBenefitData(benefits || []);
           break;
         case 'compliance':
-          await loadComplianceData();
-          break;
-        case 'all-reports':
-          // Load all data for comprehensive view
-          await Promise.all([
-            loadEmployeeData(),
-            loadPayStatementData(),
-            loadTimecardData(),
-            loadJobData(),
-            loadTaxData(),
-            loadBenefitData(),
-            loadComplianceData()
-          ]);
+          // Assuming a compliance table exists
+          query = supabase.from('compliance_records').select('*').in('tenant_id', tenantIds);
+          const { data: compliance, error: complianceError } = await query;
+          if (complianceError) throw complianceError;
+          setComplianceData(compliance || []);
           break;
         default:
           break;
       }
     } catch (err: any) {
-      console.error('Error loading tab data:', err);
-      setError(`Failed to load data: ${err.message}`);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessibleTenantIds, isMultiTenant, tenantFilter, availableTenants]);
 
-  // Enhanced filtering function (keeping existing implementation)
-  const applyFilters = (data: any[], dataType: string) => {
-    return data.filter((item: any) => {
-      // Search term filter
-      if (filters.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
-        const searchableFields = dataType === 'employees' 
-          ? [item.employee_name, item.position, item.home_department, item.employee_code]
-          : dataType === 'pay-statements'
-          ? [item.employee_name, item.check_number, item.employee_code]
-          : dataType === 'timecards'
-          ? [item.employee_name, item.department, item.employee_code]
-          : dataType === 'jobs'
-          ? [item.job_title, item.department, item.job_code]
-          : dataType === 'tax-records'
-          ? [item.employee_id, item.form_type, item.tax_record_id]
-          : dataType === 'benefits-deductions'
-          ? [item.employee_name, item.deduction_type, item.deduction_code]
-          : [item.employee_name, item.compliance_type, item.compliance_id];
-        
-        if (!searchableFields.some((field: any) => 
-          field?.toString().toLowerCase().includes(searchLower)
-        )) {
-          return false;
-        }
-      }
-
-      // Date range filters
-      if (filters.startDate && item.pay_date) {
-        if (new Date(item.pay_date) < new Date(filters.startDate)) return false;
-      }
-      if (filters.endDate && item.pay_date) {
-        if (new Date(item.pay_date) > new Date(filters.endDate)) return false;
-      }
-
-      // Department filter
-      if (filters.department && item.department !== filters.department && item.home_department !== filters.department) {
-        return false;
-      }
-
-      // Employee status filter
-      if (filters.employeeStatus && item.employment_status !== filters.employeeStatus) {
-        return false;
-      }
-
-      // Deduction type filter
-      if (filters.deductionType && item.deduction_type !== filters.deductionType) {
-        return false;
-      }
-
-      // Compliance type filter
-      if (filters.complianceType && item.compliance_type !== filters.complianceType) {
-        return false;
-      }
-
-      // Tax year filter
-      if (filters.taxYear && item.tax_year && item.tax_year.toString() !== filters.taxYear) {
-        return false;
-      }
-
-      // Form type filter
-      if (filters.formType && item.form_type !== filters.formType) {
-        return false;
-      }
-
-      return true;
-    });
-  };
-
-  // Enhanced export functions (keeping existing implementation)
-  const downloadCSV = (data: any[], filename: string) => {
-    if (!data.length) return;
-    
-    const headers = Object.keys(data[0]);
-    const csvContent = [
-      headers.join(','),
-      ...data.map((row: any) => 
-        headers.map((header: any) => {
-          const value = row[header];
-          return typeof value === 'string' && value.includes(',') 
-            ? `"${value}"` 
-            : value;
-        }).join(',')
-      )
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const downloadJSON = (data: any[], filename: string) => {
-    const jsonContent = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonContent], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  // Enhanced export functionality
-  const downloadPDF = async (data: any[], filename: string, title: string) => {
-    try {
-      // Create HTML content for PDF
-      const headers = data.length > 0 ? Object.keys(data[0]) : [];
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>${title}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f8f9fa; font-weight: bold; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            .footer { margin-top: 20px; font-size: 12px; color: #666; }
-          </style>
-        </head>
-        <body>
-          <h1>${title}</h1>
-          <p>Generated on: ${new Date().toLocaleDateString()}</p>
-          <p>Total Records: ${data.length}</p>
-          <table>
-            <thead>
-              <tr>
-                ${headers.map(header => `<th>${header.replace(/_/g, ' ').toUpperCase()}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${data.map(row => `
-                <tr>
-                  ${headers.map(header => `<td>${row[header] || ''}</td>`).join('')}
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="footer">
-            <p>HelixBridge - Enterprise Workforce Management</p>
-            <p>Report generated from Enhanced Reporting System</p>
-          </div>
-        </body>
-        </html>
-      `;
-
-      // Create blob and download
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${filename}_${new Date().toISOString().split('T')[0]}.html`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-      
-      // Note: For true PDF generation, you would use libraries like jsPDF or Puppeteer
-      console.log('HTML report generated. For PDF conversion, integrate with jsPDF or server-side PDF generation.');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF report');
-    }
-  };
-
-  const downloadExcel = (data: any[], filename: string) => {
-    if (!data.length) return;
-    
-    try {
-      // Create CSV content with Excel-friendly formatting
-      const headers = Object.keys(data[0]);
-      const csvContent = [
-        headers.map(h => h.replace(/_/g, ' ').toUpperCase()).join('\t'),
-        ...data.map((row: any) => 
-          headers.map((header: any) => {
-            const value = row[header];
-            if (value === null || value === undefined) return '';
-            if (typeof value === 'string' && (value.includes(',') || value.includes('\t'))) {
-              return `"${value}"`;
-            }
-            return value;
-          }).join('\t')
-        )
-      ].join('\n');
-      
-      // Create blob with Excel MIME type
-      const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${filename}_${new Date().toISOString().split('T')[0]}.xls`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error generating Excel file:', error);
-      alert('Error generating Excel report');
-    }
-  };
-
-  // Pay statement detail view
-  const generatePayStatementPDF = (statement: PayStatementDetail) => {
-    const payStatementData = [{
-      'Check Number': statement.check_number,
-      'Employee': statement.employee_name,
-      'Pay Date': statement.pay_date,
-      'Regular Hours': statement.regular_hours,
-      'OT Hours': statement.overtime_hours,
-      'Gross Pay': `$${statement.gross_pay}`,
-      'Net Pay': `$${statement.net_pay}`,
-      'Federal Tax': `$${statement.federal_tax_withheld}`,
-      'State Tax': `$${statement.state_tax_withheld}`,
-      'Social Security': `$${statement.social_security_tax}`,
-      'Medicare': `$${statement.medicare_tax}`
-    }];
-    
-    downloadPDF(payStatementData, `pay_statement_${statement.check_number}`, `Pay Statement - ${statement.employee_name}`);
-  };
-
-  // Load data when tab changes
   useEffect(() => {
     loadTabData(activeTab);
-  }, [activeTab, accessibleTenantIds.join(',')]);
+  }, [activeTab, loadTabData]);
 
-  // Enhanced filter panel with searchable column indicators
-  const renderEnhancedFilters = () => (
-    <Card className="p-6 mb-6">
-      <h3 className="text-lg font-semibold mb-4">Enhanced Filters & Search</h3>
-      
-      {/* Search Help Section */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-800">Searchable Fields for {activeTab.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSearchHelp(!showSearchHelp)}
-              className="p-1 h-auto"
-            >
-              <HelpCircle className="w-4 h-4 text-blue-600" />
-            </Button>
-          </div>
-        </div>
-        
-        {showSearchHelp && (
-          <div className="mt-2 text-sm text-blue-700">
-            <p className="mb-1">You can search the following fields:</p>
-            <div className="flex flex-wrap gap-1">
-              {getSearchableFields(activeTab).map((field, index: any) => (
-                <Badge key={index} variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
-                  {field}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        <div className="mt-2 text-xs text-blue-600">
-          💡 Tip: Search is case-insensitive and matches partial text across all searchable fields
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {/* Enhanced Search Field with Indicator */}
-        <div className="relative">
-          <Input
-            placeholder={getSearchPlaceholder(activeTab)}
-            value={filters.searchTerm}
-            onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-            className="pr-8"
-          />
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-            <div className="group relative">
-              <Info className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help" />
-              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-50">
-                <div className="bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                  Click the help icon above for searchable fields
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <Input
-          type="date"
-          placeholder="Start Date"
-          value={filters.startDate}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-        />
-        
-        <Input
-          type="date"
-          placeholder="End Date"
-          value={filters.endDate}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-        />
-        
-        <select
-          className="px-3 py-2 border border-gray-300 rounded-md"
-          value={filters.department}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, department: e.target.value }))}
-        >
-          <option value="">All Departments</option>
-          <option value="Engineering">Engineering</option>
-          <option value="Sales">Sales</option>
-          <option value="Marketing">Marketing</option>
-          <option value="HR">HR</option>
-          <option value="Finance">Finance</option>
-          <option value="Operations">Operations</option>
-        </select>
-        
-        <select
-          className="px-3 py-2 border border-gray-300 rounded-md"
-          value={filters.employeeStatus}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, employeeStatus: e.target.value }))}
-        >
-          <option value="">All Statuses</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="terminated">Terminated</option>
-          <option value="on_leave">On Leave</option>
-        </select>
-        
-        <Input
-          placeholder="Location"
-          value={filters.location}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-        />
-        
-        <Input
-          placeholder="Job Title"
-          value={filters.jobTitle}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, jobTitle: e.target.value }))}
-        />
-        
-        <Input
-          type="number"
-          placeholder="Min Salary"
-          value={filters.salaryMin}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, salaryMin: e.target.value }))}
-        />
-        
-        <Input
-          type="number"
-          placeholder="Max Salary"
-          value={filters.salaryMax}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, salaryMax: e.target.value }))}
-        />
-        
-        <select
-          className="px-3 py-2 border border-gray-300 rounded-md"
-          value={filters.payType}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, payType: e.target.value }))}
-        >
-          <option value="">All Pay Types</option>
-          <option value="salary">Salary</option>
-          <option value="hourly">Hourly</option>
-          <option value="commission">Commission</option>
-        </select>
-        
-        <select
-          className="px-3 py-2 border border-gray-300 rounded-md"
-          value={filters.flsaStatus}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, flsaStatus: e.target.value }))}
-        >
-          <option value="">All FLSA Statuses</option>
-          <option value="exempt">Exempt</option>
-          <option value="non-exempt">Non-Exempt</option>
-        </select>
-        
-        <Input
-          placeholder="Division"
-          value={filters.division}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, division: e.target.value }))}
-        />
-        
-        <Input
-          placeholder="Cost Center"
-          value={filters.costCenter}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, costCenter: e.target.value }))}
-        />
-        
-        <select
-          className="px-3 py-2 border border-gray-300 rounded-md"
-          value={filters.unionStatus}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, unionStatus: e.target.value }))}
-        >
-          <option value="">All Union Statuses</option>
-          <option value="union">Union</option>
-          <option value="non-union">Non-Union</option>
-        </select>
-        
-        <Input
-          placeholder="EEO Category"
-          value={filters.eeoCategory}
-          onChange={(e: any) => setFilters(prev => ({ ...prev, eeoCategory: e.target.value }))}
-        />
-        
-        {activeTab === 'timecards' && (
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-md"
-            value={filters.approvalStatus}
-            onChange={(e: any) => setFilters(prev => ({ ...prev, approvalStatus: e.target.value }))}
-          >
-            <option value="">All Approval Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        )}
-        
-        {activeTab === 'tax-records' && (
-          <>
-            <select
-              className="px-3 py-2 border border-gray-300 rounded-md"
-              value={filters.taxYear}
-              onChange={(e: any) => setFilters(prev => ({ ...prev, taxYear: e.target.value }))}
-            >
-              <option value="">All Tax Years</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-              <option value="2021">2021</option>
-            </select>
-            
-            <select
-              className="px-3 py-2 border border-gray-300 rounded-md"
-              value={filters.formType}
-              onChange={(e: any) => setFilters(prev => ({ ...prev, formType: e.target.value }))}
-            >
-              <option value="">All Form Types</option>
-              <option value="W-2">W-2</option>
-              <option value="1099-MISC">1099-MISC</option>
-              <option value="1099-NEC">1099-NEC</option>
-            </select>
-          </>
-        )}
-        
-        {activeTab === 'benefits-deductions' && (
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-md"
-            value={filters.deductionType}
-            onChange={(e: any) => setFilters(prev => ({ ...prev, deductionType: e.target.value }))}
-          >
-            <option value="">All Deduction Types</option>
-            <option value="Health Insurance">Health Insurance</option>
-            <option value="Dental Insurance">Dental Insurance</option>
-            <option value="401k">401k</option>
-            <option value="HSA">HSA</option>
-            <option value="Garnishment">Garnishment</option>
-          </select>
-        )}
-        
-        {activeTab === 'compliance' && (
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-md"
-            value={filters.complianceType}
-            onChange={(e: any) => setFilters(prev => ({ ...prev, complianceType: e.target.value }))}
-          >
-            <option value="">All Compliance Types</option>
-            <option value="EEO-1">EEO-1</option>
-            <option value="ACA">ACA</option>
-            <option value="FMLA">FMLA</option>
-            <option value="Workers Comp">Workers Comp</option>
-          </select>
-        )}
-      </div>
-      
-      <div className="flex gap-2 mt-4">
-        <Button 
-          onClick={() => {
-            setFilters({
-              startDate: '', endDate: '', department: '', location: '', employeeStatus: '',
-              jobTitle: '', salaryMin: '', salaryMax: '', payType: '', flsaStatus: '',
-              division: '', costCenter: '', unionStatus: '', eeoCategory: '', approvalStatus: '',
-              taxYear: '', formType: '', deductionType: '', complianceType: '', searchTerm: ''
-            });
-            setTenantFilter(''); // Clear tenant filter too
-          }}
-          variant="outline"
-        >
-          Clear Filters
-        </Button>
-        <Button 
-          onClick={() => setShowSearchHelp(!showSearchHelp)}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <HelpCircle className="w-4 h-4" />
-          {showSearchHelp ? 'Hide' : 'Show'} Search Help
-        </Button>
-      </div>
-    </Card>
-  );
-
-  // Enhanced view mode toggle component
-  const renderViewModeToggle = (tabId: string) => (
-    <div className="flex border rounded-md">
-      <Button
-        variant={getViewMode(tabId) === 'list' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => setViewMode(tabId, 'list')}
-        className="rounded-r-none"
-      >
-        <List className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={getViewMode(tabId) === 'grid' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => setViewMode(tabId, 'grid')}
-        className="rounded-l-none"
-      >
-        <Grid className="w-4 h-4" />
-      </Button>
-    </div>
-  );
-
-  // Enhanced data display functions with consistent list/grid views (keeping existing implementation)
-  const renderEmployeeData = () => {
-    const filteredData = applyFilters(employeeData, 'employees');
-    const currentViewMode = getViewMode('employees');
-    
-    const employeeColumns = [
-      { key: 'employee_code', label: 'Employee Code', sortable: true },
-      { key: 'full_name', label: 'Full Name', sortable: true, render: (employee: EnhancedEmployee) => employee.full_name || employee.employee_name },
-      { key: 'position', label: 'Position', sortable: true },
-      { key: 'home_department', label: 'Department', sortable: true },
-      { key: 'division', label: 'Division', sortable: true },
-      { key: 'cost_center', label: 'Cost Center', sortable: true },
-      { key: 'flsa_status', label: 'FLSA Status', sortable: true, render: (employee: EnhancedEmployee) => (
-        <Badge variant={employee.flsa_status === 'exempt' ? 'default' : 'secondary'}>
-          {employee.flsa_status}
-        </Badge>
-      )},
-      { key: 'pay_type', label: 'Pay Type', sortable: true },
-      { key: 'union_status', label: 'Union Status', sortable: true },
-      { key: 'employment_status', label: 'Status', sortable: true, render: (employee: EnhancedEmployee) => (
-        <Badge variant={employee.employment_status === 'active' ? 'default' : 'secondary'}>
-          {employee.employment_status}
-        </Badge>
-      )}
-    ];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Enhanced Employee Directory ({filteredData.length} records)</h3>
-          <div className="flex gap-2">
-            {renderViewModeToggle('employees')}
-            <Button onClick={() => downloadCSV(filteredData, 'enhanced_employees')} variant="outline">
-              Export CSV
-            </Button>
-            <Button onClick={() => downloadJSON(filteredData, 'enhanced_employees')} variant="outline">
-              Export JSON
-            </Button>
-          </div>
-        </div>
-        
-        {currentViewMode === 'list' ? (
-          <TraditionalReportTable
-            data={filteredData}
-            columns={employeeColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
-            title="Employee Directory"
-            onExportCSV={() => downloadCSV(filteredData, 'enhanced_employees')}
-            onExportJSON={() => downloadJSON(filteredData, 'enhanced_employees')}
-          />
-        ) : (
-          <div className="grid gap-4">
-            {filteredData.map((employee: any) => (
-              <Card key={employee.id} className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div>
-                    <h4 className="font-semibold">{employee.full_name || employee.employee_name}</h4>
-                    <p className="text-sm text-gray-600">{employee.employee_code}</p>
-                    <p className="text-sm">{employee.position}</p>
-                  </div>
-                  <div>
-                    <p><strong>Department:</strong> {employee.home_department}</p>
-                    <p><strong>Division:</strong> {employee.division}</p>
-                    <p><strong>Cost Center:</strong> {employee.cost_center}</p>
-                  </div>
-                  <div>
-                    <p><strong>FLSA Status:</strong> <Badge variant={employee.flsa_status === 'exempt' ? 'default' : 'secondary'}>{employee.flsa_status}</Badge></p>
-                    <p><strong>Pay Type:</strong> {employee.pay_type}</p>
-                    <p><strong>Union Status:</strong> {employee.union_status}</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
   };
 
-  const renderPayStatementData = () => {
-    const filteredData = applyFilters(payStatementData, 'pay-statements');
-    const currentViewMode = getViewMode('pay-statements');
-    
-    const payStatementColumns = [
-      { key: 'check_number', label: 'Check #', sortable: true },
-      { key: 'employee_name', label: 'Employee', sortable: true },
-      { key: 'employee_code', label: 'Employee Code', sortable: true },
-      { key: 'pay_date', label: 'Pay Date', sortable: true },
-      { key: 'pay_period_start', label: 'Period Start', sortable: true },
-      { key: 'pay_period_end', label: 'Period End', sortable: true },
-      { key: 'regular_hours', label: 'Regular Hours', sortable: true },
-      { key: 'overtime_hours', label: 'OT Hours', sortable: true },
-      { key: 'gross_pay', label: 'Gross Pay', sortable: true, render: (statement: EnhancedPayStatement) => `$${statement.gross_pay?.toLocaleString()}` },
-      { key: 'net_pay', label: 'Net Pay', sortable: true, render: (statement: EnhancedPayStatement) => `$${statement.net_pay?.toLocaleString()}` },
-      { key: 'check_status', label: 'Status', sortable: true, render: (statement: EnhancedPayStatement) => (
-        <Badge variant={statement.check_status === 'processed' ? 'default' : 'secondary'}>
-          {statement.check_status}
-        </Badge>
-      )},
-      { key: 'actions', label: 'Actions', sortable: false, render: (statement: EnhancedPayStatement) => (
-        <Button 
-          size="sm" 
-          onClick={() => openFacsimile(statement as any, 'pay_statement')}
-          variant="outline"
-        >
-          View Details
-        </Button>
-      )}
-    ];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Enhanced Pay Statements ({filteredData.length} records)</h3>
-          <div className="flex gap-2">
-            {renderViewModeToggle('pay-statements')}
-            <Button onClick={() => downloadCSV(filteredData, 'enhanced_pay_statements')} variant="outline">
-              Export CSV
-            </Button>
-            <Button onClick={() => downloadJSON(filteredData, 'enhanced_pay_statements')} variant="outline">
-              Export JSON
-            </Button>
-            <Button onClick={() => downloadExcel(filteredData, 'enhanced_pay_statements')} variant="outline">
-              Export Excel
-            </Button>
-            <Button onClick={() => downloadPDF(filteredData, 'enhanced_pay_statements', 'Enhanced Pay Statements Report')} variant="outline">
-              Export PDF
-            </Button>
-          </div>
-        </div>
-        
-        {currentViewMode === 'list' ? (
-          <TraditionalReportTable
-            data={filteredData}
-            columns={payStatementColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
-            title="Pay Statements"
-          />
-        ) : (
-          <div className="grid gap-4">
-            {filteredData.map((statement: any) => (
-              <Card key={statement.id} className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <h4 className="font-semibold">{statement.employee_name}</h4>
-                    <p className="text-sm text-gray-600">Check #{statement.check_number}</p>
-                    <p className="text-sm">{statement.pay_date}</p>
-                  </div>
-                  <div>
-                    <p><strong>Gross Pay:</strong> ${statement.gross_pay?.toLocaleString()}</p>
-                    <p><strong>Net Pay:</strong> ${statement.net_pay?.toLocaleString()}</p>
-                    <p><strong>Regular Hours:</strong> {statement.regular_hours}</p>
-                  </div>
-                  <div>
-                    <p><strong>Federal Tax:</strong> ${statement.federal_tax_withheld?.toLocaleString()}</p>
-                    <p><strong>State Tax:</strong> ${statement.state_tax_withheld?.toLocaleString()}</p>
-                    <p><strong>Social Security:</strong> ${statement.social_security_tax?.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p><strong>YTD Gross:</strong> ${statement.ytd_gross?.toLocaleString()}</p>
-                    <p><strong>YTD Net:</strong> ${statement.ytd_net?.toLocaleString()}</p>
-                    <div className="flex gap-2 mt-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => setSelectedPayStatement(statement as any)}
-                        variant="outline"
-                      >
-                        View Details
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={() => generatePayStatementPDF(statement as any)}
-                        variant="outline"
-                      >
-                        Generate PDF
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+  const handleSearch = () => {
+    // This would trigger a reload of data with filters applied
+    loadTabData(activeTab);
   };
 
-  // Continue with other render functions (keeping existing implementation)...
-  const renderTimecardData = () => {
-    const filteredData = applyFilters(timecardData, 'timecards');
-    const currentViewMode = getViewMode('timecards');
-    
-    const timecardColumns = [
-      { key: 'employee_name', label: 'Employee', sortable: true },
-      { key: 'employee_code', label: 'Employee Code', sortable: true },
-      { key: 'work_date', label: 'Work Date', sortable: true },
-      { key: 'clock_in', label: 'Clock In', sortable: true },
-      { key: 'clock_out', label: 'Clock Out', sortable: true },
-      { key: 'total_hours', label: 'Total Hours', sortable: true },
-      { key: 'regular_hours', label: 'Regular Hours', sortable: true },
-      { key: 'overtime_hours', label: 'OT Hours', sortable: true },
-      { key: 'department', label: 'Department', sortable: true },
-      { key: 'supervisor', label: 'Supervisor', sortable: true },
-      { key: 'approval_status', label: 'Status', sortable: true, render: (timecard: EnhancedTimecard) => (
-        <Badge variant={timecard.approval_status === 'approved' ? 'default' : 'secondary'}>
-          {timecard.approval_status}
-        </Badge>
-      )},
-      { key: 'actions', label: 'Actions', sortable: false, render: (timecard: EnhancedTimecard) => (
-        <Button 
-          size="sm" 
-          onClick={() => openFacsimile(timecard as any, 'timecard')}
-          variant="outline"
-        >
-          View Details
-        </Button>
-      )}
-    ];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Enhanced Timecards ({filteredData.length} records)</h3>
-          <div className="flex gap-2">
-            {renderViewModeToggle('timecards')}
-            <Button onClick={() => downloadCSV(filteredData, 'enhanced_timecards')} variant="outline">
-              Export CSV
-            </Button>
-            <Button onClick={() => downloadJSON(filteredData, 'enhanced_timecards')} variant="outline">
-              Export JSON
-            </Button>
-            <Button onClick={() => downloadExcel(filteredData, 'enhanced_timecards')} variant="outline">
-              Export Excel
-            </Button>
-            <Button onClick={() => downloadPDF(filteredData, 'enhanced_timecards', 'Enhanced Timecards Report')} variant="outline">
-              Export PDF
-            </Button>
-          </div>
-        </div>
-        
-        {currentViewMode === 'list' ? (
-          <TraditionalReportTable
-            data={filteredData}
-            columns={timecardColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
-            title="Timecards"
-          />
-        ) : (
-          <div className="grid gap-4">
-            {filteredData.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No timecard records found. The timecards table is ready for data entry.</p>
-              </Card>
-            ) : (
-              filteredData.map((timecard: any) => (
-                <Card key={timecard.id} className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <h4 className="font-semibold">{timecard.employee_name}</h4>
-                      <p className="text-sm text-gray-600">{timecard.employee_code}</p>
-                      <p className="text-sm">{timecard.work_date}</p>
-                    </div>
-                    <div>
-                      <p><strong>Total Hours:</strong> {timecard.total_hours}</p>
-                      <p><strong>Regular Hours:</strong> {timecard.regular_hours}</p>
-                      <p><strong>Overtime Hours:</strong> {timecard.overtime_hours}</p>
-                    </div>
-                    <div>
-                      <p><strong>Department:</strong> {timecard.department}</p>
-                      <p><strong>Supervisor:</strong> {timecard.supervisor}</p>
-                      <p><strong>Status:</strong> <Badge variant={timecard.approval_status === 'approved' ? 'default' : 'secondary'}>{timecard.approval_status}</Badge></p>
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => openFacsimile(timecard as any, 'timecard')}
-                        variant="outline"
-                      >
-                        View Details
-                      </Button>
-                      <Button size="sm" variant="outline">Export</Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    );
+  const clearFilters = () => {
+    setFilters({
+      startDate: '',
+      endDate: '',
+      department: '',
+      location: '',
+      employeeStatus: '',
+      jobTitle: '',
+      salaryMin: '',
+      salaryMax: '',
+      payType: '',
+      flsaStatus: '',
+      division: '',
+      costCenter: '',
+      unionStatus: '',
+      eeoCategory: '',
+      approvalStatus: '',
+      taxYear: '',
+      formType: '',
+      deductionType: '',
+      complianceType: '',
+      searchTerm: ''
+    });
+    loadTabData(activeTab);
   };
 
-  const renderJobData = () => {
-    const filteredData = applyFilters(jobData, 'jobs');
-    const currentViewMode = getViewMode('jobs');
-    
-    const jobColumns = [
-      { key: 'job_code', label: 'Job Code', sortable: true },
-      { key: 'job_title', label: 'Job Title', sortable: true },
-      { key: 'job_family', label: 'Job Family', sortable: true },
-      { key: 'department', label: 'Department', sortable: true },
-      { key: 'division', label: 'Division', sortable: true },
-      { key: 'location', label: 'Location', sortable: true },
-      { key: 'min_pay_range', label: 'Min Pay', sortable: true, render: (job: JobRecord) => `$${job.min_pay_range?.toLocaleString()}` },
-      { key: 'max_pay_range', label: 'Max Pay', sortable: true, render: (job: JobRecord) => `$${job.max_pay_range?.toLocaleString()}` },
-      { key: 'status', label: 'Status', sortable: true, render: (job: JobRecord) => (
-        <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
-          {job.status}
-        </Badge>
-      )},
-      { key: 'employee_count', label: 'Employees', sortable: true }
-    ];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Job Catalog ({filteredData.length} records)</h3>
-          <div className="flex gap-2">
-            {renderViewModeToggle('jobs')}
-            <Button onClick={() => downloadCSV(filteredData, 'job_catalog')} variant="outline">
-              Export CSV
-            </Button>
-            <Button onClick={() => downloadJSON(filteredData, 'job_catalog')} variant="outline">
-              Export JSON
-            </Button>
-            <Button onClick={() => downloadExcel(filteredData, 'job_catalog')} variant="outline">
-              Export Excel
-            </Button>
-            <Button onClick={() => downloadPDF(filteredData, 'job_catalog', 'Job Catalog Report')} variant="outline">
-              Export PDF
-            </Button>
-          </div>
-        </div>
-        
-        {currentViewMode === 'list' ? (
-          <TraditionalReportTable
-            data={filteredData}
-            columns={jobColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
-            title="Job Catalog"
-          />
-        ) : (
-          <div className="grid gap-4">
-            {filteredData.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No job records found. The job catalog is ready for job descriptions and classifications.</p>
-              </Card>
-            ) : (
-              filteredData.map((job: any) => (
-                <Card key={job.id} className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <h4 className="font-semibold">{job.job_title}</h4>
-                      <p className="text-sm text-gray-600">{job.job_code}</p>
-                      <p className="text-sm">{job.department}</p>
-                    </div>
-                    <div>
-                      <p><strong>Location:</strong> {job.location}</p>
-                      <p><strong>Pay Range:</strong> ${job.min_pay_range?.toLocaleString()} - ${job.max_pay_range?.toLocaleString()}</p>
-                      <p><strong>Status:</strong> <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>{job.status}</Badge></p>
-                    </div>
-                    <div>
-                      <p><strong>Employees:</strong> {job.employee_count}</p>
-                      <p><strong>FLSA:</strong> {job.flsa_classification}</p>
-                      <p><strong>Union:</strong> {job.union_code}</p>
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <Button size="sm" variant="outline">View Details</Button>
-                      <Button size="sm" variant="outline">Export</Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderTaxData = () => {
-    const filteredData = applyFilters(taxData, 'tax-records');
-    const currentViewMode = getViewMode('tax-records');
-    
-    const taxColumns = [
-      { key: 'tax_record_id', label: 'Record ID', sortable: true },
-      { key: 'employee_name', label: 'Employee', sortable: true },
-      { key: 'tax_year', label: 'Tax Year', sortable: true },
-      { key: 'form_type', label: 'Form Type', sortable: true },
-      { key: 'wages_tips_compensation', label: 'Wages', sortable: true, render: (record: TaxRecord) => `$${record.wages_tips_compensation?.toLocaleString()}` },
-      { key: 'federal_income_tax_withheld', label: 'Federal Tax', sortable: true, render: (record: TaxRecord) => `$${record.federal_income_tax_withheld?.toLocaleString()}` },
-      { key: 'state_income_tax', label: 'State Tax', sortable: true, render: (record: TaxRecord) => `$${record.state_income_tax?.toLocaleString()}` },
-      { key: 'document_status', label: 'Status', sortable: true, render: (record: TaxRecord) => (
-        <Badge variant={record.document_status === 'final' ? 'default' : 'secondary'}>
-          {record.document_status}
-        </Badge>
-      )},
-      { key: 'actions', label: 'Actions', sortable: false, render: (record: TaxRecord) => (
-        <Button 
-          size="sm" 
-          onClick={() => openFacsimile(record as any, 'tax_w2')}
-          variant="outline"
-        >
-          View Details
-        </Button>
-      )}
-    ];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Tax Records - W-2/1099 Documents ({filteredData.length} records)</h3>
-          <div className="flex gap-2">
-            {renderViewModeToggle('tax-records')}
-            <Button onClick={() => downloadCSV(filteredData, 'tax_records')} variant="outline">
-              Export CSV
-            </Button>
-            <Button onClick={() => downloadJSON(filteredData, 'tax_records')} variant="outline">
-              Export JSON
-            </Button>
-          </div>
-        </div>
-        
-        {currentViewMode === 'list' ? (
-          <TraditionalReportTable
-            data={filteredData}
-            columns={taxColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
-            title="Tax Records"
-          />
-        ) : (
-          <div className="grid gap-4">
-            {filteredData.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No tax records found. The tax records table is ready for W-2 and 1099 document tracking.</p>
-              </Card>
-            ) : (
-              filteredData.map((record: any) => (
-                <Card key={record.id} className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <h4 className="font-semibold">{record.form_type} - {record.tax_year}</h4>
-                      <p className="text-sm text-gray-600">{record.tax_record_id}</p>
-                      <p className="text-sm">{record.employee_name}</p>
-                    </div>
-                    <div>
-                      <p><strong>Wages:</strong> ${record.wages_tips_compensation?.toLocaleString()}</p>
-                      <p><strong>Federal Tax:</strong> ${record.federal_income_tax_withheld?.toLocaleString()}</p>
-                      <p><strong>State Tax:</strong> ${record.state_income_tax?.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p><strong>Social Security:</strong> ${record.social_security_tax_withheld?.toLocaleString()}</p>
-                      <p><strong>Medicare:</strong> ${record.medicare_tax_withheld?.toLocaleString()}</p>
-                      <p><strong>Filing Status:</strong> {record.filing_status}</p>
-                    </div>
-                    <div>
-                      <p><strong>Status:</strong> <Badge>{record.document_status}</Badge></p>
-                      <p><strong>Issue Date:</strong> {record.issue_date}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Button 
-                          size="sm" 
-                          onClick={() => setSelectedTaxRecord(record as any)}
-                          variant="outline"
-                        >
-                          View Details
-                        </Button>
-                        <Button size="sm" variant="outline">Export</Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderBenefitData = () => {
-    const filteredData = applyFilters(benefitData, 'benefits-deductions');
-    const currentViewMode = getViewMode('benefits-deductions');
-    
-    const benefitColumns = [
-      { key: 'benefit_deduction_id', label: 'Benefit ID', sortable: true },
-      { key: 'employee_name', label: 'Employee', sortable: true },
-      { key: 'deduction_type', label: 'Type', sortable: true },
-      { key: 'deduction_code', label: 'Code', sortable: true },
-      { key: 'amount', label: 'Amount', sortable: true, render: (benefit: BenefitDeduction) => `$${benefit.amount?.toLocaleString()}` },
-      { key: 'frequency', label: 'Frequency', sortable: true },
-      { key: 'effective_date', label: 'Effective Date', sortable: true },
-      { key: 'employer_contribution', label: 'Employer Contribution', sortable: true, render: (benefit: BenefitDeduction) => `$${benefit.employer_contribution?.toLocaleString()}` },
-      { key: 'employee_contribution', label: 'Employee Contribution', sortable: true, render: (benefit: BenefitDeduction) => `$${benefit.employee_contribution?.toLocaleString()}` }
-    ];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Benefits & Deductions ({filteredData.length} records)</h3>
-          <div className="flex gap-2">
-            {renderViewModeToggle('benefits-deductions')}
-            <Button onClick={() => downloadCSV(filteredData, 'benefits_deductions')} variant="outline">
-              Export CSV
-            </Button>
-            <Button onClick={() => downloadJSON(filteredData, 'benefits_deductions')} variant="outline">
-              Export JSON
-            </Button>
-          </div>
-        </div>
-        
-        {currentViewMode === 'list' ? (
-          <TraditionalReportTable
-            data={filteredData}
-            columns={benefitColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
-            title="Benefits & Deductions"
-          />
-        ) : (
-          <div className="grid gap-4">
-            {filteredData.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No benefit/deduction records found. The benefits table is ready for health insurance, 401k, and garnishment tracking.</p>
-              </Card>
-            ) : (
-              filteredData.map((record: any) => (
-                <Card key={record.id} className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <h4 className="font-semibold">{record.deduction_type}</h4>
-                      <p className="text-sm text-gray-600">{record.deduction_code}</p>
-                      <p className="text-sm">{record.employee_name}</p>
-                    </div>
-                    <div>
-                      <p><strong>Amount:</strong> ${record.amount?.toLocaleString()}</p>
-                      <p><strong>Frequency:</strong> {record.frequency}</p>
-                      <p><strong>Effective Date:</strong> {record.effective_date}</p>
-                    </div>
-                    <div>
-                      <p><strong>Employer Contribution:</strong> ${record.employer_contribution?.toLocaleString()}</p>
-                      <p><strong>Employee Contribution:</strong> ${record.employee_contribution?.toLocaleString()}</p>
-                      <p><strong>End Date:</strong> {record.end_date || 'Ongoing'}</p>
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <Button size="sm" variant="outline">View Details</Button>
-                      <Button size="sm" variant="outline">Export</Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderComplianceData = () => {
-    const filteredData = applyFilters(complianceData, 'compliance');
-    const currentViewMode = getViewMode('compliance');
-    
-    const complianceColumns = [
-      { key: 'compliance_id', label: 'Compliance ID', sortable: true },
-      { key: 'employee_name', label: 'Employee', sortable: true },
-      { key: 'compliance_type', label: 'Type', sortable: true },
-      { key: 'reporting_period', label: 'Reporting Period', sortable: true },
-      { key: 'status', label: 'Status', sortable: true, render: (compliance: ComplianceRecord) => (
-        <Badge variant={compliance.status === 'completed' ? 'default' : 'secondary'}>
-          {compliance.status}
-        </Badge>
-      )},
-      { key: 'filing_date', label: 'Filing Date', sortable: true },
-      { key: 'due_date', label: 'Due Date', sortable: true }
-    ];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Compliance Reports ({filteredData.length} records)</h3>
-          <div className="flex gap-2">
-            {renderViewModeToggle('compliance')}
-            <Button onClick={() => downloadCSV(filteredData, 'compliance_reports')} variant="outline">
-              Export CSV
-            </Button>
-            <Button onClick={() => downloadJSON(filteredData, 'compliance_reports')} variant="outline">
-              Export JSON
-            </Button>
-          </div>
-        </div>
-        
-        {currentViewMode === 'list' ? (
-          <TraditionalReportTable
-            data={filteredData}
-            columns={complianceColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
-            title="Compliance Reports"
-          />
-        ) : (
-          <div className="grid gap-4">
-            {filteredData.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No compliance records found. The compliance table is ready for EEO-1, ACA, FMLA, and audit trail tracking.</p>
-              </Card>
-            ) : (
-              filteredData.map((record: any) => (
-                <Card key={record.id} className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <h4 className="font-semibold">{record.compliance_type}</h4>
-                      <p className="text-sm text-gray-600">{record.compliance_id}</p>
-                      <p className="text-sm">{record.employee_name}</p>
-                    </div>
-                    <div>
-                      <p><strong>Reporting Period:</strong> {record.reporting_period}</p>
-                      <p><strong>Status:</strong> <Badge>{record.status}</Badge></p>
-                      <p><strong>Filing Date:</strong> {record.filing_date}</p>
-                    </div>
-                    <div>
-                      <p><strong>Due Date:</strong> {record.due_date}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Button size="sm" variant="outline">View Report</Button>
-                        <Button size="sm" variant="outline">Generate PDF</Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderAllReports = () => (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('employees')}>
-          <div className="flex items-center space-x-4">
-            <div className="text-3xl">👥</div>
-            <div>
-              <h3 className="text-lg font-semibold">Enhanced Employees</h3>
-              <p className="text-gray-600">Comprehensive employee records and demographics</p>
-              <p className="text-sm text-blue-600 mt-2">{employeeData.length} records available</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('pay-statements')}>
-          <div className="flex items-center space-x-4">
-            <div className="text-3xl">💰</div>
-            <div>
-              <h3 className="text-lg font-semibold">Pay Statements</h3>
-              <p className="text-gray-600">Detailed payroll and earnings statements</p>
-              <p className="text-sm text-blue-600 mt-2">{payStatementData.length} records available</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('timecards')}>
-          <div className="flex items-center space-x-4">
-            <div className="text-3xl">⏰</div>
-            <div>
-              <h3 className="text-lg font-semibold">Timecards</h3>
-              <p className="text-gray-600">Time tracking and attendance records</p>
-              <p className="text-sm text-blue-600 mt-2">{timecardData.length} records available</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('jobs')}>
-          <div className="flex items-center space-x-4">
-            <div className="text-3xl">💼</div>
-            <div>
-              <h3 className="text-lg font-semibold">Job Catalog</h3>
-              <p className="text-gray-600">Position descriptions and job classifications</p>
-              <p className="text-sm text-blue-600 mt-2">{jobData.length} records available</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('tax-records')}>
-          <div className="flex items-center space-x-4">
-            <div className="text-3xl">📋</div>
-            <div>
-              <h3 className="text-lg font-semibold">Tax Records</h3>
-              <p className="text-gray-600">W-2, 1099, and tax document management</p>
-              <p className="text-sm text-blue-600 mt-2">{taxData.length} records available</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('benefits-deductions')}>
-          <div className="flex items-center space-x-4">
-            <div className="text-3xl">🏥</div>
-            <div>
-              <h3 className="text-lg font-semibold">Benefits & Deductions</h3>
-              <p className="text-gray-600">Employee benefits and payroll deductions</p>
-              <p className="text-sm text-blue-600 mt-2">{benefitData.length} records available</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('compliance')}>
-          <div className="flex items-center space-x-4">
-            <div className="text-3xl">📊</div>
-            <div>
-              <h3 className="text-lg font-semibold">Compliance Reports</h3>
-              <p className="text-gray-600">Regulatory compliance and audit reports</p>
-              <p className="text-sm text-blue-600 mt-2">{complianceData.length} records available</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Report Categories</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4">
-            <h3 className="font-semibold text-green-700">✅ Active Reports</h3>
-            <p className="text-sm text-gray-600 mt-2">All report types are currently active and available for data export and analysis.</p>
-          </Card>
-          <Card className="p-4">
-            <h3 className="font-semibold text-blue-700">📈 Export Options</h3>
-            <p className="text-sm text-gray-600 mt-2">Each report supports CSV, JSON, Excel, and PDF export formats for comprehensive data analysis.</p>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-
-  const tabs = [
-    { id: 'employees', label: 'Enhanced Employees', icon: '👥' },
-    { id: 'pay-statements', label: 'Pay Statements', icon: '💰' },
-    { id: 'timecards', label: 'Timecards', icon: '⏰' },
-    { id: 'jobs', label: 'Job Catalog', icon: '💼' },
-    { id: 'tax-records', label: 'Tax Records', icon: '📋' },
-    { id: 'benefits-deductions', label: 'Benefits & Deductions', icon: '🏥' },
-    { id: 'compliance', label: 'Compliance Reports', icon: '📊' },
-    { id: 'all-reports', label: 'All Reports', icon: '📈' }
+  const reportTabs = [
+    { id: 'employees', label: 'Employees', icon: Users },
+    { id: 'pay-statements', label: 'Pay Statements', icon: DollarSign },
+    { id: 'timecards', label: 'Timecards', icon: Clock },
+    { id: 'jobs', label: 'Job History', icon: Briefcase },
+    { id: 'tax-records', label: 'Tax Records', icon: FileText },
+    { id: 'benefits-deductions', label: 'Benefits', icon: Heart },
+    { id: 'compliance', label: 'Compliance', icon: Shield },
   ];
 
   return (
     <DashboardLayout>
-      {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-gray-900">Operations Reporting Cockpit</h1>
-          <Badge variant="outline" className="bg-blue-100 text-blue-800">Unified employee reporting and document management</Badge>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading}>
-            <RefreshCcw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
-            Refresh Data
-          </Button>
-          <Button variant="outline" onClick={() => console.log('Generate Report Clicked')} disabled={loading}>
-            <FileText className="w-4 h-4 mr-2" />
-            Generate Report
-          </Button>
-          <Button variant="outline" onClick={() => console.log('View Facsimile Clicked')} disabled={loading}>
-            <Eye className="w-4 h-4 mr-2" />
-            View Facsimile
-          </Button>
-          <Button variant="outline" onClick={() => console.log('Export Selected Clicked')} disabled={loading}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Selected
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-auto p-4">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Employees</p>
-              <p className="text-2xl font-bold text-gray-900">{employeeData.length}</p>
-            </div>
-            <Users className="w-8 h-8 text-blue-500" />
-          </Card>
-          <Card className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Active</p>
-              <p className="text-2xl font-bold text-gray-900">{employeeData.filter(e => e.employment_status === 'active').length}</p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-500" />
-          </Card>
-          <Card className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Departments</p>
-              <p className="text-2xl font-bold text-gray-900">{new Set(employeeData.map(e => e.home_department)).size}</p>
-            </div>
-            <Building2 className="w-8 h-8 text-purple-500" />
-          </Card>
-          <Card className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Selected</p>
-              <p className="text-2xl font-bold text-gray-900">{selectedEmployee ? 1 : 0}</p>
-            </div>
-            <User className="w-8 h-8 text-orange-500" />
-          </Card>
-        </div>
-
-        {/* Search & Filters Section */}
+      <div className="p-4 md:p-8">
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Search & Filters</h2>
-            <Button variant="outline" onClick={() => setShowSearchHelp(!showSearchHelp)}>
-              {showSearchHelp ? 'Hide Filters' : 'Show Filters'}
-            </Button>
-          </div>
-          {showSearchHelp && renderEnhancedFilters()}
+          <h1 className="text-3xl font-bold text-gray-900">Reporting Cockpit</h1>
+          <p className="text-gray-600 mt-2">Generate, view, and manage comprehensive reports across all data categories.</p>
         </div>
+        
+        <ComprehensiveDashboard />
 
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              variant={activeTab === tab.id ? 'default' : 'outline'}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2"
-            >
-              {tab.icon && <span className="text-lg">{tab.icon}</span>}
-              <span className="hidden md:inline">{tab.label}</span>
-              <span className="md:hidden">{tab.label.split(' ')[0]}</span>
-            </Button>
-          ))}
-        </div>
-
-        {/* Data Display Area */}
-        {loading && (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500 mr-2" />
-            <p className="text-lg text-gray-600">Loading data...</p>
+        <Card className="mt-6 p-4 md:p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-4 overflow-x-auto pb-2">
+              {reportTabs.map(tab => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? 'default' : 'outline'}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex-shrink-0"
+                >
+                  <tab.icon className="w-4 h-4 mr-2" />
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading}>
+                <RefreshCcw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+                Refresh Data
+              </Button>
+              <Button variant="outline" onClick={() => console.log('Generate Report Clicked')} disabled={loading}>
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Generate Report
+              </Button>
+            </div>
           </div>
-        )}
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong className="font-bold">Error!</strong>
-            <span className="block sm:inline"> {error}</span>
-            <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
-              <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
-            </span>
+          <div className="mt-6 border-t pt-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Data for {reportTabs.find(t => t.id === activeTab)?.label}</h2>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder={getSearchPlaceholder(activeTab)}
+                  value={filters.searchTerm}
+                  onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+                  className="w-64"
+                />
+                <Button onClick={handleSearch}><Search className="w-4 h-4" /></Button>
+                <Button variant="ghost" onClick={() => setShowSearchHelp(!showSearchHelp)}><HelpCircle className="w-4 h-4" /></Button>
+              </div>
+            </div>
+
+            {showSearchHelp && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+                <h3 className="font-semibold mb-2">Searchable Fields for {reportTabs.find(t => t.id === activeTab)?.label}:</h3>
+                <p>{getSearchableFields(activeTab).join(', ')}</p>
+              </div>
+            )}
+
+            {loading && <div className="text-center py-8">Loading data...</div>}
+            {error && <div className="text-center py-8 text-red-500">Error: {error}</div>}
+            {!loading && !error && (
+              <div className="mt-6">
+                {renderDataTypeContent()}
+              </div>
+            )}
           </div>
-        )}
+        </Card>
 
-        {!loading && !error && (
-          <div className="mt-6">
-            {renderDataTypeContent()}
-          </div>
-        )}
-
-        {/* Facsimile Modal */}
-        {showFacsimileModal && facsimileData && facsimileType && selectedEmployee && (
+        {showFacsimileModal && facsimileData && facsimileType && (
           <FacsimileDocument
-            isOpen={showFacsimileModal}
-            onClose={closeFacsimile}
+            templateKey={facsimileType}
             data={facsimileData}
-            type={facsimileType}
-            employee={selectedEmployee}
+            employee={selectedEmployee || undefined}
           />
         )}
       </div>
@@ -2063,12 +725,4 @@ const EnhancedReportingPage: React.FC = () => {
 };
 
 export default EnhancedReportingPage;
-
-// Helper for conditional class names
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
-// Lucide icons for use in the header
-import { RefreshCcw, Eye, Download, CheckCircle, Building2, User, Loader2 } from 'lucide-react';
 
