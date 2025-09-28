@@ -2065,8 +2065,8 @@ const EnhancedReportingPage: React.FC = () => {
 export default EnhancedReportingPage;
 
 // Helper for conditional class names
-function cn(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
+function cn(...classes: (string | boolean | undefined | null)[]) {
+  return classes.filter(Boolean).join(" ");
 }
 
 // Lucide icons for use in the header
