@@ -74,8 +74,13 @@ function LoginForm() {
           error: `Login failed: ${error.message}` 
         }))
       } else {
-        console.log('Login successful, redirecting...')
-        router.push('/work-requests')
+        console.log('Login successful, waiting for auth state to stabilize...')
+        // Wait a moment for auth state to stabilize before redirecting
+        setTimeout(() => {
+          console.log('Redirecting to work-requests...')
+          setState(prev => ({ ...prev, isLoading: false }))
+          router.push('/work-requests')
+        }, 1000)
       }
     } catch (err: any) {
       console.error('Login exception:', err)

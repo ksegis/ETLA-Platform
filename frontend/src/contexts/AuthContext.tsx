@@ -172,20 +172,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event: AuthChangeEvent, newSession: Session | null) => {
         console.log('🔄 AuthProvider: Auth state changed:', event)
         
-        if (newSession) {
-          setSession(newSession)
-          setUser(newSession.user)
-          await loadTenantUser(newSession.user.id)
-        } else {
-          console.log('⚠️ AuthProvider: User signed out')
-          setUser(null)
-          setSession(null)
-          setTenantUser(null)
+        try {
+          if (newSession) {
+            console.log('✅ AuthProvider: Setting new session and user')
+            setSession(newSession)
+            setUser(newSession.user)
+            
+            // Load tenant user with timeout protection
+            try {
+              await Promise.race([
+                loadTenantUser(newSession.user.id),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Tenant user load timeout')), 5000)
+                )
+              ])
+              console.log('✅ AuthProvider: Tenant user loaded successfully')
+            } catch (tenantError) {
+              console.warn('⚠️ AuthProvider: Failed to load tenant user:', tenantError)
+              // Continue with login even if tenant user fails to load
+              setTenantUser(null)
+            }
+          } else {
+            console.log('⚠️ AuthProvider: User signed out')
+            setUser(null)
+            setSession(null)
+            setTenantUser(null)
+          }
+        } catch (error) {
+          console.error('❌ AuthProvider: Error in auth state change:', error)
+        } finally {
+          // Always clear loading state
+          clearTimeout(initTimeout)
+          setLoading(false)
+          setIsStable(true)
+          updateServiceAuthContext()
+          console.log('✅ AuthProvider: Auth state change completed')
         }
-        
-        setLoading(false)
-        setIsStable(true)
-        updateServiceAuthContext()
       }
     )
 
@@ -196,14 +218,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    console.log('🔐 AuthProvider: Starting sign in process')
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+      
+      if (error) {
+        console.error('❌ AuthProvider: Sign in failed:', error)
+        // Ensure loading state is cleared on error
+        setLoading(false)
+        setIsStable(true)
+      } else {
+        console.log('✅ AuthProvider: Sign in successful, waiting for auth state change')
+        // Don't clear loading here - let the auth state change handler do it
+      }
+      
       return { error }
     } catch (error) {
       console.error('❌ AuthProvider: Sign in error:', error)
+      // Ensure loading state is cleared on exception
+      setLoading(false)
+      setIsStable(true)
       return { error }
     }
   }
