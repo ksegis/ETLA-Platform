@@ -400,10 +400,11 @@ const EnhancedReportingPage: React.FC = () => {
   const renderDataTypeContent = () => {
     switch (activeTab) {
       case 'employees':
+        const filteredData = filterDataBySearch(employeeData, filters.searchTerm);
         return (
           <TraditionalReportTable
             title="Employees"
-            data={employeeData}
+            data={filteredData}
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'employee_code', label: 'Employee Code' },
@@ -421,10 +422,11 @@ const EnhancedReportingPage: React.FC = () => {
           />
         );
       case 'pay-statements':
+        const filteredPayStatements = filterDataBySearch(payStatementData, filters.searchTerm);
         return (
           <TraditionalReportTable
             title="Pay Statements"
-            data={payStatementData}
+            data={filteredPayStatements}
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'pay_date', label: 'Pay Date' },
@@ -442,10 +444,11 @@ const EnhancedReportingPage: React.FC = () => {
           />
         );
       case 'timecards':
+        const filteredTimecards = filterDataBySearch(timecardData, filters.searchTerm);
         return (
           <TraditionalReportTable
             title="Timecards"
-            data={timecardData}
+            data={filteredTimecards}
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'work_date', label: 'Date' },
@@ -462,10 +465,11 @@ const EnhancedReportingPage: React.FC = () => {
           />
         );
       case 'tax-records':
+        const filteredTaxRecords = filterDataBySearch(taxRecordData, filters.searchTerm);
         return (
           <TraditionalReportTable
             title="Tax Records"
-            data={taxData}
+            data={filteredTaxRecords}
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'tax_year', label: 'Year' },
@@ -480,11 +484,12 @@ const EnhancedReportingPage: React.FC = () => {
             error={error}
           />
         );
-      case 'benefits-deductions':
+      case 'benefits':
+        const filteredBenefits = filterDataBySearch(benefitData, filters.searchTerm);
         return (
           <TraditionalReportTable
             title="Benefits & Deductions"
-            data={benefitData}
+            data={filteredBenefits}
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'deduction_type', label: 'Type' },
@@ -499,10 +504,11 @@ const EnhancedReportingPage: React.FC = () => {
           />
         );
       case 'jobs':
+        const filteredJobs = filterDataBySearch(jobData, filters.searchTerm);
         return (
           <TraditionalReportTable
-            title="Job Records"
-            data={jobData}
+            title="Jobs"
+            data={filteredJobs}
             columns={[
               { key: 'job_title', label: 'Job Title' },
               { key: 'job_code', label: 'Job Code' },
@@ -518,10 +524,11 @@ const EnhancedReportingPage: React.FC = () => {
           />
         );
       case 'compliance':
+        const filteredCompliance = filterDataBySearch(complianceData, filters.searchTerm);
         return (
           <TraditionalReportTable
             title="Compliance Records"
-            data={complianceData}
+            data={filteredCompliance}
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'compliance_type', label: 'Type' },
@@ -645,8 +652,47 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const handleSearch = () => {
-    // This would trigger a reload of data with filters applied
+    // Trigger a reload of data with filters applied
     loadTabData(activeTab);
+  };
+
+  // Filter data based on search term
+  const filterDataBySearch = (data: any[], searchTerm: string): any[] => {
+    if (!searchTerm.trim()) return data;
+    
+    const term = searchTerm.toLowerCase();
+    const searchableFields = getSearchableFields(activeTab);
+    
+    return data.filter(item => {
+      // Search in employee name (most common field)
+      if (item.employee_name && item.employee_name.toLowerCase().includes(term)) return true;
+      if (item.name && item.name.toLowerCase().includes(term)) return true;
+      
+      // Search in employee code
+      if (item.employee_code && item.employee_code.toLowerCase().includes(term)) return true;
+      if (item.code && item.code.toLowerCase().includes(term)) return true;
+      
+      // Search in position/title
+      if (item.position && item.position.toLowerCase().includes(term)) return true;
+      if (item.title && item.title.toLowerCase().includes(term)) return true;
+      
+      // Search in department
+      if (item.department && item.department.toLowerCase().includes(term)) return true;
+      
+      // Search in division
+      if (item.division && item.division.toLowerCase().includes(term)) return true;
+      
+      // Search in manager
+      if (item.manager && item.manager.toLowerCase().includes(term)) return true;
+      
+      // Search in check number (for pay statements)
+      if (item.check_number && item.check_number.toLowerCase().includes(term)) return true;
+      
+      // Search in any string field that might contain the term
+      return Object.values(item).some(value => 
+        typeof value === 'string' && value.toLowerCase().includes(term)
+      );
+    });
   };
 
   const clearFilters = () => {
@@ -813,8 +859,14 @@ const EnhancedReportingPage: React.FC = () => {
                   value={filters.searchTerm}
                   onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                   className="w-64"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <Button onClick={handleSearch}><Search className="w-4 h-4" /></Button>
+                <Button 
+                  onClick={handleSearch}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
                 <Button variant="ghost" onClick={() => setShowSearchHelp(!showSearchHelp)}><HelpCircle className="w-4 h-4" /></Button>
               </div>
             </div>

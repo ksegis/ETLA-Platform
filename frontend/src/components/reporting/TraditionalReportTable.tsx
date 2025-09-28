@@ -125,27 +125,13 @@ export default function TraditionalReportTable({
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mt-4 flex items-center space-x-4">
-          <div className="flex-1 max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search records..."
-                value={searchTerm}
-                onChange={(e: any) => onSearch?.(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+        {/* Filters only - search is handled by parent component */}
+        {filters && (
+          <div className="mt-4 flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            {filters}
           </div>
-          {filters && (
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
-              {filters}
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Table */}
