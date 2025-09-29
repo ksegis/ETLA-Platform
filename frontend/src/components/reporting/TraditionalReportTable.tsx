@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, Search, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Search, Filter, Eye, Printer } from 'lucide-react';
 
 interface Column {
   key: string;
@@ -23,6 +23,9 @@ interface TraditionalReportTableProps {
   viewMode?: 'list' | 'grid';
   loading?: boolean;
   error?: string | null;
+  onViewFacsimile?: (item: any) => void;
+  onPrintFacsimile?: (item: any) => void;
+  showActions?: boolean;
 }
 
 export default function TraditionalReportTable({
@@ -38,7 +41,10 @@ export default function TraditionalReportTable({
   onRowClick,
   viewMode,
   loading,
-  error
+  error,
+  onViewFacsimile,
+  onPrintFacsimile,
+  showActions = true
 }: TraditionalReportTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
@@ -157,16 +163,51 @@ export default function TraditionalReportTable({
                   </div>
                 </th>
               ))}
+              {showActions && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {paginatedData.map((row, index: any) => (
-              <tr key={index} className="hover:bg-gray-50 cursor-pointer" onClick={() => onRowClick?.(row)}>
+              <tr key={index} className="hover:bg-gray-50">
                 {columns.map((column: any) => (
-                  <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td 
+                    key={column.key} 
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                    onClick={() => onRowClick?.(row)}
+                  >
                     {column.render ? column.render(row) : (row[column.key as keyof typeof row] || '-')}
                   </td>
                 ))}
+                {showActions && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewFacsimile?.(row);
+                        }}
+                        className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                        title="View Facsimile"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPrintFacsimile?.(row);
+                        }}
+                        className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
+                        title="Print Facsimile"
+                      >
+                        <Printer className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

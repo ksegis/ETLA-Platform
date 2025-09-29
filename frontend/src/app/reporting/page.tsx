@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/Badge';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
 import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+import FacsimileModal from '@/components/reporting/FacsimileModal';
+import TimecardGridView from '@/components/reporting/TimecardGridView';
 import FacsimileDocument from '@/components/facsimile/FacsimileDocument';
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
@@ -294,6 +296,11 @@ const EnhancedReportingPage: React.FC = () => {
   const [facsimileType, setFacsimileType] = useState<'pay_statement' | 'timecard' | 'tax_w2' | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<FacsimileEmployee | null>(null);
   
+  // New FacsimileModal states
+  const [showNewFacsimileModal, setShowNewFacsimileModal] = useState<boolean>(false);
+  const [newFacsimileRecord, setNewFacsimileRecord] = useState<any>(null);
+  const [newFacsimileType, setNewFacsimileType] = useState<string>('');
+  
   // Enhanced view mode state - separate for each tab
   const [viewModes, setViewModes] = useState<Record<string, 'list' | 'grid'>>({
     employees: 'list',
@@ -397,6 +404,33 @@ const EnhancedReportingPage: React.FC = () => {
     setSelectedEmployee(null);
   };
 
+  // New facsimile modal handlers
+  const handleViewFacsimile = (record: any) => {
+    setNewFacsimileRecord(record);
+    setNewFacsimileType(activeTab === 'timecards' ? 'timecard' : 
+                       activeTab === 'pay-statements' ? 'invoice' : 
+                       activeTab === 'tax-records' ? 'tax' : 'expense');
+    setShowNewFacsimileModal(true);
+  };
+
+  const handlePrintFacsimile = (record: any) => {
+    setNewFacsimileRecord(record);
+    setNewFacsimileType(activeTab === 'timecards' ? 'timecard' : 
+                       activeTab === 'pay-statements' ? 'invoice' : 
+                       activeTab === 'tax-records' ? 'tax' : 'expense');
+    setShowNewFacsimileModal(true);
+    // Auto-trigger print after modal opens
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const closeNewFacsimile = () => {
+    setShowNewFacsimileModal(false);
+    setNewFacsimileRecord(null);
+    setNewFacsimileType('');
+  };
+
   const renderDataTypeContent = () => {
     switch (activeTab) {
       case 'employees':
@@ -416,6 +450,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'pay_type', label: 'Pay Type' },
             ]}
             onRowClick={(row) => setSelectedEmployee(row as FacsimileEmployee)}
+            onViewFacsimile={handleViewFacsimile}
+            onPrintFacsimile={handlePrintFacsimile}
             viewMode={getViewMode('employees')}
             loading={loading}
             error={error}
@@ -438,6 +474,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'check_status', label: 'Status' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimilePayStatement, 'pay_statement')}
+            onViewFacsimile={handleViewFacsimile}
+            onPrintFacsimile={handlePrintFacsimile}
             viewMode={getViewMode('pay-statements')}
             loading={loading}
             error={error}
@@ -445,6 +483,35 @@ const EnhancedReportingPage: React.FC = () => {
         );
       case 'timecards':
         const filteredTimecards = filterDataBySearch(timecardData, filters.searchTerm);
+        const currentViewMode = getViewMode('timecards');
+        
+        if (currentViewMode === 'grid') {
+          return (
+            <TimecardGridView
+              data={filteredTimecards.map(tc => ({
+                id: tc.id,
+                employee_id: tc.employee_id,
+                employee_name: tc.employee_name,
+                date: tc.work_date,
+                day_of_week: tc.day_of_week,
+                time_in: tc.clock_in,
+                time_out: tc.clock_out,
+                break_duration: tc.break_duration,
+                total_hours: tc.total_hours,
+                regular_hours: tc.regular_hours,
+                overtime_hours: tc.overtime_hours,
+                project_code: tc.job_code,
+                notes: tc.notes,
+                status: tc.approval_status as 'pending' | 'approved' | 'rejected'
+              }))}
+              onViewFacsimile={handleViewFacsimile}
+              onPrintFacsimile={handlePrintFacsimile}
+              loading={loading}
+              error={error}
+            />
+          );
+        }
+        
         return (
           <TraditionalReportTable
             title="Timecards"
@@ -459,7 +526,9 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'approval_status', label: 'Status' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimileTimecard, 'timecard')}
-            viewMode={getViewMode('timecards')}
+            onViewFacsimile={handleViewFacsimile}
+            onPrintFacsimile={handlePrintFacsimile}
+            viewMode={currentViewMode}
             loading={loading}
             error={error}
           />
@@ -479,6 +548,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'document_status', label: 'Status' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimileTaxRecord, 'tax_w2')}
+            onViewFacsimile={handleViewFacsimile}
+            onPrintFacsimile={handlePrintFacsimile}
             viewMode={getViewMode('tax-records')}
             loading={loading}
             error={error}
@@ -854,6 +925,26 @@ const EnhancedReportingPage: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Data for {reportTabs.find(t => t.id === activeTab)?.label}</h2>
               <div className="flex items-center gap-2">
+                {activeTab === 'timecards' && (
+                  <div className="flex items-center gap-1 mr-4">
+                    <Button
+                      variant={getViewMode('timecards') === 'list' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('timecards', 'list')}
+                    >
+                      <List className="w-4 h-4 mr-1" />
+                      List
+                    </Button>
+                    <Button
+                      variant={getViewMode('timecards') === 'grid' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('timecards', 'grid')}
+                    >
+                      <Grid className="w-4 h-4 mr-1" />
+                      Grid
+                    </Button>
+                  </div>
+                )}
                 <Input
                   placeholder={getSearchPlaceholder(activeTab)}
                   value={filters.searchTerm}
@@ -910,6 +1001,20 @@ const EnhancedReportingPage: React.FC = () => {
             templateKey={facsimileType}
             data={facsimileData}
             employee={selectedEmployee || undefined}
+          />
+        )}
+
+        {showNewFacsimileModal && newFacsimileRecord && (
+          <FacsimileModal
+            isOpen={showNewFacsimileModal}
+            onClose={closeNewFacsimile}
+            record={newFacsimileRecord}
+            recordType={newFacsimileType}
+            onPrint={() => window.print()}
+            onDownload={() => {
+              // Handle download logic here
+              console.log('Download facsimile');
+            }}
           />
         )}
       </div>
