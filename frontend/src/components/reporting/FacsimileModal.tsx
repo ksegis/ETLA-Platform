@@ -80,13 +80,13 @@ export default function FacsimileModal({
       case 'timecard':
         // Create sample timecard data for the week - in real implementation, this would come from the database
         const sampleTimecardData = [
-          { date: '9/7/2025', clockIn: '9:07am', clockOut: '5:20pm', regularHours: 8, otHours: 0.22, totalHours: 8.22 },
-          { date: '9/8/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
-          { date: '9/9/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
-          { date: '9/10/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
-          { date: '9/11/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
-          { date: '9/12/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
-          { date: '9/13/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 }
+          { date: '9/7/2025', clockIn: '9:07am', clockOut: '5:20pm', clockIn2: '', clockOut2: '', regularHours: 8, otHours: 0.22, totalHours: 8.22 },
+          { date: '9/8/2025', clockIn: '', clockOut: '', clockIn2: '', clockOut2: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/9/2025', clockIn: '', clockOut: '', clockIn2: '', clockOut2: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/10/2025', clockIn: '', clockOut: '', clockIn2: '', clockOut2: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/11/2025', clockIn: '', clockOut: '', clockIn2: '', clockOut2: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/12/2025', clockIn: '', clockOut: '', clockIn2: '', clockOut2: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/13/2025', clockIn: '', clockOut: '', clockIn2: '', clockOut2: '', regularHours: 0, otHours: 0, totalHours: 0 }
         ];
         
         const totalRegular = sampleTimecardData.reduce((sum, day) => sum + day.regularHours, 0);
@@ -114,33 +114,39 @@ export default function FacsimileModal({
                 <table className="w-full text-sm">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Work Date</th>
-                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Clock In</th>
-                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Clock Out</th>
-                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Regular Hours</th>
-                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">OT Hours</th>
-                      <th className="px-3 py-2 text-left font-medium">Total Hours</th>
+                      <th className="border-r border-gray-300 px-2 py-2 text-left font-medium">Work Date</th>
+                      <th className="border-r border-gray-300 px-2 py-2 text-left font-medium">Clock In</th>
+                      <th className="border-r border-gray-300 px-2 py-2 text-left font-medium">Clock Out</th>
+                      <th className="border-r border-gray-300 px-2 py-2 text-left font-medium">Clock In</th>
+                      <th className="border-r border-gray-300 px-2 py-2 text-left font-medium">Clock Out</th>
+                      <th className="border-r border-gray-300 px-2 py-2 text-left font-medium">Regular Hours</th>
+                      <th className="border-r border-gray-300 px-2 py-2 text-left font-medium">OT Hours</th>
+                      <th className="px-2 py-2 text-left font-medium">Total Hours</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sampleTimecardData.map((day, index) => (
                       <tr key={index} className="border-t border-gray-300">
-                        <td className="border-r border-gray-300 px-3 py-2">{day.date}</td>
-                        <td className="border-r border-gray-300 px-3 py-2">{day.clockIn}</td>
-                        <td className="border-r border-gray-300 px-3 py-2">{day.clockOut}</td>
-                        <td className="border-r border-gray-300 px-3 py-2 text-right">{day.regularHours || ''}</td>
-                        <td className="border-r border-gray-300 px-3 py-2 text-right">{day.otHours || ''}</td>
-                        <td className="px-3 py-2 text-right">{day.totalHours || ''}</td>
+                        <td className="border-r border-gray-300 px-2 py-2">{day.date}</td>
+                        <td className="border-r border-gray-300 px-2 py-2">{day.clockIn}</td>
+                        <td className="border-r border-gray-300 px-2 py-2">{day.clockOut}</td>
+                        <td className="border-r border-gray-300 px-2 py-2">{day.clockIn2 || ''}</td>
+                        <td className="border-r border-gray-300 px-2 py-2">{day.clockOut2 || ''}</td>
+                        <td className="border-r border-gray-300 px-2 py-2 text-right">{day.regularHours || ''}</td>
+                        <td className="border-r border-gray-300 px-2 py-2 text-right">{day.otHours || ''}</td>
+                        <td className="px-2 py-2 text-right">{day.totalHours || ''}</td>
                       </tr>
                     ))}
                     {/* Pay Period Totals Row */}
                     <tr className="border-t-2 border-gray-400 bg-gray-50 font-semibold">
-                      <td className="border-r border-gray-300 px-3 py-2">Pay Period Totals</td>
-                      <td className="border-r border-gray-300 px-3 py-2"></td>
-                      <td className="border-r border-gray-300 px-3 py-2"></td>
-                      <td className="border-r border-gray-300 px-3 py-2 text-right">{totalRegular}</td>
-                      <td className="border-r border-gray-300 px-3 py-2 text-right">{totalOT.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right">{grandTotal.toFixed(2)}</td>
+                      <td className="border-r border-gray-300 px-2 py-2">Pay Period Totals</td>
+                      <td className="border-r border-gray-300 px-2 py-2"></td>
+                      <td className="border-r border-gray-300 px-2 py-2"></td>
+                      <td className="border-r border-gray-300 px-2 py-2"></td>
+                      <td className="border-r border-gray-300 px-2 py-2"></td>
+                      <td className="border-r border-gray-300 px-2 py-2 text-right">{totalRegular}</td>
+                      <td className="border-r border-gray-300 px-2 py-2 text-right">{totalOT.toFixed(2)}</td>
+                      <td className="px-2 py-2 text-right">{grandTotal.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -280,7 +286,7 @@ export default function FacsimileModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 no-print">
           <div>
@@ -322,9 +328,6 @@ export default function FacsimileModal({
             <div className="header mb-6 pb-4 border-b-2 border-gray-900">
               <div className="company-name text-xl font-bold text-gray-900">
                 {record.sub_client_company || record.client_name || record.customer_name || 'Customer Company Name'}
-              </div>
-              <div className="sub-client text-sm text-gray-600 mt-1">
-                Sub-Client Company Name
               </div>
               <div className="text-sm text-gray-500 mt-2">
                 Generated on: {new Date().toLocaleDateString()}

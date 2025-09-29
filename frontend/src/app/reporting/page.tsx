@@ -525,7 +525,7 @@ const EnhancedReportingPage: React.FC = () => {
             error={error}
           />
         );
-      case 'benefits':
+      case 'benefits-deductions':
         const filteredBenefits = filterDataBySearch(benefitData, filters.searchTerm);
         return (
           <TraditionalReportTable
@@ -539,6 +539,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'effective_date', label: 'Effective Date' },
               { key: 'employer_contribution', label: 'Employer Contrib.', render: (item) => `$${(item.employer_contribution || 0).toFixed(2)}` },
             ]}
+            onViewFacsimile={handleViewFacsimile}
+            onPrintFacsimile={handlePrintFacsimile}
             viewMode={getViewMode('benefits-deductions')}
             loading={loading}
             error={error}
@@ -559,6 +561,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'end_date', label: 'End Date' },
               { key: 'status', label: 'Status' },
             ]}
+            onViewFacsimile={handleViewFacsimile}
+            onPrintFacsimile={handlePrintFacsimile}
             viewMode={getViewMode('jobs')}
             loading={loading}
             error={error}
@@ -577,6 +581,8 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'status', label: 'Status' },
               { key: 'due_date', label: 'Due Date' },
             ]}
+            onViewFacsimile={handleViewFacsimile}
+            onPrintFacsimile={handlePrintFacsimile}
             viewMode={getViewMode('compliance')}
             loading={loading}
             error={error}
