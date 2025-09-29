@@ -720,8 +720,16 @@ export default function FacsimileModal({
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold">TAX DOCUMENT (W-2)</h3>
-                    <p className="text-purple-100 text-sm">Annual Wage & Tax Statement</p>
+                    <h3 className="text-xl font-bold">TAX DOCUMENT ({record.form_type || 'W-2'})</h3>
+                    <p className="text-purple-100 text-sm">{
+                      record.form_type === 'W-2' ? 'Annual Wage & Tax Statement' :
+                      record.form_type === '1099-NEC' ? 'Nonemployee Compensation' :
+                      record.form_type === '1099-MISC' ? 'Miscellaneous Income' :
+                      record.form_type === 'W-4' ? 'Employee Withholding Certificate' :
+                      record.form_type === '1099-INT' ? 'Interest Income' :
+                      record.form_type === '1099-DIV' ? 'Dividend Income' :
+                      'Tax Document'
+                    }</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -760,32 +768,123 @@ export default function FacsimileModal({
                 <h4 className="font-semibold text-gray-900 text-lg">Tax Information</h4>
               </div>
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Wages, Tips & Compensation</label>
-                    <div className="text-2xl font-bold text-green-600 mt-1">${record.wages_tips_compensation || '0.00'}</div>
+                {/* W-2 Form Fields */}
+                {(record.form_type === 'W-2' || !record.form_type) && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Wages, Tips & Compensation</label>
+                      <div className="text-2xl font-bold text-green-600 mt-1">${record.wages_tips_compensation || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Wages</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.social_security_wages || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Tax Withheld</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.social_security_tax_withheld || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Wages</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.medicare_wages || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Tax Withheld</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.medicare_tax_withheld || '0.00'}</div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
-                    <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
+                )}
+
+                {/* 1099-NEC Form Fields */}
+                {record.form_type === '1099-NEC' && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Nonemployee Compensation</label>
+                      <div className="text-2xl font-bold text-green-600 mt-1">${record.nonemployee_compensation || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.state_income_tax || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State/Payer's State No.</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Wages</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">${record.social_security_wages || '0.00'}</div>
+                )}
+
+                {/* 1099-MISC Form Fields */}
+                {record.form_type === '1099-MISC' && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Miscellaneous Income</label>
+                      <div className="text-2xl font-bold text-green-600 mt-1">${record.misc_income || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.state_income_tax || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State/Payer's State No.</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Tax Withheld</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">${record.social_security_tax_withheld || '0.00'}</div>
+                )}
+
+                {/* W-4 Form Fields */}
+                {record.form_type === 'W-4' && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Filing Status</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.filing_status || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Number of Dependents</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.dependents || '0'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tax Jurisdiction</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.tax_jurisdiction || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Code</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Wages</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">${record.medicare_wages || '0.00'}</div>
+                )}
+
+                {/* Other Form Types - Generic Display */}
+                {record.form_type && !['W-2', '1099-NEC', '1099-MISC', 'W-4'].includes(record.form_type) && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Form Type</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.form_type}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tax Year</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.tax_year || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.state_income_tax || '0.00'}</div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Tax Withheld</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">${record.medicare_tax_withheld || '0.00'}</div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
