@@ -183,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await Promise.race([
                 loadTenantUser(newSession.user.id),
                 new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Tenant user load timeout')), 5000)
+                  setTimeout(() => reject(new Error('Tenant user load timeout')), 15000)
                 )
               ])
               console.log('✅ AuthProvider: Tenant user loaded successfully')
