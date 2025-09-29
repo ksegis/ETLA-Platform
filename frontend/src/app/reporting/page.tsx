@@ -406,17 +406,31 @@ const EnhancedReportingPage: React.FC = () => {
   // New facsimile modal handlers
   const handleViewFacsimile = (record: any) => {
     setNewFacsimileRecord(record);
-    setNewFacsimileType(activeTab === 'timecards' ? 'timecard' : 
-                       activeTab === 'pay-statements' ? 'invoice' : 
-                       activeTab === 'tax-records' ? 'tax' : 'expense');
+    setNewFacsimileType(
+      activeTab === 'timecards' ? 'timecard' : 
+      activeTab === 'pay-statements' ? 'pay_statement' : 
+      activeTab === 'tax-records' ? 'tax_w2' : 
+      activeTab === 'jobs' ? 'job' :
+      activeTab === 'benefits-deductions' ? 'benefit' :
+      activeTab === 'compliance' ? 'compliance' :
+      activeTab === 'employees' ? 'employee' :
+      'expense'
+    );
     setShowNewFacsimileModal(true);
   };
 
   const handlePrintFacsimile = (record: any) => {
     setNewFacsimileRecord(record);
-    setNewFacsimileType(activeTab === 'timecards' ? 'timecard' : 
-                       activeTab === 'pay-statements' ? 'invoice' : 
-                       activeTab === 'tax-records' ? 'tax' : 'expense');
+    setNewFacsimileType(
+      activeTab === 'timecards' ? 'timecard' : 
+      activeTab === 'pay-statements' ? 'pay_statement' : 
+      activeTab === 'tax-records' ? 'tax_w2' : 
+      activeTab === 'jobs' ? 'job' :
+      activeTab === 'benefits-deductions' ? 'benefit' :
+      activeTab === 'compliance' ? 'compliance' :
+      activeTab === 'employees' ? 'employee' :
+      'expense'
+    );
     setShowNewFacsimileModal(true);
     // Auto-trigger print after modal opens
     setTimeout(() => {
