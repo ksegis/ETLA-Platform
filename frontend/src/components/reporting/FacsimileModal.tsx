@@ -78,9 +78,25 @@ export default function FacsimileModal({
   const renderRecordDetails = () => {
     switch (recordType.toLowerCase()) {
       case 'timecard':
+        // Create sample timecard data for the week - in real implementation, this would come from the database
+        const sampleTimecardData = [
+          { date: '9/7/2025', clockIn: '9:07am', clockOut: '5:20pm', regularHours: 8, otHours: 0.22, totalHours: 8.22 },
+          { date: '9/8/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/9/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/10/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/11/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/12/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 },
+          { date: '9/13/2025', clockIn: '', clockOut: '', regularHours: 0, otHours: 0, totalHours: 0 }
+        ];
+        
+        const totalRegular = sampleTimecardData.reduce((sum, day) => sum + day.regularHours, 0);
+        const totalOT = sampleTimecardData.reduce((sum, day) => sum + day.otHours, 0);
+        const grandTotal = totalRegular + totalOT;
+        
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-6">
+            {/* Employee Info */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <span className="font-semibold text-gray-700">Employee:</span>
                 <div className="text-gray-900">{record.employee_name || 'N/A'}</div>
@@ -89,39 +105,49 @@ export default function FacsimileModal({
                 <span className="font-semibold text-gray-700">Employee ID:</span>
                 <div className="text-gray-900">{record.employee_id || 'N/A'}</div>
               </div>
-              <div>
-                <span className="font-semibold text-gray-700">Period:</span>
-                <div className="text-gray-900">{record.period_start} - {record.period_end}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Total Hours:</span>
-                <div className="text-gray-900">{record.total_hours || 0}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Regular Hours:</span>
-                <div className="text-gray-900">{record.regular_hours || 0}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Overtime Hours:</span>
-                <div className="text-gray-900">{record.overtime_hours || 0}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Status:</span>
-                <div className="text-gray-900">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    record.status === 'approved' ? 'bg-green-100 text-green-800' :
-                    record.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {record.status || 'Unknown'}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Submitted Date:</span>
-                <div className="text-gray-900">{record.submitted_date || 'N/A'}</div>
+            </div>
+
+            {/* Time Summary Table */}
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Time Summary</h4>
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Work Date</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Clock In</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Clock Out</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">Regular Hours</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left font-medium">OT Hours</th>
+                      <th className="px-3 py-2 text-left font-medium">Total Hours</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sampleTimecardData.map((day, index) => (
+                      <tr key={index} className="border-t border-gray-300">
+                        <td className="border-r border-gray-300 px-3 py-2">{day.date}</td>
+                        <td className="border-r border-gray-300 px-3 py-2">{day.clockIn}</td>
+                        <td className="border-r border-gray-300 px-3 py-2">{day.clockOut}</td>
+                        <td className="border-r border-gray-300 px-3 py-2 text-right">{day.regularHours || ''}</td>
+                        <td className="border-r border-gray-300 px-3 py-2 text-right">{day.otHours || ''}</td>
+                        <td className="px-3 py-2 text-right">{day.totalHours || ''}</td>
+                      </tr>
+                    ))}
+                    {/* Pay Period Totals Row */}
+                    <tr className="border-t-2 border-gray-400 bg-gray-50 font-semibold">
+                      <td className="border-r border-gray-300 px-3 py-2">Pay Period Totals</td>
+                      <td className="border-r border-gray-300 px-3 py-2"></td>
+                      <td className="border-r border-gray-300 px-3 py-2"></td>
+                      <td className="border-r border-gray-300 px-3 py-2 text-right">{totalRegular}</td>
+                      <td className="border-r border-gray-300 px-3 py-2 text-right">{totalOT.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right">{grandTotal.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
+
+            {/* Additional Info */}
             {record.notes && (
               <div>
                 <span className="font-semibold text-gray-700">Notes:</span>

@@ -10,7 +10,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
 import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
 import FacsimileModal from '@/components/reporting/FacsimileModal';
-import TimecardGridView from '@/components/reporting/TimecardGridView';
 import FacsimileDocument from '@/components/facsimile/FacsimileDocument';
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
@@ -483,35 +482,6 @@ const EnhancedReportingPage: React.FC = () => {
         );
       case 'timecards':
         const filteredTimecards = filterDataBySearch(timecardData, filters.searchTerm);
-        const currentViewMode = getViewMode('timecards');
-        
-        if (currentViewMode === 'grid') {
-          return (
-            <TimecardGridView
-              data={filteredTimecards.map(tc => ({
-                id: tc.id,
-                employee_id: tc.employee_id,
-                employee_name: tc.employee_name,
-                date: tc.work_date,
-                day_of_week: tc.day_of_week,
-                time_in: tc.clock_in,
-                time_out: tc.clock_out,
-                break_duration: tc.break_duration,
-                total_hours: tc.total_hours,
-                regular_hours: tc.regular_hours,
-                overtime_hours: tc.overtime_hours,
-                project_code: tc.job_code,
-                notes: tc.notes,
-                status: tc.approval_status as 'pending' | 'approved' | 'rejected'
-              }))}
-              onViewFacsimile={handleViewFacsimile}
-              onPrintFacsimile={handlePrintFacsimile}
-              loading={loading}
-              error={error}
-            />
-          );
-        }
-        
         return (
           <TraditionalReportTable
             title="Timecards"
@@ -528,7 +498,7 @@ const EnhancedReportingPage: React.FC = () => {
             onRowClick={(row) => openFacsimile(row as FacsimileTimecard, 'timecard')}
             onViewFacsimile={handleViewFacsimile}
             onPrintFacsimile={handlePrintFacsimile}
-            viewMode={currentViewMode}
+            viewMode="list"
             loading={loading}
             error={error}
           />
@@ -925,26 +895,6 @@ const EnhancedReportingPage: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Data for {reportTabs.find(t => t.id === activeTab)?.label}</h2>
               <div className="flex items-center gap-2">
-                {activeTab === 'timecards' && (
-                  <div className="flex items-center gap-1 mr-4">
-                    <Button
-                      variant={getViewMode('timecards') === 'list' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setViewMode('timecards', 'list')}
-                    >
-                      <List className="w-4 h-4 mr-1" />
-                      List
-                    </Button>
-                    <Button
-                      variant={getViewMode('timecards') === 'grid' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setViewMode('timecards', 'grid')}
-                    >
-                      <Grid className="w-4 h-4 mr-1" />
-                      Grid
-                    </Button>
-                  </div>
-                )}
                 <Input
                   placeholder={getSearchPlaceholder(activeTab)}
                   value={filters.searchTerm}
