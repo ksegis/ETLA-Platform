@@ -2,13 +2,13 @@
 
 import React from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import TimecardDailyReport from '@/components/timecard/TimecardDailyReport'
+import TimecardRecalculationTool from '@/components/admin/TimecardRecalculationTool'
 
-export default function TimecardsPage() {
+export default function TimecardUtilitiesPage() {
   return (
     <DashboardLayout>
       <div className="p-6">
-        <TimecardDailyReport />
+        <TimecardRecalculationTool />
       </div>
     </DashboardLayout>
   )
