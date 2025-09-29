@@ -26,7 +26,6 @@ export default function FacsimileModal({
   };
 
   const handleDownload = () => {
-    // Create a printable version of the facsimile
     const printContent = document.getElementById('facsimile-content');
     if (printContent) {
       const printWindow = window.open('', '_blank');
@@ -39,7 +38,6 @@ export default function FacsimileModal({
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 .header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
                 .company-name { font-size: 18px; font-weight: bold; }
-                .sub-client { font-size: 14px; color: #666; margin-top: 5px; }
                 .record-details { margin: 20px 0; }
                 .field-group { margin: 15px 0; }
                 .field-label { font-weight: bold; display: inline-block; width: 150px; }
@@ -54,11 +52,9 @@ export default function FacsimileModal({
             <body>
               <div class="header">
                 <div class="company-name">${record.sub_client_company || record.client_name || record.customer_name || 'Customer Company Name'}</div>
-                <div class="sub-client">Sub-Client Company Name</div>
                 <div style="font-size: 12px; color: #999; margin-top: 10px;">Generated on: ${new Date().toLocaleDateString()}</div>
               </div>
               <div class="record-details">
-                <h3>${recordType} Details</h3>
                 ${printContent.querySelector('.record-details')?.innerHTML || ''}
               </div>
               <div class="footer">
@@ -240,7 +236,7 @@ export default function FacsimileModal({
                 </svg>
                 <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
@@ -248,6 +244,10 @@ export default function FacsimileModal({
                 <div>
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Client</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.client_name || 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -263,10 +263,6 @@ export default function FacsimileModal({
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                 <div className="grid grid-cols-3 gap-6">
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Client</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.client_name || 'N/A'}</div>
-                  </div>
-                  <div>
                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Invoice Date</label>
                     <div className="text-lg font-semibold text-gray-900 mt-1">{record.invoice_date || 'N/A'}</div>
                   </div>
@@ -275,36 +271,334 @@ export default function FacsimileModal({
                     <div className="text-lg font-semibold text-gray-900 mt-1">{record.due_date || 'N/A'}</div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Amount</label>
-                    <div className="text-2xl font-bold text-green-600 mt-1">${record.amount || '0.00'}</div>
-                  </div>
-                  <div>
                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</label>
-                    <div className="mt-1">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        record.status === 'paid' ? 'bg-green-100 text-green-800' :
-                        record.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${record.status === 'Paid' ? 'bg-green-100 text-green-800' : record.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
                         {record.status || 'Unknown'}
                       </span>
                     </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Amount</label>
+                    <div className="text-2xl font-bold text-green-600 mt-1">${(record.amount || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Balance Due</label>
+                    <div className="text-2xl font-bold text-red-600 mt-1">${(record.balance_due || 0).toFixed(2)}</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Description */}
-            {record.description && (
+            {/* Line Items */}
+            {record.line_items && record.line_items.length > 0 && (
+              <div className="mx-6 mb-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 4a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2H5zm0 10h10V6H5v8zm-1 1a1 1 0 100 2h12a1 1 0 100-2H4z" clipRule="evenodd" />
+                  </svg>
+                  <h4 className="font-semibold text-gray-900 text-lg">Line Items</h4>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                      <tr>
+                        <th className="border-r border-gray-200 px-4 py-3 text-left font-semibold text-gray-700">Description</th>
+                        <th className="border-r border-gray-200 px-4 py-3 text-center font-semibold text-gray-700">Quantity</th>
+                        <th className="border-r border-gray-200 px-4 py-3 text-center font-semibold text-gray-700">Unit Price</th>
+                        <th className="px-4 py-3 text-right font-semibold text-gray-700">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {record.line_items.map((item: any, index: number) => (
+                        <tr key={index} className={`border-t border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                          <td className="border-r border-gray-200 px-4 py-3 font-medium">{item.description}</td>
+                          <td className="border-r border-gray-200 px-4 py-3 text-center">{item.quantity}</td>
+                          <td className="border-r border-gray-200 px-4 py-3 text-center">${(item.unit_price || 0).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-bold">${(item.total || 0).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'pay_statement':
+        return (
+          <div className="bg-white">
+            {/* Professional Header Section */}
+            <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v2H4v-2zm0 4h12v2H4v-2z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">PAY STATEMENT</h3>
+                    <p className="text-indigo-100 text-sm">Employee Payroll Statement</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-indigo-100">Check #</div>
+                  <div className="font-mono text-lg">{record.check_number || 'CHK001'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Employee Information Card */}
+            <div className="bg-gray-50 border-l-4 border-indigo-500 p-6 m-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
+              </div>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Address</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_address || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pay Period Information */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Pay Period Information</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Pay Date</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.pay_date || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Period Start</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.period_start || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Period End</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.period_end || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Earnings & Deductions */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 10h10V6H4v8zm-1 1a1 1 0 100 2h12a1 1 0 100-2H3z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Earnings & Deductions</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-2">Earnings</h5>
+                    {record.earnings && Object.entries(record.earnings).map(([key, value]: [string, any]) => (
+                      <div key={key} className="flex justify-between py-1">
+                        <span className="text-gray-600">{key.replace(/_/g, ' ')}:</span>
+                        <span className="font-medium">${(value || 0).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between py-1 mt-2 border-t border-gray-200 pt-2">
+                      <span className="font-bold text-gray-800">Gross Pay:</span>
+                      <span className="font-bold text-green-600">${(record.gross_pay || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-2">Deductions</h5>
+                    {record.deductions && Object.entries(record.deductions).map(([key, value]: [string, any]) => (
+                      <div key={key} className="flex justify-between py-1">
+                        <span className="text-gray-600">{key.replace(/_/g, ' ')}:</span>
+                        <span className="font-medium">${(value || 0).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between py-1 mt-2 border-t border-gray-200 pt-2">
+                      <span className="font-bold text-gray-800">Total Deductions:</span>
+                      <span className="font-bold text-red-600">-${(record.total_deductions || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between py-2 mt-4 border-t-2 border-indigo-300 pt-4">
+                  <span className="text-xl font-bold text-gray-900">Net Pay:</span>
+                  <span className="text-2xl font-bold text-indigo-600">${(record.net_pay || 0).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Year-to-Date Summary */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Year-to-Date Summary</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Gross Pay YTD</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.gross_pay_ytd || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Tax YTD</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.federal_tax_ytd || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax YTD</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.state_tax_ytd || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security YTD</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.social_security_ytd || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare YTD</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.medicare_ytd || 0).toFixed(2)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'job':
+        return (
+          <div className="bg-white">
+            {/* Professional Header Section */}
+            <div className="bg-gradient-to-r from-teal-600 to-teal-800 text-white p-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">JOB CATALOG</h3>
+                    <p className="text-teal-100 text-sm">Position Details & Compensation</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-teal-100">Job ID</div>
+                  <div className="font-mono text-lg">{record.id || 'JOB-001'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Employee Information Card */}
+            <div className="bg-gray-50 border-l-4 border-teal-500 p-6 m-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
+              </div>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Hire Date</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.hire_date || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Position Details */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Position Details</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Job Title</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.job_title || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Department</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.department || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Location</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.location || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">FLSA Status</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.flsa_status || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Reports To</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.reports_to || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Compensation Information */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 10h10V6H4v8zm-1 1a1 1 0 100 2h12a1 1 0 100-2H4z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Compensation Information</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Salary</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.salary || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Pay Rate</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.pay_rate || 0).toFixed(2)} / {record.pay_frequency || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Bonus Eligibility</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.bonus_eligibility ? 'Yes' : 'No'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Job Description */}
+            {record.job_description && (
               <div className="mx-6 mb-6">
                 <div className="flex items-center space-x-2 mb-3">
-                  <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                  <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6zm-1 1a1 1 0 100 2h12a1 1 0 100-2H3z" clipRule="evenodd" />
                   </svg>
-                  <h4 className="font-semibold text-gray-900">Description</h4>
+                  <h4 className="font-semibold text-gray-900">Job Description</h4>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="text-gray-900">{record.description}</div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="text-gray-900">{record.job_description}</div>
                 </div>
               </div>
             )}
@@ -320,7 +614,7 @@ export default function FacsimileModal({
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v2H4v-2zm0 4h12v2H4v-2z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
@@ -343,7 +637,7 @@ export default function FacsimileModal({
                 </svg>
                 <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
@@ -351,6 +645,10 @@ export default function FacsimileModal({
                 <div>
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Department</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.department || 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -358,7 +656,7 @@ export default function FacsimileModal({
             {/* Expense Details */}
             <div className="mx-6 mb-6">
               <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
                 <h4 className="font-semibold text-gray-900 text-lg">Expense Details</h4>
@@ -366,341 +664,48 @@ export default function FacsimileModal({
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                 <div className="grid grid-cols-3 gap-6">
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Date</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.date || 'N/A'}</div>
-                  </div>
-                  <div>
                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Category</label>
                     <div className="text-lg font-semibold text-gray-900 mt-1">{record.category || 'N/A'}</div>
                   </div>
                   <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Date</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.date || 'N/A'}</div>
+                  </div>
+                  <div>
                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Amount</label>
-                    <div className="text-2xl font-bold text-orange-600 mt-1">${record.amount || '0.00'}</div>
+                    <div className="text-2xl font-bold text-green-600 mt-1">${(record.amount || 0).toFixed(2)}</div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</label>
-                    <div className="mt-1">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        record.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        record.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${record.status === 'Approved' ? 'bg-green-100 text-green-800' : record.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
                         {record.status || 'Unknown'}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Submitted</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.submitted_date || 'N/A'}</div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Submitted By</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.submitted_by || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Submission Date</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.submission_date || 'N/A'}</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Notes */}
-            {record.notes && (
+            {/* Description */}
+            {record.description && (
               <div className="mx-6 mb-6">
                 <div className="flex items-center space-x-2 mb-3">
-                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                  <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6zm-1 1a1 1 0 100 2h12a1 1 0 100-2H3z" clipRule="evenodd" />
                   </svg>
-                  <h4 className="font-semibold text-gray-900">Notes & Comments</h4>
+                  <h4 className="font-semibold text-gray-900">Description</h4>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="text-gray-900">{record.notes}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'pay_statement':
-        return (
-          <div className="bg-white">
-            {/* Professional Header Section */}
-            <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-6 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold">PAY STATEMENT</h3>
-                    <p className="text-indigo-100 text-sm">Employee Payroll Statement</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-indigo-100">Check #</div>
-                  <div className="font-mono text-lg">{record.check_number || 'CHK-001'}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Employee Information Card */}
-            <div className="bg-gray-50 border-l-4 border-indigo-500 p-6 m-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-                <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
-                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
-                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Pay Period Information */}
-            <div className="mx-6 mb-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-                <h4 className="font-semibold text-gray-900 text-lg">Pay Period Information</h4>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                <div className="grid grid-cols-3 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Pay Date</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.pay_date || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Period Start</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.pay_period_start || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Period End</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.pay_period_end || 'N/A'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Earnings & Deductions */}
-            <div className="mx-6 mb-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
-                <h4 className="font-semibold text-gray-900 text-lg">Earnings & Deductions</h4>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                <div className="grid grid-cols-2 gap-8">
-                  <div>
-                    <h5 className="font-semibold text-green-700 mb-3">Earnings</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Gross Pay:</span>
-                        <span className="font-semibold text-green-600">${record.gross_pay || '0.00'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Regular Hours:</span>
-                        <span className="font-medium">{record.regular_hours || '0'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Overtime Hours:</span>
-                        <span className="font-medium">{record.overtime_hours || '0'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h5 className="font-semibold text-red-700 mb-3">Deductions</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Federal Tax:</span>
-                        <span className="font-medium text-red-600">${record.federal_tax || '0.00'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">State Tax:</span>
-                        <span className="font-medium text-red-600">${record.state_tax || '0.00'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Social Security:</span>
-                        <span className="font-medium text-red-600">${record.social_security || '0.00'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Medicare:</span>
-                        <span className="font-medium text-red-600">${record.medicare || '0.00'}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="border-t border-gray-200 mt-6 pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Net Pay:</span>
-                    <span className="text-2xl font-bold text-indigo-600">${record.net_pay || '0.00'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Year-to-Date Summary */}
-            <div className="mx-6 mb-6">
-              <div className="flex items-center space-x-2 mb-3">
-                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
-                <h4 className="font-semibold text-gray-900">Year-to-Date Summary</h4>
-              </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <div className="grid grid-cols-4 gap-4 text-center">
-                  <div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">YTD Gross</div>
-                    <div className="text-lg font-semibold text-gray-900">${record.ytd_gross || '0.00'}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">YTD Federal</div>
-                    <div className="text-lg font-semibold text-gray-900">${record.ytd_federal || '0.00'}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">YTD Social Security</div>
-                    <div className="text-lg font-semibold text-gray-900">${record.ytd_social_security || '0.00'}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">YTD Medicare</div>
-                    <div className="text-lg font-semibold text-gray-900">${record.ytd_medicare || '0.00'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'job':
-        return (
-          <div className="bg-white">
-            {/* Professional Header Section */}
-            <div className="bg-gradient-to-r from-teal-600 to-teal-800 text-white p-6 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold">JOB CATALOG</h3>
-                    <p className="text-teal-100 text-sm">Position & Role Information</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-teal-100">Job ID</div>
-                  <div className="font-mono text-lg">{record.job_id || record.id || 'JOB-001'}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Employee Information Card */}
-            <div className="bg-gray-50 border-l-4 border-teal-500 p-6 m-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-                <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
-                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
-                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Job Details */}
-            <div className="mx-6 mb-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                </svg>
-                <h4 className="font-semibold text-gray-900 text-lg">Position Details</h4>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Job Title</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.job_title || record.title || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Department</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.department || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Division</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.division || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Location</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.location || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Pay Type</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.pay_type || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">FLSA Status</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.flsa_status || 'N/A'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Compensation */}
-            <div className="mx-6 mb-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
-                </svg>
-                <h4 className="font-semibold text-gray-900 text-lg">Compensation Information</h4>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                <div className="grid grid-cols-3 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Salary/Rate</label>
-                    <div className="text-2xl font-bold text-green-600 mt-1">${record.salary || record.hourly_rate || '0.00'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</label>
-                    <div className="mt-1">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        record.status === 'active' ? 'bg-green-100 text-green-800' :
-                        record.status === 'inactive' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {record.status || 'Unknown'}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Hire Date</label>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.hire_date || 'N/A'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Job Description */}
-            {record.job_description && (
-              <div className="mx-6 mb-6">
-                <div className="flex items-center space-x-2 mb-3">
-                  <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                  </svg>
-                  <h4 className="font-semibold text-gray-900">Job Description</h4>
-                </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="text-gray-900">{record.job_description}</div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="text-gray-900">{record.description}</div>
                 </div>
               </div>
             )}
@@ -708,6 +713,25 @@ export default function FacsimileModal({
         );
 
       case 'tax_w2':
+      case 'tax_1099_nec':
+      case 'tax_1099_misc':
+      case 'tax_w4':
+      case 'tax_1099_int':
+      case 'tax_1099_div':
+      case 'tax_other':
+        const taxFormType = recordType.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').replace('Tax', 'TAX DOCUMENT');
+        const taxFormDescription = (() => {
+          switch (recordType) {
+            case 'tax_w2': return 'Annual Wage & Tax Statement';
+            case 'tax_1099_nec': return 'Nonemployee Compensation';
+            case 'tax_1099_misc': return 'Miscellaneous Income';
+            case 'tax_w4': return 'Employee Withholding Certificate';
+            case 'tax_1099_int': return 'Interest Income';
+            case 'tax_1099_div': return 'Dividend Income';
+            default: return 'Tax Document Details';
+          }
+        })();
+
         return (
           <div className="bg-white">
             {/* Professional Header Section */}
@@ -716,25 +740,17 @@ export default function FacsimileModal({
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v2H4v-2zm0 4h12v2H4v-2z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold">TAX DOCUMENT ({record.form_type || 'W-2'})</h3>
-                    <p className="text-purple-100 text-sm">{
-                      record.form_type === 'W-2' ? 'Annual Wage & Tax Statement' :
-                      record.form_type === '1099-NEC' ? 'Nonemployee Compensation' :
-                      record.form_type === '1099-MISC' ? 'Miscellaneous Income' :
-                      record.form_type === 'W-4' ? 'Employee Withholding Certificate' :
-                      record.form_type === '1099-INT' ? 'Interest Income' :
-                      record.form_type === '1099-DIV' ? 'Dividend Income' :
-                      'Tax Document'
-                    }</p>
+                    <h3 className="text-xl font-bold">{taxFormType}</h3>
+                    <p className="text-purple-100 text-sm">{taxFormDescription}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-purple-100">Tax Year</div>
-                  <div className="font-mono text-lg">{record.tax_year || '2025'}</div>
+                  <div className="font-mono text-lg">{record.tax_year || 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -747,7 +763,7 @@ export default function FacsimileModal({
                 </svg>
                 <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
@@ -756,163 +772,461 @@ export default function FacsimileModal({
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Address</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_address || 'N/A'}</div>
+                </div>
               </div>
             </div>
 
             {/* Tax Information */}
             <div className="mx-6 mb-6">
               <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
                 <h4 className="font-semibold text-gray-900 text-lg">Tax Information</h4>
               </div>
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                {/* W-2 Form Fields */}
-                {(record.form_type === 'W-2' || !record.form_type) && (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Wages, Tips & Compensation</label>
-                      <div className="text-2xl font-bold text-green-600 mt-1">${record.wages_tips_compensation || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
-                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Wages</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.social_security_wages || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Tax Withheld</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.social_security_tax_withheld || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Wages</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.medicare_wages || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Tax Withheld</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.medicare_tax_withheld || '0.00'}</div>
-                    </div>
-                  </div>
-                )}
+                <div className="grid grid-cols-3 gap-6">
+                  {recordType === 'tax_w2' && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Wages, Tips, Other Comp.</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">${(record.wages_tips_other_comp || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Wages</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">${(record.social_security_wages || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Social Security Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.social_security_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Wages and Tips</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">${(record.medicare_wages_tips || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Medicare Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.medicare_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                    </>
+                  )}
+                  {recordType === 'tax_1099_nec' && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Nonemployee Compensation</label>
+                        <div className="text-lg font-semibold text-green-600 mt-1">${(record.nonemployee_compensation || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.state_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State/Payer's State No.</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_payers_state_no || 'N/A'}</div>
+                      </div>
+                    </>
+                  )}
+                  {recordType === 'tax_1099_misc' && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Miscellaneous Income</label>
+                        <div className="text-lg font-semibold text-green-600 mt-1">${(record.miscellaneous_income || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.state_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                    </>
+                  )}
+                  {recordType === 'tax_w4' && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Filing Status</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{record.filing_status || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Number of Dependents</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{record.dependents || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tax Jurisdiction</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{record.tax_jurisdiction || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Code</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
+                      </div>
+                    </>
+                  )}
+                  {(recordType === 'tax_1099_int' || recordType === 'tax_1099_div' || recordType === 'tax_other') && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Form Type</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{taxFormType.replace('TAX DOCUMENT ', '') || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tax Year</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{record.tax_year || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
+                        <div className="text-lg font-semibold text-red-600 mt-1">${(record.state_tax_withheld || 0).toFixed(2)}</div>
+                      </div>
+                      {record.interest_income && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Interest Income</label>
+                          <div className="text-lg font-semibold text-green-600 mt-1">${(record.interest_income || 0).toFixed(2)}</div>
+                        </div>
+                      )}
+                      {record.dividend_income && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Dividend Income</label>
+                          <div className="text-lg font-semibold text-green-600 mt-1">${(record.dividend_income || 0).toFixed(2)}</div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
 
-                {/* 1099-NEC Form Fields */}
-                {record.form_type === '1099-NEC' && (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Nonemployee Compensation</label>
-                      <div className="text-2xl font-bold text-green-600 mt-1">${record.nonemployee_compensation || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
-                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.state_income_tax || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State/Payer's State No.</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
-                    </div>
+      case 'benefit':
+        return (
+          <div className="bg-white">
+            {/* Professional Header Section */}
+            <div className="bg-gradient-to-r from-pink-600 to-pink-800 text-white p-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v2H4v-2zm0 4h12v2H4v-2z" clipRule="evenodd" />
+                    </svg>
                   </div>
-                )}
-
-                {/* 1099-MISC Form Fields */}
-                {record.form_type === '1099-MISC' && (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Miscellaneous Income</label>
-                      <div className="text-2xl font-bold text-green-600 mt-1">${record.misc_income || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
-                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.state_income_tax || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State/Payer's State No.</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
-                    </div>
+                  <div>
+                    <h3 className="text-xl font-bold">BENEFIT STATEMENT</h3>
+                    <p className="text-pink-100 text-sm">Employee Benefits & Deductions Summary</p>
                   </div>
-                )}
-
-                {/* W-4 Form Fields */}
-                {record.form_type === 'W-4' && (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Filing Status</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.filing_status || 'N/A'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Number of Dependents</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.dependents || '0'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tax Jurisdiction</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.tax_jurisdiction || 'N/A'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Code</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Other Form Types - Generic Display */}
-                {record.form_type && !['W-2', '1099-NEC', '1099-MISC', 'W-4'].includes(record.form_type) && (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Form Type</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.form_type}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tax Year</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.tax_year || 'N/A'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Federal Income Tax Withheld</label>
-                      <div className="text-2xl font-bold text-red-600 mt-1">${record.federal_income_tax_withheld || '0.00'}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Tax Withheld</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${record.state_income_tax || '0.00'}</div>
-                    </div>
-                  </div>
-                )}
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-pink-100">Record ID</div>
+                  <div className="font-mono text-lg">{record.id || 'BEN-001'}</div>
+                </div>
               </div>
             </div>
 
-            {/* Document Status */}
-            <div className="mx-6 mb-6">
-              <div className="flex items-center space-x-2 mb-3">
-                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            {/* Employee Information Card */}
+            <div className="bg-gray-50 border-l-4 border-pink-500 p-6 m-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
-                <h4 className="font-semibold text-gray-900">Document Status</h4>
+                <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Benefit Plan</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.benefit_plan || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Benefit Details */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Benefit Details</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-3 gap-6">
                   <div>
-                    <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</span>
-                    <div className="mt-1">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        record.document_status === 'issued' ? 'bg-green-100 text-green-800' :
-                        record.document_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {record.document_status || 'Unknown'}
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Coverage Type</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.coverage_type || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Effective Date</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.effective_date || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${record.status === 'Active' ? 'bg-green-100 text-green-800' : record.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                        {record.status || 'Unknown'}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Form Type</span>
-                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.form_type || 'W-2'}</div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Contribution</label>
+                    <div className="text-lg font-semibold text-red-600 mt-1">${(record.employee_contribution || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employer Contribution</label>
+                    <div className="text-lg font-semibold text-green-600 mt-1">${(record.employer_contribution || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Cost</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">${(record.total_cost || 0).toFixed(2)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dependents Covered */}
+            {record.dependents_covered && record.dependents_covered.length > 0 && (
+              <div className="mx-6 mb-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  <h4 className="font-semibold text-gray-900 text-lg">Dependents Covered</h4>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                      <tr>
+                        <th className="border-r border-gray-200 px-4 py-3 text-left font-semibold text-gray-700">Name</th>
+                        <th className="border-r border-gray-200 px-4 py-3 text-center font-semibold text-gray-700">Relationship</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700">Date of Birth</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {record.dependents_covered.map((dependent: any, index: number) => (
+                        <tr key={index} className={`border-t border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                          <td className="border-r border-gray-200 px-4 py-3 font-medium">{dependent.name}</td>
+                          <td className="border-r border-gray-200 px-4 py-3 text-center">{dependent.relationship}</td>
+                          <td className="px-4 py-3 text-center">{dependent.dob}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'compliance':
+        return (
+          <div className="bg-white">
+            {/* Professional Header Section */}
+            <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v2H4v-2zm0 4h12v2H4v-2z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">COMPLIANCE REPORT</h3>
+                    <p className="text-gray-100 text-sm">Regulatory & Policy Adherence</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-100">Record ID</div>
+                  <div className="font-mono text-lg">{record.id || 'COMP-001'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Employee Information Card */}
+            <div className="bg-gray-50 border-l-4 border-gray-500 p-6 m-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
+              </div>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Department</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.department || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Compliance Details */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Compliance Details</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Policy Name</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.policy_name || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Compliance Status</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${record.compliance_status === 'Compliant' ? 'bg-green-100 text-green-800' : record.compliance_status === 'Non-Compliant' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {record.compliance_status || 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Due Date</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.due_date || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Completion Date</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.completion_date || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Assigned To</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.assigned_to || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Policy Description */}
+            {record.policy_description && (
+              <div className="mx-6 mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6zm-1 1a1 1 0 100 2h12a1 1 0 100-2H3z" clipRule="evenodd" />
+                  </svg>
+                  <h4 className="font-semibold text-gray-900">Policy Description</h4>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="text-gray-900">{record.policy_description}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'employee':
+        return (
+          <div className="bg-white">
+            {/* Professional Header Section */}
+            <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">EMPLOYEE PROFILE</h3>
+                    <p className="text-gray-100 text-sm">Comprehensive Employee Information</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-100">Employee ID</div>
+                  <div className="font-mono text-lg">{record.id || 'EMP-001'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Personal Information */}
+            <div className="bg-gray-50 border-l-4 border-gray-500 p-6 m-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Personal Information</h4>
+              </div>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Full Name</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.full_name || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Date of Birth</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.dob || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Gender</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.gender || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Email</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.email || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Phone</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.phone || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Address</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.address || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Employment Details */}
+            <div className="mx-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Employment Details</h4>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Job Title</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.job_title || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Department</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.department || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Hire Date</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.hire_date || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employment Status</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.employment_status || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Manager</label>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">{record.manager || 'N/A'}</div>
                   </div>
                 </div>
               </div>
@@ -929,17 +1243,17 @@ export default function FacsimileModal({
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h12v2H4v-2zm0 4h12v2H4v-2z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold">{recordType.toUpperCase()} RECORD</h3>
-                    <p className="text-gray-100 text-sm">Employee Record Details</p>
+                    <h3 className="text-xl font-bold">{recordType.toUpperCase()} FACSIMILE</h3>
+                    <p className="text-gray-100 text-sm">General Record Details</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-gray-100">Record ID</div>
-                  <div className="font-mono text-lg">{record.id || 'REC-001'}</div>
+                  <div className="font-mono text-lg">{record.id || 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -952,7 +1266,7 @@ export default function FacsimileModal({
                 </svg>
                 <h4 className="font-semibold text-gray-900 text-lg">Employee Information</h4>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Name</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_name || 'N/A'}</div>
@@ -961,29 +1275,35 @@ export default function FacsimileModal({
                   <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee ID</label>
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.employee_id || 'N/A'}</div>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Record ID</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.id || 'N/A'}</div>
+                </div>
               </div>
             </div>
 
-            {/* Record Details */}
+            {/* General Details */}
             <div className="mx-6 mb-6">
               <div className="flex items-center space-x-2 mb-4">
                 <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-                <h4 className="font-semibold text-gray-900 text-lg">Record Details</h4>
+                <h4 className="font-semibold text-gray-900 text-lg">General Details</h4>
               </div>
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                <div className="grid grid-cols-2 gap-6">
-                  {Object.entries(record)
-                    .filter(([key]) => !['employee_name', 'employee_id', 'id'].includes(key))
-                    .map(([key, value]) => (
-                    <div key={key}>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                        {key.replace(/_/g, ' ')}
-                      </label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{String(value) || 'N/A'}</div>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-3 gap-6">
+                  {Object.entries(record).map(([key, value]: [string, any]) => {
+                    // Exclude already displayed fields and complex objects
+                    if (['id', 'employee_name', 'employee_id', 'sub_client_company', 'client_name', 'customer_name', 'primary_client_name', 'tenant_name', 'record_type', 'invoice_number', 'expense_id', 'tax_year', 'check_number', 'job_title', 'department', 'hire_date', 'employment_status', 'manager', 'full_name', 'dob', 'gender', 'email', 'phone', 'address', 'policy_name', 'compliance_status', 'due_date', 'completion_date', 'assigned_to', 'policy_description', 'notes', 'line_items', 'earnings', 'deductions', 'gross_pay', 'net_pay', 'total_deductions', 'gross_pay_ytd', 'federal_tax_ytd', 'state_tax_ytd', 'social_security_ytd', 'medicare_ytd', 'wages_tips_other_comp', 'federal_income_tax_withheld', 'social_security_wages', 'social_security_tax_withheld', 'medicare_wages_tips', 'medicare_tax_withheld', 'nonemployee_compensation', 'miscellaneous_income', 'state_payers_state_no', 'filing_status', 'dependents', 'tax_jurisdiction', 'state_code', 'interest_income', 'dividend_income', 'benefit_plan', 'coverage_type', 'effective_date', 'employee_contribution', 'employer_contribution', 'total_cost', 'dependents_covered', 'salary', 'pay_rate', 'pay_frequency', 'bonus_eligibility', 'location', 'flsa_status', 'reports_to', 'job_description'].includes(key) || typeof value === 'object') {
+                      return null;
+                    }
+                    return (
+                      <div key={key}>
+                        <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">{key.replace(/_/g, ' ')}</label>
+                        <div className="text-lg font-semibold text-gray-900 mt-1">{String(value)}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -996,15 +1316,7 @@ export default function FacsimileModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full mx-4 my-8 relative overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 no-print">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              {recordType} Facsimile
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Record ID: {record.id || record.invoice_number || record.expense_id || 'N/A'}
-            </p>
-          </div>
+        <div className="flex justify-end p-6 border-b border-gray-200 no-print">
           <div className="flex items-center space-x-2">
             <button
               onClick={handleDownload}
@@ -1022,7 +1334,7 @@ export default function FacsimileModal({
             </button>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md p-2"
+              className="p-2 rounded-full text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <X className="h-5 w-5" />
             </button>
@@ -1032,25 +1344,13 @@ export default function FacsimileModal({
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           <div id="facsimile-content">
-            {/* Company Header */}
-            <div className="header mb-6 pb-4 border-b-2 border-gray-900">
-              <div className="company-name text-xl font-bold text-gray-900">
-                {record.sub_client_company || record.client_name || record.customer_name || 'Customer Company Name'}
-              </div>
-              <div className="text-sm text-gray-500 mt-2">
-                Generated on: {new Date().toLocaleDateString()}
-              </div>
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">{record.sub_client_company || record.client_name || record.customer_name || 'Customer Company Name'}</h3>
+              <p className="text-sm text-gray-500">Generated on: {new Date().toLocaleDateString()}</p>
             </div>
-
-            {/* Record Details */}
             <div className="record-details">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {recordType} Details
-              </h3>
               {renderRecordDetails()}
             </div>
-
-            {/* Footer */}
             <div className="footer mt-8 pt-4 border-t border-gray-300 text-xs text-gray-500">
               <p>This is an official facsimile generated by {record.primary_client_name || record.tenant_name || 'Primary Client Name'}.</p>
               <p>For questions or concerns, please contact your account representative.</p>
@@ -1061,3 +1361,4 @@ export default function FacsimileModal({
     </div>
   );
 }
+
