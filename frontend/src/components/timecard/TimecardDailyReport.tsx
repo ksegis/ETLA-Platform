@@ -386,10 +386,38 @@ export default function TimecardDailyReport({ className = '' }: TimecardDailyRep
                   <TableRow>
                     <TableHead>Employee</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>First Clock In</TableHead>
-                    <TableHead>Mid Clock Out</TableHead>
-                    <TableHead>Mid Clock In</TableHead>
-                    <TableHead>Last Clock Out</TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>Clock In</TooltipTrigger>
+                          <TooltipContent>First Clock In</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>Clock Out</TooltipTrigger>
+                          <TooltipContent>Mid Clock Out (Lunch Start)</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>Clock In</TooltipTrigger>
+                          <TooltipContent>Mid Clock In (Lunch End)</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>Clock Out</TooltipTrigger>
+                          <TooltipContent>Last Clock Out</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
                     <TableHead className="text-right">Regular Hrs</TableHead>
                     <TableHead className="text-right">OT Hrs</TableHead>
                     <TableHead className="text-right">DT Hrs</TableHead>

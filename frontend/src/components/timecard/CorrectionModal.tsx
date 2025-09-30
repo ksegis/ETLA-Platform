@@ -233,7 +233,7 @@ export function CorrectionModal({ record, isOpen, onClose, onSave }: CorrectionM
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="first_clock_in">First Clock In</Label>
+                  <Label htmlFor="first_clock_in">Clock In <span className="text-xs text-gray-500">(First)</span></Label>
                   <Input
                     id="first_clock_in"
                     type="time"
@@ -244,7 +244,7 @@ export function CorrectionModal({ record, isOpen, onClose, onSave }: CorrectionM
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mid_clock_out">Mid Clock Out</Label>
+                  <Label htmlFor="mid_clock_out">Clock Out <span className="text-xs text-gray-500">(Lunch Start)</span></Label>
                   <Input
                     id="mid_clock_out"
                     type="time"
@@ -255,7 +255,7 @@ export function CorrectionModal({ record, isOpen, onClose, onSave }: CorrectionM
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mid_clock_in">Mid Clock In</Label>
+                  <Label htmlFor="mid_clock_in">Clock In <span className="text-xs text-gray-500">(Lunch End)</span></Label>
                   <Input
                     id="mid_clock_in"
                     type="time"
@@ -266,7 +266,7 @@ export function CorrectionModal({ record, isOpen, onClose, onSave }: CorrectionM
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="last_clock_out">Last Clock Out</Label>
+                  <Label htmlFor="last_clock_out">Clock Out <span className="text-xs text-gray-500">(Last)</span></Label>
                   <Input
                     id="last_clock_out"
                     type="time"
