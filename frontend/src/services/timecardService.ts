@@ -246,10 +246,10 @@ class TimecardService {
         'Employee Name',
         'Employee Ref',
         'Work Date',
-        'First Clock In',
-        'Mid Clock Out',
-        'Mid Clock In',
-        'Last Clock Out',
+        'Clock In',
+        'Clock Out',
+        'Clock In',
+        'Clock Out',
         'Total Hours',
         'Regular Hours',
         'OT Hours',
@@ -302,3 +302,4 @@ class TimecardService {
 // Export singleton instance
 export const timecardService = new TimecardService()
 export default timecardService
+

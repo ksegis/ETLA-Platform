@@ -55,10 +55,10 @@ export const exportTimecardToCSV = (data: TimecardDailySummaryV2[], filename: st
     'Employee ID',
     'Employee Code',
     'Work Date',
-    'First Clock In',
-    'Mid Clock Out',
-    'Mid Clock In',
-    'Last Clock Out',
+    'Clock In',
+    'Clock Out',
+    'Clock In',
+    'Clock Out',
     'Total Hours',
     'Regular Hours',
     'OT Hours',
@@ -144,7 +144,7 @@ export const exportToPDF = (data: any[], filename: string, options?: ExportOptio
  * Export timecard data to PDF format (currently CSV)
  */
 export const exportTimecardToPDF = (data: TimecardDailySummaryV2[], filename: string, options?: ExportOptions) => {
-  console.warn('PDF export not implemented, exporting as CSV instead');
+  console.warn('PDF export not implemented, exported as CSV instead');
   const pdfFilename = filename.replace('.pdf', '.csv');
   exportTimecardToCSV(data, pdfFilename);
 };
