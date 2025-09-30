@@ -100,8 +100,11 @@ export default function TimecardDailyReport({ className = '' }: TimecardDailyRep
   useEffect(() => {
     if (contextTenant && !isHostAdmin) {
       setSelectedTenant(contextTenant.id)
+    } else if (isHostAdmin && tenants.length > 0 && !selectedTenant) {
+      // For host admins, if no tenant is selected, default to the first available tenant
+      setSelectedTenant(tenants[0].id)
     }
-  }, [contextTenant, isHostAdmin])
+  }, [contextTenant, isHostAdmin, tenants, selectedTenant])
 
   // Load tenants for host admin
   useEffect(() => {
