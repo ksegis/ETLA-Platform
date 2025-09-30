@@ -386,10 +386,10 @@ export default function TimecardDailyReport({ className = '' }: TimecardDailyRep
                   <TableRow>
                     <TableHead>Employee</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>First Clock In</TableHead>
-                    <TableHead>Mid Clock Out</TableHead>
-                    <TableHead>Mid Clock In</TableHead>
-                    <TableHead>Last Clock Out</TableHead>
+                    <TableHead>Clock In</TableHead>
+                    <TableHead>Clock Out</TableHead>
+                    <TableHead>Clock In</TableHead>
+                    <TableHead>Clock Out</TableHead>
                     <TableHead className="text-right">Regular Hrs</TableHead>
                     <TableHead className="text-right">OT Hrs</TableHead>
                     <TableHead className="text-right">DT Hrs</TableHead>
@@ -458,10 +458,10 @@ export default function TimecardDailyReport({ className = '' }: TimecardDailyRep
                       {canCorrect && (
                         <TableCell>
                           <Button
-                            onClick={() => handleCorrection(record)}
                             variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
+                            size="icon"
+                            onClick={() => handleCorrection(record)}
+                            className="text-gray-500 hover:text-gray-900"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -476,13 +476,12 @@ export default function TimecardDailyReport({ className = '' }: TimecardDailyRep
         </CardContent>
       </Card>
 
-      {/* Correction Modal */}
-      {correctionModalOpen && selectedRecord && (
+      {selectedRecord && (
         <CorrectionModal
-          record={selectedRecord}
           isOpen={correctionModalOpen}
           onClose={() => setCorrectionModalOpen(false)}
           onSave={handleCorrectionSaved}
+          initialData={selectedRecord}
         />
       )}
     </div>

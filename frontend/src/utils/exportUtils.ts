@@ -148,3 +148,4 @@ export const exportTimecardToPDF = (data: TimecardDailySummaryV2[], filename: st
   const pdfFilename = filename.replace('.pdf', '.csv');
   exportTimecardToCSV(data, pdfFilename);
 };
+
