@@ -111,7 +111,13 @@ export function CorrectionModal({ isOpen, onClose, onSave, initialData }: Correc
       updatedRecord.ot_hours = Math.max(0, updatedRecord.total_hours - 8) // Simple example
       updatedRecord.dt_hours = 0 // Not implemented in this example
 
-      await timecardService.updateDailySummary(updatedRecord)
+      await timecardService.correctDailySummary(
+        updatedRecord.tenant_id,
+        updatedRecord.employee_ref,
+        updatedRecord.work_date,
+        updatedRecord
+      )
+
       onSave()
     } catch (err) {
       console.error('Error saving correction:', err)
