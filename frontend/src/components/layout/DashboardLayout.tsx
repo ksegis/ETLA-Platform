@@ -158,6 +158,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       items: [
         { name: 'Access Control', href: '/admin/access-control', icon: Shield },
         { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
+        { name: 'Timecard Utilities', href: '/admin/timecard-utilities', icon: Clock },
         { name: 'Employee Directory', href: '/employee-directory', icon: Users },
         { name: 'Benefits Management', href: '/benefits', icon: Building },
         { name: 'Payroll Management', href: '/payroll', icon: DollarSign }

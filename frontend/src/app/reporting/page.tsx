@@ -651,7 +651,7 @@ const EnhancedReportingPage: React.FC = () => {
           setPayStatementData(payStatements || []);
           break;
         case 'timecards':
-          query = supabase.from('timecards_comprehensive_report').select('*').in('tenant_id', tenantIds);
+          query = supabase.from('v_timecard_daily_effective_v2').select('*').in('tenant_id', tenantIds);
           const { data: timecards, error: tcError } = await query;
           if (tcError) throw tcError;
           setTimecardData(timecards || []);
