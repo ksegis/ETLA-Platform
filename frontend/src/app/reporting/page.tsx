@@ -87,35 +87,24 @@ interface EnhancedPayStatement {
 }
 
 interface EnhancedTimecard {
-  id: string;
-  customer_id: string;
   tenant_id: string;
-  employee_id: string;
-  employee_code: string;
+  employee_ref: string;
   employee_name: string;
   work_date: string;
-  clock_in: string;
-  clock_out: string;
-  break_duration: number;
+  first_clock_in: string | null;
+  mid_clock_out: string | null;
+  mid_clock_in: string | null;
+  last_clock_out: string | null;
   total_hours: number;
   regular_hours: number;
-  overtime_hours: number;
-  doubletime_hours: number;
-  holiday_hours: number;
-  sick_hours: number;
-  vacation_hours: number;
-  department: string;
-  supervisor: string;
-  job_code: string;
-  cost_center: string;
-  pay_rate: number;
-  day_of_week: string;
-  shift_code: string;
-  schedule_code: string;
-  approval_status: string;
-  approver_id: string;
-  approval_date: string;
-  notes: string;
+  ot_hours: number;
+  dt_hours: number;
+  is_corrected: boolean;
+  corrected_by: string | null;
+  corrected_at: string | null;
+  correction_reason: string | null;
+  employee_id?: string;
+  employee_code?: string;
 }
 
 interface JobRecord {
@@ -503,11 +492,13 @@ const EnhancedReportingPage: React.FC = () => {
             columns={[
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'work_date', label: 'Date' },
-              { key: 'clock_in', label: 'Clock In' },
-              { key: 'clock_out', label: 'Clock Out' },
+              { key: 'first_clock_in', label: 'Clock In' },
+              { key: 'last_clock_out', label: 'Clock Out' },
               { key: 'total_hours', label: 'Total Hours' },
-              { key: 'department', label: 'Department' },
-              { key: 'approval_status', label: 'Status' },
+              { key: 'regular_hours', label: 'Regular' },
+              { key: 'ot_hours', label: 'Overtime' },
+              { key: 'dt_hours', label: 'Double Time' },
+              { key: 'is_corrected', label: 'Status', render: (item) => item.is_corrected ? 'Corrected' : 'Calculated' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimileTimecard, 'timecard')}
             onViewFacsimile={handleViewFacsimile}

@@ -142,7 +142,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       ] = await Promise.all([
         supabase.from('employee_comprehensive_report').select('*').in('tenant_id', tenantIds),
         supabase.from('pay_statements_comprehensive_report').select('*').in('tenant_id', tenantIds),
-        supabase.from('timecards_comprehensive_report').select('*').in('tenant_id', tenantIds),
+        supabase.from('v_timecard_daily_effective_v2').select('*').in('tenant_id', tenantIds),
         supabase.from('jobs_comprehensive_report').select('*').in('tenant_id', tenantIds),
         supabase.from('tax_records_comprehensive_report').select('*').in('tenant_id', tenantIds),
         supabase.from('benefits').select('*').in('tenant_id', tenantIds), // Use same table as reporting
@@ -207,15 +207,15 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         total: timecards.length,
         totalHours: timecards.reduce((sum: number, t: any) => sum + (t.total_hours || 0), 0),
         regularHours: timecards.reduce((sum: number, t: any) => sum + (t.regular_hours || 0), 0),
-        overtimeHours: timecards.reduce((sum: number, t: any) => sum + (t.overtime_hours || 0), 0),
-        holidayHours: timecards.reduce((sum: number, t: any) => sum + (t.holiday_hours || 0), 0),
+        overtimeHours: timecards.reduce((sum: number, t: any) => sum + (t.ot_hours || 0), 0),
+        holidayHours: timecards.reduce((sum: number, t: any) => sum + (t.dt_hours || 0), 0),
         byApprovalStatus: timecards.reduce((acc: Record<string, any>, t: any) => {
-          const status = t.approval_status || 'pending';
+          const status = t.is_corrected ? 'corrected' : 'calculated';
           acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {}),
         byDepartment: timecards.reduce((acc: Record<string, any>, t: any) => {
-          const dept = t.department || 'Unknown';
+          const dept = t.employee_name || 'Unknown';
           acc[dept] = (acc[dept] || 0) + 1;
           return acc;
         }, {}),

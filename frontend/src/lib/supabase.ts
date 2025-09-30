@@ -257,42 +257,64 @@ const mockPayStatements = [
   }
 ]
 
-const mockTimecards = [
+const mockTimecardsV2 = [
   {
-    id: 'time1',
     tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
-    user_id: 'emp1',
-    total_hours: 85,
-    regular_hours: 80,
-    overtime_hours: 5,
-    holiday_hours: 0,
-    approval_status: 'approved',
-    department: 'Engineering',
-    week_ending: '2024-11-30'
+    employee_ref: 'emp-001',
+    employee_name: 'John Doe',
+    work_date: '2025-09-23',
+    first_clock_in: '08:00:00',
+    mid_clock_out: '12:00:00',
+    mid_clock_in: '13:00:00',
+    last_clock_out: '17:00:00',
+    total_hours: 8.00,
+    regular_hours: 8.00,
+    ot_hours: 0.00,
+    dt_hours: 0.00,
+    is_corrected: false,
+    corrected_by: null,
+    corrected_at: null,
+    correction_reason: null,
+    employee_id: 'e123',
+    employee_code: 'JD001'
   },
   {
-    id: 'time2',
     tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
-    user_id: 'emp2',
-    total_hours: 82,
-    regular_hours: 80,
-    overtime_hours: 2,
-    holiday_hours: 0,
-    approval_status: 'approved',
-    department: 'Marketing',
-    week_ending: '2024-11-30'
+    employee_ref: 'emp-001',
+    employee_name: 'John Doe',
+    work_date: '2025-09-24',
+    first_clock_in: '08:00:00',
+    mid_clock_out: '12:00:00',
+    mid_clock_in: '13:00:00',
+    last_clock_out: '18:00:00',
+    total_hours: 9.00,
+    regular_hours: 8.00,
+    ot_hours: 1.00,
+    dt_hours: 0.00,
+    is_corrected: false,
+    corrected_by: null,
+    corrected_at: null,
+    correction_reason: null,
+    employee_id: 'e123',
+    employee_code: 'JD001'
   },
   {
-    id: 'time3',
     tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
-    user_id: 'emp3',
-    total_hours: 88,
-    regular_hours: 80,
-    overtime_hours: 8,
-    holiday_hours: 0,
-    approval_status: 'pending',
-    department: 'Sales',
-    week_ending: '2024-11-30'
+    employee_ref: 'emp-002',
+    employee_name: 'Jane Smith',
+    work_date: '2025-09-23',
+    first_clock_in: '09:00:00',
+    mid_clock_out: '13:00:00',
+    mid_clock_in: '14:00:00',
+    last_clock_out: '18:00:00',
+    total_hours: 8.00,
+    regular_hours: 8.00,
+    ot_hours: 0.00,
+    dt_hours: 0.00,
+    is_corrected: true,
+    corrected_by: 'admin@example.com',
+    corrected_at: '2025-09-25T10:00:00Z',
+    correction_reason: 'Missed punch correction'
   }
 ]
 
@@ -527,10 +549,8 @@ const getMockData = (table: string) => {
       return mockEmployeeReports
     case 'pay_statements_comprehensive_report':
       return mockPayStatements
-    case 'timecards_comprehensive_report':
-      return mockTimecards
-    case 'timecards':
-      return mockTimecards
+    case 'v_timecard_daily_effective_v2':
+      return mockTimecardsV2
     case 'jobs_comprehensive_report':
       return mockJobs
     case 'tax_records_comprehensive_report':
