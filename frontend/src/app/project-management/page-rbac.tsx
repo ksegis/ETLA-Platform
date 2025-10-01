@@ -35,12 +35,9 @@ interface DashboardData {
 export default function ProjectManagementPageRBAC() {
   const router = useRouter()
   const { 
-    hasPermission, 
-    canAccessFeature, 
-    currentRole, 
-    isAdmin, 
+    canManage, 
+    currentUserRole,
     isLoading: permissionsLoading,
-    getUserPermissions 
   } = usePermissions()
   
   const [data, setData] = useState<DashboardData>({
@@ -70,13 +67,13 @@ export default function ProjectManagementPageRBAC() {
         
         // Load detailed data only if user has permissions
         const [workRequests, projects, risks] = await Promise.all([
-          hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW) 
+          canManage(FEATURES.WORK_REQUESTS) 
             ? pmbokRBAC.getWorkRequests() 
             : Promise.resolve([]),
-          hasPermission(FEATURES.PROJECT_MANAGEMENT, PERMISSIONS.VIEW) 
+          canManage(FEATURES.PROJECT_MANAGEMENT) 
             ? pmbokRBAC.getProjects() 
             : Promise.resolve([]),
-          hasPermission(FEATURES.RISK_MANAGEMENT, PERMISSIONS.VIEW) 
+          canManage(FEATURES.RISK_MANAGEMENT) 
             ? pmbokRBAC.getRisks() 
             : Promise.resolve([])
         ])
@@ -109,21 +106,21 @@ export default function ProjectManagementPageRBAC() {
       id: 'work-requests', 
       label: 'Work Requests', 
       icon: '📝',
-      visible: canAccessFeature(FEATURES.WORK_REQUESTS),
+      visible: canManage(FEATURES.WORK_REQUESTS),
       count: data.workRequests.length
     },
     { 
       id: 'projects', 
       label: 'Projects', 
       icon: '📋',
-      visible: canAccessFeature(FEATURES.PROJECT_MANAGEMENT),
+      visible: canManage(FEATURES.PROJECT_MANAGEMENT),
       count: data.projects.length
     },
     { 
       id: 'risks', 
       label: 'Risks', 
       icon: '⚠️',
-      visible: canAccessFeature(FEATURES.RISK_MANAGEMENT),
+      visible: canManage(FEATURES.RISK_MANAGEMENT),
       count: data.risks.length
     }
   ].filter((tab: any) => tab.visible)
@@ -181,9 +178,9 @@ export default function ProjectManagementPageRBAC() {
                     <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
                     <p className="text-gray-600 mt-2">
                       Manage your projects, work requests, and risks
-                      {currentRole && (
+                      {currentUserRole && (
                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                          {currentRole}
+                          {currentUserRole}
                         </span>
                       )}
                     </p>
