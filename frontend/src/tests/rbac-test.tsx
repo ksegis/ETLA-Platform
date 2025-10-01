@@ -229,12 +229,7 @@ export const RBACTestComponent: React.FC = () => {
       </div>
 
       {/* Permission Details */}
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">Detailed Permissions</h2>
-        <pre className="text-xs overflow-auto bg-white p-3 rounded border">
-          {JSON.stringify(permissions.getUserPermissions(), null, 2)}
-        </pre>
-      </div>
+      <div className="mb-8 p-4 bg-gray-50 rounded-lg"></div>
 
       {/* Test Instructions */}
       <div className="p-4 bg-yellow-50 rounded-lg">
