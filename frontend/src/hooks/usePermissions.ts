@@ -10,6 +10,7 @@ export const FEATURES = {
   RISK_MANAGEMENT: 'risk-management',
   REPORTING: 'reporting',
   DASHBOARDS: 'dashboards',
+  PROJECT_CHARTER: 'project-charter',
   // Add other features here as needed
 };
 
@@ -48,6 +49,7 @@ export const usePermissions = () => {
       case FEATURES.RISK_MANAGEMENT:
       case FEATURES.REPORTING:
       case FEATURES.DASHBOARDS:
+      case FEATURES.PROJECT_CHARTER:
         return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin' || currentUserRole === 'program_manager';
       // Add more cases for other features as needed
       default:
@@ -67,6 +69,5 @@ export const usePermissions = () => {
     currentUserRole,
     isLoading,
   };
-};
 };
 
