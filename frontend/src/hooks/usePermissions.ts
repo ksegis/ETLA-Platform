@@ -13,6 +13,7 @@ export const FEATURES = {
   PROJECT_CHARTER: 'project-charter',
   RESOURCE_MANAGEMENT: 'resource-management',
   ANALYTICS: 'analytics',
+  MIGRATION_WORKBENCH: 'migration-workbench',
   // Add other features here as needed
 };
 
@@ -54,6 +55,7 @@ export const usePermissions = () => {
       case FEATURES.PROJECT_CHARTER:
       case FEATURES.RESOURCE_MANAGEMENT:
       case FEATURES.ANALYTICS:
+      case FEATURES.MIGRATION_WORKBENCH:
         return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin' || currentUserRole === 'program_manager';
       // Add more cases for other features as needed
       default:
