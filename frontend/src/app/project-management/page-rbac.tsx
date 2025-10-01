@@ -549,7 +549,7 @@ export default function ProjectManagementPageRBAC() {
                   )}
 
                   {/* Debug Tab (Admin only) */}
-                  {selectedTab === 'debug' && isAdmin() && (
+                  {selectedTab === 'debug' && (currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin') && (
                     <div className="space-y-6">
                       <h3 className="text-lg font-medium text-gray-900">RBAC Debug Information</h3>
                       <PermissionDebugPanel />
