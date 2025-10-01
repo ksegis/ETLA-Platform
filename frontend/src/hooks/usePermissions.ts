@@ -11,6 +11,7 @@ export const FEATURES = {
   REPORTING: 'reporting',
   DASHBOARDS: 'dashboards',
   PROJECT_CHARTER: 'project-charter',
+  RESOURCE_MANAGEMENT: 'resource-management',
   // Add other features here as needed
 };
 
@@ -50,6 +51,7 @@ export const usePermissions = () => {
       case FEATURES.REPORTING:
       case FEATURES.DASHBOARDS:
       case FEATURES.PROJECT_CHARTER:
+      case FEATURES.RESOURCE_MANAGEMENT:
         return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin' || currentUserRole === 'program_manager';
       // Add more cases for other features as needed
       default:
