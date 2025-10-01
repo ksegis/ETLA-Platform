@@ -92,7 +92,7 @@ export default function ProjectManagementPageRBAC() {
     }
 
     loadData()
-  }, [permissionsLoading, hasPermission])
+  }, [permissionsLoading, canManage])
 
   // Permission-based tab configuration
   const tabs = [
