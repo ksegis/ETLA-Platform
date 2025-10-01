@@ -7,8 +7,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usePermissions } from '@/hooks/usePermissions'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Building, Users, Plus, Edit, Trash2, UserPlus, Search, AlertCircle } from 'lucide-react'
 import { Tenant, User } from '@/types'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -653,4 +656,8 @@ function CreateTenantModal({ isOpen, onClose, onCreate }: CreateTenantModalProps
     </Dialog>
   )
 }
+
+
+
+// Force Vercel rebuild - attempt to clear cache
 
