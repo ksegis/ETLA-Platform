@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic'
 
 export default function AccessControlPage() {
   const router = useRouter()
-  const { user, tenantUser, isAuthenticated } = useAuth()
+  const { user, tenantUser, isAuthenticated, tenant } = useAuth()
   const { canManage, currentUserRole } = usePermissions()
 
   const [activeTab, setActiveTab] = useState('users')
