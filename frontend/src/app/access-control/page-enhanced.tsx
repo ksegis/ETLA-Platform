@@ -109,8 +109,8 @@ export default function AccessControlPageEnhanced() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   // Check if user has access to this page
-  const canAccessUserManagement = canManage(\'user-management\') && currentUserRole === \'host_admin\'
-  const canViewUserManagement = canManage(\'user-management\') || canAccessUserManagement
+  const canAccessUserManagement = canManage('user-management') && currentUserRole === 'host_admin'
+  const canViewUserManagement = canManage('user-management') || canAccessUserManagement
 
   useEffect(() => {
     if (isAuthenticated && canViewUserManagement) {
