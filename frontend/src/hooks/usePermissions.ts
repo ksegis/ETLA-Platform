@@ -14,6 +14,13 @@ export const FEATURES = {
   RESOURCE_MANAGEMENT: 'resource-management',
   ANALYTICS: 'analytics',
   MIGRATION_WORKBENCH: 'migration-workbench',
+  FILE_UPLOAD: 'file-upload',
+  DATA_VALIDATION: 'data-validation',
+  BENEFITS_MANAGEMENT: 'benefits-management',
+  EMPLOYEE_RECORDS: 'employee-records',
+  PAYROLL_PROCESSING: 'payroll-processing',
+  SYSTEM_SETTINGS: 'system-settings',
+  AUDIT_LOGS: 'audit-logs',
   // Add other features here as needed
 };
 
@@ -56,7 +63,15 @@ export const usePermissions = () => {
       case FEATURES.RESOURCE_MANAGEMENT:
       case FEATURES.ANALYTICS:
       case FEATURES.MIGRATION_WORKBENCH:
+      case FEATURES.FILE_UPLOAD:
+      case FEATURES.DATA_VALIDATION:
+      case FEATURES.BENEFITS_MANAGEMENT:
+      case FEATURES.EMPLOYEE_RECORDS:
+      case FEATURES.PAYROLL_PROCESSING:
         return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin' || currentUserRole === 'program_manager';
+      case FEATURES.SYSTEM_SETTINGS:
+      case FEATURES.AUDIT_LOGS:
+        return currentUserRole === 'host_admin';
       // Add more cases for other features as needed
       default:
         return false;
