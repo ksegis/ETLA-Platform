@@ -52,10 +52,18 @@ export const usePermissions = () => {
     }
   };
 
+  const canView = (feature: string): boolean => {
+    // For now, assume if a user can manage a feature, they can also view it.
+    // Or, implement specific view logic if needed.
+    return canManage(feature);
+  };
+
   return {
     canManage,
+    canView,
     currentUserRole,
     isLoading,
   };
+};
 };
 
