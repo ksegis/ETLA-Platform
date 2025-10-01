@@ -25,6 +25,7 @@ interface TenantUser {
 
 interface AuthContextType {
   user: User | null
+  // tenant: Tenant | null // Temporarily removed to force Vercel re-evaluation
   tenant: Tenant | null
   tenantUser: TenantUser | null
   session: Session | null
