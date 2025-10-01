@@ -673,7 +673,7 @@ export default function WorkRequestsPage() {
                 ? "Get started by creating your first work request."
                 : "Try adjusting your search or filter criteria."}
             </p>
-            {canCreate(FEATURES.WORK_REQUESTS) && workRequests.length === 0 && (
+            {canManage(PERMISSIONS.WORK_REQUESTS_CREATE) && workRequests.length === 0 && (
               <Button onClick={handleCreateRequest}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create First Request
