@@ -187,7 +187,7 @@ export default function ProjectManagementPageRBAC() {
                   </div>
                   
                   {/* Admin-only debug panel toggle */}
-                  {isAdmin() && process.env.NODE_ENV === 'development' && (
+                  {(currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin') && process.env.NODE_ENV === 'development' && (
                     <button
                       onClick={() => setSelectedTab('debug')}
                       className="text-xs text-gray-500 hover:text-gray-700"
