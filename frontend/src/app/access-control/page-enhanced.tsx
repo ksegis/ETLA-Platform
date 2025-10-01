@@ -86,7 +86,7 @@ interface RoleStats {
 
 export default function AccessControlPageEnhanced() {
   const { user, isAuthenticated, tenant } = useAuth()
-  const { hasPermission, currentRole, isHostAdmin } = usePermissions()
+    const { canManage, currentUserRole } = usePermissions()
   
   // State management
   const [users, setUsers] = useState<User[]>([])
@@ -109,8 +109,8 @@ export default function AccessControlPageEnhanced() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   // Check if user has access to this page
-  const canAccessUserManagement = hasPermission('user-management', 'manage') && isHostAdmin()
-  const canViewUserManagement = hasPermission('user-management', 'view') || canAccessUserManagement
+  const canAccessUserManagement = canManage(\'user-management\') && currentUserRole === \'host_admin\'
+  const canViewUserManagement = canManage(\'user-management\') || canAccessUserManagement
 
   useEffect(() => {
     if (isAuthenticated && canViewUserManagement) {
