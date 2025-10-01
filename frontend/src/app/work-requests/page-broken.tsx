@@ -301,7 +301,7 @@ export default function WorkRequestsPage() {
 
   const tenantId = useCurrentTenantId()
   const { user, tenantUser } = useAuth()
-  const { canCreate, canUpdate, canDelete, canView } = usePermissions()
+  const { canManage, canView } = usePermissions()
 
   // Load work requests
   const loadWorkRequests = async () => {
@@ -412,7 +412,7 @@ export default function WorkRequestsPage() {
           </div>
           <div className="flex items-center gap-4">
             <TenantSelector />
-            {canCreate(FEATURES.WORK_REQUESTS) && (
+            {canManage(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE) && (
               <Button onClick={handleCreateRequest}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Request
@@ -606,7 +606,7 @@ export default function WorkRequestsPage() {
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {canUpdate(FEATURES.WORK_REQUESTS) && (
+                        {canManage(FEATURES.WORK_REQUESTS, PERMISSIONS.EDIT) && (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -615,7 +615,7 @@ export default function WorkRequestsPage() {
                             <Edit className="h-4 w-4" />
                           </Button>
                         )}
-                        {canDelete(FEATURES.WORK_REQUESTS) && (
+                        {canManage(FEATURES.WORK_REQUESTS, PERMISSIONS.DELETE) && (
                           <Button 
                             variant="outline" 
                             size="sm"
