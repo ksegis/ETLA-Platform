@@ -89,7 +89,7 @@ export default function AccessControlPage() {
     };
 
     loadInitialData();
-  }, [isAuthenticated, router, canAccessFeature]);
+    }, [isAuthenticated, router, canManage]);
 
   useEffect(() => {
     if (selectedTenant) {
