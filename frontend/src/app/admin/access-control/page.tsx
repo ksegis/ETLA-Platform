@@ -1,216 +1,235 @@
+"use client";
 
-'use client'
-
-import { useEffect, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { usePermissions } from '@/hooks/usePermissions'
-import { RBACAdminService } from '@/services/rbac_admin_service'
-import { 
-  RBACMatrixRowUser, 
-  RBACPermissionCatalog, 
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { RBACAdminService } from "@/services/rbac_admin_service";
+import {
+  RBACMatrixRowUser,
+  RBACPermissionCatalog,
   RBACUserDetail,
   RBACChangeOperation,
-  RBACApplyChangesRequest
-} from '@/types'
+  RBACApplyChangesRequest,
+} from "@/types";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/Input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
-import RBACMatrixGrid from '@/components/rbac/RBACMatrixGrid'
-import { RolesPermissionsTab } from '@/components/rbac/RolesPermissionsTab'
-import { UserDetailPanel } from '@/components/rbac/UserDetailPanel'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import RBACMatrixGrid from "@/components/rbac/RBACMatrixGrid";
+import { RolesPermissionsTab } from "@/components/rbac/RolesPermissionsTab";
+import { UserDetailPanel } from "@/components/rbac/UserDetailPanel";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default function AccessControlPage() {
-  const router = useRouter()
-  const { user, tenantUser, isAuthenticated, tenant } = useAuth()
-  const { canManage, currentUserRole } = usePermissions()
+  const router = useRouter();
+  const { user, tenantUser, isAuthenticated, tenant } = useAuth();
+  const { canManage, currentUserRole } = usePermissions();
 
-  const [activeTab, setActiveTab] = useState('users')
-  const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>([])
+  const [activeTab, setActiveTab] = useState("users");
+  const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
   const [selectedTenant, setSelectedTenant] = useState<{
     id: string;
     name: string;
-  } | null>(null)
-  const [users, setUsers] = useState<RBACMatrixRowUser[]>([])
-  const [permissionCatalog, setPermissionCatalog] = useState<RBACPermissionCatalog[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-  const [userDetail, setUserDetail] = useState<RBACUserDetail | null>(null)
-  const [userDetailLoading, setUserDetailLoading] = useState(false)
-  const [draftChanges, setDraftChanges] = useState<Map<string, 'allow' | 'deny' | 'none'>>(new Map())
-  const [changeQueue, setChangeQueue] = useState<RBACChangeOperation[]>([])
-  const currentUserId = user?.id
+  } | null>(null);
+  const [users, setUsers] = useState<RBACMatrixRowUser[]>([]);
+  const [permissionCatalog, setPermissionCatalog] = useState<
+    RBACPermissionCatalog[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [userDetail, setUserDetail] = useState<RBACUserDetail | null>(null);
+  const [userDetailLoading, setUserDetailLoading] = useState(false);
+  const [draftChanges, setDraftChanges] = useState<
+    Map<string, "allow" | "deny" | "none">
+  >(new Map());
+  const [changeQueue, setChangeQueue] = useState<RBACChangeOperation[]>([]);
+  const currentUserId = user?.id;
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/auth/login')
-      return
+      router.push("/auth/login");
+      return;
     }
 
-    if (!canManage(\'access-control\')) {
-      router.push('/unauthorized')
-      return
+    if (!canManage("access_control")) {
+      router.push("/unauthorized");
+      return;
     }
 
     const loadInitialData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const fetchedTenants = await RBACAdminService.listTenants()
-        setTenants(fetchedTenants)
+        const fetchedTenants = await RBACAdminService.listTenants();
+        setTenants(fetchedTenants);
         if (fetchedTenants.length > 0) {
-          setSelectedTenant(fetchedTenants[0])
+          setSelectedTenant(fetchedTenants[0]);
         }
 
-        const fetchedCatalog = await RBACAdminService.listPermissionCatalog()
-        setPermissionCatalog(fetchedCatalog)
+        const fetchedCatalog = await RBACAdminService.listPermissionCatalog();
+        setPermissionCatalog(fetchedCatalog);
       } catch (error) {
-        console.error('Error loading initial data:', error)
+        console.error("Error loading initial data:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadInitialData()
-  }, [isAuthenticated, router, canAccessFeature])
+    loadInitialData();
+  }, [isAuthenticated, router, canAccessFeature]);
 
   useEffect(() => {
     if (selectedTenant) {
-      loadTenantUsers(selectedTenant.id, searchQuery)
+      loadTenantUsers(selectedTenant.id, searchQuery);
     }
-  }, [selectedTenant, searchQuery])
+  }, [selectedTenant, searchQuery]);
 
   useEffect(() => {
     if (selectedUserId && selectedTenant) {
-      loadUserDetail(selectedTenant.id, selectedUserId)
+      loadUserDetail(selectedTenant.id, selectedUserId);
     }
-  }, [selectedUserId, selectedTenant])
+  }, [selectedUserId, selectedTenant]);
 
   const loadTenantUsers = async (tenantId: string, search?: string) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(tenantId, { search })
-      setUsers(fetchedUsers)
+      const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(
+        tenantId,
+        { search },
+      );
+      setUsers(fetchedUsers);
 
       // Get effective permissions for all users
-      const userIds = fetchedUsers.map((u: any) => u.userId)
-      const effectivePermissions = await RBACAdminService.getEffectivePermissions(tenantId, userIds)
+      const userIds = fetchedUsers.map((u: any) => u.userId);
+      const effectivePermissions =
+        await RBACAdminService.getEffectivePermissions(tenantId, userIds);
 
       // Merge effective permissions into user objects
-      const usersWithPermissions = fetchedUsers.map(user => ({
+      const usersWithPermissions = fetchedUsers.map((user) => ({
         ...user,
-        cells: effectivePermissions.get(user.userId) || []
-      }))
-      setUsers(usersWithPermissions)
+        cells: effectivePermissions.get(user.userId) || [],
+      }));
+      setUsers(usersWithPermissions);
     } catch (error) {
-      console.error('Error loading tenant users:', error)
+      console.error("Error loading tenant users:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadUserDetail = async (tenantId: string, userId: string) => {
-    setUserDetailLoading(true)
+    setUserDetailLoading(true);
     try {
-      const detail = await RBACAdminService.getUserDetail(tenantId, userId)
-      setUserDetail(detail)
+      const detail = await RBACAdminService.getUserDetail(tenantId, userId);
+      setUserDetail(detail);
     } catch (error) {
-      console.error('Error loading user detail:', error)
+      console.error("Error loading user detail:", error);
     } finally {
-      setUserDetailLoading(false)
+      setUserDetailLoading(false);
     }
-  }
+  };
 
   const handleCellClick = (userId: string, permissionId: string) => {
     // Determine the current effective state for this cell
-    const userToUpdate = users.find(u => u.userId === userId);
-    const currentCell = userToUpdate?.cells?.find(cell => cell.permissionId === permissionId);
-    const currentValue = draftChanges.get(`${userId}:${permissionId}`) || currentCell?.state || 'none';
+    const userToUpdate = users.find((u) => u.userId === userId);
+    const currentCell = userToUpdate?.cells?.find(
+      (cell) => cell.permissionId === permissionId,
+    );
+    const currentValue =
+      draftChanges.get(`${userId}:${permissionId}`) ||
+      currentCell?.state ||
+      "none";
 
-    let newValue: 'allow' | 'deny' | 'none';
+    let newValue: "allow" | "deny" | "none";
     switch (currentValue) {
-      case 'allow':
-        newValue = 'deny';
+      case "allow":
+        newValue = "deny";
         break;
-      case 'deny':
-        newValue = 'none';
+      case "deny":
+        newValue = "none";
         break;
       default:
-        newValue = 'allow';
+        newValue = "allow";
     }
-    
+
     // Update draft changes
     const key = `${userId}:${permissionId}`;
     const newDraftChanges = new Map(draftChanges);
-    
-    if (newValue === 'none') {
+
+    if (newValue === "none") {
       newDraftChanges.delete(key);
     } else {
       newDraftChanges.set(key, newValue);
     }
-    
+
     setDraftChanges(newDraftChanges);
-    
+
     // Add to change queue
     const changeOperation: RBACChangeOperation = {
       id: `${Date.now()}`,
-      type: 'permission_change',
-      op: newValue === 'none' ? 'clearOverride' : 'setOverride',
+      type: "permission_change",
+      op: newValue === "none" ? "clearOverride" : "setOverride",
       userId,
       permissionId,
-      oldValue: currentValue as 'allow' | 'deny' | 'none',
+      oldValue: currentValue as "allow" | "deny" | "none",
       newValue,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    setChangeQueue(prev => [...prev, changeOperation]);
+    setChangeQueue((prev) => [...prev, changeOperation]);
   };
 
   const handleUserClick = (userId: string) => {
-    setSelectedUserId(userId)
-  }
+    setSelectedUserId(userId);
+  };
 
   const handleApplyChanges = async () => {
-    if (changeQueue.length === 0 || !selectedTenant || !currentUserId) return
-    
-    setLoading(true)
+    if (changeQueue.length === 0 || !selectedTenant || !currentUserId) return;
+
+    setLoading(true);
     try {
       const request: RBACApplyChangesRequest = {
         tenantId: selectedTenant.id,
         actorUserId: currentUserId as string, // Explicitly cast to string after null- to satisfy TypeScript
-        changes: changeQueue
-      }
-      
-      await RBACAdminService.applyChanges(request) // Corrected method name
-      
-      // Clear draft changes and queue
-      setDraftChanges(new Map())
-      setChangeQueue([])
-      
-      // Reload users and user detail to reflect changes
-      loadTenantUsers(selectedTenant.id, searchQuery)
-      if (selectedUserId) {
-        loadUserDetail(selectedTenant.id, selectedUserId)
-      }
+        changes: changeQueue,
+      };
 
+      await RBACAdminService.applyChanges(request); // Corrected method name
+
+      // Clear draft changes and queue
+      setDraftChanges(new Map());
+      setChangeQueue([]);
+
+      // Reload users and user detail to reflect changes
+      loadTenantUsers(selectedTenant.id, searchQuery);
+      if (selectedUserId) {
+        loadUserDetail(selectedTenant.id, selectedUserId);
+      }
     } catch (error) {
-      console.error('Error applying changes:', error)
+      console.error("Error applying changes:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDiscardChanges = () => {
-    setDraftChanges(new Map())
-    setChangeQueue([])
-  }
+    setDraftChanges(new Map());
+    setChangeQueue([]);
+  };
 
-  const pendingChangesCount = draftChanges.size
+  const pendingChangesCount = draftChanges.size;
 
   return (
     <div className="flex h-full">
@@ -226,7 +245,11 @@ export default function AccessControlPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <div className="flex items-center justify-between mb-4">
                 <TabsList>
                   <TabsTrigger value="users">Users</TabsTrigger>
@@ -242,10 +265,10 @@ export default function AccessControlPage() {
                     className="w-[200px]"
                   />
                   <Select
-                    value={selectedTenant?.id || ''}
+                    value={selectedTenant?.id || ""}
                     onValueChange={(tenantId) => {
-                      const tenant = tenants.find(t => t.id === tenantId)
-                      setSelectedTenant(tenant || null)
+                      const tenant = tenants.find((t) => t.id === tenantId);
+                      setSelectedTenant(tenant || null);
                     }}
                   >
                     <SelectTrigger className="w-[180px]">
@@ -274,7 +297,9 @@ export default function AccessControlPage() {
                 {pendingChangesCount > 0 && (
                   <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white p-3 rounded-lg shadow-lg flex items-center space-x-4">
                     <span>{pendingChangesCount} pending changes</span>
-                    <Button variant="secondary" onClick={handleDiscardChanges}>Discard</Button>
+                    <Button variant="secondary" onClick={handleDiscardChanges}>
+                      Discard
+                    </Button>
                     <Button onClick={handleApplyChanges}>Apply Changes</Button>
                   </div>
                 )}
@@ -282,26 +307,32 @@ export default function AccessControlPage() {
               <TabsContent value="roles">
                 <RolesPermissionsTab selectedTenantId={selectedTenant?.id} />
               </TabsContent>
-              <TabsContent value="invitations">Invitations content here.</TabsContent>
-              <TabsContent value="notifications">Notifications content here.</TabsContent>
+              <TabsContent value="invitations">
+                Invitations content here.
+              </TabsContent>
+              <TabsContent value="notifications">
+                Notifications content here.
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
       </div>
       {selectedUserId && (
         <div className="w-80 border-l bg-gray-50 p-6 overflow-y-auto">
-          <UserDetailPanel 
+          <UserDetailPanel
             userId={selectedUserId}
-            tenantId={selectedTenant?.id || ''}
+            tenantId={selectedTenant?.id || ""}
             onClose={() => setSelectedUserId(null)}
             userDetail={userDetail}
             loading={userDetailLoading}
-            isHostAdmin={currentUserRole === 'host_admin'}
-            isAdmin={currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin'}
+            isHostAdmin={currentUserRole === "host_admin"}
+            isAdmin={
+              currentUserRole === "host_admin" ||
+              currentUserRole === "tenant_admin"
+            }
           />
         </div>
       )}
     </div>
-  )
+  );
 }
-
