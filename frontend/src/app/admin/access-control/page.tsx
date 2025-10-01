@@ -29,7 +29,7 @@ export const dynamic = 'force-dynamic'
 export default function AccessControlPage() {
   const router = useRouter()
   const { user, tenantUser, isAuthenticated } = useAuth()
-  const { isHostAdmin, isAdmin, canAccessFeature } = usePermissions()
+  const { canManage, currentUserRole } = usePermissions()
 
   const [activeTab, setActiveTab] = useState('users')
   const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>([])
@@ -54,7 +54,7 @@ export default function AccessControlPage() {
       return
     }
 
-    if (!canAccessFeature('access-control')) {
+    if (!canManage(\'access-control\')) {
       router.push('/unauthorized')
       return
     }
@@ -296,8 +296,8 @@ export default function AccessControlPage() {
             onClose={() => setSelectedUserId(null)}
             userDetail={userDetail}
             loading={userDetailLoading}
-            isHostAdmin={isHostAdmin()}
-            isAdmin={isAdmin()}
+            isHostAdmin={currentUserRole === 'host_admin'}
+            isAdmin={currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin'}
           />
         </div>
       )}
