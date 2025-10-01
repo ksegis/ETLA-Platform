@@ -72,29 +72,39 @@ export default function TenantManagementPage() {
 
   const loadTenants = async () => {
     try {
+      console.log("Attempting to load tenants...")
       const { data, error } = await supabase
         .from('tenants')
         .select('*')
         .order('name')
 
-      if (error) throw error
+      if (error) {
+        console.error("Error loading tenants:", error)
+        throw error
+      }
       setTenants(data || [])
+      console.log("Tenants loaded successfully:", data)
     } catch (error) {
-      console.error('Error loading tenants:', error)
+      console.error("Caught error loading tenants:", error)
     }
   }
 
   const loadAllUsers = async () => {
     try {
+      console.log("Attempting to load all users...")
       const { data, error } = await supabase
         .from('auth.users')
         .select('id, email, created_at')
         .order('email')
 
-      if (error) throw error
+      if (error) {
+        console.error("Error loading all users:", error)
+        throw error
+      }
       setAllUsers(data || [])
+      console.log("All users loaded successfully:", data)
     } catch (error) {
-      console.error('Error loading users:', error)
+      console.error("Caught error loading all users:", error)
     }
   }
 
@@ -201,29 +211,60 @@ export default function TenantManagementPage() {
     tenant_type: string
     contact_email: string
   }) => {
+    console.log('=== CREATE TENANT DEBUG START ===')
+    console.log('Input tenantData:', tenantData)
+    
     try {
-      const { error } = await supabase
+      const insertData = {
+        ...tenantData,
+        status: 'active',
+        subscription_plan: 'professional',
+        max_users: 25,
+        max_projects: 50,
+        is_active: true,
+        tenant_level: 1,
+        settings: {},
+        feature_flags: {},
+        usage_quotas: {},
+        rbac_settings: {}
+      }
+      
+      console.log('Data to insert:', insertData)
+      console.log('Making Supabase insert call...')
+      
+      const { data, error } = await supabase
         .from('tenants')
-        .insert({
-          ...tenantData,
-          status: 'active',
-          subscription_plan: 'professional',
-          max_users: 25,
-          max_projects: 50,
-          is_active: true,
-          tenant_level: 1,
-          settings: {},
-          feature_flags: {},
-          usage_quotas: {},
-          rbac_settings: {}
+        .insert(insertData)
+        .select()
+
+      console.log('Supabase response - data:', data)
+      console.log('Supabase response - error:', error)
+
+      if (error) {
+        console.error('Supabase error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
         })
+        throw error
+      }
 
-      if (error) throw error
-
+      console.log('Tenant created successfully, closing modal and reloading tenants...')
       setShowCreateTenantModal(false)
-      loadTenants()
+      await loadTenants()
+      console.log('=== CREATE TENANT DEBUG END ===')
     } catch (error) {
+      console.error('=== CREATE TENANT ERROR ===')
       console.error('Error creating tenant:', error)
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        })
+      }
+      console.error('=== CREATE TENANT ERROR END ===')
     }
   }
 
@@ -461,31 +502,27 @@ export default function TenantManagementPage() {
                   id="role-select"
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                 >
-                  <option value="client_user">Client User</option>
-                  <option value="client_admin">Client Admin</option>
                   <option value="program_manager">Program Manager</option>
-                  <option value="host_admin">Host Admin</option>
+                  <option value="client_admin">Client Admin</option>
+                  <option value="client_user">Client User</option>
                 </select>
               </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddUserModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  const userSelect = document.getElementById('user-select') as HTMLSelectElement
-                  const roleSelect = document.getElementById('role-select') as HTMLSelectElement
-                  if (userSelect.value && roleSelect.value) {
-                    addUserToTenant(userSelect.value, roleSelect.value)
-                  }
-                }}
-              >
-                Add User
-              </Button>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowAddUserModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    const userId = (document.getElementById('user-select') as HTMLSelectElement).value
+                    const role = (document.getElementById('role-select') as HTMLSelectElement).value
+                    if (userId && selectedTenantId) {
+                      addUserToTenant(userId, role)
+                    }
+                  }}
+                >
+                  Add User
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -493,32 +530,127 @@ export default function TenantManagementPage() {
 
       {/* Create Tenant Modal */}
       {showCreateTenantModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4">Create New Tenant</h3>
-            <div className="space-y-4">
-              {/* Form fields for new tenant */}
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setShowCreateTenantModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  // Logic to create tenant
-                }}
-              >
-                Create
-              </Button>
-            </div>
-          </div>
-        </div>
+        <CreateTenantModal
+          isOpen={showCreateTenantModal}
+          onClose={() => setShowCreateTenantModal(false)}
+          onCreate={createTenant}
+        />
       )}
       </div>
     </DashboardLayout>
+  )
+}
+
+interface CreateTenantModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onCreate: (tenantData: {
+    name: string
+    code: string
+    tenant_type: string
+    contact_email: string
+  }) => Promise<void>
+}
+
+function CreateTenantModal({ isOpen, onClose, onCreate }: CreateTenantModalProps) {
+  const [name, setName] = useState('')
+  const [code, setCode] = useState('')
+  const [tenantType, setTenantType] = useState('client')
+  const [contactEmail, setContactEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = async () => {
+    if (!name || !code || !tenantType || !contactEmail) {
+      setError('All fields are required.')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      await onCreate({
+        name,
+        code,
+        tenant_type: tenantType,
+        contact_email: contactEmail
+      })
+      onClose()
+    } catch (err) {
+      console.error('Error in CreateTenantModal handleSubmit:', err)
+      setError('Failed to create tenant. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create New Tenant</DialogTitle>
+          <DialogDescription>
+            Fill in the details for the new tenant.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          {error && (
+            <div className="flex items-center text-red-500 text-sm mb-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              {error}
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="name">Tenant Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Acme Corp"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="code">Tenant Code</Label>
+            <Input
+              id="code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="e.g., ACME"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tenantType">Tenant Type</Label>
+            <Select value={tenantType} onValueChange={setTenantType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="client">Client</SelectItem>
+                <SelectItem value="vendor">Vendor</SelectItem>
+                <SelectItem value="internal">Internal</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contactEmail">Contact Email</Label>
+            <Input
+              id="contactEmail"
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="email@example.com"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Creating...' : 'Create Tenant'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
