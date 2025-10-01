@@ -19,6 +19,9 @@ export const PERMISSIONS = {
   EDIT: 'edit',
   DELETE: 'delete',
   APPROVE: 'approve',
+  WORK_REQUESTS_CREATE: 'work_requests:create',
+  WORK_REQUESTS_UPDATE: 'work_requests:update',
+  WORK_REQUESTS_DELETE: 'work_requests:delete',
   // Add other permissions here as needed
 };
 
