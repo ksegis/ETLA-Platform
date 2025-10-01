@@ -23,7 +23,7 @@ export const PERMISSIONS = {
 };
 
 export const usePermissions = () => {
-  const { currentUserRole } = useAuth();
+  const { currentUserRole, loading: isLoading } = useAuth();
 
   const canManage = (feature: string): boolean => {
     if (!currentUserRole) {
@@ -55,6 +55,7 @@ export const usePermissions = () => {
   return {
     canManage,
     currentUserRole,
+    isLoading,
   };
 };
 
