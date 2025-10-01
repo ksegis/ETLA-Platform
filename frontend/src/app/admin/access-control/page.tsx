@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/hooks/usePermissions";
+import { FEATURES, usePermissions } from "@/hooks/usePermissions";
 import { RBACAdminService } from "@/services/rbac_admin_service";
 import {
   RBACMatrixRowUser,
@@ -65,7 +65,7 @@ export default function AccessControlPage() {
       return;
     }
 
-    if (!canManage("access_control")) {
+    if (!canManage(FEATURES.ACCESS_CONTROL)) {
       router.push("/unauthorized");
       return;
     }
