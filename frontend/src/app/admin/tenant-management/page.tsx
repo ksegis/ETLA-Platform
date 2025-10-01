@@ -497,7 +497,53 @@ export default function TenantManagementPage() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium mb-4">Create New Tenant</h3>
             <div className="space-y-4">
-              {/* Form fields for new tenant */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tenant Name
+                </label>
+                <input
+                  id="tenant-name"
+                  type="text"
+                  placeholder="Enter tenant name"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tenant Code
+                </label>
+                <input
+                  id="tenant-code"
+                  type="text"
+                  placeholder="Enter tenant code"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tenant Type
+                </label>
+                <select
+                  id="tenant-type"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select tenant type</option>
+                  <option value="host">Host</option>
+                  <option value="primary">Primary</option>
+                  <option value="sub">Sub-client</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Contact Email
+                </label>
+                <input
+                  id="tenant-contact-email"
+                  type="email"
+                  placeholder="Enter contact email"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <Button
@@ -508,7 +554,19 @@ export default function TenantManagementPage() {
               </Button>
               <Button
                 onClick={() => {
-                  // Logic to create tenant
+                  const nameInput = document.getElementById('tenant-name') as HTMLInputElement
+                  const codeInput = document.getElementById('tenant-code') as HTMLInputElement
+                  const typeSelect = document.getElementById('tenant-type') as HTMLSelectElement
+                  const emailInput = document.getElementById('tenant-contact-email') as HTMLInputElement
+                  
+                  if (nameInput.value && codeInput.value && typeSelect.value && emailInput.value) {
+                    createTenant({
+                      name: nameInput.value,
+                      code: codeInput.value,
+                      tenant_type: typeSelect.value,
+                      contact_email: emailInput.value
+                    })
+                  }
                 }}
               >
                 Create
