@@ -396,25 +396,15 @@ export function PermissionStatus({
 export function PermissionDebugPanel({ className = "p-4 bg-gray-100 rounded-lg text-xs" }: { className?: string }) {
   const { 
     currentRole, 
-    currentUserId, 
-    currentTenantId, 
-    userPermissions, 
-    getAccessibleFeatures,
-    isAdmin,
-    isDemoMode 
+    isAdmin 
   } = usePermissions()
   
   return (
     <div className={className}>
       <h4 className="font-bold mb-2">Permission Debug Info</h4>
       <div className="space-y-1">
-        <div><strong>User ID:</strong> {currentUserId}</div>
-        <div><strong>Tenant ID:</strong> {currentTenantId}</div>
         <div><strong>Role:</strong> {currentRole}</div>
         <div><strong>Is Admin:</strong> {isAdmin() ? 'Yes' : 'No'}</div>
-        <div><strong>Demo Mode:</strong> {isDemoMode ? 'Yes' : 'No'}</div>
-        <div><strong>Permissions:</strong> {userPermissions.length}</div>
-        <div><strong>Accessible Features:</strong> {getAccessibleFeatures().length}</div>
       </div>
     </div>
   )

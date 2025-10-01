@@ -18,11 +18,7 @@ import {
   PermissionDebugPanel,
 } from "@/components/PermissionGuards";
 import { RouteGuard } from "@/components/RouteGuard";
-import {
-  BreadcrumbRBAC,
-  QuickActionsRBAC,
-  NavigationStats,
-} from "@/components/NavigationRBAC";
+import { BreadcrumbRBAC, QuickActionsRBAC } from "@/components/NavigationRBAC";
 import type { WorkRequest, ProjectCharter, Risk } from "@/types";
 
 interface DashboardData {
@@ -46,7 +42,7 @@ export default function ProjectManagementPageRBAC() {
   const {
     canManage,
     canView,
-    currentUserRole,
+    currentRole,
     isLoading: permissionsLoading,
   } = usePermissions();
 
@@ -221,17 +217,17 @@ export default function ProjectManagementPageRBAC() {
                     </h1>
                     <p className="text-gray-600 mt-2">
                       Manage your projects, work requests, and risks
-                      {currentUserRole && (
+                      {currentRole && (
                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                          {currentUserRole}
+                          {currentRole}
                         </span>
                       )}
                     </p>
                   </div>
 
                   {/* Admin-only debug panel toggle */}
-                  {(currentUserRole === "host_admin" ||
-                    currentUserRole === "tenant_admin") &&
+                  {(currentRole === "host_admin" ||
+                    currentRole === "tenant_admin") &&
                     process.env.NODE_ENV !== "production" && (
                       <button
                         onClick={() => setSelectedTab("debug")}
@@ -683,8 +679,8 @@ export default function ProjectManagementPageRBAC() {
 
                   {/* Debug Tab (Admin only) */}
                   {selectedTab === "debug" &&
-                    (currentUserRole === "host_admin" ||
-                      currentUserRole === "tenant_admin") && (
+                    (currentRole === "host_admin" ||
+                      currentRole === "tenant_admin") && (
                       <div className="space-y-6">
                         <h3 className="text-lg font-medium text-gray-900">
                           RBAC Debug Information
@@ -707,8 +703,6 @@ export default function ProjectManagementPageRBAC() {
 
             {/* Sidebar with navigation stats */}
             <div className="w-80">
-              <NavigationStats className="mb-6" />
-
               {/* Permission-based quick links */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h4 className="font-medium text-gray-900 mb-4">Quick Links</h4>

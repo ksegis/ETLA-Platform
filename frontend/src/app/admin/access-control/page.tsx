@@ -34,7 +34,7 @@ export const dynamic = "force-dynamic";
 export default function AccessControlPage() {
   const router = useRouter();
   const { user, tenantUser, isAuthenticated, tenant } = useAuth();
-  const { canManage, currentUserRole } = usePermissions();
+  const { canManage, currentRole } = usePermissions();
 
   const [activeTab, setActiveTab] = useState("users");
   const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>(
@@ -89,7 +89,7 @@ export default function AccessControlPage() {
     };
 
     loadInitialData();
-    }, [isAuthenticated, router, canManage]);
+  }, [isAuthenticated, router, canManage]);
 
   useEffect(() => {
     if (selectedTenant) {
@@ -325,10 +325,9 @@ export default function AccessControlPage() {
             onClose={() => setSelectedUserId(null)}
             userDetail={userDetail}
             loading={userDetailLoading}
-            isHostAdmin={currentUserRole === "host_admin"}
+            isHostAdmin={currentRole === "host_admin"}
             isAdmin={
-              currentUserRole === "host_admin" ||
-              currentUserRole === "tenant_admin"
+              currentRole === "host_admin" || currentRole === "tenant_admin"
             }
           />
         </div>
