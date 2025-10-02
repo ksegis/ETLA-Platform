@@ -148,10 +148,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Clear timeout since we completed successfully
         clearTimeout(initTimeout)
+        // Set loading to false and stable to true only after tenant user is loaded or failed
         setLoading(false)
         setIsStable(true)
         updateServiceAuthContext()
-        console.log('✅ AuthProvider: Authentication state stabilized')
+        console.log("✅ AuthProvider: Authentication state stabilized")
         
       } catch (error) {
         console.error('❌ AuthProvider: Unexpected error during initialization:', error)
@@ -184,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await Promise.race([
                 loadTenantUser(newSession.user.id),
                 new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Tenant user load timeout')), 5000)
+                  setTimeout(() => reject(new Error('Tenant user load timeout')), 10000) // Increased to 10 seconds
                 )
               ])
               console.log('✅ AuthProvider: Tenant user loaded successfully')
@@ -204,10 +205,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           // Always clear loading state
           clearTimeout(initTimeout)
+          // Set loading to false and stable to true only after tenant user is loaded or failed
           setLoading(false)
           setIsStable(true)
           updateServiceAuthContext()
-          console.log('✅ AuthProvider: Auth state change completed')
+          console.log("✅ AuthProvider: Auth state change completed")
         }
       }
     )
