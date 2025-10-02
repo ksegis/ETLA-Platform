@@ -81,11 +81,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadTenantUser = async (userId: string) => {
     try {
+      console.log(`🔍 AuthProvider: Starting loadTenantUser for userId: ${userId}`)
+      const startTime = Date.now()
       const { data, error } = await supabase
-        .from('tenant_users')
-        .select('*')
-        .eq('user_id', userId)
+        .from(\'tenant_users\')
+        .select(\'*\')
+        .eq(\'user_id\', userId)
         .single();
+      const endTime = Date.now()
+      console.log(`🔍 AuthProvider: loadTenantUser for userId: ${userId} completed in ${endTime - startTime}ms`)
 
       if (error) {
         console.error('Error fetching tenant user:', error);
@@ -180,17 +184,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(newSession)
             setUser(newSession.user)
             
-            // Load tenant user with timeout protection
+            // Load tenant user without timeout protection for diagnosis
             try {
-              await Promise.race([
-                loadTenantUser(newSession.user.id),
-                new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Tenant user load timeout')), 10000) // Increased to 10 seconds
-                )
-              ])
-              console.log('✅ AuthProvider: Tenant user loaded successfully')
+              await loadTenantUser(newSession.user.id)
+              console.log(\'✅ AuthProvider: Tenant user loaded successfully (no timeout applied)\'
+              )
             } catch (tenantError) {
-              console.warn('⚠️ AuthProvider: Failed to load tenant user:', tenantError)
+              console.warn(\'❌ AuthProvider: Failed to load tenant user (no timeout applied):\', tenantError)
               // Continue with login even if tenant user fails to load
               setTenantUser(null)
             }
