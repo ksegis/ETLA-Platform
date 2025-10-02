@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export default function AccessControlTestPage() {
+export default async function AccessControlTestPage() {
   return (
     <div>
       <h1>Access Control Test Page - It Works!</h1>
