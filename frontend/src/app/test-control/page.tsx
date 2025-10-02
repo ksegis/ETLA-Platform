@@ -1,8 +1,6 @@
 "use client";
 
-import React from 'react';
-
-export default async function AccessControlTestPage() {
+export default function AccessControlTestPage() {
   return (
     <div>
       <h1>Access Control Test Page - It Works!</h1>
