@@ -107,15 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('🔐 AuthProvider: Initializing authentication state')
     
-    // Add timeout to prevent infinite loading
-    const initTimeout = setTimeout(() => {
-      console.log('⚠️ AuthProvider: Initialization timeout - forcing stable state')
-      setLoading(false)
-      setIsStable(true)
-      updateServiceAuthContext()
-    }, 10000) // 10 second timeout
+
     
-    const getInitialSession = async () => {
+        const getInitialSession = async () => {
+          console.log("🔍 AuthProvider: Starting getInitialSession")
+          const sessionStartTime = Date.now()
       try {
         // In demo mode, skip Supabase session check and complete initialization quickly
         if (isDemoMode) {
@@ -150,13 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser(null)
         }
         
-        // Clear timeout since we completed successfully
-        clearTimeout(initTimeout)
-        // Set loading to false and stable to true only after tenant user is loaded or failed
+        // Set loading to false and stable to true only after all initial session logic
         setLoading(false)
         setIsStable(true)
         updateServiceAuthContext()
-        console.log("✅ AuthProvider: Authentication state stabilized")
+        console.log(`✅ AuthProvider: Authentication state stabilized. getInitialSession completed in ${Date.now() - sessionStartTime}ms`)
         
       } catch (error) {
         console.error('❌ AuthProvider: Unexpected error during initialization:', error)
@@ -164,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null)
         setTenantUser(null)
         // Clear timeout since we completed (with error)
-        clearTimeout(initTimeout)
+
         setLoading(false)
         setIsStable(true)
         updateServiceAuthContext()
@@ -204,7 +198,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('❌ AuthProvider: Error in auth state change:', error)
         } finally {
           // Always clear loading state
-          clearTimeout(initTimeout)
           // Set loading to false and stable to true only after tenant user is loaded or failed
           setLoading(false)
           setIsStable(true)
