@@ -47,7 +47,7 @@ export default function ProjectManagementPageRBAC() {
     isLoading: permissionsLoading,
   } = usePermissions();
 
-  // Build a lightweight, safe-to-render permissions snapshot
+  // Build a lightweight, safe-to-render permissions snapsho
   const debugPermissionsSummary = (() => {
     const featureKeys = FEATURES ? Object.keys(FEATURES) : [];
     const permissionKeys = PERMISSIONS ? Object.keys(PERMISSIONS) : [];
