@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -13,14 +13,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectTrigger as BaseSelectTrigger } from "@/components/ui/select";
-import type * as React from "react";
+import type {
+  ComponentProps,
+  ForwardRefExoticComponent,
+  HTMLAttributes,
+} from "react";
 
 // widen props just for this file
-type TriggerProps = React.ComponentProps<typeof BaseSelectTrigger> &
-  React.HTMLAttributes<HTMLButtonElement>;
+type TriggerProps = ComponentProps<typeof BaseSelectTrigger> &
+  HTMLAttributes<HTMLButtonElement>;
 
 const SelectTrigger = BaseSelectTrigger as unknown as
-  React.ForwardRefExoticComponent<TriggerProps>;
+  ForwardRefExoticComponent<TriggerProps>;
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/Badge";
 import {
