@@ -8,9 +8,9 @@ export const FEATURES = {
   PROFILES: 'profiles',
   TIMEKEEPING: 'timekeeping',
 
-  // --- Added aliases to fix TS errors in page-rbac.tsx ---
-  PROJECT_MANAGEMENT: 'projects',  // alias -> existing slug
-  RISK_MANAGEMENT: 'risks',        // choose canonical slug for risks
+  // Aliases so existing callsites like page-rbac.tsx compile
+  PROJECT_MANAGEMENT: 'projects',
+  RISK_MANAGEMENT: 'risks',
 } as const;
 
 export const PERMISSIONS = {
@@ -21,5 +21,10 @@ export const PERMISSIONS = {
   APPROVE: 'approve',
 } as const;
 
+// Canonical key unions for compile-time safety
 export type FeatureKey = keyof typeof FEATURES;
 export type PermissionKey = keyof typeof PERMISSIONS;
+
+// ---- Add these aliases to satisfy existing imports ----
+export type Feature = FeatureKey;
+export type Permission = PermissionKey;
