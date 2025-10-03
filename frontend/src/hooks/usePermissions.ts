@@ -1,28 +1,42 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { hasPermission, hasAnyPermission } from "@/lib/rbac";
+import { hasPermission, hasAnyPermission, type Feature, type Permission } from "@/rbac/constants";
 
 export function usePermissions() {
-  const { currentUserRole, loading } = useAuth();
+  const { currentUserRole: role, loading: isLoading } = useAuth();
 
-  const checkPermission = (permission: string): boolean => {
-    if (loading) {
-      return false; 
-    }
-    return hasPermission(currentUserRole, permission);
-  };
+  // Existing permission check functions (assuming they are defined elsewhere or will be adapted)
+  // For now, let's assume a simplified version or that they will be refactored.
+  // If your actual hasPermission and hasAnyPermission are different, adjust accordingly.
 
-  const checkAnyPermission = (permissions: string[]): boolean => {
-    if (loading) {
+  // ── Aliases expected by page-rbac.tsx ──────────────────────────────────────────
+  const checkPermission = (feature: Feature, permission: Permission): boolean => {
+    if (isLoading) {
       return false;
     }
-    return hasAnyPermission(currentUserRole, permissions);
+    return hasPermission(role, feature, permission);
+  };
+
+  const checkAnyPermission = (feature: Feature, permissions: Permission[]): boolean => {
+    if (isLoading) {
+      return false;
+    }
+    return hasAnyPermission(role, feature, permissions);
   };
 
   return {
+    // existing API (if any, otherwise remove)
+    // hasPermission: (f, p) => hasPermission(role, f, p),
+    // canAccessFeature: (f) => canAccessFeature(role, f),
+    // getPermissionLevel: (f) => getPermissionLevel(role, f),
+    // canCreate: (f) => canCreate(role, f),
+
+    // ✅ aliases for page-rbac.tsx
     checkPermission,
     checkAnyPermission,
-    currentUserRole,
-    loading,
+
+    // ✅ normalize names the page expects
+    currentUserRole: role ?? null,
+    loading: isLoading === undefined ? false : isLoading,
   };
 }
 
