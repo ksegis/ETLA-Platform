@@ -31,3 +31,7 @@ export type PermissionKey = keyof typeof PERMISSIONS;
 export type Feature = FeatureKey;
 export type Permission = PermissionKey;
 
+
+
+// Minor change to trigger new build (corrected path)
+
