@@ -36,6 +36,8 @@ import {
   Key,
   User
 } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
+import { PERMISSIONS } from '@/lib/rbac'
 
 interface NavigationItem {
   name: string;
@@ -43,6 +45,7 @@ interface NavigationItem {
   icon: any;
   badge?: string;
   isNew?: boolean;
+  requiredPermission?: string; // Add requiredPermission to NavItem
 }
 
 interface NavigationGroup {
@@ -55,6 +58,7 @@ interface NavigationGroup {
   textColor: string;
   defaultExpanded?: boolean;
   items: NavigationItem[];
+  requiredPermission?: string; // Add requiredPermission to NavigationGroup
 }
 
 interface DashboardLayoutProps {
@@ -65,9 +69,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'talent-management', 'etl-cockpit'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(["operations", "talent-management", "etl-cockpit"])
   const router = useRouter()
   const pathname = usePathname()
+  const { checkPermission, loading: permissionsLoading } = usePermissions();
 
   // REDESIGNED NAVIGATION GROUPS - USER-FRIENDLY WORKFLOW ORIENTED
   const navigationGroups: NavigationGroup[] = [
@@ -80,10 +85,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       hoverColor: 'hover:bg-blue-50',
       textColor: 'text-blue-900',
       items: [
-        { name: 'Work Requests', href: '/work-requests', icon: FileText },
-        { name: 'Project Management', href: '/project-management', icon: Calendar },
-        { name: 'Reporting', href: '/reporting', icon: TrendingUp },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true }
+        { name: 'Work Requests', href: '/work-requests', icon: FileText, requiredPermission: PERMISSIONS.WORK_REQUEST_READ },
+        { name: 'Project Management', href: '/project-management', icon: Calendar, requiredPermission: PERMISSIONS.PROJECT_READ },
+        { name: 'Reporting', href: '/reporting', icon: TrendingUp, requiredPermission: PERMISSIONS.REPORTING_VIEW },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true, requiredPermission: PERMISSIONS.REPORTING_VIEW }
       ]
     },
     {
@@ -94,13 +99,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-emerald-600',
       hoverColor: 'hover:bg-emerald-50',
       textColor: 'text-emerald-900',
+      requiredPermission: PERMISSIONS.USER_READ, // Example: entire group requires user read
       items: [
-        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3 },
-        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase },
-        { name: 'Candidates', href: '/talent/candidates', icon: Users },
-        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp },
-        { name: 'Interviews', href: '/talent/interviews', icon: Calendar },
-        { name: 'Offers', href: '/talent/offers', icon: FileText }
+        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3, requiredPermission: PERMISSIONS.USER_READ },
+        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
+        { name: 'Candidates', href: '/talent/candidates', icon: Users, requiredPermission: PERMISSIONS.CANDIDATE_READ },
+        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp, requiredPermission: PERMISSIONS.CANDIDATE_READ },
+        { name: 'Interviews', href: '/talent/interviews', icon: Calendar, requiredPermission: PERMISSIONS.INTERVIEW_MANAGE },
+        { name: 'Offers', href: '/talent/offers', icon: FileText, requiredPermission: PERMISSIONS.OFFER_MANAGE }
       ]
     },
     {
@@ -111,12 +117,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-green-600',
       hoverColor: 'hover:bg-green-50',
       textColor: 'text-green-900',
+      requiredPermission: PERMISSIONS.DATA_PROCESS, // Example: entire group requires data process permission
       items: [
-        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3 },
-        { name: 'Job Management', href: '/jobs', icon: Briefcase },
-        { name: 'Employee Data Processing', href: '/employees', icon: Users },
-        { name: 'Data Analytics', href: '/analytics', icon: Database },
-        { name: 'Audit Trail', href: '/audit', icon: Eye }
+        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3, requiredPermission: PERMISSIONS.DATA_PROCESS },
+        { name: 'Job Management', href: '/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
+        { name: 'Employee Data Processing', href: '/employees', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_PROCESS },
+        { name: 'Data Analytics', href: '/analytics', icon: Database, requiredPermission: PERMISSIONS.DATA_ANALYZE },
+        { name: 'Audit Trail', href: '/audit', icon: Eye, requiredPermission: PERMISSIONS.AUDIT_VIEW }
       ]
     },
     {
@@ -127,10 +134,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-indigo-600',
       hoverColor: 'hover:bg-indigo-50',
       textColor: 'text-indigo-900',
+      requiredPermission: PERMISSIONS.DATA_MANAGE, // Example: entire group requires data manage permission
       items: [
-        { name: 'File Upload', href: '/upload', icon: Upload },
-        { name: 'Data Validation', href: '/validation', icon: CheckCircle },
-        { name: 'System Health', href: '/system-health', icon: Activity }
+        { name: 'File Upload', href: '/upload', icon: Upload, requiredPermission: PERMISSIONS.FILE_UPLOAD },
+        { name: 'Data Validation', href: '/validation', icon: CheckCircle, requiredPermission: PERMISSIONS.DATA_VALIDATE },
+        { name: 'System Health', href: '/system-health', icon: Activity, requiredPermission: PERMISSIONS.SYSTEM_HEALTH_VIEW }
       ]
     },
     {
@@ -141,10 +149,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-purple-600',
       hoverColor: 'hover:bg-purple-50',
       textColor: 'text-purple-900',
+      requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE, // Example: entire group requires system settings manage
       items: [
-        { name: 'System Settings', href: '/settings', icon: Settings },
-        { name: 'API Configuration', href: '/api-config', icon: Zap },
-        { name: 'Integration Settings', href: '/integrations', icon: Target }
+        { name: 'System Settings', href: '/settings', icon: Settings, requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE },
+        { name: 'API Configuration', href: '/api-config', icon: Zap, requiredPermission: PERMISSIONS.API_CONFIG_MANAGE },
+        { name: 'Integration Settings', href: '/integrations', icon: Target, requiredPermission: PERMISSIONS.INTEGRATION_MANAGE }
       ]
     },
     {
@@ -155,12 +164,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-orange-600',
       hoverColor: 'hover:bg-orange-50',
       textColor: 'text-orange-900',
+      requiredPermission: PERMISSIONS.ADMIN_ACCESS, // Example: entire group requires admin access
       items: [
-        { name: 'Access Control', href: '/admin/access-control', icon: Shield },
-        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
-        { name: 'Employee Directory', href: '/employee-directory', icon: Users },
-        { name: 'Benefits Management', href: '/benefits', icon: Building },
-        { name: 'Payroll Management', href: '/payroll', icon: DollarSign }
+        { name: 'Access Control', href: '/admin/access-control', icon: Shield, requiredPermission: PERMISSIONS.USER_READ },
+        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building, requiredPermission: PERMISSIONS.TENANT_READ },
+        { name: 'Employee Directory', href: '/employee-directory', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_READ },
+        { name: 'Benefits Management', href: '/benefits', icon: Building, requiredPermission: PERMISSIONS.BENEFITS_MANAGE },
+        { name: 'Payroll Management', href: '/payroll', icon: DollarSign, requiredPermission: PERMISSIONS.PAYROLL_MANAGE }
       ]
     }
   ]
@@ -247,6 +257,38 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [pathname])
 
+  // Filter navigation groups and items based on permissions
+  const filteredNavigationGroups = useMemo(() => {
+    if (permissionsLoading) return [];
+
+    return navigationGroups.filter(group => {
+      // Check if the group itself has a required permission
+      if (group.requiredPermission && !checkPermission(group.requiredPermission)) {
+        return false;
+      }
+      // Filter items within the group
+      group.items = group.items.filter(item => {
+        if (item.requiredPermission && !checkPermission(item.requiredPermission)) {
+          return false;
+        }
+        return true;
+      });
+      // Only show group if it has accessible items or no items (e.g., just a header)
+      return group.items.length > 0;
+    });
+  }, [navigationGroups, checkPermission, permissionsLoading]);
+
+  if (permissionsLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex bg-gray-50">
       {/* Mobile sidebar overlay */}
@@ -289,7 +331,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-3 overflow-y-auto">
-            {navigationGroups.map((group: any) => {
+            {filteredNavigationGroups.map((group: any) => {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
               
@@ -438,38 +480,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         onClick={() => setProfileDropdownOpen(false)}
                       >
                         <Settings className="h-4 w-4 mr-3 text-gray-400" />
-                        Profile Settings
+                        Settings
                       </a>
-                      
-                      <a
-                        href="/profile#security"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <Shield className="h-4 w-4 mr-3 text-gray-400" />
-                        Security & MFA
-                      </a>
-                      
-                      <a
-                        href="/reset-password"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <Key className="h-4 w-4 mr-3 text-gray-400" />
-                        Change Password
-                      </a>
-                      
-                      <div className="border-t border-gray-100 my-1"></div>
-                      
                       <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false)
-                          handleSignOut()
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={handleSignOut}
+                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
-                        <LogOut className="h-4 w-4 mr-3" />
-                        Sign Out
+                        <LogOut className="h-4 w-4 mr-3 text-gray-400" />
+                        Sign out
                       </button>
                     </div>
                   </div>
@@ -479,8 +497,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Page content - No padding/margin to eliminate white space */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>
