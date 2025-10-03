@@ -30,7 +30,7 @@ export const PERMISSIONS = {
 
 export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
-// ---- Roles (named export) ----
+// ---- Roles ----
 export const ROLES = {
   PLATFORM_ADMIN: "platform_admin",
   TENANT_ADMIN: "tenant_admin",
@@ -39,14 +39,10 @@ export const ROLES = {
 
 export type Role = typeof ROLES[keyof typeof ROLES];
 
-// If you ever need an ordered list:
+// Optional ordered list if you need to iterate in the UI
 export const ALL_ROLES: Role[] = [
   ROLES.PLATFORM_ADMIN,
   ROLES.TENANT_ADMIN,
   ROLES.TENANT_MEMBER,
 ];
-
-
-
-// Minor change to trigger new build after Vercel cache purge
 
