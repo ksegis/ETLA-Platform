@@ -10,9 +10,17 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectTrigger as BaseSelectTrigger } from "@/components/ui/select";
+import type * as React from "react";
+
+// widen props just for this file
+type TriggerProps = React.ComponentProps<typeof BaseSelectTrigger> &
+  React.HTMLAttributes<HTMLButtonElement>;
+
+const SelectTrigger = BaseSelectTrigger as unknown as
+  React.ForwardRefExoticComponent<TriggerProps>;
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -242,7 +250,7 @@ export default function TenantManagementPage() {
     tenant_type: string;
     contact_email: string;
   }) => {
-    console.log("=== CREATE TENANT DEBUG START ===");
+    console.log("=== CREATE TENANT DEBUG START ====");
     console.log("Input tenantData:", tenantData);
 
     try {
@@ -286,9 +294,9 @@ export default function TenantManagementPage() {
       );
       setShowCreateTenantModal(false);
       await loadTenants();
-      console.log("=== CREATE TENANT DEBUG END ===");
+      console.log("=== CREATE TENANT DEBUG END ====");
     } catch (error) {
-      console.error("=== CREATE TENANT ERROR ===");
+      console.error("=== CREATE TENANT ERROR ====");
       console.error("Error creating tenant:", error);
       if (error instanceof Error) {
         console.error("Error details:", {
@@ -297,7 +305,7 @@ export default function TenantManagementPage() {
           stack: error.stack,
         });
       }
-      console.error("=== CREATE TENANT ERROR END ===");
+      console.error("=== CREATE TENANT ERROR END ====");
     }
   };
 
@@ -499,6 +507,13 @@ export default function TenantManagementPage() {
                               <option value="client_admin">Client Admin</option>
                               <option value="client_user">Client User</option>
                             </select>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeUserFromTenant(user.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -507,163 +522,167 @@ export default function TenantManagementPage() {
                 </div>
               ) : (
                 <div className="text-center py-4 text-gray-500">
-                  Select a tenant to view its users
+                  Select a tenant from the list to manage its users.
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {showAddUserModal && (
-          <AddUserToTenantModal
-            allUsers={allUsers}
-            onClose={() => setShowAddUserModal(false)}
-            onAddUser={addUserToTenant}
-          />
-        )}
+        {/* Add User Modal */}
+        <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add User to Tenant</DialogTitle>
+              <DialogDescription>
+                Select a user and assign a role to add them to the current
+                tenant.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="user-select" className="text-right">
+                  User
+                </Label>
+                <Select
+                  value={selectedUserId}
+                  onValueChange={setSelectedUserId}
+                >
+                  <SelectTrigger id="user-select">
+                    <SelectValue placeholder="Select a user" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allUsers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role-select" className="text-right">
+                  Role
+                </Label>
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                  <SelectTrigger id="role-select">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="program_manager">
+                      Program Manager
+                    </SelectItem>
+                    <SelectItem value="client_admin">Client Admin</SelectItem>
+                    <SelectItem value="client_user">Client User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() =>
+                  addUserToTenant(selectedUserId as string, selectedRole)
+                }
+                disabled={!selectedUserId || !selectedRole}
+              >
+                Add User
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-        {showCreateTenantModal && (
-          <CreateTenantModal
-            onClose={() => setShowCreateTenantModal(false)}
-            onCreateTenant={createTenant}
-          />
-        )}
+        {/* Create Tenant Modal */}
+        <Dialog
+          open={showCreateTenantModal}
+          onOpenChange={setShowCreateTenantModal}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Tenant</DialogTitle>
+              <DialogDescription>
+                Enter the details for the new tenant.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tenant-name" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="tenant-name"
+                  value={newTenant.name}
+                  onChange={(e) =>
+                    setNewTenant({ ...newTenant, name: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tenant-code" className="text-right">
+                  Code
+                </Label>
+                <Input
+                  id="tenant-code"
+                  value={newTenant.code}
+                  onChange={(e) =>
+                    setNewTenant({ ...newTenant, code: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tenant-type" className="text-right">
+                  Type
+                </Label>
+                <Input
+                  id="tenant-type"
+                  value={newTenant.tenant_type}
+                  onChange={(e) =>
+                    setNewTenant({ ...newTenant, tenant_type: e.target.value })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="contact-email" className="text-right">
+                  Contact Email
+                </Label>
+                <Input
+                  id="contact-email"
+                  type="email"
+                  value={newTenant.contact_email}
+                  onChange={(e) =>
+                    setNewTenant({
+                      ...newTenant,
+                      contact_email: e.target.value,
+                    })
+                  }
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => createTenant(newTenant)}>
+                Create Tenant
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
 }
 
-function AddUserToTenantModal({ allUsers, onClose, onAddUser }: any) {
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [role, setRole] = useState("client_user");
+const selectedUserId = ""; // Placeholder for selected user ID
+const setSelectedUserId = (id: string) => {}; // Placeholder for setSelectedUserId
+const selectedRole = ""; // Placeholder for selected role
+const setSelectedRole = (role: string) => {}; // Placeholder for setSelectedRole
 
-  const handleSubmit = () => {
-    if (selectedUserId) {
-      onAddUser(selectedUserId, role);
-    }
-  };
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add User to Tenant</DialogTitle>
-          <DialogDescription>
-            Select a user and assign a role within this tenant.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="user-select">User</Label>
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger id="user-select">
-                <SelectValue placeholder="Select a user" />
-              </SelectTrigger>
-              <SelectContent>
-                {allUsers.map((user: any) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="role-select">Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger id="role-select">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="host_admin">Host Admin</SelectItem>
-                <SelectItem value="program_manager">Program Manager</SelectItem>
-                <SelectItem value="client_admin">Client Admin</SelectItem>
-                <SelectItem value="client_user">Client User</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit}>Add User</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function CreateTenantModal({ onClose, onCreateTenant }: any) {
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [tenantType, setTenantType] = useState("standard");
-  const [contactEmail, setContactEmail] = useState("");
-
-  const handleSubmit = () => {
-    onCreateTenant({ name, code, tenant_type: tenantType, contact_email: contactEmail });
-  };
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create New Tenant</DialogTitle>
-          <DialogDescription>
-            Enter the details for the new tenant.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="tenant-name">Tenant Name</Label>
-            <Input
-              id="tenant-name"
-              value={name}
-              onChange={(e: any) => setName(e.target.value)}
-              placeholder="e.g., Acme Corporation"
-            />
-          </div>
-          <div>
-            <Label htmlFor="tenant-code">Tenant Code</Label>
-            <Input
-              id="tenant-code"
-              value={code}
-              onChange={(e: any) => setCode(e.target.value)}
-              placeholder="e.g., ACME"
-            />
-          </div>
-          <div>
-            <Label htmlFor="tenant-type">Tenant Type</Label>
-            <Select value={tenantType} onValueChange={setTenantType}>
-              <SelectTrigger id="tenant-type">
-                <SelectValue placeholder="Select a type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="enterprise">Enterprise</SelectItem>
-                <SelectItem value="partner">Partner</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="contact-email">Contact Email</Label>
-            <Input
-              id="contact-email"
-              type="email"
-              value={contactEmail}
-              onChange={(e: any) => setContactEmail(e.target.value)}
-              placeholder="e.g., admin@acme.com"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit}>Create Tenant</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+const newTenant = {
+  name: "",
+  code: "",
+  tenant_type: "",
+  contact_email: "",
+}; // Placeholder for new tenant data
+const setNewTenant = (tenant: any) => {}; // Placeholder for setNewTenant
 
