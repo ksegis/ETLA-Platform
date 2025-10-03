@@ -1,39 +1,25 @@
 // src/rbac/constants.ts
-
-// Canonical feature keys used to compose "<feature>:<action>" permission strings
 export const FEATURES = {
-  ACCESS_CONTROL: "access_control",
-  TENANT_MANAGEMENT: "tenant_management",
-  WORK_REQUESTS: "work_requests",
-  PROJECTS: "projects",
-  EMPLOYEES: "employees",
-  PROFILES: "profiles",
-  TIMEKEEPING: "timekeeping",
+  ACCESS_CONTROL: 'access_control',
+  TENANT_MANAGEMENT: 'tenant_management',
+  WORK_REQUESTS: 'work_requests',
+  PROJECTS: 'projects',
+  EMPLOYEES: 'employees',
+  PROFILES: 'profiles',
+  TIMEKEEPING: 'timekeeping',
+
+  // --- Added aliases to fix TS errors in page-rbac.tsx ---
+  PROJECT_MANAGEMENT: 'projects',  // alias -> existing slug
+  RISK_MANAGEMENT: 'risks',        // choose canonical slug for risks
 } as const;
 
-export type Feature = typeof FEATURES[keyof typeof FEATURES];
-
-// Canonical actions
 export const PERMISSIONS = {
-  VIEW: "view",
-  CREATE: "create",
-  EDIT: "edit",
-  DELETE: "delete",
-  APPROVE: "approve",
-
-  // Back-compat legacy keys some pages still reference
-  WORK_REQUESTS_CREATE: `${FEATURES.WORK_REQUESTS}:create`,
-  WORK_REQUESTS_UPDATE: `${FEATURES.WORK_REQUESTS}:edit`,
-  WORK_REQUESTS_DELETE: `${FEATURES.WORK_REQUESTS}:delete`,
+  VIEW: 'view',
+  CREATE: 'create',
+  EDIT: 'edit',
+  DELETE: 'delete',
+  APPROVE: 'approve',
 } as const;
 
-export type PermissionAction =
-  | "view"
-  | "create"
-  | "edit"
-  | "delete"
-  | "approve";
-
-// Optional helper (useful elsewhere if needed)
-export const permKey = (feature: Feature, action: PermissionAction) =>
-  `${feature}:${action}`;
+export type FeatureKey = keyof typeof FEATURES;
+export type PermissionKey = keyof typeof PERMISSIONS;
