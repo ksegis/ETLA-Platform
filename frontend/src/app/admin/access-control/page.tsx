@@ -28,9 +28,7 @@ import { Label } from "@/components/ui/label";
 import RBACMatrixGrid from "@/components/rbac/RBACMatrixGrid";
 import { RolesPermissionsTab } from "@/components/rbac/RolesPermissionsTab";
 import { UserDetailPanel } from "@/components/rbac/UserDetailPanel";
-import { FEATURES, PERMISSIONS, ROLES } from "@/lib/rbac"; // Import PERMISSIONS and ROLES
-
-export const dynamic = "force-dynamic";
+import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants"; // Import PERMISSIONS and ROLES
 
 export default function AccessControlPage() {
   const router = useRouter();
