@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePermissions, FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FEATURES, PERMISSIONS } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
 import {
   PermissionGuard,
