@@ -23,15 +23,21 @@ export const PERMISSIONS = {
   APPROVE: 'approve',
 } as const;
 
+export const ROLES = {
+  HOST_ADMIN: "host_admin",
+  TENANT_ADMIN: "tenant_admin",
+  PROJECT_MANAGER: "project_manager",
+  TEAM_MEMBER: "team_member",
+  VIEWER: "viewer",
+} as const;
+
 // Canonical key unions for compile-time safety
 export type FeatureKey = keyof typeof FEATURES;
 export type PermissionKey = keyof typeof PERMISSIONS;
+export type RoleKey = keyof typeof ROLES;
 
 // ---- Add these aliases to satisfy existing imports ----
 export type Feature = FeatureKey;
 export type Permission = PermissionKey;
-
-
-
-// Minor change to trigger new build (corrected path)
+export type Role = RoleKey;
 
