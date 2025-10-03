@@ -49,7 +49,7 @@ export default function ProjectManagementPageRBAC() {
     loading: permissionsLoading,
   } = usePermissions();
 
-  const canView = (feature: ke  type FeatureKey = keyof typeof FEATURES;
+  type FeatureKey = keyof typeof FEATURES;
   type FeatureValue = (typeof FEATURES)[FeatureKey];
   type FeatureArg = FeatureKey | FeatureValue;
 
