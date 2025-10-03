@@ -49,18 +49,28 @@ export default function ProjectManagementPageRBAC() {
     loading: permissionsLoading,
   } = usePermissions();
 
-  const canView = (feature: keyof typeof FEATURES) =>
-    checkPermission(`${feature}:${PERMISSIONS.VIEW}`);
+  const canView = (feature: ke  type FeatureKey = keyof typeof FEATURES;
+  type FeatureValue = (typeof FEATURES)[FeatureKey];
+  type FeatureArg = FeatureKey | FeatureValue;
 
-  const canManage = (feature: keyof typeof FEATURES) =>
+  // runtime type guard for keys
+  const isFeatureKey = (f: FeatureArg): f is FeatureKey =>
+    Object.prototype.hasOwnProperty.call(FEATURES, f as any);
+
+  // always return the slug/value used in permission strings
+  const featureSlug = (f: FeatureArg): FeatureValue =>
+    isFeatureKey(f) ? FEATURES[f] : (f as FeatureValue);
+
+  const canView = (feature: FeatureArg) =>
+    checkPermission(`${featureSlug(feature)}:${PERMISSIONS.VIEW}`);
+
+  const canManage = (feature: FeatureArg) =>
     checkAnyPermission([
-      `${feature}:${PERMISSIONS.CREATE}`,
-      `${feature}:${PERMISSIONS.EDIT}`,
-      `${feature}:${PERMISSIONS.DELETE}`,
-      `${feature}:${PERMISSIONS.APPROVE}`,
-    ]);
-
-  // ---- Local state ----
+      `${featureSlug(feature)}:${PERMISSIONS.CREATE}`,
+      `${featureSlug(feature)}:${PERMISSIONS.EDIT}`,
+      `${featureSlug(feature)}:${PERMISSIONS.DELETE}`,
+      `${featureSlug(feature)}:${PERMISSIONS.APPROVE}`,
+    ]);  // ---- Local state ----
   type DashboardData = {
     workRequests: any[];
     projects: any[];
