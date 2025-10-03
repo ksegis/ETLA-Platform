@@ -187,8 +187,7 @@ function NavigationItem({
   const { checkPermission, currentUserRole } = usePermissions();
 
   // Check if item should be visible based on requiredPermission
-  const isVisible = () => {
-    if (item.requiredPermission && !checkPermission(item.requiredPermission)) {
+  const isVisible = () => {    if (item.requiredPermission && !checkPermission(item.requiredPermission)) {
       return false;
     }
     return true;
@@ -203,7 +202,7 @@ function NavigationItem({
   // Filter visible children
   const visibleChildren =
     item.children?.filter((child) => {
-      if (child.requiredPermission && !checkPermission(child.requiredPermission)) {
+     if (child.requiredPermission && !checkPermission(child.requiredPermission)) {
         return false;
       }
       return true;
