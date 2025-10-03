@@ -10,6 +10,9 @@ export const FEATURES = {
   // Aliases so existing callsites like page-rbac.tsx compile
   PROJECT_MANAGEMENT: 'projects',
   RISK_MANAGEMENT: 'risks',
+
+  // add this to satisfy page-rbac usage
+  DASHBOARDS: 'dashboards',
 } as const;
 
 export const PERMISSIONS = {
