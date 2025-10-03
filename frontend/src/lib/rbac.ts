@@ -1,0 +1,138 @@
+export const ROLES = {
+  HOST_ADMIN: 'host_admin',
+  TENANT_ADMIN: 'tenant_admin',
+  MANAGER: 'manager',
+  EMPLOYEE: 'employee',
+};
+
+export const PERMISSIONS = {
+  // Tenant Management
+  TENANT_READ: 'tenant:read',
+  TENANT_CREATE: 'tenant:create',
+  TENANT_UPDATE: 'tenant:update',
+  TENANT_DELETE: 'tenant:delete',
+
+  // User Management within a Tenant
+  USER_READ: 'user:read',
+  USER_CREATE: 'user:create',
+  USER_UPDATE: 'user:update',
+  USER_DELETE: 'user:delete',
+  USER_ASSIGN_ROLE: 'user:assign_role',
+
+  // Timecard Management
+  TIMECARD_READ_OWN: 'timecard:read:own',
+  TIMECARD_READ_ALL: 'timecard:read:all',
+  TIMECARD_CREATE_OWN: 'timecard:create:own',
+  TIMECARD_UPDATE_OWN: 'timecard:update:own',
+  TIMECARD_DELETE_OWN: 'timecard:delete:own',
+  TIMECARD_APPROVE: 'timecard:approve',
+  TIMECARD_RECALCULATE: 'timecard:recalculate',
+
+  // Reporting
+  REPORTING_VIEW: 'reporting:view',
+
+  // Project Management
+  PROJECT_READ: 'project:read',
+  PROJECT_CREATE: 'project:create',
+  PROJECT_UPDATE: 'project:update',
+  PROJECT_DELETE: 'project:delete',
+
+  // Work Requests
+  WORK_REQUEST_READ: 'work_request:read',
+  WORK_REQUEST_CREATE: 'work_request:create',
+  WORK_REQUEST_UPDATE: 'work_request:update',
+  WORK_REQUEST_DELETE: 'work_request:delete',
+};
+
+export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  [ROLES.HOST_ADMIN]: [
+    PERMISSIONS.TENANT_READ,
+    PERMISSIONS.TENANT_CREATE,
+    PERMISSIONS.TENANT_UPDATE,
+    PERMISSIONS.TENANT_DELETE,
+    PERMISSIONS.USER_READ,
+    PERMISSIONS.USER_CREATE,
+    PERMISSIONS.USER_UPDATE,
+    PERMISSIONS.USER_DELETE,
+    PERMISSIONS.USER_ASSIGN_ROLE,
+    PERMISSIONS.TIMECARD_READ_ALL,
+    PERMISSIONS.TIMECARD_CREATE_OWN,
+    PERMISSIONS.TIMECARD_UPDATE_OWN,
+    PERMISSIONS.TIMECARD_DELETE_OWN,
+    PERMISSIONS.TIMECARD_APPROVE,
+    PERMISSIONS.TIMECARD_RECALCULATE,
+    PERMISSIONS.REPORTING_VIEW,
+    PERMISSIONS.PROJECT_READ,
+    PERMISSIONS.PROJECT_CREATE,
+    PERMISSIONS.PROJECT_UPDATE,
+    PERMISSIONS.PROJECT_DELETE,
+    PERMISSIONS.WORK_REQUEST_READ,
+    PERMISSIONS.WORK_REQUEST_CREATE,
+    PERMISSIONS.WORK_REQUEST_UPDATE,
+    PERMISSIONS.WORK_REQUEST_DELETE,
+  ],
+  [ROLES.TENANT_ADMIN]: [
+    PERMISSIONS.USER_READ,
+    PERMISSIONS.USER_CREATE,
+    PERMISSIONS.USER_UPDATE,
+    PERMISSIONS.USER_DELETE,
+    PERMISSIONS.USER_ASSIGN_ROLE,
+    PERMISSIONS.TIMECARD_READ_ALL,
+    PERMISSIONS.TIMECARD_CREATE_OWN,
+    PERMISSIONS.TIMECARD_UPDATE_OWN,
+    PERMISSIONS.TIMECARD_DELETE_OWN,
+    PERMISSIONS.TIMECARD_APPROVE,
+    PERMISSIONS.TIMECARD_RECALCULATE,
+    PERMISSIONS.REPORTING_VIEW,
+    PERMISSIONS.PROJECT_READ,
+    PERMISSIONS.PROJECT_CREATE,
+    PERMISSIONS.PROJECT_UPDATE,
+    PERMISSIONS.PROJECT_DELETE,
+    PERMISSIONS.WORK_REQUEST_READ,
+    PERMISSIONS.WORK_REQUEST_CREATE,
+    PERMISSIONS.WORK_REQUEST_UPDATE,
+    PERMISSIONS.WORK_REQUEST_DELETE,
+  ],
+  [ROLES.MANAGER]: [
+    PERMISSIONS.USER_READ,
+    PERMISSIONS.TIMECARD_READ_ALL,
+    PERMISSIONS.TIMECARD_CREATE_OWN,
+    PERMISSIONS.TIMECARD_UPDATE_OWN,
+    PERMISSIONS.TIMECARD_DELETE_OWN,
+    PERMISSIONS.TIMECARD_APPROVE,
+    PERMISSIONS.REPORTING_VIEW,
+    PERMISSIONS.PROJECT_READ,
+    PERMISSIONS.WORK_REQUEST_READ,
+    PERMISSIONS.WORK_REQUEST_CREATE,
+    PERMISSIONS.WORK_REQUEST_UPDATE,
+  ],
+  [ROLES.EMPLOYEE]: [
+    PERMISSIONS.TIMECARD_READ_OWN,
+    PERMISSIONS.TIMECARD_CREATE_OWN,
+    PERMISSIONS.TIMECARD_UPDATE_OWN,
+    PERMISSIONS.TIMECARD_DELETE_OWN,
+    PERMISSIONS.WORK_REQUEST_READ,
+    PERMISSIONS.WORK_REQUEST_CREATE,
+    PERMISSIONS.WORK_REQUEST_UPDATE,
+  ],
+};
+
+export function hasPermission(userRole: string | null, permission: string): boolean {
+  if (!userRole) {
+    return false;
+  }
+  const permissionsForRole = ROLE_PERMISSIONS[userRole];
+  return permissionsForRole ? permissionsForRole.includes(permission) : false;
+}
+
+export function hasAnyPermission(userRole: string | null, permissions: string[]): boolean {
+  if (!userRole) {
+    return false;
+  }
+  const permissionsForRole = ROLE_PERMISSIONS[userRole];
+  if (!permissionsForRole) {
+    return false;
+  }
+  return permissions.some(p => permissionsForRole.includes(p));
+}
+

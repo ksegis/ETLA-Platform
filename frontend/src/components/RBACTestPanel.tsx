@@ -9,11 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { usePermissions, FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
+import { PERMISSIONS, ROLES, ROLE_PERMISSIONS } from "@/lib/rbac";
 
 interface TestResult {
-  feature: string;
   permission: string;
   expected: boolean;
   actual: boolean;
@@ -22,116 +22,12 @@ interface TestResult {
 
 export default function RBACTestPanel() {
   const { user, currentUserRole: role, currentTenantId } = useAuth();
-  const { hasPermission, canAccessFeature } = usePermissions();
+  const { checkPermission } = usePermissions();
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
-  // Define test cases for each role
-  const getTestCases = (userRole: string) => {
-    const testCases = [
-      // Host Admin Tests
-      {
-        feature: FEATURES.USER_MANAGEMENT,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin"],
-      },
-      {
-        feature: FEATURES.TENANT_MANAGEMENT,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin"],
-      },
-      {
-        feature: FEATURES.SYSTEM_SETTINGS,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin"],
-      },
-      {
-        feature: FEATURES.AUDIT_LOGS,
-        permission: PERMISSIONS.VIEW,
-        roles: ["host_admin"],
-      },
-
-      // Program Manager Tests
-      {
-        feature: FEATURES.PROJECT_MANAGEMENT,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin", "program_manager", "client_admin"],
-      },
-      {
-        feature: FEATURES.WORK_REQUESTS,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin", "program_manager", "client_admin"],
-      },
-      {
-        feature: FEATURES.RISK_MANAGEMENT,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin", "program_manager"],
-      },
-      {
-        feature: FEATURES.RESOURCE_MANAGEMENT,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin", "program_manager"],
-      },
-
-      // Client Admin Tests
-      {
-        feature: FEATURES.BENEFITS_MANAGEMENT,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin", "client_admin"],
-      },
-      {
-        feature: FEATURES.EMPLOYEE_RECORDS,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin", "client_admin"],
-      },
-
-      // Client User Tests
-      {
-        feature: FEATURES.WORK_REQUESTS,
-        permission: PERMISSIONS.CREATE,
-        roles: ["host_admin", "program_manager", "client_admin", "client_user"],
-      },
-      {
-        feature: FEATURES.WORK_REQUESTS,
-        permission: PERMISSIONS.VIEW,
-        roles: ["host_admin", "program_manager", "client_admin", "client_user"],
-      },
-      {
-        feature: FEATURES.PROJECT_MANAGEMENT,
-        permission: PERMISSIONS.VIEW,
-        roles: ["host_admin", "program_manager", "client_admin", "client_user"],
-      },
-
-      // Reporting Tests
-      {
-        feature: FEATURES.REPORTING,
-        permission: PERMISSIONS.VIEW,
-        roles: ["host_admin", "program_manager", "client_admin", "client_user"],
-      },
-      {
-        feature: FEATURES.DASHBOARDS,
-        permission: PERMISSIONS.VIEW,
-        roles: ["host_admin", "program_manager", "client_admin", "client_user"],
-      },
-
-      // Negative Tests (should fail for certain roles)
-      {
-        feature: FEATURES.USER_MANAGEMENT,
-        permission: PERMISSIONS.MANAGE,
-        roles: ["host_admin", "client_admin"],
-      },
-      {
-        feature: FEATURES.SYSTEM_SETTINGS,
-        permission: PERMISSIONS.VIEW,
-        roles: ["host_admin"],
-      },
-    ];
-
-    return testCases.map((testCase: any) => ({
-      ...testCase,
-      expected: testCase.roles.includes(userRole),
-    }));
-  };
+  // Define test cases based on the PERMISSIONS constant
+  const allPermissions = Object.values(PERMISSIONS);
 
   const runRBACTests = async () => {
     if (!role) {
@@ -140,23 +36,22 @@ export default function RBACTestPanel() {
     }
 
     setIsRunning(true);
-    const testCases = getTestCases(role);
     const results: TestResult[] = [];
 
-    for (const testCase of testCases) {
-      const actual = hasPermission(testCase.feature, testCase.permission);
-      const passed = actual === testCase.expected;
+    for (const permission of allPermissions) {
+      const expected = ROLE_PERMISSIONS[role]?.includes(permission) || false;
+      const actual = checkPermission(permission);
+      const passed = actual === expected;
 
       results.push({
-        feature: testCase.feature,
-        permission: testCase.permission,
-        expected: testCase.expected,
+        permission,
+        expected,
         actual,
         passed,
       });
 
       // Small delay to make testing visible
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     setTestResults(results);
@@ -171,7 +66,7 @@ export default function RBACTestPanel() {
     return passed ? "✅" : "❌";
   };
 
-  const passedTests = testResults.filter((r: any) => r.passed).length;
+  const passedTests = testResults.filter((r) => r.passed).length;
   const totalTests = testResults.length;
   const passRate =
     totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
@@ -245,7 +140,6 @@ export default function RBACTestPanel() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="text-left p-2 border-b">Feature</th>
                       <th className="text-left p-2 border-b">Permission</th>
                       <th className="text-center p-2 border-b">Expected</th>
                       <th className="text-center p-2 border-b">Actual</th>
@@ -253,14 +147,11 @@ export default function RBACTestPanel() {
                     </tr>
                   </thead>
                   <tbody>
-                    {testResults.map((result, index: any) => (
+                    {testResults.map((result, index) => (
                       <tr
                         key={index}
                         className={`border-b ${result.passed ? "bg-green-50" : "bg-red-50"}`}
                       >
-                        <td className="p-2 font-mono text-xs">
-                          {result.feature}
-                        </td>
                         <td className="p-2 font-mono text-xs">
                           {result.permission}
                         </td>
@@ -288,35 +179,29 @@ export default function RBACTestPanel() {
             <h3 className="font-semibold mb-2">Quick RBAC Checks</h3>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="font-medium">Can Manage Users:</span>
+                <span className="font-medium">Can Read Users:</span>
                 <span
                   className={
-                    hasPermission(FEATURES.USER_MANAGEMENT, PERMISSIONS.MANAGE)
+                    checkPermission(PERMISSIONS.USER_READ)
                       ? "text-green-600"
                       : "text-red-600"
                   }
                 >
-                  {hasPermission(FEATURES.USER_MANAGEMENT, PERMISSIONS.MANAGE)
+                  {checkPermission(PERMISSIONS.USER_READ)
                     ? " Yes"
                     : " No"}
                 </span>
               </div>
               <div>
-                <span className="font-medium">Can Manage Projects:</span>
+                <span className="font-medium">Can Create Projects:</span>
                 <span
                   className={
-                    hasPermission(
-                      FEATURES.PROJECT_MANAGEMENT,
-                      PERMISSIONS.MANAGE,
-                    )
+                    checkPermission(PERMISSIONS.PROJECT_CREATE)
                       ? "text-green-600"
                       : "text-red-600"
                   }
                 >
-                  {hasPermission(
-                    FEATURES.PROJECT_MANAGEMENT,
-                    PERMISSIONS.MANAGE,
-                  )
+                  {checkPermission(PERMISSIONS.PROJECT_CREATE)
                     ? " Yes"
                     : " No"}
                 </span>
@@ -325,26 +210,26 @@ export default function RBACTestPanel() {
                 <span className="font-medium">Can View Reports:</span>
                 <span
                   className={
-                    hasPermission(FEATURES.REPORTING, PERMISSIONS.VIEW)
+                    checkPermission(PERMISSIONS.REPORTING_VIEW)
                       ? "text-green-600"
                       : "text-red-600"
                   }
                 >
-                  {hasPermission(FEATURES.REPORTING, PERMISSIONS.VIEW)
+                  {checkPermission(PERMISSIONS.REPORTING_VIEW)
                     ? " Yes"
                     : " No"}
                 </span>
               </div>
               <div>
-                <span className="font-medium">Can Access System Settings:</span>
+                <span className="font-medium">Can Update Tenants:</span>
                 <span
                   className={
-                    hasPermission(FEATURES.SYSTEM_SETTINGS, PERMISSIONS.MANAGE)
+                    checkPermission(PERMISSIONS.TENANT_UPDATE)
                       ? "text-green-600"
                       : "text-red-600"
                   }
                 >
-                  {hasPermission(FEATURES.SYSTEM_SETTINGS, PERMISSIONS.MANAGE)
+                  {checkPermission(PERMISSIONS.TENANT_UPDATE)
                     ? " Yes"
                     : " No"}
                 </span>
@@ -356,3 +241,4 @@ export default function RBACTestPanel() {
     </div>
   );
 }
+

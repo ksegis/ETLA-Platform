@@ -1,9 +1,8 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { usePermissions, FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PERMISSIONS, ROLES } from "@/lib/rbac";
 
 // Navigation item interface
 interface NavItem {
@@ -11,11 +10,7 @@ interface NavItem {
   label: string;
   href: string;
   icon?: React.ReactNode;
-  feature?: string;
-  permission?: string;
-  roles?: string[];
-  adminOnly?: boolean;
-  hostAdminOnly?: boolean;
+  requiredPermission?: string; // Use requiredPermission directly
   children?: NavItem[];
 }
 
@@ -32,31 +27,31 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Project Management",
     href: "/project-management",
     icon: "📋",
-    feature: FEATURES.PROJECT_MANAGEMENT,
+    requiredPermission: PERMISSIONS.PROJECT_READ,
     children: [
       {
         id: "work-requests",
         label: "Work Requests",
         href: "/project-management/requests",
-        feature: FEATURES.WORK_REQUESTS,
+        requiredPermission: PERMISSIONS.WORK_REQUEST_READ,
       },
       {
         id: "project-charters",
         label: "Project Charters",
         href: "/project-management/charters",
-        feature: FEATURES.PROJECT_CHARTER,
+        requiredPermission: PERMISSIONS.PROJECT_READ,
       },
       {
         id: "risk-management",
         label: "Risk Management",
         href: "/project-management/risks",
-        feature: FEATURES.RISK_MANAGEMENT,
+        requiredPermission: PERMISSIONS.PROJECT_READ,
       },
       {
         id: "resource-management",
         label: "Resources",
         href: "/project-management/resources",
-        feature: FEATURES.RESOURCE_MANAGEMENT,
+        requiredPermission: PERMISSIONS.PROJECT_READ,
       },
     ],
   },
@@ -65,26 +60,26 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Work Requests",
     href: "/work-requests",
     icon: "📝",
-    feature: FEATURES.WORK_REQUESTS,
+    requiredPermission: PERMISSIONS.WORK_REQUEST_READ,
   },
   {
     id: "reporting",
     label: "Reporting",
     href: "/reporting",
     icon: "📈",
-    feature: FEATURES.REPORTING,
+    requiredPermission: PERMISSIONS.REPORTING_VIEW,
     children: [
       {
         id: "dashboards",
         label: "Dashboards",
         href: "/dashboards",
-        feature: FEATURES.DASHBOARDS,
+        requiredPermission: PERMISSIONS.REPORTING_VIEW,
       },
       {
         id: "analytics",
         label: "Analytics",
         href: "/analytics",
-        feature: FEATURES.ANALYTICS,
+        requiredPermission: PERMISSIONS.REPORTING_VIEW,
       },
     ],
   },
@@ -93,24 +88,25 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Data Management",
     href: "/data-management",
     icon: "🗄️",
+    requiredPermission: PERMISSIONS.TENANT_UPDATE, // Assuming data management is a high-level permission
     children: [
       {
         id: "migration-workbench",
         label: "Migration Workbench",
         href: "/migration-workbench",
-        feature: FEATURES.MIGRATION_WORKBENCH,
+        requiredPermission: PERMISSIONS.TENANT_UPDATE,
       },
       {
         id: "file-upload",
         label: "File Upload",
         href: "/file-upload",
-        feature: FEATURES.FILE_UPLOAD,
+        requiredPermission: PERMISSIONS.TENANT_UPDATE,
       },
       {
         id: "data-validation",
         label: "Data Validation",
         href: "/data-validation",
-        feature: FEATURES.DATA_VALIDATION,
+        requiredPermission: PERMISSIONS.TENANT_UPDATE,
       },
     ],
   },
@@ -119,19 +115,19 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Benefits & HR",
     href: "/benefits",
     icon: "👥",
-    feature: FEATURES.BENEFITS_MANAGEMENT,
+    requiredPermission: PERMISSIONS.USER_READ, // Assuming benefits viewing requires user read
     children: [
       {
         id: "employee-records",
         label: "Employee Records",
         href: "/employees",
-        feature: FEATURES.EMPLOYEE_RECORDS,
+        requiredPermission: PERMISSIONS.USER_READ,
       },
       {
         id: "payroll",
         label: "Payroll",
         href: "/payroll",
-        feature: FEATURES.PAYROLL_PROCESSING,
+        requiredPermission: PERMISSIONS.TIMECARD_READ_ALL,
       },
     ],
   },
@@ -140,49 +136,37 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Administration",
     href: "/admin",
     icon: "⚙️",
-    adminOnly: true,
+    requiredPermission: PERMISSIONS.USER_READ, // General admin access requires user read
     children: [
       {
         id: "access-control",
         label: "Access Control",
-        href: "/admin/access-control",
-        feature: FEATURES.ACCESS_CONTROL,
-        adminOnly: true,
-      },
-      {
-        id: "rbac-matrix",
-        label: "RBAC Matrix",
-        href: "/admin/access-control",
-        feature: FEATURES.ACCESS_CONTROL,
-        adminOnly: true,
+        href: "/access-control",
+        requiredPermission: PERMISSIONS.USER_READ,
       },
       {
         id: "user-management",
         label: "User Management",
         href: "/user-management",
-        feature: FEATURES.USER_MANAGEMENT,
-        adminOnly: true,
+        requiredPermission: PERMISSIONS.USER_READ,
       },
       {
         id: "tenant-management",
         label: "Tenant Management",
         href: "/tenant-management",
-        feature: FEATURES.TENANT_MANAGEMENT,
-        hostAdminOnly: true,
+        requiredPermission: PERMISSIONS.TENANT_READ,
       },
       {
         id: "system-settings",
         label: "System Settings",
         href: "/system-settings",
-        feature: FEATURES.SYSTEM_SETTINGS,
-        hostAdminOnly: true,
+        requiredPermission: PERMISSIONS.TENANT_UPDATE,
       },
       {
         id: "audit-logs",
         label: "Audit Logs",
         href: "/audit-logs",
-        feature: FEATURES.AUDIT_LOGS,
-        adminOnly: true,
+        requiredPermission: PERMISSIONS.TENANT_READ,
       },
     ],
   },
@@ -200,24 +184,13 @@ function NavigationItem({
   isCollapsed = false,
 }: NavigationItemProps) {
   const pathname = usePathname();
-  const { canView, isAdmin, isHostAdmin, currentRole } = usePermissions();
+  const { checkPermission, currentUserRole } = usePermissions();
 
-  // Check if item should be visible
+  // Check if item should be visible based on requiredPermission
   const isVisible = () => {
-    // Check admin requirements
-    if (item.adminOnly && !isAdmin()) return false;
-    if (item.hostAdminOnly && !isHostAdmin()) return false;
-
-    // Check role requirements
-    if (item.roles && item.roles.length > 0) {
-      if (!currentRole || !item.roles.includes(currentRole)) return false;
+    if (item.requiredPermission && !checkPermission(item.requiredPermission)) {
+      return false;
     }
-
-    // Check feature/permission requirements
-    if (item.feature) {
-      return canView(item.feature);
-    }
-
     return true;
   };
 
@@ -229,11 +202,9 @@ function NavigationItem({
 
   // Filter visible children
   const visibleChildren =
-    item.children?.filter((child: any) => {
-      if (child.adminOnly && !isAdmin()) return false;
-      if (child.hostAdminOnly && !isHostAdmin()) return false;
-      if (child.feature) {
-        return canView(child.feature);
+    item.children?.filter((child) => {
+      if (child.requiredPermission && !checkPermission(child.requiredPermission)) {
+        return false;
       }
       return true;
     }) || [];
@@ -275,7 +246,7 @@ function NavigationItem({
         visibleChildren.length > 0 &&
         isActive && (
           <div className="mt-1 space-y-1">
-            {visibleChildren.map((child: any) => (
+            {visibleChildren.map((child) => (
               <NavigationItem
                 key={child.id}
                 item={child}
@@ -298,13 +269,13 @@ export function NavigationRBAC({
   isCollapsed = false,
   className = "",
 }: NavigationRBACProps) {
-  const { isLoading, currentRole, isAdmin, isHostAdmin } = usePermissions();
+  const { loading: isLoading, currentUserRole } = usePermissions();
 
   if (isLoading) {
     return (
       <nav className={`space-y-1 ${className}`}>
         <div className="animate-pulse">
-          {[1, 2, 3, 4, 5].map((i: any) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-10 bg-gray-200 rounded-md mb-2"></div>
           ))}
         </div>
@@ -318,25 +289,14 @@ export function NavigationRBAC({
       {!isCollapsed && (
         <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-200 mb-4">
           <div className="flex items-center justify-between">
-            <span>Role: {currentRole}</span>
-            <div className="flex space-x-1">
-              {isAdmin() && (
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                  Admin
-                </span>
-              )}
-              {isHostAdmin() && (
-                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                  Host
-                </span>
-              )}
-            </div>
+            <span>Role: {currentUserRole}</span>
+            {/* Admin/Host Admin badges can be derived from currentUserRole if needed */}
           </div>
         </div>
       )}
 
       {/* Navigation items */}
-      {NAVIGATION_ITEMS.map((item: any) => (
+      {NAVIGATION_ITEMS.map((item) => (
         <NavigationItem key={item.id} item={item} isCollapsed={isCollapsed} />
       ))}
     </nav>
@@ -347,8 +307,7 @@ export function NavigationRBAC({
 interface BreadcrumbItem {
   label: string;
   href?: string;
-  feature?: string;
-  permission?: string;
+  requiredPermission?: string;
 }
 
 interface BreadcrumbRBACProps {
@@ -357,15 +316,11 @@ interface BreadcrumbRBACProps {
 }
 
 export function BreadcrumbRBAC({ items, className = "" }: BreadcrumbRBACProps) {
-  const { hasPermission, canAccessFeature } = usePermissions();
+  const { checkPermission } = usePermissions();
 
   const isItemAccessible = (item: BreadcrumbItem) => {
-    if (item.feature) {
-      if (item.permission) {
-        return hasPermission(item.feature, item.permission);
-      } else {
-        return canAccessFeature(item.feature);
-      }
+    if (item.requiredPermission) {
+      return checkPermission(item.requiredPermission);
     }
     return true;
   };
@@ -373,7 +328,7 @@ export function BreadcrumbRBAC({ items, className = "" }: BreadcrumbRBACProps) {
   return (
     <nav className={`flex ${className}`} aria-label="Breadcrumb">
       <ol className="flex items-center space-x-2">
-        {items.map((item, index: any) => {
+        {items.map((item, index) => {
           const isLast = index === items.length - 1;
           const isAccessible = isItemAccessible(item);
 
@@ -411,8 +366,7 @@ interface QuickAction {
   label: string;
   href: string;
   icon: React.ReactNode;
-  feature: string;
-  permission: string;
+  requiredPermission: string;
   className?: string;
 }
 
@@ -422,8 +376,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "New Work Request",
     href: "/work-requests/create",
     icon: "📝",
-    feature: FEATURES.WORK_REQUESTS,
-    permission: PERMISSIONS.CREATE,
+    requiredPermission: PERMISSIONS.WORK_REQUEST_CREATE,
     className: "bg-blue-600 hover:bg-blue-700 text-white",
   },
   {
@@ -431,8 +384,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "New Project",
     href: "/project-management/create",
     icon: "📋",
-    feature: FEATURES.PROJECT_MANAGEMENT,
-    permission: PERMISSIONS.CREATE,
+    requiredPermission: PERMISSIONS.PROJECT_CREATE,
     className: "bg-green-600 hover:bg-green-700 text-white",
   },
   {
@@ -440,17 +392,16 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "Upload File",
     href: "/file-upload",
     icon: "📁",
-    feature: FEATURES.FILE_UPLOAD,
-    permission: PERMISSIONS.CREATE,
+    requiredPermission: PERMISSIONS.TENANT_UPDATE, // Assuming file upload is a high-level permission
     className: "bg-purple-600 hover:bg-purple-700 text-white",
   },
 ];
 
 export function QuickActionsRBAC({ className = "" }: { className?: string }) {
-  const { hasPermission } = usePermissions();
+  const { checkPermission } = usePermissions();
 
-  const accessibleActions = QUICK_ACTIONS.filter((action: any) =>
-    hasPermission(action.feature, action.permission),
+  const accessibleActions = QUICK_ACTIONS.filter((action) =>
+    checkPermission(action.requiredPermission),
   );
 
   if (accessibleActions.length === 0) {
@@ -459,7 +410,7 @@ export function QuickActionsRBAC({ className = "" }: { className?: string }) {
 
   return (
     <div className={`flex space-x-2 ${className}`}>
-      {accessibleActions.map((action: any) => (
+      {accessibleActions.map((action) => (
         <Link
           key={action.id}
           href={action.href}
@@ -478,3 +429,6 @@ export function QuickActionsRBAC({ className = "" }: { className?: string }) {
     </div>
   );
 }
+
+export default NavigationRBAC;
+

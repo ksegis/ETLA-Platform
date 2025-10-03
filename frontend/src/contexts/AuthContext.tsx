@@ -1,20 +1,8 @@
-"use client";
-
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import type {
-  User,
-  Session,
-  AuthError,
-  AuthChangeEvent,
-} from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import type { User, Session, AuthError, AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { setServiceAuthContext } from "@/utils/serviceAuth";
+import { ROLES } from "@/lib/rbac"; // Import ROLES
 
 interface Tenant {
   id: string;
@@ -36,7 +24,6 @@ interface TenantUser {
 
 interface AuthContextType {
   user: User | null;
-  // tenant: Tenant | null // Temporarily removed to force Vercel re-evaluation
   tenant: Tenant | null;
   tenantUser: TenantUser | null;
   session: Session | null;
@@ -68,13 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isStable, setIsStable] = useState(false);
 
-  // Tenant state - will be managed by TenantContext
   const [tenant, setTenant] = useState<Tenant | null>(null);
-
-  // Tenant user state - will be loaded dynamically based on authentication
   const [tenantUser, setTenantUser] = useState<TenantUser | null>(null);
 
-  // Computed properties for RBAC
   const isDemoMode =
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL === "https://demo.supabase.co" ||
@@ -86,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const currentTenantId = tenantUser?.tenant_id || null;
   const currentUserRole = tenantUser?.role || null;
 
-  // Helper function to update service auth context
   const updateServiceAuthContext = () => {
     setServiceAuthContext({
       userId: currentUserId,
@@ -125,7 +107,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Initialize authentication state
   useEffect(() => {
     console.log("🔐 AuthProvider: Initializing authentication state");
 
@@ -133,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("🔍 AuthProvider: Starting getInitialSession");
       const sessionStartTime = Date.now();
       try {
-        // In demo mode, skip Supabase session check and complete initialization quickly
         if (isDemoMode) {
           console.log(
             "🎭 AuthProvider: Demo mode detected - skipping session check",
@@ -171,7 +151,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser(null);
         }
 
-        // Set loading to false and stable to true only after all initial session logic
         setLoading(false);
         setIsStable(true);
         updateServiceAuthContext();
@@ -186,7 +165,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setSession(null);
         setTenantUser(null);
-        // Clear timeout since we completed (with error)
 
         setLoading(false);
         setIsStable(true);
@@ -196,7 +174,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     getInitialSession();
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
@@ -209,7 +186,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(newSession);
             setUser(newSession.user);
 
-            // Load tenant user without timeout protection for diagnosis
             try {
               await loadTenantUser(newSession.user.id);
               console.log(
@@ -220,7 +196,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 "❌ AuthProvider: Failed to load tenant user (no timeout applied):",
                 tenantError,
               );
-              // Continue with login even if tenant user fails to load
               setTenantUser(null);
             }
           } else {
@@ -232,8 +207,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error("❌ AuthProvider: Error in auth state change:", error);
         } finally {
-          // Always clear loading state
-          // Set loading to false and stable to true only after tenant user is loaded or failed
           setLoading(false);
           setIsStable(true);
           updateServiceAuthContext();
@@ -243,7 +216,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => {
-
       subscription.unsubscribe();
     };
   }, []);
@@ -258,20 +230,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error("❌ AuthProvider: Sign in failed:", error);
-        // Ensure loading state is cleared on error
         setLoading(false);
         setIsStable(true);
       } else {
         console.log(
           "✅ AuthProvider: Sign in successful, waiting for auth state change",
         );
-        // Don't clear loading here - let the auth state change handler do it
       }
 
       return { error };
     } catch (error) {
       console.error("❌ AuthProvider: Sign in error:", error);
-      // Ensure loading state is cleared on exception
       setLoading(false);
       setIsStable(true);
       return { error };
@@ -302,13 +271,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsStable(true);
       updateServiceAuthContext();
 
-      // Redirect to login page
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
     } catch (error) {
       console.error("❌ AuthProvider: Error during sign out:", error);
-      // Still redirect even if there's an error
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
@@ -378,12 +345,3 @@ export function useAuth() {
 
 export default AuthContext;
 
-// Trigger Vercel rebuild
-
-// Force Vercel rebuild - attempt to clear cache
-
-// Another small change to trigger Vercel rebuild
-
-// Final small change to trigger Vercel rebuild before browser test
-
-// Small change to trigger Vercel rebuild after successful build

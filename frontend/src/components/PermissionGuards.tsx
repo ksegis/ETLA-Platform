@@ -1,74 +1,65 @@
+
 'use client'
 
 import React from 'react'
-import { usePermissions, FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
+import { usePermissions } from '@/hooks/usePermissions'
+import { PERMISSIONS, ROLES } from '@/lib/rbac'
 
 // Base Permission Guard Component
 interface PermissionGuardProps {
-  feature: string
-  permission?: string
+  requiredPermission: string
   fallback?: React.ReactNode
   children: React.ReactNode
   className?: string
 }
 
-export function PermissionGuard({ 
-  feature, 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
+export function PermissionGuard({
+  requiredPermission,
+  fallback = null,
   children,
-  className 
+  className
 }: PermissionGuardProps) {
-  const { hasPermission, canAccessFeature } = usePermissions()
-  
-  const hasAccess = permission 
-    ? hasPermission(feature, permission)
-    : canAccessFeature(feature)
-  
-  if (!hasAccess) {
+  const { checkPermission, loading } = usePermissions()
+
+  if (loading) {
+    return null; // Or a loading indicator
+  }
+
+  if (!checkPermission(requiredPermission)) {
     return <div className={className}>{fallback}</div>
   }
-  
+
   return <div className={className}>{children}</div>
 }
 
-// Feature Guard Component (any access to feature)
-interface FeatureGuardProps {
-  feature: string
-  fallback?: React.ReactNode
-  children: React.ReactNode
-  className?: string
-}
-
-export function FeatureGuard({ feature, fallback = null, children, className }: FeatureGuardProps) {
-  const { canAccessFeature } = usePermissions()
-  
-  if (!canAccessFeature(feature)) {
-    return <div className={className}>{fallback}</div>
-  }
-  
-  return <div className={className}>{children}</div>
-}
+// Feature Guard Component (any access to feature) - this concept is now covered by specific permissions
+// We can keep it if there's a need to check for *any* permission related to a feature, but for now,
+// we'll focus on explicit permission checks.
+// If a feature has a 'view' permission, that would be its FeatureGuard equivalent.
 
 // Role Guard Component
 interface RoleGuardProps {
-  roles: string[]
+  allowedRoles: string[]
   fallback?: React.ReactNode
   children: React.ReactNode
   className?: string
 }
 
-export function RoleGuard({ roles, fallback = null, children, className }: RoleGuardProps) {
-  const { currentRole } = usePermissions()
-  
-  if (!currentRole || !roles.includes(currentRole)) {
+export function RoleGuard({ allowedRoles, fallback = null, children, className }: RoleGuardProps) {
+  const { currentUserRole, loading } = usePermissions()
+
+  if (loading) {
+    return null; // Or a loading indicator
+  }
+
+  if (!currentUserRole || !allowedRoles.includes(currentUserRole)) {
     return <div className={className}>{fallback}</div>
   }
-  
+
   return <div className={className}>{children}</div>
 }
 
-// Admin Guard Component
+// Admin Guard Component (checks for host_admin or tenant_admin role)
 interface AdminGuardProps {
   fallback?: React.ReactNode
   children: React.ReactNode
@@ -76,39 +67,47 @@ interface AdminGuardProps {
 }
 
 export function AdminGuard({ fallback = null, children, className }: AdminGuardProps) {
-  const { isAdmin } = usePermissions()
-  
-  if (!isAdmin()) {
+  const { currentUserRole, loading } = usePermissions()
+
+  if (loading) {
+    return null; // Or a loading indicator
+  }
+
+  const isAdmin = currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.TENANT_ADMIN;
+
+  if (!isAdmin) {
     return <div className={className}>{fallback}</div>
   }
-  
+
   return <div className={className}>{children}</div>
 }
 
 // Button with Permission Check
 interface PermissionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  feature: string
-  permission: string
+  requiredPermission: string
   fallback?: React.ReactNode
   children: React.ReactNode
 }
 
-export function PermissionButton({ 
-  feature, 
-  permission, 
-  fallback = null, 
-  children, 
+export function PermissionButton({
+  requiredPermission,
+  fallback = null,
+  children,
   className = '',
-  ...buttonProps 
+  ...buttonProps
 }: PermissionButtonProps) {
-  const { hasPermission } = usePermissions()
-  
-  if (!hasPermission(feature, permission)) {
+  const { checkPermission, loading } = usePermissions()
+
+  if (loading) {
+    return null; // Or a loading indicator
+  }
+
+  if (!checkPermission(requiredPermission)) {
     return <>{fallback}</>
   }
-  
+
   return (
-    <button 
+    <button
       className={`${className}`}
       {...buttonProps}
     >
@@ -119,28 +118,30 @@ export function PermissionButton({
 
 // Link with Permission Check
 interface PermissionLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
-  feature: string
-  permission?: string
+  requiredPermission: string
   fallback?: React.ReactNode
   children: React.ReactNode
 }
 
-export function PermissionLink({ 
-  feature, 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
-  children, 
+export function PermissionLink({
+  requiredPermission,
+  fallback = null,
+  children,
   className = '',
-  ...linkProps 
+  ...linkProps
 }: PermissionLinkProps) {
-  const { hasPermission } = usePermissions()
-  
-  if (!hasPermission(feature, permission)) {
+  const { checkPermission, loading } = usePermissions()
+
+  if (loading) {
+    return null; // Or a loading indicator
+  }
+
+  if (!checkPermission(requiredPermission)) {
     return <>{fallback}</>
   }
-  
+
   return (
-    <a 
+    <a
       className={`${className}`}
       {...linkProps}
     >
@@ -160,23 +161,22 @@ export function ConditionalRender({ condition, children, fallback = null }: Cond
   if (!condition()) {
     return <>{fallback}</>
   }
-  
+
   return <>{children}</>
 }
 
 // Specific Feature Guards for common use cases
+// These now directly use PermissionGuard with the specific permission
 
-// Work Request Guards
-export function WorkRequestGuard({ 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
-  children, 
-  className 
-}: Omit<PermissionGuardProps, 'feature'>) {
+export function WorkRequestGuard({
+  permission = PERMISSIONS.WORK_REQUEST_READ,
+  fallback = null,
+  children,
+  className
+}: Omit<PermissionGuardProps, 'requiredPermission'> & { permission?: string }) {
   return (
-    <PermissionGuard 
-      feature={FEATURES.WORK_REQUESTS} 
-      permission={permission} 
+    <PermissionGuard
+      requiredPermission={permission}
       fallback={fallback}
       className={className}
     >
@@ -185,16 +185,15 @@ export function WorkRequestGuard({
   )
 }
 
-export function WorkRequestCreateButton({ 
-  fallback = null, 
-  children, 
+export function WorkRequestCreateButton({
+  fallback = null,
+  children,
   className = '',
-  ...buttonProps 
-}: Omit<PermissionButtonProps, 'feature' | 'permission'>) {
+  ...buttonProps
+}: Omit<PermissionButtonProps, 'requiredPermission'>) {
   return (
-    <PermissionButton 
-      feature={FEATURES.WORK_REQUESTS} 
-      permission={PERMISSIONS.CREATE} 
+    <PermissionButton
+      requiredPermission={PERMISSIONS.WORK_REQUEST_CREATE}
       fallback={fallback}
       className={className}
       {...buttonProps}
@@ -204,16 +203,15 @@ export function WorkRequestCreateButton({
   )
 }
 
-export function WorkRequestApproveButton({ 
-  fallback = null, 
-  children, 
+export function WorkRequestApproveButton({
+  fallback = null,
+  children,
   className = '',
-  ...buttonProps 
-}: Omit<PermissionButtonProps, 'feature' | 'permission'>) {
+  ...buttonProps
+}: Omit<PermissionButtonProps, 'requiredPermission'>) {
   return (
-    <PermissionButton 
-      feature={FEATURES.WORK_REQUESTS} 
-      permission={PERMISSIONS.APPROVE} 
+    <PermissionButton
+      requiredPermission={PERMISSIONS.TIMECARD_APPROVE} // Assuming work request approval is tied to timecard approval for now
       fallback={fallback}
       className={className}
       {...buttonProps}
@@ -223,17 +221,15 @@ export function WorkRequestApproveButton({
   )
 }
 
-// Project Management Guards
-export function ProjectGuard({ 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
-  children, 
-  className 
-}: Omit<PermissionGuardProps, 'feature'>) {
+export function ProjectGuard({
+  permission = PERMISSIONS.PROJECT_READ,
+  fallback = null,
+  children,
+  className
+}: Omit<PermissionGuardProps, 'requiredPermission'> & { permission?: string }) {
   return (
-    <PermissionGuard 
-      feature={FEATURES.PROJECT_MANAGEMENT} 
-      permission={permission} 
+    <PermissionGuard
+      requiredPermission={permission}
       fallback={fallback}
       className={className}
     >
@@ -242,16 +238,15 @@ export function ProjectGuard({
   )
 }
 
-export function ProjectCreateButton({ 
-  fallback = null, 
-  children, 
+export function ProjectCreateButton({
+  fallback = null,
+  children,
   className = '',
-  ...buttonProps 
-}: Omit<PermissionButtonProps, 'feature' | 'permission'>) {
+  ...buttonProps
+}: Omit<PermissionButtonProps, 'requiredPermission'>) {
   return (
-    <PermissionButton 
-      feature={FEATURES.PROJECT_MANAGEMENT} 
-      permission={PERMISSIONS.CREATE} 
+    <PermissionButton
+      requiredPermission={PERMISSIONS.PROJECT_CREATE}
       fallback={fallback}
       className={className}
       {...buttonProps}
@@ -261,17 +256,15 @@ export function ProjectCreateButton({
   )
 }
 
-// Risk Management Guards
-export function RiskGuard({ 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
-  children, 
-  className 
-}: Omit<PermissionGuardProps, 'feature'>) {
+export function RiskGuard({
+  permission = PERMISSIONS.PROJECT_READ, // Assuming risk management falls under project read for now
+  fallback = null,
+  children,
+  className
+}: Omit<PermissionGuardProps, 'requiredPermission'> & { permission?: string }) {
   return (
-    <PermissionGuard 
-      feature={FEATURES.RISK_MANAGEMENT} 
-      permission={permission} 
+    <PermissionGuard
+      requiredPermission={permission}
       fallback={fallback}
       className={className}
     >
@@ -280,17 +273,15 @@ export function RiskGuard({
   )
 }
 
-// User Management Guards
-export function UserManagementGuard({ 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
-  children, 
-  className 
-}: Omit<PermissionGuardProps, 'feature'>) {
+export function UserManagementGuard({
+  permission = PERMISSIONS.USER_READ,
+  fallback = null,
+  children,
+  className
+}: Omit<PermissionGuardProps, 'requiredPermission'> & { permission?: string }) {
   return (
-    <PermissionGuard 
-      feature={FEATURES.USER_MANAGEMENT} 
-      permission={permission} 
+    <PermissionGuard
+      requiredPermission={permission}
       fallback={fallback}
       className={className}
     >
@@ -299,17 +290,15 @@ export function UserManagementGuard({
   )
 }
 
-// Reporting Guards
-export function ReportingGuard({ 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
-  children, 
-  className 
-}: Omit<PermissionGuardProps, 'feature'>) {
+export function ReportingGuard({
+  permission = PERMISSIONS.REPORTING_VIEW,
+  fallback = null,
+  children,
+  className
+}: Omit<PermissionGuardProps, 'requiredPermission'> & { permission?: string }) {
   return (
-    <PermissionGuard 
-      feature={FEATURES.REPORTING} 
-      permission={permission} 
+    <PermissionGuard
+      requiredPermission={permission}
       fallback={fallback}
       className={className}
     >
@@ -318,16 +307,15 @@ export function ReportingGuard({
   )
 }
 
-export function ReportExportButton({ 
-  fallback = null, 
-  children, 
+export function ReportExportButton({
+  fallback = null,
+  children,
   className = '',
-  ...buttonProps 
-}: Omit<PermissionButtonProps, 'feature' | 'permission'>) {
+  ...buttonProps
+}: Omit<PermissionButtonProps, 'requiredPermission'>) {
   return (
-    <PermissionButton 
-      feature={FEATURES.REPORTING} 
-      permission={PERMISSIONS.EXPORT} 
+    <PermissionButton
+      requiredPermission={PERMISSIONS.REPORTING_VIEW} // Assuming export is part of view for now
       fallback={fallback}
       className={className}
       {...buttonProps}
@@ -337,17 +325,15 @@ export function ReportExportButton({
   )
 }
 
-// Access Control Guards
-export function AccessControlGuard({ 
-  permission = PERMISSIONS.VIEW, 
-  fallback = null, 
-  children, 
-  className 
-}: Omit<PermissionGuardProps, 'feature'>) {
+export function AccessControlGuard({
+  permission = PERMISSIONS.USER_READ, // Assuming access control page requires user read permission
+  fallback = null,
+  children,
+  className
+}: Omit<PermissionGuardProps, 'requiredPermission'> & { permission?: string }) {
   return (
-    <PermissionGuard 
-      feature={FEATURES.ACCESS_CONTROL} 
-      permission={permission} 
+    <PermissionGuard
+      requiredPermission={permission}
       fallback={fallback}
       className={className}
     >
@@ -357,7 +343,7 @@ export function AccessControlGuard({
 }
 
 // No Access Fallback Component
-export function NoAccessFallback({ 
+export function NoAccessFallback({
   message = "You don't have permission to access this feature.",
   className = "p-4 text-center text-gray-500 bg-gray-50 rounded-lg border border-gray-200"
 }: {
@@ -373,18 +359,16 @@ export function NoAccessFallback({
 }
 
 // Permission Status Indicator
-export function PermissionStatus({ 
-  feature, 
-  permission, 
+export function PermissionStatus({
+  requiredPermission,
   className = "inline-flex items-center px-2 py-1 text-xs rounded-full"
 }: {
-  feature: string
-  permission: string
+  requiredPermission: string
   className?: string
 }) {
-  const { hasPermission } = usePermissions()
-  const hasAccess = hasPermission(feature, permission)
-  
+  const { checkPermission, loading } = usePermissions()
+  const hasAccess = !loading && checkPermission(requiredPermission)
+
   return (
     <span className={`${className} ${hasAccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
       {hasAccess ? '✓ Allowed' : '✗ Denied'}
@@ -394,17 +378,25 @@ export function PermissionStatus({
 
 // Permission Debug Panel (for development)
 export function PermissionDebugPanel({ className = "p-4 bg-gray-100 rounded-lg text-xs" }: { className?: string }) {
-  const { 
-    currentRole, 
-    isAdmin 
+  const {
+    currentUserRole,
+    loading
   } = usePermissions()
-  
+
+  if (loading) {
+    return null; // Or a loading indicator
+  }
+
+  const isAdmin = currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.TENANT_ADMIN;
+  const isHostAdmin = currentUserRole === ROLES.HOST_ADMIN;
+
   return (
     <div className={className}>
       <h4 className="font-bold mb-2">Permission Debug Info</h4>
       <div className="space-y-1">
-        <div><strong>Role:</strong> {currentRole}</div>
-        <div><strong>Is Admin:</strong> {isAdmin() ? 'Yes' : 'No'}</div>
+        <div><strong>Role:</strong> {currentUserRole}</div>
+        <div><strong>Is Admin:</strong> {isAdmin ? 'Yes' : 'No'}</div>
+        <div><strong>Is Host Admin:</strong> {isHostAdmin ? 'Yes' : 'No'}</div>
       </div>
     </div>
   )
@@ -412,7 +404,6 @@ export function PermissionDebugPanel({ className = "p-4 bg-gray-100 rounded-lg t
 
 export default {
   PermissionGuard,
-  FeatureGuard,
   RoleGuard,
   AdminGuard,
   PermissionButton,
