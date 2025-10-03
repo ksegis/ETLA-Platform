@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -28,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import RBACMatrixGrid from "@/components/rbac/RBACMatrixGrid";
 import { RolesPermissionsTab } from "@/components/rbac/RolesPermissionsTab";
 import { UserDetailPanel } from "@/components/rbac/UserDetailPanel";
-import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants"; // Import PERMISSIONS and ROLES
+import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants";
 
 export default function AccessControlPage() {
   const router = useRouter();
@@ -88,7 +89,7 @@ export default function AccessControlPage() {
       }
     };
 
-    if (isAuthenticated && !permissionsLoading && checkPermission(PERMISSIONS.USER_READ)) {
+    if (isAuthenticated) {
       loadInitialData();
     }
   }, [isAuthenticated, router, checkPermission, permissionsLoading]);
@@ -338,4 +339,3 @@ export default function AccessControlPage() {
   );
 }
 
-// Trigger a new build
