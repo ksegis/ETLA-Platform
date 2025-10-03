@@ -40,7 +40,8 @@ interface DashboardData {
 
 export default function ProjectManagementPageRBAC() {
   const router = useRouter();
-  // Minor change to trigger a new build
+
+  // ---- Permissions (new hook shape) ----
   const {
     checkPermission,
     checkAnyPermission,
@@ -48,11 +49,10 @@ export default function ProjectManagementPageRBAC() {
     loading: permissionsLoading,
   } = usePermissions();
 
-  // Derive the legacy helpers used by this page from the new API
-  const canView = (feature: Feature) =>
+  const canView = (feature: keyof typeof FEATURES) =>
     checkPermission(`${feature}:${PERMISSIONS.VIEW}`);
 
-  const canManage = (feature: Feature) =>
+  const canManage = (feature: keyof typeof FEATURES) =>
     checkAnyPermission([
       `${feature}:${PERMISSIONS.CREATE}`,
       `${feature}:${PERMISSIONS.EDIT}`,
@@ -60,42 +60,17 @@ export default function ProjectManagementPageRBAC() {
       `${feature}:${PERMISSIONS.APPROVE}`,
     ]);
 
-  // Legacy alias used in some effects/deps
-  const hasPermission = canView;
+  // ---- Local state ----
+  type DashboardData = {
+    workRequests: any[];
+    projects: any[];
+    risks: any[];
+  };
 
-  // Build a lightweight, safe-to-render permissions snapshot
-  const debugPermissionsSummary = (() => {
-    const featureKeys = FEATURES ? Object.keys(FEATURES) : [];
-    const permissionKeys = PERMISSIONS ? Object.keys(PERMISSIONS) : [];
-    return {
-      // high-level areas the user can at least view
-      features_viewable: featureKeys.filter((k) => {
-        const key = (FEATURES as any)[k] ?? k;
-        try {
-          return canView(key) === true;
-        } catch {
-          return false;
-        }
-      }),
-      // granular actions the user can manage
-      permissions_manageable: permissionKeys.filter((k) => {
-        const key = (PERMISSIONS as any)[k] ?? k;
-        try {
-          return canManage(key) === true;
-        } catch {
-          return false;
-        }
-      }),
-    };
-  })();Data] = useState<DashboardData>({
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     workRequests: [],
     projects: [],
     risks: [],
-    stats: {
-      workRequests: { total: 0, pending: 0, approved: 0, declined: 0 },
-      projects: { total: 0, active: 0, completed: 0 },
-      risks: { total: 0, high: 0, medium: 0, low: 0 },
-    },
   });
 
   const [isLoading, setIsLoading] = useState(true);
