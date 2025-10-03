@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
-import { FEATURES, PERMISSIONS } from "@/rbac/constants";
+import { FEATURES, PERMISSIONS, type Feature } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
 import {
   PermissionGuard,
@@ -40,12 +40,28 @@ interface DashboardData {
 
 export default function ProjectManagementPageRBAC() {
   const router = useRouter();
+  // Minor change to trigger a new build
   const {
-    canManage,
-    canView,
-    currentRole,
-    isLoading: permissionsLoading,
+    checkPermission,
+    checkAnyPermission,
+    currentUserRole: currentRole,
+    loading: permissionsLoading,
   } = usePermissions();
+
+  // Derive the legacy helpers used by this page from the new API
+  const canView = (feature: Feature) =>
+    checkPermission(`${feature}:${PERMISSIONS.VIEW}`);
+
+  const canManage = (feature: Feature) =>
+    checkAnyPermission([
+      `${feature}:${PERMISSIONS.CREATE}`,
+      `${feature}:${PERMISSIONS.EDIT}`,
+      `${feature}:${PERMISSIONS.DELETE}`,
+      `${feature}:${PERMISSIONS.APPROVE}`,
+    ]);
+
+  // Legacy alias used in some effects/deps
+  const hasPermission = canView;
 
   // Build a lightweight, safe-to-render permissions snapshot
   const debugPermissionsSummary = (() => {
@@ -56,7 +72,7 @@ export default function ProjectManagementPageRBAC() {
       features_viewable: featureKeys.filter((k) => {
         const key = (FEATURES as any)[k] ?? k;
         try {
-          return canView?.(key) === true;
+          return canView(key) === true;
         } catch {
           return false;
         }
@@ -65,15 +81,13 @@ export default function ProjectManagementPageRBAC() {
       permissions_manageable: permissionKeys.filter((k) => {
         const key = (PERMISSIONS as any)[k] ?? k;
         try {
-          return canManage?.(key) === true;
+          return canManage(key) === true;
         } catch {
           return false;
         }
       }),
     };
-  })();
-
-  const [data, setData] = useState<DashboardData>({
+  })();Data] = useState<DashboardData>({
     workRequests: [],
     projects: [],
     risks: [],
