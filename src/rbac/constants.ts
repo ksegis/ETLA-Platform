@@ -7,37 +7,42 @@ export const FEATURES = {
   PROFILES: 'profiles',
   TIMEKEEPING: 'timekeeping',
 
-  // Aliases so existing callsites like page-rbac.tsx compile
+  // you already have these variants
   PROJECT_MANAGEMENT: 'projects',
-  RISK_MANAGEMENT: 'risks',
+  RISK_MANAGEMENT: 'risk_management',
 
-  // add this to satisfy page-rbac usage
+  // ADD THIS:
   DASHBOARDS: 'dashboards',
 } as const;
 
+export type Feature = typeof FEATURES[keyof typeof FEATURES];
+
 export const PERMISSIONS = {
-  VIEW: 'view',
-  CREATE: 'create',
-  EDIT: 'edit',
-  DELETE: 'delete',
-  APPROVE: 'approve',
+  VIEW: 'VIEW',
+  CREATE: 'CREATE',
+  EDIT: 'EDIT',
+  DELETE: 'DELETE',
+  APPROVE: 'APPROVE',
+  WORK_REQUESTS_CREATE: 'WORK_REQUESTS_CREATE',
+  WORK_REQUESTS_UPDATE: 'WORK_REQUESTS_UPDATE',
+  WORK_REQUESTS_DELETE: 'WORK_REQUESTS_DELETE',
 } as const;
 
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+
+// ---- Roles (named export) ----
 export const ROLES = {
-  HOST_ADMIN: "host_admin",
+  PLATFORM_ADMIN: "platform_admin",
   TENANT_ADMIN: "tenant_admin",
-  PROJECT_MANAGER: "project_manager",
-  TEAM_MEMBER: "team_member",
-  VIEWER: "viewer",
+  TENANT_MEMBER: "tenant_member",
 } as const;
 
-// Canonical key unions for compile-time safety
-export type FeatureKey = keyof typeof FEATURES;
-export type PermissionKey = keyof typeof PERMISSIONS;
-export type RoleKey = keyof typeof ROLES;
+export type Role = typeof ROLES[keyof typeof ROLES];
 
-// ---- Add these aliases to satisfy existing imports ----
-export type Feature = FeatureKey;
-export type Permission = PermissionKey;
-export type Role = RoleKey;
+// If you ever need an ordered list:
+export const ALL_ROLES: Role[] = [
+  ROLES.PLATFORM_ADMIN,
+  ROLES.TENANT_ADMIN,
+  ROLES.TENANT_MEMBER,
+];
 
