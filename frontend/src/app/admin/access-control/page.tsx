@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { FEATURES, usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { RBACAdminService } from "@/services/rbac_admin_service";
 import {
   RBACMatrixRowUser,
@@ -28,13 +28,14 @@ import { Label } from "@/components/ui/label";
 import RBACMatrixGrid from "@/components/rbac/RBACMatrixGrid";
 import { RolesPermissionsTab } from "@/components/rbac/RolesPermissionsTab";
 import { UserDetailPanel } from "@/components/rbac/UserDetailPanel";
+import { PERMISSIONS, ROLES } from "@/lib/rbac"; // Import PERMISSIONS and ROLES
 
 export const dynamic = "force-dynamic";
 
 export default function AccessControlPage() {
   const router = useRouter();
-  const { user, tenantUser, isAuthenticated, tenant } = useAuth();
-  const { canManage, currentRole } = usePermissions();
+  const { user, isAuthenticated, currentTenantId } = useAuth();
+  const { checkPermission, currentUserRole, loading: permissionsLoading } = usePermissions();
 
   const [activeTab, setActiveTab] = useState("users");
   const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>(
@@ -65,7 +66,8 @@ export default function AccessControlPage() {
       return;
     }
 
-    if (!canManage(FEATURES.ACCESS_CONTROL)) {
+    // Check permission for accessing this page
+    if (!permissionsLoading && !checkPermission(PERMISSIONS.USER_READ)) {
       router.push("/unauthorized");
       return;
     }
@@ -88,8 +90,10 @@ export default function AccessControlPage() {
       }
     };
 
-    loadInitialData();
-  }, [isAuthenticated, router, canManage]);
+    if (isAuthenticated && !permissionsLoading && checkPermission(PERMISSIONS.USER_READ)) {
+      loadInitialData();
+    }
+  }, [isAuthenticated, router, checkPermission, permissionsLoading]);
 
   useEffect(() => {
     if (selectedTenant) {
@@ -325,9 +329,9 @@ export default function AccessControlPage() {
             onClose={() => setSelectedUserId(null)}
             userDetail={userDetail}
             loading={userDetailLoading}
-            isHostAdmin={currentRole === "host_admin"}
+            isHostAdmin={currentUserRole === ROLES.HOST_ADMIN}
             isAdmin={
-              currentRole === "host_admin" || currentRole === "tenant_admin"
+              currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.TENANT_ADMIN
             }
           />
         </div>
@@ -335,3 +339,4 @@ export default function AccessControlPage() {
     </div>
   );
 }
+
