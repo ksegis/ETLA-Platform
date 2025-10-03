@@ -68,12 +68,7 @@ export default function ProjectManagementPageRBAC() {
     checkAnyPermission([
       `${featureSlug(feature)}:${PERMISSIONS.CREATE}`,
       `${featureSlug(feature)}:${PERMISSIONS.EDIT}`,
-      `${featureSlug(feature)}:${PERMISSIONS.DELETE}`,
-      `${featureSlug(feature)}:${PERMISSIONS.APPROVE}`,
-    ]);
-
-  // ---- Local state ----
-  const [data, setData] = useState<DashboardData>({
+      `${featureSlug(f  const [data, setData] = useState<DashboardData>({
     workRequests: [],
     projects: [],
     risks: [],
@@ -745,7 +740,7 @@ export default function ProjectManagementPageRBAC() {
                     >
                       ⚠️ Risk Register
                     </button>
-                  </PermissionGuard>
+                  </RiskGuard>
 
                   <PermissionGuard
                     feature={FEATURES.REPORTING}
