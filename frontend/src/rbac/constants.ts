@@ -1,30 +1,34 @@
-// src/rbac/constants.ts
 export const FEATURES = {
-  ACCESS_CONTROL: 'access_control',
-  TENANT_MANAGEMENT: 'tenant_management',
-  WORK_REQUESTS: 'work_requests',
-  PROJECTS: 'projects',
-  EMPLOYEES: 'employees',
-  PROFILES: 'profiles',
-  TIMEKEEPING: 'timekeeping',
-
-  // Aliases so existing callsites like page-rbac.tsx compile
-  PROJECT_MANAGEMENT: 'projects',
-  RISK_MANAGEMENT: 'risks',
+  ACCESS_CONTROL: "access_control",
+  TENANT_MANAGEMENT: "tenant_management",
+  WORK_REQUESTS: "work_requests",
+  PROJECTS: "projects",
+  EMPLOYEES: "employees",
+  PROFILES: "profiles",
+  TIMEKEEPING: "timekeeping",
+  // Keep this if any page uses it; safe to have
+  DASHBOARDS: "dashboards",
 } as const;
 
 export const PERMISSIONS = {
-  VIEW: 'view',
-  CREATE: 'create',
-  EDIT: 'edit',
-  DELETE: 'delete',
-  APPROVE: 'approve',
+  VIEW: "view",
+  CREATE: "create",
+  UPDATE: "update",
+  DELETE: "delete",
+
+  // Backward-compat for any old call sites you haven’t cleaned yet
+  USER_READ: "view",
 } as const;
 
-// Canonical key unions for compile-time safety
-export type FeatureKey = keyof typeof FEATURES;
-export type PermissionKey = keyof typeof PERMISSIONS;
+export const ROLES = {
+  PLATFORM_ADMIN: "platform_admin",
+  TENANT_ADMIN: "tenant_admin",
+  MANAGER: "manager",
+  MEMBER: "member",
+  VIEWER: "viewer",
+} as const;
 
-// ---- Add these aliases to satisfy existing imports ----
-export type Feature = FeatureKey;
-export type Permission = PermissionKey;
+export type Feature = typeof FEATURES[keyof typeof FEATURES];
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+export type Role = typeof ROLES[keyof typeof ROLES];
+
