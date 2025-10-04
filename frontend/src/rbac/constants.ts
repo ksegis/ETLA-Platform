@@ -3,12 +3,15 @@ export const FEATURES = {
   TENANT_MANAGEMENT: "tenant_management",
   WORK_REQUESTS: "work_requests",
   PROJECTS: "projects",
+  PROJECT_MANAGEMENT: "projects",  // legacy alias used in older code
+  RISK_MANAGEMENT: "risks",
   EMPLOYEES: "employees",
   PROFILES: "profiles",
   TIMEKEEPING: "timekeeping",
-  // Keep this if any page uses it; safe to have
   DASHBOARDS: "dashboards",
 } as const;
+export type FeatureKey = keyof typeof FEATURES;
+export type Feature = typeof FEATURES[FeatureKey];
 
 export const PERMISSIONS = {
   VIEW: "view",
@@ -16,25 +19,21 @@ export const PERMISSIONS = {
   UPDATE: "update",
   DELETE: "delete",
 
-  // Backward-compat for any old call sites you haven’t cleaned yet
+  // legacy “read” aliases some pages still use:
   USER_READ: "view",
+  TENANT_READ: "view",
 } as const;
+export type PermissionKey = keyof typeof PERMISSIONS;
+export type Permission = typeof PERMISSIONS[PermissionKey];
 
 export const ROLES = {
   PLATFORM_ADMIN: "platform_admin",
-  HOST_ADMIN: "platform_admin", // ← alias for backward-compat (fix)
-
+  HOST_ADMIN: "platform_admin",   // legacy alias used by some UIs
   TENANT_ADMIN: "tenant_admin",
   MANAGER: "manager",
   MEMBER: "member",
   VIEWER: "viewer",
 } as const;
-
-export type Feature = typeof FEATURES[keyof typeof FEATURES];
-export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
-export type Role = typeof ROLES[keyof typeof ROLES];
-
-
-
-// Minor change to trigger new build after persistent Vercel cache issue
+export type RoleKey = keyof typeof ROLES;
+export type Role = typeof ROLES[RoleKey];
 

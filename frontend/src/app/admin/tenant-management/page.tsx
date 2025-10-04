@@ -54,7 +54,7 @@ import {
 } from "lucide-react";
 import { Tenant, User } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { PERMISSIONS } from "@/lib/rbac";
+import { FEATURES, PERMISSIONS } from "@/lib/rbac";
 
 interface ExtendedTenant extends Tenant {
   code?: string;
@@ -95,8 +95,8 @@ export default function TenantManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
-
-  const hasAdminAccess = checkPermission(PERMISSIONS.TENANT_READ);
+  // RBAC v2 API requires (feature, permission)
+  const hasAdminAccess = checkPermission(FEATURES.TENANT_MANAGEMENT, PERMISSIONS.TENANT_READ);
 
   useEffect(() => {
     if (isAuthenticated && hasAdminAccess) {

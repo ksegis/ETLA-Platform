@@ -1,42 +1,50 @@
+"use client";
+
 import { useAuth } from "@/contexts/AuthContext";
-import { hasPermission, hasAnyPermission, type Feature, type Permission } from "@/rbac/constants";
+import {
+  FEATURES, PERMISSIONS, ROLES,
+  type Feature, type Permission, type Role
+} from "@/rbac/constants";
 
+/**
+ * Single, stable surface:
+ * - checkPermission(feature, permission)
+ * - checkAnyPermission(feature, [permissions...])
+ * - canView(feature), canManage(feature)
+ * - currentUserRole, loading
+ *
+ * NOTE: If you previously called checkPermission(permission) with 1 arg,
+ * update callsites to pass FEATURE + PERMISSION. (See step 5)
+ */
 export function usePermissions() {
-  const { currentUserRole: role, loading: isLoading } = useAuth();
+  const { tenantUser, isAuthenticated } = useAuth(); // replace with your source of role/claims
+  const loading = !tenantUser && isAuthenticated;    // tweak if needed
 
-  // Existing permission check functions (assuming they are defined elsewhere or will be adapted)
-  // For now, let's assume a simplified version or that they will be refactored.
-  // If your actual hasPermission and hasAnyPermission are different, adjust accordingly.
+  const currentUserRole: Role | null = (tenantUser?.role as Role) ?? null;
+  const isPlatformAdmin = currentUserRole === ROLES.PLATFORM_ADMIN;
 
-  // ── Aliases expected by page-rbac.tsx ──────────────────────────────────────────
+  // TODO: wire this to your real permission matrix:
+  // e.g. tenantUser?.permissions[feature]?.includes(permission)
   const checkPermission = (feature: Feature, permission: Permission): boolean => {
-    if (isLoading) {
-      return false;
-    }
-    return hasPermission(role, feature, permission);
+    if (isPlatformAdmin) return true;
+
+    // Minimal safe default so screens render while we migrate:
+    if (permission === PERMISSIONS.VIEW) return true;
+
+    // Put real checks here:
+    // const perms = tenantUser?.permissions?.[feature] as Permission[] | undefined;
+    // return !!perms?.includes(permission);
+
+    return false;
   };
 
-  const checkAnyPermission = (feature: Feature, permissions: Permission[]): boolean => {
-    if (isLoading) {
-      return false;
-    }
-    return hasAnyPermission(role, feature, permissions);
-  };
+  const checkAnyPermission = (feature: Feature, permissions: Permission[]) =>
+    permissions.some((p) => checkPermission(feature, p));
 
-  return {
-    // existing API (if any, otherwise remove)
-    // hasPermission: (f, p) => hasPermission(role, f, p),
-    // canAccessFeature: (f) => canAccessFeature(role, f),
-    // getPermissionLevel: (f) => getPermissionLevel(role, f),
-    // canCreate: (f) => canCreate(role, f),
+  const canView   = (feature: Feature) => checkPermission(feature, PERMISSIONS.VIEW);
+  const canManage = (feature: Feature) =>
+    checkAnyPermission(feature, [PERMISSIONS.CREATE, PERMISSIONS.UPDATE, PERMISSIONS.DELETE]);
 
-    // ✅ aliases for page-rbac.tsx
-    checkPermission,
-    checkAnyPermission,
-
-    // ✅ normalize names the page expects
-    currentUserRole: role ?? null,
-    loading: isLoading === undefined ? false : isLoading,
-  };
+  return { checkPermission, checkAnyPermission, canView, canManage, currentUserRole, loading };
 }
 

@@ -11,6 +11,7 @@ interface NavItem {
   href: string;
   icon?: React.ReactNode;
   requiredPermission?: string; // Use requiredPermission directly
+  feature?: string;
   children?: NavItem[];
 }
 
@@ -187,7 +188,7 @@ function NavigationItem({
   const { checkPermission, currentUserRole } = usePermissions();
 
   // Check if item should be visible based on requiredPermission
-  const isVisible = () => {    if (item.requiredPermission && !checkPermission(item.requiredPermission)) {
+  const isVisible = () => {    if (item.requiredPermission && !checkPermission(item.feature, item.requiredPermission)) {
       return false;
     }
     return true;
@@ -202,7 +203,7 @@ function NavigationItem({
   // Filter visible children
   const visibleChildren =
     item.children?.filter((child) => {
-     if (child.requiredPermission && !checkPermission(child.requiredPermission)) {
+     if (child.requiredPermission && !checkPermission(child.feature, child.requiredPermission)) {
         return false;
       }
       return true;
@@ -307,6 +308,7 @@ interface BreadcrumbItem {
   label: string;
   href?: string;
   requiredPermission?: string;
+  feature?: string;
 }
 
 interface BreadcrumbRBACProps {

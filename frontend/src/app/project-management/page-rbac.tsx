@@ -62,14 +62,14 @@ export default function ProjectManagementPageRBAC() {
     isFeatureKey(f) ? FEATURES[f] : (f as FeatureValue);
 
   const canView = (feature: FeatureArg) =>
-    checkPermission(`${featureSlug(feature)}:${PERMISSIONS.VIEW}`);
+    checkPermission(featureSlug(feature), PERMISSIONS.VIEW);
 
   const canManage = (feature: FeatureArg) =>
     checkAnyPermission([
-      `${featureSlug(feature)}:${PERMISSIONS.CREATE}`,
-      `${featureSlug(feature)}:${PERMISSIONS.EDIT}`,
-      `${featureSlug(feature)}:${PERMISSIONS.DELETE}`,
-      `${featureSlug(feature)}:${PERMISSIONS.APPROVE}`,
+      featureSlug(feature), PERMISSIONS.CREATE,
+      featureSlug(feature), PERMISSIONS.EDIT,
+      featureSlug(feature), PERMISSIONS.DELETE,
+      featureSlug(feature), PERMISSIONS.APPROVE,
     ]);
 
   // ---- Local state ----
