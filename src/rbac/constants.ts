@@ -1,5 +1,5 @@
 export const FEATURES = {
-  ACCESS_CONTROL: 'access_control',
+  ACCESS_CONTROL: 'ACCESS_CONTROL',
   TENANT_MANAGEMENT: 'tenant_management',
   WORK_REQUESTS: 'work_requests',
   PROJECTS: 'projects',
