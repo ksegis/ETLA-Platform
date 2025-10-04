@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import RBACMatrixGrid from "@/components/rbac/RBACMatrixGrid";
 import { RolesPermissionsTab } from "@/components/rbac/RolesPermissionsTab";
 import { UserDetailPanel } from "@/components/rbac/UserDetailPanel";
-import { FEATURES, PERMISSIONS, ROLES, type Feature } from "@/rbac/constants/index";
+import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants/index";
 export default function AccessControlPage() {
   const router = useRouter();
   const { user, isAuthenticated, currentTenantId } = useAuth();
@@ -65,7 +65,7 @@ export default function AccessControlPage() {
     }
 
     // Check permission for accessing this page
-    if (!permissionsLoading && !checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.USER_READ)) {
+    if (!permissionsLoading && !checkPermission('ACCESS_CONTROL', PERMISSIONS.USER_READ)) {
       router.push("/unauthorized");
       return;
     }
