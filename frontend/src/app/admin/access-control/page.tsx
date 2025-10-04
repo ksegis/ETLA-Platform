@@ -65,7 +65,7 @@ export default function AccessControlPage() {
     }
 
     // Check permission for accessing this page
-    if (!permissionsLoading && !checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.USER_READ)) {
+    if (!permissionsLoading && !checkPermission(FEATURES.ACCESS_CONTROL as Feature, PERMISSIONS.USER_READ)) {
       router.push("/unauthorized");
       return;
     }
