@@ -32,3 +32,7 @@ export type Feature = typeof FEATURES[keyof typeof FEATURES];
 export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 export type Role = typeof ROLES[keyof typeof ROLES];
 
+
+
+// Minor change to trigger new build after persistent Vercel cache issue
+
