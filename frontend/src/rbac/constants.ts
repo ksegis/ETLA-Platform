@@ -22,6 +22,8 @@ export const PERMISSIONS = {
 
 export const ROLES = {
   PLATFORM_ADMIN: "platform_admin",
+  HOST_ADMIN: "platform_admin", // ← alias for backward-compat (fix)
+
   TENANT_ADMIN: "tenant_admin",
   MANAGER: "manager",
   MEMBER: "member",
