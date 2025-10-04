@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import RBACMatrixGrid from "@/components/rbac/RBACMatrixGrid";
 import { RolesPermissionsTab } from "@/components/rbac/RolesPermissionsTab";
 import { UserDetailPanel } from "@/components/rbac/UserDetailPanel";
-import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants";
+import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants/index";
 export default function AccessControlPage() {
   const router = useRouter();
   const { user, isAuthenticated, currentTenantId } = useAuth();
