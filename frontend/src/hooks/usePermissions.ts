@@ -1,94 +1,50 @@
-import { useAuth } from '@/contexts/AuthContext';
+"use client";
 
-export const FEATURES = {
-  ACCESS_CONTROL: 'access_control',
-  TENANT_MANAGEMENT: 'tenant-management',
-  USER_MANAGEMENT: 'user-management',
-  TIMECARD_CORRECTION: 'timecard-correction',
-  WORK_REQUESTS: 'work-requests',
-  PROJECT_MANAGEMENT: 'project-management',
-  RISK_MANAGEMENT: 'risk-management',
-  REPORTING: 'reporting',
-  DASHBOARDS: 'dashboards',
-  PROJECT_CHARTER: 'project-charter',
-  RESOURCE_MANAGEMENT: 'resource-management',
-  ANALYTICS: 'analytics',
-  MIGRATION_WORKBENCH: 'migration-workbench',
-  FILE_UPLOAD: 'file-upload',
-  DATA_VALIDATION: 'data-validation',
-  BENEFITS_MANAGEMENT: 'benefits-management',
-  EMPLOYEE_RECORDS: 'employee-records',
-  PAYROLL_PROCESSING: 'payroll-processing',
-  SYSTEM_SETTINGS: 'system-settings',
-  AUDIT_LOGS: 'audit-logs',
-  // Add other features here as needed
-};
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  FEATURES, PERMISSIONS, ROLES,
+  type Feature, type Permission, type Role
+} from "@/rbac/constants";
 
-export const PERMISSIONS = {
-  VIEW: 'view',
-  CREATE: 'create',
-  EDIT: 'edit',
-  DELETE: 'delete',
-  APPROVE: 'approve',
-  WORK_REQUESTS_CREATE: 'work_requests:create',
-  WORK_REQUESTS_UPDATE: 'work_requests:update',
-  WORK_REQUESTS_DELETE: 'work_requests:delete',
-  // Add other permissions here as needed
-};
+/**
+ * Single, stable surface:
+ * - checkPermission(feature, permission)
+ * - checkAnyPermission(feature, [permissions...])
+ * - canView(feature), canManage(feature)
+ * - currentUserRole, loading
+ *
+ * NOTE: If you previously called checkPermission(permission) with 1 arg,
+ * update callsites to pass FEATURE + PERMISSION. (See step 5)
+ */
+export function usePermissions() {
+  const { tenantUser, isAuthenticated } = useAuth(); // replace with your source of role/claims
+  const loading = !tenantUser && isAuthenticated;    // tweak if needed
 
-export const usePermissions = () => {
-  const { currentUserRole, loading: isLoading } = useAuth();
+  const currentUserRole: Role | null = (tenantUser?.role as Role) ?? null;
+  const isPlatformAdmin = currentUserRole === ROLES.PLATFORM_ADMIN;
 
-  const canManage = (feature: string): boolean => {
-    if (!currentUserRole) {
-      return false;
-    }
+  // TODO: wire this to your real permission matrix:
+  // e.g. tenantUser?.permissions[feature]?.includes(permission)
+  const checkPermission = (feature: Feature, permission: Permission): boolean => {
+    if (isPlatformAdmin) return true;
 
-    // Define permission logic based on roles and features
-    switch (feature) {
-      case FEATURES.TENANT_MANAGEMENT:
-        return currentUserRole === 'host_admin';
-      case FEATURES.USER_MANAGEMENT:
-        return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin';
-      case FEATURES.TIMECARD_CORRECTION:
-        return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin' || currentUserRole === 'payroll_manager';
-      case FEATURES.ACCESS_CONTROL:
-        return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin';
-      case FEATURES.WORK_REQUESTS:
-      case FEATURES.PROJECT_MANAGEMENT:
-      case FEATURES.RISK_MANAGEMENT:
-      case FEATURES.REPORTING:
-      case FEATURES.DASHBOARDS:
-      case FEATURES.PROJECT_CHARTER:
-      case FEATURES.RESOURCE_MANAGEMENT:
-      case FEATURES.ANALYTICS:
-      case FEATURES.MIGRATION_WORKBENCH:
-      case FEATURES.FILE_UPLOAD:
-      case FEATURES.DATA_VALIDATION:
-      case FEATURES.BENEFITS_MANAGEMENT:
-      case FEATURES.EMPLOYEE_RECORDS:
-      case FEATURES.PAYROLL_PROCESSING:
-        return currentUserRole === 'host_admin' || currentUserRole === 'tenant_admin' || currentUserRole === 'program_manager';
-      case FEATURES.SYSTEM_SETTINGS:
-      case FEATURES.AUDIT_LOGS:
-        return currentUserRole === 'host_admin';
-      // Add more cases for other features as needed
-      default:
-        return false;
-    }
+    // Minimal safe default so screens render while we migrate:
+    if (permission === PERMISSIONS.VIEW) return true;
+
+    // Put real checks here:
+    // const perms = tenantUser?.permissions?.[feature] as Permission[] | undefined;
+    // return !!perms?.includes(permission);
+
+    return false;
   };
 
-  const canView = (feature: string): boolean => {
-    // For now, assume if a user can manage a feature, they can also view it.
-    // Or, implement specific view logic if needed.
-    return canManage(feature);
-  };
+  const checkAnyPermission = (feature: Feature, permissions: Permission[]) =>
+    permissions.some((p) => checkPermission(feature, p));
 
-  return {
-    canManage,
-    canView,
-    currentUserRole,
-    isLoading,
-  };
-};
+  const canView   = (feature: Feature) => checkPermission(feature, PERMISSIONS.VIEW);
+  const canManage = (feature: Feature) =>
+    checkAnyPermission(feature, [PERMISSIONS.CREATE, PERMISSIONS.UPDATE, PERMISSIONS.DELETE]);
+
+  return { checkPermission, checkAnyPermission, canView, canManage, currentUserRole, loading };
+}
 

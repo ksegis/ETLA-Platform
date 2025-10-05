@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
-import { FEATURES, PERMISSIONS } from "@/rbac/constants";
+import { FEATURES, PERMISSIONS, type Feature } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
 import {
   PermissionGuard,
@@ -43,39 +43,32 @@ export default function ProjectManagementPageRBAC() {
 
   // ---- Permissions (new hook shape) ----
   const {
-    canManage,
-    canView,
-    currentUserRole,
-    isLoading: permissionsLoading,
+    checkPermission,
+    checkAnyPermission,
+    currentUserRole: currentRole,
+    loading: permissionsLoading,
   } = usePermissions();
 
-  // Build a lightweight, safe-to-render permissions snapshot
-  const debugPermissionsSummary = (() => {
-    const featureKeys = FEATURES ? Object.keys(FEATURES) : [];
-    const permissionKeys = PERMISSIONS ? Object.keys(PERMISSIONS) : [];
-    return {
-      // high-level areas the user can at least view
-      features_viewable: featureKeys.filter((k) => {
-        const key = (FEATURES as any)[k] ?? k;
-        try {
-          return canView?.(key) === true;
-        } catch {
-          return false;
-        }
-      }),
-      // granular actions the user can manage
-      permissions_manageable: permissionKeys.filter((k) => {
-        const key = (PERMISSIONS as any)[k] ?? k;
-        try {
-          return canManage?.(key) === true;
-        } catch {
-          return false;
-        }
-      }),
-    };
-  })();
+  type FeatureKey = keyof typeof FEATURES;
+  type FeatureValue = (typeof FEATURES)[FeatureKey];
+  type FeatureArg = FeatureKey | FeatureValue;
 
-  const [data, setData] = useState<DashboardData>({
+  // runtime type guard for keys
+  const isFeatureKey = (f: FeatureArg): f is FeatureKey =>
+    Object.prototype.hasOwnProperty.call(FEATURES, f as any);
+
+  // always return the slug/value used in permission strings
+  const featureSlug = (f: FeatureArg): FeatureValue =>
+    isFeatureKey(f) ? FEATURES[f] : (f as FeatureValue);
+
+  const canView = (feature: FeatureArg) =>
+    checkPermission(`${featureSlug(feature)}:${PERMISSIONS.VIEW}`);
+
+  const canManage = (feature: FeatureArg) =>
+    checkAnyPermission([
+      `${featureSlug(feature)}:${PERMISSIONS.CREATE}`,
+      `${featureSlug(feature)}:${PERMISSIONS.EDIT}`,
+      `${featureSlug(f  const [data, setData] = useState<DashboardData>({
     workRequests: [],
     projects: [],
     risks: [],
@@ -86,6 +79,7 @@ export default function ProjectManagementPageRBAC() {
     },
   });
 
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedWorkRequest, setSelectedWorkRequest] =
     useState<WorkRequest | null>(null);
@@ -96,6 +90,7 @@ export default function ProjectManagementPageRBAC() {
     if (permissionsLoading) return;
 
     const loadData = async () => {
+      setIsLoading(true);
       try {
         const dashboardData = await pmbokRBAC.getDashboardData();
 
@@ -121,6 +116,7 @@ export default function ProjectManagementPageRBAC() {
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {
+        setIsLoading(false);
       }
     };
 
@@ -217,17 +213,17 @@ export default function ProjectManagementPageRBAC() {
                     </h1>
                     <p className="text-gray-600 mt-2">
                       Manage your projects, work requests, and risks
-                      {currentUserRole && (
+                      {currentRole && (
                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                          {currentUserRole}
+                          {currentRole}
                         </span>
                       )}
                     </p>
                   </div>
 
                   {/* Admin-only debug panel toggle */}
-                  {(currentUserRole === "host_admin" ||
-                    currentUserRole === "tenant_admin") &&
+                  {(currentRole === "host_admin" ||
+                    currentRole === "tenant_admin") &&
                     process.env.NODE_ENV !== "production" && (
                       <button
                         onClick={() => setSelectedTab("debug")}
@@ -241,7 +237,7 @@ export default function ProjectManagementPageRBAC() {
 
               {/* Permission-based stats overview */}
               <PermissionGuard
-                feature={FEATURES.REPORTING}
+                feature={FEATURES.DASHBOARDS}
                 permission={PERMISSIONS.VIEW}
                 fallback={
                   <NoAccessFallback
@@ -689,8 +685,8 @@ export default function ProjectManagementPageRBAC() {
 
                   {/* Debug Tab (Admin only) */}
                   {selectedTab === "debug" &&
-                    (currentUserRole === "host_admin" ||
-                      currentUserRole === "tenant_admin") && (
+                    (currentRole === "host_admin" ||
+                      currentRole === "tenant_admin") && (
                       <div className="space-y-6">
                         <h3 className="text-lg font-medium text-gray-900">
                           RBAC Debug Information

@@ -31,7 +31,8 @@ import {
 } from "@/services/workRequestService";
 import { useTenant, useCurrentTenantId } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions, FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FEATURES, PERMISSIONS } from "@/rbac/constants";
 
 // Status configuration
 const statusConfig = {
