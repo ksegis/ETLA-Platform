@@ -54,7 +54,7 @@ import {
 } from "lucide-react";
 import { Tenant, User } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { FEATURES, PERMISSIONS } from "@/lib/rbac";
+import { FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
 
 interface ExtendedTenant extends Tenant {
   code?: string;

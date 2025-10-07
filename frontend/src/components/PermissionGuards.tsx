@@ -41,7 +41,7 @@ export const ProjectGuard = ({ children, fallback }: { children: ReactNode; fall
   </PermissionGuard>
 );
 export const RiskGuard = ({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGuard feature="risk_management" permission="view" fallback={fallback}>
+  <<PermissionGuard feature={FEATURES.RISK_MANAGEMENT} permission={PERMISSIONS.VIEW} fallback={fallback}>
     {children}
   </PermissionGuard>
 );

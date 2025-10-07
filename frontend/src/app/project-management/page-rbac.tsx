@@ -46,7 +46,7 @@ export default function ProjectManagementPageRBAC() {
     canManage,
     canView,
     currentUserRole,
-    isLoading: permissionsLoading,
+    Loading: permissionsLoading,
   } = usePermissions();
 
   // Build a lightweight, safe-to-render permissions snapshot
