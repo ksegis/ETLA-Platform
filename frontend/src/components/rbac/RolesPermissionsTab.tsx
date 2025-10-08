@@ -18,7 +18,6 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
-// IMPORTANT: pull from the consolidated RBAC constants
 import {
   FEATURES,
   PERMISSIONS,
@@ -46,26 +45,31 @@ interface RolesPermissionsTabProps {
   selectedTenantId?: string;
 }
 
-/** Helpers */
+/* ---------- helpers ---------- */
+
+const ALL_FEATURES = Object.values(FEATURES) as Feature[];
 const UNIQUE_PERMISSIONS = Array.from(
   new Set(Object.values(PERMISSIONS))
 ) as Permission[];
 
-const ALL_FEATURES = Object.values(FEATURES) as Feature[];
+const getExistingFeatures = (keys: string[]): Feature[] =>
+  keys
+    .map((k) => (FEATURES as any)[k])
+    .filter(Boolean) as Feature[];
 
-const PROJECT_FEATURES: Feature[] = [
-  FEATURES.PROJECT_MANAGEMENT,
-  FEATURES.WORK_REQUESTS,
-  FEATURES.PROJECT_CHARTER,
-  FEATURES.RISK_MANAGEMENT,
-  FEATURES.RESOURCE_MANAGEMENT,
-];
+const PROJECT_FEATURES = getExistingFeatures([
+  'PROJECT_MANAGEMENT',
+  'WORK_REQUESTS',
+  'PROJECT_CHARTER',
+  'RISK_MANAGEMENT',
+  'RESOURCE_MANAGEMENT',
+]);
 
-const REPORTING_FEATURES: Feature[] = [
-  FEATURES.REPORTING,
-  FEATURES.DASHBOARDS,
-  FEATURES.ANALYTICS,
-];
+const REPORTING_FEATURES = getExistingFeatures([
+  'REPORTING',
+  'DASHBOARDS',
+  'ANALYTICS',
+]);
 
 const labelize = (slug: string) =>
   slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -98,14 +102,13 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
         granted: grant(feature, permission),
       }))
     );
-
     return {
       id,
       name,
       description,
       isSystemRole,
       permissionCount: permissions.filter((p) => p.granted).length,
-      userCount: 0, // placeholder; wire to real counts later
+      userCount: 0,
       permissions,
     };
   };
@@ -115,7 +118,6 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
     setError(null);
 
     try {
-      // System roles (static matrix mirroring your hook)
       const hostAdmin = buildRole(
         'host_admin',
         'Host Admin',
@@ -127,9 +129,9 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
         'client_admin',
         'Client Admin',
         'Tenant administrator with full tenant privileges',
-        (feature, _permission) =>
-          feature !== FEATURES.TENANT_MANAGEMENT &&
-          feature !== FEATURES.SYSTEM_SETTINGS
+        (feature) =>
+          feature !== (FEATURES as any).TENANT_MANAGEMENT &&
+          feature !== (FEATURES as any).SYSTEM_SETTINGS
       );
 
       const programManager = buildRole(
@@ -138,7 +140,6 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
         'Project and program management with team oversight',
         (feature, permission) => {
           if (PROJECT_FEATURES.includes(feature)) {
-            // manage + typical CRUD
             return (
               permission === PERMISSIONS.MANAGE ||
               permission === PERMISSIONS.VIEW ||
@@ -149,13 +150,12 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
           if (REPORTING_FEATURES.includes(feature)) {
             return permission === PERMISSIONS.VIEW;
           }
-          if (feature === FEATURES.USER_MANAGEMENT) {
+          if (feature === (FEATURES as any).USER_MANAGEMENT) {
             return permission === PERMISSIONS.VIEW;
           }
-          // light read-only access to validation/migration if you want it:
           if (
-            feature === FEATURES.MIGRATION_WORKBENCH ||
-            feature === FEATURES.DATA_VALIDATION
+            feature === (FEATURES as any).MIGRATION_WORKBENCH ||
+            feature === (FEATURES as any).DATA_VALIDATION
           ) {
             return permission === PERMISSIONS.VIEW;
           }
@@ -168,7 +168,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
         'Client User',
         'Standard user with basic access to work requests and reporting',
         (feature, permission) => {
-          if (feature === FEATURES.WORK_REQUESTS) {
+          if (feature === (FEATURES as any).WORK_REQUESTS) {
             return (
               permission === PERMISSIONS.VIEW ||
               permission === PERMISSIONS.CREATE ||
@@ -176,22 +176,22 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
             );
           }
           if (
-            feature === FEATURES.REPORTING ||
-            feature === FEATURES.DASHBOARDS ||
-            feature === FEATURES.BENEFITS_MANAGEMENT
+            feature === (FEATURES as any).REPORTING ||
+            feature === (FEATURES as any).DASHBOARDS ||
+            feature === (FEATURES as any).BENEFITS_MANAGEMENT
           ) {
             return permission === PERMISSIONS.VIEW;
           }
-          if (feature === FEATURES.FILE_UPLOAD) {
+          if (feature === (FEATURES as any).FILE_UPLOAD) {
             return permission === PERMISSIONS.CREATE;
           }
           if (
-            feature === FEATURES.ACCESS_CONTROL ||
-            feature === FEATURES.USER_MANAGEMENT
+            feature === (FEATURES as any).ACCESS_CONTROL ||
+            feature === (FEATURES as any).USER_MANAGEMENT
           ) {
             return permission === PERMISSIONS.VIEW;
           }
-          return false;
+            return false;
         }
       );
 
@@ -450,4 +450,4 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
   );
 };
 
-export default RolesPermissionsTab;
+export defa
