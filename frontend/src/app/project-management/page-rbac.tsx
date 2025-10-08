@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// ✅ Import from single RBAC source
+// Import the single RBAC source of truth (keeps Feature typing correct)
 import {
   usePermissions,
   FEATURES,
@@ -57,13 +57,13 @@ export default function ProjectManagementPageRBAC() {
     loading: permissionsloading,
   } = usePermissions();
 
-  // Narrow feature constants to the Feature type (fixes "string not assignable to Feature")
+  // Narrow constants to Feature to satisfy <PermissionGuard feature={...}>
   const F_DASHBOARDS = FEATURES.DASHBOARDS as Feature;
   const F_WORK_REQUESTS = FEATURES.WORK_REQUESTS as Feature;
   const F_PROJECT_MANAGEMENT = FEATURES.PROJECT_MANAGEMENT as Feature;
   const F_RISK_MANAGEMENT = FEATURES.RISK_MANAGEMENT as Feature;
 
-  // Build a lightweight, safe-to-render permissions snapshot
+  // Debug snapshot (safe to render)
   const debugPermissionsSummary = (() => {
     const featureKeys = FEATURES ? Object.keys(FEATURES) : [];
     const permissionKeys = PERMISSIONS ? Object.keys(PERMISSIONS) : [];
@@ -135,7 +135,13 @@ export default function ProjectManagementPageRBAC() {
     };
 
     loadData();
-  }, [permissionsloading, canManage, F_WORK_REQUESTS, F_PROJECT_MANAGEMENT, F_RISK_MANAGEMENT]);
+  }, [
+    permissionsloading,
+    canManage,
+    F_WORK_REQUESTS,
+    F_PROJECT_MANAGEMENT,
+    F_RISK_MANAGEMENT,
+  ]);
 
   // Permission-based tab configuration
   const tabs = [
@@ -606,3 +612,176 @@ export default function ProjectManagementPageRBAC() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-medium text-gray-900">
+                            Risk Register
+                          </h3>
+                          <PermissionGuard
+                            feature={F_RISK_MANAGEMENT}
+                            permission={PERMISSIONS.CREATE}
+                            fallback={null}
+                          >
+                            <button
+                              onClick={() =>
+                                router.push("/project-management/risks/create")
+                              }
+                              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                            >
+                              + New Risk
+                            </button>
+                          </PermissionGuard>
+                        </div>
+
+                        <div className="space-y-4">
+                          {data.risks.map((risk: any) => (
+                            <div key={risk.id} className="border rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium text-gray-900">
+                                  {risk.title}
+                                </h4>
+                                <div className="flex items-center space-x-2">
+                                  <span
+                                    className={`px-2 py-1 text-xs rounded-full ${
+                                      (risk.risk_score || 0) >= 15
+                                        ? "bg-red-100 text-red-800"
+                                        : (risk.risk_score || 0) >= 8
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-green-100 text-green-800"
+                                    }`}
+                                  >
+                                    Score: {risk.risk_score || "N/A"}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-gray-600 text-sm mb-3">
+                                {risk.description}
+                              </p>
+                              <div className="flex items-center justify-between text-sm text-gray-500">
+                                <span>Probability: {risk.probability}</span>
+                                <span>Impact: {risk.impact}</span>
+                                <span>Owner: {risk.risk_owner || "Unassigned"}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </RiskGuard>
+                  )}
+
+                  {/* Debug Tab (Admin only) */}
+                  {selectedTab === "debug" &&
+                    (currentUserRole === ROLES.HOST_ADMIN ||
+                      currentUserRole === ROLES.CLIENT_ADMIN) && (
+                      <div className="space-y-6">
+                        <h3 className="text-lg font-medium text-gray-900">
+                          RBAC Debug Information
+                        </h3>
+                        <PermissionDebugPanel />
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-medium mb-2">
+                            User Permissions Summary
+                          </h4>
+                          <pre className="text-xs text-gray-600 overflow-auto">
+                            {JSON.stringify(debugPermissionsSummary, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar with navigation stats */}
+            <div className="w-80">
+              <div className="bg-white rounded-lg shadow p-6">
+                <h4 className="font-medium text-gray-900 mb-4">Quick Links</h4>
+                <div className="space-y-2">
+                  <WorkRequestGuard fallback={null}>
+                    <button
+                      onClick={() => router.push("/work-requests")}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    >
+                      📝 All Work Requests
+                    </button>
+                  </WorkRequestGuard>
+
+                  <ProjectGuard fallback={null}>
+                    <button
+                      onClick={() => router.push("/project-management/charters")}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    >
+                      📋 Project Charters
+                    </button>
+                  </ProjectGuard>
+
+                  <RiskGuard fallback={null}>
+                    <button
+                      onClick={() => router.push("/project-management/risks")}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    >
+                      ⚠️ Risk Register
+                    </button>
+                  </RiskGuard>
+
+                  <PermissionGuard
+                    feature={F_DASHBOARDS}
+                    permission={PERMISSIONS.VIEW}
+                    fallback={null}
+                  >
+                    <button
+                      onClick={() => router.push("/reporting")}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                    >
+                      📊 Reports
+                    </button>
+                  </PermissionGuard>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Approval Modal (permission-gated) */}
+        {showApprovalModal && selectedWorkRequest && (
+          <WorkRequestApproveButton onClick={() => {}} fallback={null}>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Approve Work Request
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Are you sure you want to approve "{selectedWorkRequest.title}"?
+                </p>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowApprovalModal(false);
+                      setSelectedWorkRequest(null);
+                    }}
+                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (selectedWorkRequest) {
+                        await pmbokRBAC.approveWorkRequest(
+                          selectedWorkRequest.id,
+                          "current-user"
+                        );
+                        setShowApprovalModal(false);
+                        setSelectedWorkRequest(null);
+                        window.location.reload();
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    Approve
+                  </button>
+                </div>
+              </div>
+            </div>
+          </WorkRequestApproveButton>
+        )}
+      </div>
+    </RouteGuard>
+  );
+}
