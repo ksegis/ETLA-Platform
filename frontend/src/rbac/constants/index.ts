@@ -119,7 +119,7 @@ export const ROLES = {
   TENANT_ADMIN: 'tenant_admin', // keep explicit key for UI checks
   PROGRAM_MANAGER: 'program_manager',
   CLIENT_USER: 'client_user',
-  USER: 'user', // alias used in some places
+  USER: 'user', // alias used in some placess
 } as const;
 export type Role = typeof ROLES[keyof typeof ROLES];
 
