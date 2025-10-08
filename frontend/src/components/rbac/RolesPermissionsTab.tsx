@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
-import { 
-  Plus, 
-  Search, 
+import {
+  Plus,
+  Search,
   Edit,
   Trash2,
   Shield,
@@ -13,175 +15,228 @@ import {
   Lock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
-import { RBACAdminService } from '@/services/rbac_admin_service';
-import { FEATURES, PERMISSIONS } from '@/hooks/usePermissions';
 
-interface Role {
+// IMPORTANT: pull from the consolidated RBAC constants
+import {
+  FEATURES,
+  PERMISSIONS,
+  type Feature,
+  type Permission,
+} from '@/rbac/constants';
+
+type RolePermission = {
+  feature: Feature;
+  permission: Permission;
+  granted: boolean;
+};
+
+type UiRole = {
   id: string;
   name: string;
   description: string;
   isSystemRole: boolean;
   permissionCount: number;
   userCount: number;
-  permissions: Array<{
-    feature: string;
-    permission: string;
-    granted: boolean;
-  }>;
-}
+  permissions: RolePermission[];
+};
 
 interface RolesPermissionsTabProps {
   selectedTenantId?: string;
 }
 
-export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ selectedTenantId }) => {
+/** Helpers */
+const UNIQUE_PERMISSIONS = Array.from(
+  new Set(Object.values(PERMISSIONS))
+) as Permission[];
+
+const ALL_FEATURES = Object.values(FEATURES) as Feature[];
+
+const PROJECT_FEATURES: Feature[] = [
+  FEATURES.PROJECT_MANAGEMENT,
+  FEATURES.WORK_REQUESTS,
+  FEATURES.PROJECT_CHARTER,
+  FEATURES.RISK_MANAGEMENT,
+  FEATURES.RESOURCE_MANAGEMENT,
+];
+
+const REPORTING_FEATURES: Feature[] = [
+  FEATURES.REPORTING,
+  FEATURES.DASHBOARDS,
+  FEATURES.ANALYTICS,
+];
+
+const labelize = (slug: string) =>
+  slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
+  selectedTenantId,
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setloading] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<UiRole | null>(null);
+  const [roles, setRoles] = useState<UiRole[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load roles data
   useEffect(() => {
-    loadRoles();
+    void loadRoles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const buildRole = (
+    id: string,
+    name: string,
+    description: string,
+    grant: (feature: Feature, permission: Permission) => boolean,
+    isSystemRole = true
+  ): UiRole => {
+    const permissions: RolePermission[] = ALL_FEATURES.flatMap((feature) =>
+      UNIQUE_PERMISSIONS.map((permission) => ({
+        feature,
+        permission,
+        granted: grant(feature, permission),
+      }))
+    );
+
+    return {
+      id,
+      name,
+      description,
+      isSystemRole,
+      permissionCount: permissions.filter((p) => p.granted).length,
+      userCount: 0, // placeholder; wire to real counts later
+      permissions,
+    };
+  };
+
   const loadRoles = async () => {
-    setloading(true);
+    setLoading(true);
     setError(null);
-    
+
     try {
-      // Get system roles with their permissions
-      const systemRoles = [
-        {
-          id: 'host_admin',
-          name: 'Host Admin',
-          description: 'Full system administrator with all privileges',
-          isSystemRole: true,
-          permissionCount: 0,
-          userCount: 0,
-          permissions: Object.values(FEATURES).flatMap(feature => 
-            Object.values(PERMISSIONS).map(permission => ({
-              feature,
-              permission,
-              granted: true
-            }))
-          )
-        },
-        {
-          id: 'client_admin',
-          name: 'Client Admin',
-          description: 'Tenant administrator with full tenant privileges',
-          isSystemRole: true,
-          permissionCount: 0,
-          userCount: 0,
-          permissions: Object.values(FEATURES).flatMap(feature => 
-            Object.values(PERMISSIONS).map(permission => ({
-              feature,
-              permission,
-              granted: feature !== 'tenant-management' && feature !== 'system-settings'
-            }))
-          )
-        },
-        {
-          id: 'program_manager',
-          name: 'Program Manager',
-          description: 'Project and program management with team oversight',
-          isSystemRole: true,
-          permissionCount: 0,
-          userCount: 0,
-          permissions: Object.values(FEATURES).flatMap(feature => 
-            Object.values(PERMISSIONS).map(permission => {
-              const projectFeatures = ['project-management', 'work-requests', 'project-charter', 'risk-management', 'resource-management'];
-              const reportingFeatures = ['reporting', 'dashboards', 'analytics'];
-              
-              if (projectFeatures.includes(feature)) {
-                return { feature, permission, granted: ['view', 'create', 'update', 'manage'].includes(permission) };
-              }
-              if (reportingFeatures.includes(feature)) {
-                return { feature, permission, granted: permission === 'view' };
-              }
-              if (feature === 'user-management') {
-                return { feature, permission, granted: permission === 'view' };
-              }
-              return { feature, permission, granted: false };
-            })
-          )
-        },
-        {
-          id: 'client_user',
-          name: 'Client User',
-          description: 'Standard user with basic access to work requests and reporting',
-          isSystemRole: true,
-          permissionCount: 0,
-          userCount: 0,
-          permissions: Object.values(FEATURES).flatMap(feature => 
-            Object.values(PERMISSIONS).map(permission => {
-              const userFeatures = ['work-requests', 'reporting', 'dashboards', 'benefits-management', 'file-upload'];
-              
-              if (feature === 'work-requests') {
-                return { feature, permission, granted: ['view', 'create', 'update'].includes(permission) };
-              }
-              if (['reporting', 'dashboards', 'benefits-management'].includes(feature)) {
-                return { feature, permission, granted: permission === 'view' };
-              }
-              if (feature === 'file-upload') {
-                return { feature, permission, granted: permission === 'create' };
-              }
-              return { feature, permission, granted: false };
-            })
-          )
+      // System roles (static matrix mirroring your hook)
+      const hostAdmin = buildRole(
+        'host_admin',
+        'Host Admin',
+        'Full system administrator with all privileges',
+        () => true
+      );
+
+      const clientAdmin = buildRole(
+        'client_admin',
+        'Client Admin',
+        'Tenant administrator with full tenant privileges',
+        (feature, _permission) =>
+          feature !== FEATURES.TENANT_MANAGEMENT &&
+          feature !== FEATURES.SYSTEM_SETTINGS
+      );
+
+      const programManager = buildRole(
+        'program_manager',
+        'Program Manager',
+        'Project and program management with team oversight',
+        (feature, permission) => {
+          if (PROJECT_FEATURES.includes(feature)) {
+            // manage + typical CRUD
+            return (
+              permission === PERMISSIONS.MANAGE ||
+              permission === PERMISSIONS.VIEW ||
+              permission === PERMISSIONS.CREATE ||
+              permission === PERMISSIONS.UPDATE
+            );
+          }
+          if (REPORTING_FEATURES.includes(feature)) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          if (feature === FEATURES.USER_MANAGEMENT) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          // light read-only access to validation/migration if you want it:
+          if (
+            feature === FEATURES.MIGRATION_WORKBENCH ||
+            feature === FEATURES.DATA_VALIDATION
+          ) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          return false;
         }
-      ];
+      );
 
-      const rolesWithCounts = systemRoles.map(role => ({
-        ...role,
-        userCount: 0, // Hardcoded for debugging
-        permissionCount: role.permissions.filter(p => p.granted).length
-      }));
+      const clientUser = buildRole(
+        'client_user',
+        'Client User',
+        'Standard user with basic access to work requests and reporting',
+        (feature, permission) => {
+          if (feature === FEATURES.WORK_REQUESTS) {
+            return (
+              permission === PERMISSIONS.VIEW ||
+              permission === PERMISSIONS.CREATE ||
+              permission === PERMISSIONS.UPDATE
+            );
+          }
+          if (
+            feature === FEATURES.REPORTING ||
+            feature === FEATURES.DASHBOARDS ||
+            feature === FEATURES.BENEFITS_MANAGEMENT
+          ) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          if (feature === FEATURES.FILE_UPLOAD) {
+            return permission === PERMISSIONS.CREATE;
+          }
+          if (
+            feature === FEATURES.ACCESS_CONTROL ||
+            feature === FEATURES.USER_MANAGEMENT
+          ) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          return false;
+        }
+      );
 
-      setRoles(rolesWithCounts);
+      setRoles([hostAdmin, clientAdmin, programManager, clientUser]);
     } catch (err) {
       console.error('Error loading roles:', err);
       setError('Failed to load roles data');
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
-  // Filter roles based on search term
-  const filteredRoles = roles.filter(role => 
-    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    role.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRoles = roles.filter(
+    (role) =>
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Handle role selection
-  const handleRoleClick = (role: Role) => {
-    setSelectedRole(role);
-  };
+  const handleRoleClick = (role: UiRole) => setSelectedRole(role);
 
-  // Handle role creation
   const handleCreateRole = () => {
-    alert('Custom role creation is not yet implemented. Currently using system-defined roles.');
+    alert(
+      'Custom role creation is not yet implemented. Currently using system-defined roles.'
+    );
   };
 
-  // Handle role editing
   const handleEditRole = (roleId: string) => {
-    if (roles.find(r => r.id === roleId)?.isSystemRole) {
-      alert('System roles cannot be edited. You can create custom roles with specific permissions.');
+    const r = roles.find((x) => x.id === roleId);
+    if (!r) return;
+    if (r.isSystemRole) {
+      alert(
+        'System roles cannot be edited. You can create custom roles with specific permissions.'
+      );
     } else {
-      alert(`Edit role ${roleId} functionality will be implemented in a future update.`);
+      alert(`Edit role ${roleId} coming soon.`);
     }
   };
 
-  // Handle role deletion
   const handleDeleteRole = (roleId: string) => {
-    if (roles.find(r => r.id === roleId)?.isSystemRole) {
+    const r = roles.find((x) => x.id === roleId);
+    if (!r) return;
+    if (r.isSystemRole) {
       alert('System roles cannot be deleted.');
     } else {
-      alert(`Delete role ${roleId} functionality will be implemented in a future update.`);
+      alert(`Delete role ${roleId} coming soon.`);
     }
   };
 
@@ -189,7 +244,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">loading roles and permissions...</p>
         </div>
       </div>
@@ -201,7 +256,9 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading Roles</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Error loading Roles
+          </h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <Button onClick={loadRoles}>Try Again</Button>
         </div>
@@ -214,8 +271,12 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Tenant</h3>
-          <p className="text-gray-600">Please select a tenant to view roles and permissions.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Select a Tenant
+          </h3>
+          <p className="text-gray-600">
+            Please select a tenant to view roles and permissions.
+          </p>
         </div>
       </div>
     );
@@ -242,8 +303,8 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
 
       {/* Roles list */}
       <div className="grid grid-cols-1 gap-4">
-        {filteredRoles.map(role => (
-          <Card 
+        {filteredRoles.map((role) => (
+          <Card
             key={role.id}
             className={`cursor-pointer hover:border-blue-300 transition-colors ${
               selectedRole?.id === role.id ? 'border-blue-500' : ''
@@ -256,13 +317,18 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
                   <div className="flex items-center space-x-2">
                     <h3 className="text-lg font-medium">{role.name}</h3>
                     {role.isSystemRole && (
-                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                      <Badge
+                        variant="outline"
+                        className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                      >
                         System Role
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">{role.description}</p>
-                  
+                  <p className="text-sm text-gray-500 mt-1">
+                    {role.description}
+                  </p>
+
                   <div className="flex space-x-4 mt-3">
                     <div className="flex items-center text-sm text-gray-600">
                       <Shield className="h-4 w-4 mr-1" />
@@ -274,10 +340,10 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex space-x-2">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -287,8 +353,8 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
                     <Edit className="h-4 w-4" />
                   </Button>
                   {!role.isSystemRole && (
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -308,9 +374,13 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
       {filteredRoles.length === 0 && (
         <div className="text-center py-12">
           <Shield className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No roles found</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            No roles found
+          </h3>
           <p className="mt-1 text-sm text-gray-500">
-            {searchTerm ? 'Try adjusting your search terms.' : 'No roles are configured for this tenant.'}
+            {searchTerm
+              ? 'Try adjusting your search terms.'
+              : 'No roles are configured for this tenant.'}
           </p>
         </div>
       )}
@@ -326,27 +396,31 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Group permissions by feature */}
-              {Object.values(FEATURES).map(feature => {
-                const featurePermissions = selectedRole.permissions.filter(p => p.feature === feature);
-                const grantedPermissions = featurePermissions.filter(p => p.granted);
-                
-                if (grantedPermissions.length === 0) return null;
-                
+              {ALL_FEATURES.map((feature) => {
+                const featurePermissions = selectedRole.permissions.filter(
+                  (p) => p.feature === feature
+                );
+                const granted = featurePermissions.filter((p) => p.granted);
+                if (granted.length === 0) return null;
+
                 return (
                   <div key={feature} className="border-b border-gray-100 pb-3">
-                    <h4 className="font-medium text-sm text-gray-900 mb-2 capitalize">
-                      {feature.replace('-', ' ')}
+                    <h4 className="font-medium text-sm text-gray-900 mb-2">
+                      {labelize(feature)}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {Object.values(PERMISSIONS).map(permission => {
-                        const hasPermission = featurePermissions.find(p => 
-                          p.permission === permission && p.granted
+                      {UNIQUE_PERMISSIONS.map((permission) => {
+                        const hasPermission = featurePermissions.some(
+                          (p) => p.permission === permission && p.granted
                         );
-                        
                         return (
-                          <div key={permission} className="flex items-center justify-between py-1">
-                            <span className="text-xs text-gray-600 capitalize">{permission}</span>
+                          <div
+                            key={`${feature}-${permission}`}
+                            className="flex items-center justify-between py-1"
+                          >
+                            <span className="text-xs text-gray-600 capitalize">
+                              {permission}
+                            </span>
                             {hasPermission ? (
                               <CheckCircle className="h-4 w-4 text-green-500" />
                             ) : (
@@ -359,10 +433,10 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
                   </div>
                 );
               })}
-              
+
               <div className="pt-4">
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={() => handleEditRole(selectedRole.id)}
                 >
                   {selectedRole.isSystemRole ? 'View Details' : 'Edit Permissions'}
