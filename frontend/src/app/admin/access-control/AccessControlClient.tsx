@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 
@@ -31,8 +31,23 @@ import {
 import RBACMatrixGrid from '@/components/rbac/RBACMatrixGrid';
 import { FEATURES, PERMISSIONS, ROLES } from '@/rbac/constants';
 
-// --- Dynamic children (works with default OR named exports) ---
-const RolesPermissionsTab = dynamic(
+// ---- Local prop types for dynamically imported components ----
+type RolesPermissionsTabProps = {
+  selectedTenantId?: string | null;
+};
+
+type UserDetailPanelProps = {
+  userId: string;
+  tenantId: string;
+  onClose: () => void;
+  userDetail: RBACUserDetail | null;
+  loading: boolean;
+  isHostAdmin: boolean;
+  isAdmin: boolean;
+};
+
+// --- Dynamic imports (handle default or named export) ---
+const RolesPermissionsTab = dynamic<RolesPermissionsTabProps>(
   () =>
     import('@/components/rbac/RolesPermissionsTab').then((m: any) =>
       m?.default ? m.default : m.RolesPermissionsTab
@@ -47,7 +62,7 @@ const RolesPermissionsTab = dynamic(
   }
 );
 
-const UserDetailPanel = dynamic(
+const UserDetailPanel = dynamic<UserDetailPanelProps>(
   () =>
     import('@/components/rbac/UserDetailPanel').then((m: any) =>
       m?.default ? m.default : m.UserDetailPanel
@@ -90,7 +105,6 @@ export default function AccessControlClient() {
       return;
     }
 
-    // When permissions are ready, block if not allowed
     if (!permissionsloading && !checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW)) {
       router.push('/unauthorized');
       return;
@@ -101,9 +115,7 @@ export default function AccessControlClient() {
       try {
         const fetchedTenants = await RBACAdminService.listTenants();
         setTenants(fetchedTenants);
-        if (fetchedTenants.length > 0) {
-          setSelectedTenant(fetchedTenants[0]);
-        }
+        if (fetchedTenants.length > 0) setSelectedTenant(fetchedTenants[0]);
 
         const fetchedCatalog = await RBACAdminService.listPermissionCatalog();
         setPermissionCatalog(fetchedCatalog);
@@ -125,7 +137,6 @@ export default function AccessControlClient() {
       setLoading(true);
       try {
         const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(tenantId, { search });
-        // Get effective permissions for all users and merge
         const userIds = fetchedUsers.map((u: any) => u.userId);
         const effectivePermissions = await RBACAdminService.getEffectivePermissions(tenantId, userIds);
 
@@ -164,23 +175,14 @@ export default function AccessControlClient() {
     loadUserDetail(selectedTenant.id, selectedUserId);
   }, [selectedUserId, selectedTenant]);
 
-  // Cell toggle
+  // Toggle a cell
   const handleCellClick = (userId: string, permissionId: string) => {
-    const userToUpdate = users.find((u) => u.userId === userId);
-    const currentCell = userToUpdate?.cells?.find((cell) => cell.permissionId === permissionId);
+    const u = users.find((x) => x.userId === userId);
+    const currentCell = u?.cells?.find((c) => c.permissionId === permissionId);
     const currentValue = draftChanges.get(`${userId}:${permissionId}`) || currentCell?.state || 'none';
 
-    let newValue: 'allow' | 'deny' | 'none';
-    switch (currentValue) {
-      case 'allow':
-        newValue = 'deny';
-        break;
-      case 'deny':
-        newValue = 'none';
-        break;
-      default:
-        newValue = 'allow';
-    }
+    const newValue: 'allow' | 'deny' | 'none' =
+      currentValue === 'allow' ? 'deny' : currentValue === 'deny' ? 'none' : 'allow';
 
     const key = `${userId}:${permissionId}`;
     const nextDraft = new Map(draftChanges);
@@ -214,15 +216,25 @@ export default function AccessControlClient() {
 
       await RBACAdminService.applyChanges(req);
 
-      // Clear drafts & reload
       setDraftChanges(new Map());
       setChangeQueue([]);
 
       // Reload users and detail
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      selectedTenant && setSearchQuery((q) => q); // trigger users effect by setting same query
+      if (selectedTenant) {
+        const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(selectedTenant.id, {
+          search: searchQuery,
+        });
+        const userIds = fetchedUsers.map((u: any) => u.userId);
+        const effectivePermissions = await RBACAdminService.getEffectivePermissions(
+          selectedTenant.id,
+          userIds
+        );
+        setUsers(
+          fetchedUsers.map((u) => ({ ...u, cells: effectivePermissions.get(u.userId) || [] }))
+        );
+      }
       if (selectedUserId) {
-        const detail = await RBACAdminService.getUserDetail(selectedTenant.id, selectedUserId);
+        const detail = await RBACAdminService.getUserDetail(selectedTenant!.id, selectedUserId);
         setUserDetail(detail);
       }
     } catch (err) {
@@ -239,7 +251,6 @@ export default function AccessControlClient() {
 
   const pendingChangesCount = draftChanges.size;
 
-  // UI
   if (permissionsloading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -305,12 +316,12 @@ export default function AccessControlClient() {
 
               <TabsContent value="users">
                 <RBACMatrixGrid
-                  users={users}
-                  permissionCatalog={permissionCatalog}
-                  onCellClick={handleCellClick}
-                  onUserClick={(uid) => setSelectedUserId(uid)}
-                  loading={loading}
-                  draftChanges={draftChanges}
+                    users={users}
+                    permissionCatalog={permissionCatalog}
+                    onCellClick={handleCellClick}
+                    onUserClick={(uid) => setSelectedUserId(uid)}
+                    loading={loading}
+                    draftChanges={draftChanges}
                 />
 
                 {pendingChangesCount > 0 && (
