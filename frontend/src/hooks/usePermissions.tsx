@@ -2,13 +2,6 @@
 import { useEffect, useState, ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 
-/**
- * RBAC — single source of truth
- * - Export constants & types for use across the app.
- * - Provide a flexible hook (`usePermissions`) with helpers.
- * - Include small guard components for backwards compatibility.
- */
-
 /* =========================
  * Features
  * ========================= */
@@ -49,7 +42,7 @@ export const FEATURES = {
   BENEFITS_MANAGEMENT: 'benefits-management',
   PAYROLL_PROCESSING: 'payroll-processing',
 
-  // Talent (for DashboardLayout)
+  // Talent
   TALENT_JOBS: 'talent-jobs',
   TALENT_CANDIDATES: 'talent-candidates',
   TALENT_INTERVIEWS: 'talent-interviews',
@@ -71,12 +64,10 @@ const CORE = {
   IMPORT: 'import',
 } as const
 
-// Compatibility keys used around the app, all mapped to core semantics.
-// Values deliberately collapse to core so code like PERMISSIONS.PROJECT_READ === 'view'.
 export const PERMISSIONS = {
   ...CORE,
 
-  // Menu/route gating aliases
+  // Aliases
   JOB_MANAGE: 'manage',
   CANDIDATE_READ: 'view',
   INTERVIEW_MANAGE: 'manage',
@@ -100,14 +91,12 @@ export const PERMISSIONS = {
   BENEFITS_MANAGE: 'manage',
   PAYROLL_MANAGE: 'manage',
 
-  // RouteGuard / misc aliases used historically
   TENANT_READ: 'view',
   USER_READ: 'view',
   PROJECT_READ: 'view',
   WORK_REQUEST_READ: 'view',
   REPORTING_VIEW: 'view',
 
-  // Composite legacy (feature_permission)
   WORK_REQUESTS_CREATE: 'create',
   WORK_REQUESTS_UPDATE: 'update',
   WORK_REQUESTS_DELETE: 'delete',
@@ -122,26 +111,21 @@ export const ROLES = {
   CLIENT_ADMIN: 'client_admin',
   PROGRAM_MANAGER: 'program_manager',
   CLIENT_USER: 'client_user',
-  USER: 'user', // convenience alias used in some places
+  USER: 'user',
 } as const
 export type Role = typeof ROLES[keyof typeof ROLES]
 
 /* =========================
  * Default role matrix
  * ========================= */
-
 type RolePermissionEntry = { feature: Feature; permission: Permission }
 type RolePermissionsMatrix = Record<Role, { role: Role; permissions: RolePermissionEntry[] }>
 
 const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
   [ROLES.HOST_ADMIN]: {
     role: ROLES.HOST_ADMIN,
-    permissions: Object.values(FEATURES).map((feature) => ({
-      feature,
-      permission: CORE.MANAGE,
-    })),
+    permissions: Object.values(FEATURES).map((feature) => ({ feature, permission: CORE.MANAGE })),
   },
-
   [ROLES.PROGRAM_MANAGER]: {
     role: ROLES.PROGRAM_MANAGER,
     permissions: [
@@ -157,7 +141,6 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
       { feature: FEATURES.DATA_VALIDATION, permission: CORE.VIEW },
     ],
   },
-
   [ROLES.CLIENT_ADMIN]: {
     role: ROLES.CLIENT_ADMIN,
     permissions: [
@@ -173,7 +156,6 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
       { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE.VIEW },
     ],
   },
-
   [ROLES.CLIENT_USER]: {
     role: ROLES.CLIENT_USER,
     permissions: [
@@ -188,7 +170,6 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
       { feature: FEATURES.USER_MANAGEMENT, permission: CORE.VIEW },
     ],
   },
-
   [ROLES.USER]: {
     role: ROLES.USER,
     permissions: [
@@ -208,7 +189,6 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
 /* =========================
  * Hook
  * ========================= */
-
 export function usePermissions() {
   const { user, tenantUser, isAuthenticated, isDemoMode } = useAuth()
   const [userPermissions, setUserPermissions] = useState<RolePermissionEntry[]>([])
@@ -227,10 +207,8 @@ export function usePermissions() {
     setIsLoading(false)
   }, [isAuthenticated, tenantUser])
 
-  // Collapse compatibility aliases to core semantics.
   function normalizePermission(p: Permission): Permission {
     switch (p) {
-      // -> MANAGE
       case PERMISSIONS.JOB_MANAGE:
       case PERMISSIONS.INTERVIEW_MANAGE:
       case PERMISSIONS.OFFER_MANAGE:
@@ -243,7 +221,6 @@ export function usePermissions() {
       case CORE.MANAGE:
         return CORE.MANAGE
 
-      // -> VIEW
       case PERMISSIONS.CANDIDATE_READ:
       case PERMISSIONS.DATA_PROCESS:
       case PERMISSIONS.DATA_ANALYZE:
@@ -259,7 +236,6 @@ export function usePermissions() {
       case CORE.VIEW:
         return CORE.VIEW
 
-      // -> CREATE / UPDATE / DELETE
       case PERMISSIONS.WORK_REQUESTS_CREATE:
       case CORE.CREATE:
         return CORE.CREATE
@@ -270,7 +246,6 @@ export function usePermissions() {
       case CORE.DELETE:
         return CORE.DELETE
 
-      // -> IMPORT / EXPORT / APPROVE
       case PERMISSIONS.FILE_UPLOAD:
       case CORE.IMPORT:
         return CORE.IMPORT
@@ -284,7 +259,6 @@ export function usePermissions() {
     }
   }
 
-  // Core check
   function hasPermission(feature: Feature, permission: Permission): boolean {
     if (isDemoMode) return true
     if (!isAuthenticated || !tenantUser) return false
@@ -295,14 +269,6 @@ export function usePermissions() {
     )
   }
 
-  /**
-   * Flexible checker
-   * - checkPermission(feature, permission)
-   * - checkPermission('feature.permission')
-   *
-   * Passing **only** a permission string is not supported (it collapses to core values
-   * like 'view' and becomes ambiguous). Prefer one of the forms above.
-   */
   function checkPermission(arg1: Feature | string | undefined, arg2?: Permission): boolean {
     if (arg1 === undefined) return true
     if (typeof arg1 === 'string' && !arg2) {
@@ -332,7 +298,12 @@ export function usePermissions() {
       .map((p) => normalizePermission(p.permission))
   }
 
-  // Helpers (feature-first)
+  // Convenience helpers (feature-first)
+  const resolveFeatureFromArg = (arg: Feature | string): Feature => {
+    const values = Object.values(FEATURES) as string[]
+    return (values.includes(String(arg)) ? arg : FEATURES.WORK_REQUESTS) as Feature
+  }
+
   const canCreate = (f: Feature | string) =>
     hasPermission(resolveFeatureFromArg(f), CORE.CREATE) ||
     hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
@@ -351,14 +322,8 @@ export function usePermissions() {
     canCreate(f) ||
     canUpdate(f)
 
-  const canManage = (arg: Feature | string): boolean => {
-    // If a "feature.permission" string was passed accidentally, try to parse it.
-    if (typeof arg === 'string' && arg.includes('.')) {
-      const [f] = arg.split('.')
-      return hasPermission(f as Feature, CORE.MANAGE)
-    }
-    return hasPermission(arg as Feature, CORE.MANAGE)
-  }
+  const canManage = (arg: Feature | string): boolean =>
+    hasPermission(resolveFeatureFromArg(arg), CORE.MANAGE)
 
   const canApprove = (f: Feature | string) =>
     hasPermission(resolveFeatureFromArg(f), CORE.UPDATE) ||
@@ -372,13 +337,6 @@ export function usePermissions() {
     hasPermission(resolveFeatureFromArg(f), CORE.IMPORT) ||
     hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
 
-  function resolveFeatureFromArg(arg: Feature | string): Feature {
-    const values = Object.values(FEATURES) as string[]
-    if (values.includes(String(arg))) return arg as Feature
-    // Default for ambiguous calls — keep legacy behavior minimal:
-    return FEATURES.WORK_REQUESTS
-  }
-
   const getAccessibleFeatures = (): Feature[] => {
     if (isDemoMode) return Object.values(FEATURES)
     if (!isAuthenticated || !tenantUser) return []
@@ -386,7 +344,6 @@ export function usePermissions() {
     return Array.from(new Set(userPermissions.map((p) => p.feature))) as Feature[]
   }
 
-  // Admin-ish helpers
   const isAdmin = () =>
     !!tenantUser &&
     ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN] as readonly string[]).includes(
@@ -468,19 +425,19 @@ export function usePermissions() {
     // State
     userPermissions,
     isLoading,
-    loading: isLoading, // compat alias
-    Loading: isLoading, // compat alias
+    loading: isLoading,
+    Loading: isLoading,
     isDemoMode,
     isAuthenticated,
 
     // Current user info
     currentRole: tenantUser?.role,
-    currentUserRole: tenantUser?.role, // compat alias
+    currentUserRole: tenantUser?.role,
     currentUserId: user?.id,
     currentTenantId: tenantUser?.tenant_id,
     isSuperAdmin,
 
-    // Re-export constants for convenience
+    // Re-export constants
     FEATURES,
     PERMISSIONS,
     ROLES,
@@ -491,7 +448,6 @@ export default usePermissions
 
 /* =========================
  * Lightweight Guard Components
- * (Backwards compatibility)
  * ========================= */
 
 type GuardBaseProps = {
@@ -499,38 +455,41 @@ type GuardBaseProps = {
   fallback?: ReactNode
 }
 
+// Widened to accept Feature | string
 export function FeatureGuard({
   feature,
   children,
   fallback = null,
-}: GuardBaseProps & { feature: Feature }) {
+}: GuardBaseProps & { feature: Feature | string }) {
   const { canAccessFeature, isLoading } = usePermissions()
   if (isLoading) return null
-  return canAccessFeature(feature) ? <>{children}</> : <>{fallback}</>
+  return canAccessFeature(feature as Feature) ? <>{children}</> : <>{fallback}</>
 }
 
+// Widened to accept Feature | string and Permission | string
 export function PermissionGuard({
   feature,
   permission,
   children,
   fallback = null,
-}: GuardBaseProps & { feature: Feature; permission: Permission }) {
+}: GuardBaseProps & { feature: Feature | string; permission: Permission | string }) {
   const { hasPermission, isLoading } = usePermissions()
   if (isLoading) return null
-  return hasPermission(feature, permission) ? <>{children}</> : <>{fallback}</>
-}
-
-export function RoleGuard({
-  allow,
-  children,
-  fallback = null,
-}: GuardBaseProps & { allow: Role | Role[] }) {
-  const { currentUserRole, isLoading } = usePermissions()
-  if (isLoading) return null
-  const allowed = Array.isArray(allow) ? allow : [allow]
-  return allowed.includes(String(currentUserRole) as Role) ? (
+  return hasPermission(feature as Feature, permission as Permission) ? (
     <>{children}</>
   ) : (
     <>{fallback}</>
   )
+}
+
+// Widened to accept Role or string variants
+export function RoleGuard({
+  allow,
+  children,
+  fallback = null,
+}: GuardBaseProps & { allow: Role | string | Array<Role | string> }) {
+  const { currentUserRole, isLoading } = usePermissions()
+  if (isLoading) return null
+  const allowed = (Array.isArray(allow) ? allow : [allow]).map(String)
+  return allowed.includes(String(currentUserRole)) ? <>{children}</> : <>{fallback}</>
 }
