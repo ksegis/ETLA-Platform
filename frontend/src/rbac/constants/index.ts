@@ -1,20 +1,22 @@
 // src/rbac/constants/index.ts
 
-// Re-export single source of truth
-export { FEATURES, PERMISSIONS, ROLES } from '@/hooks/usePermissions'
-export type { Feature, Permission, Role } from '@/hooks/usePermissions'
+import { FEATURES, PERMISSIONS, ROLES } from "@/hooks/usePermissions";
+import type { Feature, Permission, Role } from "@/hooks/usePermissions";
+
+export { FEATURES, PERMISSIONS, ROLES };
+export type { Feature, Permission, Role };
 
 // Common helpers some files expect
-export const ALL_ROLES: import('@/hooks/usePermissions').Role[] = [
+export const ALL_ROLES: Role[] = [
   ROLES.HOST_ADMIN,
   ROLES.CLIENT_ADMIN,
-  ROLES.TENANT_ADMIN,     // alias of CLIENT_ADMIN
+  ROLES.TENANT_ADMIN, // alias of CLIENT_ADMIN (see usePermissions)
   ROLES.PROGRAM_MANAGER,
   ROLES.CLIENT_USER,
   ROLES.USER,
-]
+];
 
-// Optional legacy mirrors (for older imports / code search)
+// Optional legacy mirrors (handy for code search or gradual refactors)
 export const FEATURES_LEGACY = {
   ACCESS_CONTROL:     FEATURES.ACCESS_CONTROL,
   TENANT_MANAGEMENT:  FEATURES.TENANT_MANAGEMENT,
@@ -27,7 +29,7 @@ export const FEATURES_LEGACY = {
   DASHBOARDS:         FEATURES.DASHBOARDS,
   REPORTING:          FEATURES.REPORTING,
   ANALYTICS:          FEATURES.ANALYTICS,
-} as const
+} as const;
 
 export const PERMISSIONS_LEGACY = {
   VIEW:                 PERMISSIONS.VIEW,
@@ -38,7 +40,4 @@ export const PERMISSIONS_LEGACY = {
   WORK_REQUESTS_CREATE: PERMISSIONS.WORK_REQUESTS_CREATE,
   WORK_REQUESTS_UPDATE: PERMISSIONS.WORK_REQUESTS_UPDATE,
   WORK_REQUESTS_DELETE: PERMISSIONS.WORK_REQUESTS_DELETE,
-} as const
-
-// Convenience re-exports (so imports from '@//rbac/constants' work)
-export { FeatureGuard, PermissionGuard, RoleGuard } from '@/hooks/usePermissions'
+} as const;
