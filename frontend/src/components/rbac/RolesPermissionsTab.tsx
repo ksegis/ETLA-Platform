@@ -60,7 +60,7 @@ const getExistingFeatures = (keys: string[]): Feature[] =>
 const PROJECT_FEATURES = getExistingFeatures([
   'PROJECT_MANAGEMENT',
   'WORK_REQUESTS',
-  'PROJECT_CHARTER',
+  'PROJECT_CHARTER', // guarded by getExistingFeatures
   'RISK_MANAGEMENT',
   'RESOURCE_MANAGEMENT',
 ]);
@@ -191,7 +191,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
           ) {
             return permission === PERMISSIONS.VIEW;
           }
-            return false;
+          return false;
         }
       );
 
@@ -450,4 +450,4 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
   );
 };
 
-export defa
+export default RolesPermissionsTab;
