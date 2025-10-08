@@ -1,6 +1,15 @@
 // src/rbac/constants/index.ts
-// PURE RBAC CONSTANTS (safe for server/SSR imports)
 
+/**
+ * Central RBAC constants (no imports to avoid cycles).
+ * - Exposes FEATURES, CORE_PERMISSIONS, PERMISSIONS, ROLES
+ * - Exposes types: Feature, Permission, Role
+ * - Includes helpful ALL_ROLES and legacy alias maps
+ */
+
+/* =========================
+ * Features
+ * ========================= */
 export const FEATURES = {
   // Data Management
   MIGRATION_WORKBENCH: 'migration-workbench',
@@ -38,15 +47,17 @@ export const FEATURES = {
   BENEFITS_MANAGEMENT: 'benefits-management',
   PAYROLL_PROCESSING: 'payroll-processing',
 
-  // Talent (to satisfy DashboardLayout)
+  // Talent (for dashboard/menu compatibility)
   TALENT_JOBS: 'talent-jobs',
   TALENT_CANDIDATES: 'talent-candidates',
   TALENT_INTERVIEWS: 'talent-interviews',
   TALENT_OFFERS: 'talent-offers',
 } as const;
-export type Feature = (typeof FEATURES)[keyof typeof FEATURES];
+export type Feature = typeof FEATURES[keyof typeof FEATURES];
 
-// Core permissions (canonical)
+/* =========================
+ * Permissions
+ * ========================= */
 export const CORE_PERMISSIONS = {
   VIEW: 'view',
   CREATE: 'create',
@@ -58,11 +69,10 @@ export const CORE_PERMISSIONS = {
   IMPORT: 'import',
 } as const;
 
-// Public permissions map incl. legacy aliases
 export const PERMISSIONS = {
   ...CORE_PERMISSIONS,
 
-  // Menu/route gating aliases
+  // Menu/route gating aliases (legacy)
   JOB_MANAGE: 'manage',
   CANDIDATE_READ: 'view',
   INTERVIEW_MANAGE: 'manage',
@@ -98,30 +108,33 @@ export const PERMISSIONS = {
   WORK_REQUESTS_UPDATE: 'update',
   WORK_REQUESTS_DELETE: 'delete',
 } as const;
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
-// Roles
+/* =========================
+ * Roles
+ * ========================= */
 export const ROLES = {
   HOST_ADMIN: 'host_admin',
   CLIENT_ADMIN: 'client_admin',
-  TENANT_ADMIN: 'client_admin', // alias so ROLES.TENANT_ADMIN works
+  TENANT_ADMIN: 'tenant_admin', // keep explicit key for UI checks
   PROGRAM_MANAGER: 'program_manager',
   CLIENT_USER: 'client_user',
-  USER: 'user', // alias for client_user
+  USER: 'user', // alias used in some places
 } as const;
-export type Role = (typeof ROLES)[keyof typeof ROLES];
+export type Role = typeof ROLES[keyof typeof ROLES];
 
-// Helpers some code expects
 export const ALL_ROLES: Role[] = [
   ROLES.HOST_ADMIN,
   ROLES.CLIENT_ADMIN,
-  ROLES.TENANT_ADMIN, // alias of CLIENT_ADMIN
+  ROLES.TENANT_ADMIN,
   ROLES.PROGRAM_MANAGER,
   ROLES.CLIENT_USER,
   ROLES.USER,
 ];
 
-// Optional legacy mirrors (handy for gradual refactors)
+/* =========================
+ * Legacy mirrors (optional)
+ * ========================= */
 export const FEATURES_LEGACY = {
   ACCESS_CONTROL:     FEATURES.ACCESS_CONTROL,
   TENANT_MANAGEMENT:  FEATURES.TENANT_MANAGEMENT,
@@ -139,7 +152,7 @@ export const FEATURES_LEGACY = {
 export const PERMISSIONS_LEGACY = {
   VIEW:                 PERMISSIONS.VIEW,
   CREATE:               PERMISSIONS.CREATE,
-  EDIT:                 PERMISSIONS.UPDATE, // map EDIT -> UPDATE
+  EDIT:                 PERMISSIONS.UPDATE, // EDIT -> UPDATE
   DELETE:               PERMISSIONS.DELETE,
   APPROVE:              PERMISSIONS.APPROVE,
   WORK_REQUESTS_CREATE: PERMISSIONS.WORK_REQUESTS_CREATE,
