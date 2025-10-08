@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { RBACAdminService } from '@/services/rbac_admin_service';
+
 import type {
   RBACMatrixRowUser,
   RBACPermissionCatalog,
@@ -25,31 +27,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+import RBACMatrixGrid from '@/components/rbac/RBACMatrixGrid';
 import { FEATURES, PERMISSIONS, ROLES } from '@/rbac/constants';
 
-// Dynamically import client-only RBAC components (no SSR)
-const RBACMatrixGrid = dynamic(
-  () => import('@/components/rbac/RBACMatrixGrid'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-64 rounded-lg border border-dashed grid place-items-center text-gray-500">
-        Loading permissions matrix…
-      </div>
-    ),
-  }
-);
-
+// --- Dynamic children (works with default OR named exports) ---
 const RolesPermissionsTab = dynamic(
   () =>
-    import('@/components/rbac/RolesPermissionsTab').then(
-      (m) => m.default ?? m.RolesPermissionsTab
+    import('@/components/rbac/RolesPermissionsTab').then((m: any) =>
+      m?.default ? m.default : m.RolesPermissionsTab
     ),
   {
     ssr: false,
     loading: () => (
       <div className="h-64 rounded-lg border border-dashed grid place-items-center text-gray-500">
-        Loading roles & permissions…
+        Loading roles &amp; permissions…
       </div>
     ),
   }
@@ -57,8 +49,8 @@ const RolesPermissionsTab = dynamic(
 
 const UserDetailPanel = dynamic(
   () =>
-    import('@/components/rbac/UserDetailPanel').then(
-      (m) => m.default ?? m.UserDetailPanel
+    import('@/components/rbac/UserDetailPanel').then((m: any) =>
+      m?.default ? m.default : m.UserDetailPanel
     ),
   {
     ssr: false,
@@ -71,55 +63,41 @@ const UserDetailPanel = dynamic(
 export default function AccessControlClient() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const {
-    checkPermission,
-    currentUserRole,
-    loading: permissionsloading,
-  } = usePermissions();
+  const { checkPermission, currentUserRole, loading: permissionsloading } = usePermissions();
 
   const [activeTab, setActiveTab] = useState('users');
-
-  const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>(
-    []
-  );
-  const [selectedTenant, setSelectedTenant] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedTenant, setSelectedTenant] = useState<{ id: string; name: string } | null>(null);
 
   const [users, setUsers] = useState<RBACMatrixRowUser[]>([]);
-  const [permissionCatalog, setPermissionCatalog] = useState<
-    RBACPermissionCatalog[]
-  >([]);
+  const [permissionCatalog, setPermissionCatalog] = useState<RBACPermissionCatalog[]>([]);
 
-  const [loading, setloading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [userDetail, setUserDetail] = useState<RBACUserDetail | null>(null);
-  const [userDetailloading, setUserDetailloading] = useState(false);
+  const [userDetailLoading, setUserDetailLoading] = useState(false);
 
-  const [draftChanges, setDraftChanges] = useState<
-    Map<string, 'allow' | 'deny' | 'none'>
-  >(new Map());
+  const [draftChanges, setDraftChanges] = useState<Map<string, 'allow' | 'deny' | 'none'>>(new Map());
   const [changeQueue, setChangeQueue] = useState<RBACChangeOperation[]>([]);
+  const currentUserId = user?.id;
 
-  const currentUserId = user?.id ?? null;
-
-  // Gate route access & load initial data
+  // Gate access & initial loads
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace('/auth/login');
-      return;
-    }
-    if (permissionsloading) return;
-
-    if (!checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW)) {
-      router.replace('/unauthorized');
+      router.push('/auth/login');
       return;
     }
 
-    const loadInitial = async () => {
-      setloading(true);
+    // When permissions are ready, block if not allowed
+    if (!permissionsloading && !checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW)) {
+      router.push('/unauthorized');
+      return;
+    }
+
+    const loadInitialData = async () => {
+      setLoading(true);
       try {
         const fetchedTenants = await RBACAdminService.listTenants();
         setTenants(fetchedTenants);
@@ -132,71 +110,65 @@ export default function AccessControlClient() {
       } catch (err) {
         console.error('Error loading initial data:', err);
       } finally {
-        setloading(false);
+        setLoading(false);
       }
     };
 
-    loadInitial();
-  }, [isAuthenticated, permissionsloading, checkPermission, router]);
+    if (isAuthenticated) loadInitialData();
+  }, [isAuthenticated, router, checkPermission, permissionsloading]);
 
-  // Load users list for tenant + search
+  // Load users for selected tenant (and search)
   useEffect(() => {
     if (!selectedTenant) return;
-    void loadTenantUsers(selectedTenant.id, searchQuery);
+
+    const loadTenantUsers = async (tenantId: string, search?: string) => {
+      setLoading(true);
+      try {
+        const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(tenantId, { search });
+        // Get effective permissions for all users and merge
+        const userIds = fetchedUsers.map((u: any) => u.userId);
+        const effectivePermissions = await RBACAdminService.getEffectivePermissions(tenantId, userIds);
+
+        const usersWithPermissions = fetchedUsers.map((u) => ({
+          ...u,
+          cells: effectivePermissions.get(u.userId) || [],
+        }));
+
+        setUsers(usersWithPermissions);
+      } catch (err) {
+        console.error('Error loading tenant users:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTenantUsers(selectedTenant.id, searchQuery);
   }, [selectedTenant, searchQuery]);
 
-  // Load user detail when a row is selected
+  // Load selected user detail
   useEffect(() => {
     if (!selectedUserId || !selectedTenant) return;
-    void loadUserDetail(selectedTenant.id, selectedUserId);
+
+    const loadUserDetail = async (tenantId: string, userId: string) => {
+      setUserDetailLoading(true);
+      try {
+        const detail = await RBACAdminService.getUserDetail(tenantId, userId);
+        setUserDetail(detail);
+      } catch (err) {
+        console.error('Error loading user detail:', err);
+      } finally {
+        setUserDetailLoading(false);
+      }
+    };
+
+    loadUserDetail(selectedTenant.id, selectedUserId);
   }, [selectedUserId, selectedTenant]);
 
-  const loadTenantUsers = async (tenantId: string, search?: string) => {
-    setloading(true);
-    try {
-      const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(
-        tenantId,
-        { search }
-      );
-
-      const userIds = fetchedUsers.map((u) => u.userId);
-      const effective = await RBACAdminService.getEffectivePermissions(
-        tenantId,
-        userIds
-      );
-
-      const merged = fetchedUsers.map((u) => ({
-        ...u,
-        cells: effective.get(u.userId) || [],
-      }));
-
-      setUsers(merged);
-    } catch (err) {
-      console.error('Error loading tenant users:', err);
-    } finally {
-      setloading(false);
-    }
-  };
-
-  const loadUserDetail = async (tenantId: string, userId: string) => {
-    setUserDetailloading(true);
-    try {
-      const detail = await RBACAdminService.getUserDetail(tenantId, userId);
-      setUserDetail(detail);
-    } catch (err) {
-      console.error('Error loading user detail:', err);
-    } finally {
-      setUserDetailloading(false);
-    }
-  };
-
+  // Cell toggle
   const handleCellClick = (userId: string, permissionId: string) => {
-    const row = users.find((u) => u.userId === userId);
-    const currentCell = row?.cells?.find((c) => c.permissionId === permissionId);
-    const currentValue =
-      draftChanges.get(`${userId}:${permissionId}`) ||
-      currentCell?.state ||
-      'none';
+    const userToUpdate = users.find((u) => u.userId === userId);
+    const currentCell = userToUpdate?.cells?.find((cell) => cell.permissionId === permissionId);
+    const currentValue = draftChanges.get(`${userId}:${permissionId}`) || currentCell?.state || 'none';
 
     let newValue: 'allow' | 'deny' | 'none';
     switch (currentValue) {
@@ -211,10 +183,10 @@ export default function AccessControlClient() {
     }
 
     const key = `${userId}:${permissionId}`;
-    const next = new Map(draftChanges);
-    if (newValue === 'none') next.delete(key);
-    else next.set(key, newValue);
-    setDraftChanges(next);
+    const nextDraft = new Map(draftChanges);
+    if (newValue === 'none') nextDraft.delete(key);
+    else nextDraft.set(key, newValue);
+    setDraftChanges(nextDraft);
 
     const change: RBACChangeOperation = {
       id: `${Date.now()}`,
@@ -229,30 +201,34 @@ export default function AccessControlClient() {
     setChangeQueue((prev) => [...prev, change]);
   };
 
-  const handleUserClick = (userId: string) => setSelectedUserId(userId);
-
   const handleApplyChanges = async () => {
     if (changeQueue.length === 0 || !selectedTenant || !currentUserId) return;
-    setloading(true);
+
+    setLoading(true);
     try {
-      const request: RBACApplyChangesRequest = {
+      const req: RBACApplyChangesRequest = {
         tenantId: selectedTenant.id,
-        actorUserId: currentUserId,
+        actorUserId: currentUserId as string,
         changes: changeQueue,
       };
-      await RBACAdminService.applyChanges(request);
 
+      await RBACAdminService.applyChanges(req);
+
+      // Clear drafts & reload
       setDraftChanges(new Map());
       setChangeQueue([]);
 
-      await loadTenantUsers(selectedTenant.id, searchQuery);
+      // Reload users and detail
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      selectedTenant && setSearchQuery((q) => q); // trigger users effect by setting same query
       if (selectedUserId) {
-        await loadUserDetail(selectedTenant.id, selectedUserId);
+        const detail = await RBACAdminService.getUserDetail(selectedTenant.id, selectedUserId);
+        setUserDetail(detail);
       }
     } catch (err) {
       console.error('Error applying changes:', err);
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
@@ -263,12 +239,13 @@ export default function AccessControlClient() {
 
   const pendingChangesCount = draftChanges.size;
 
+  // UI
   if (permissionsloading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-center text-gray-600">
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-          loading permissions…
+          <p className="text-gray-600">loading permissions…</p>
         </div>
       </div>
     );
@@ -299,7 +276,7 @@ export default function AccessControlClient() {
 
                 <div className="flex space-x-2">
                   <Input
-                    placeholder="Search users..."
+                    placeholder="Search users…"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-[200px]"
@@ -308,11 +285,11 @@ export default function AccessControlClient() {
                   <Select
                     value={selectedTenant?.id || ''}
                     onValueChange={(tenantId) => {
-                      const t = tenants.find((x) => x.id === tenantId) || null;
-                      setSelectedTenant(t);
+                      const t = tenants.find((x) => x.id === tenantId);
+                      setSelectedTenant(t || null);
                     }}
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Select Tenant" />
                     </SelectTrigger>
                     <SelectContent>
@@ -331,7 +308,7 @@ export default function AccessControlClient() {
                   users={users}
                   permissionCatalog={permissionCatalog}
                   onCellClick={handleCellClick}
-                  onUserClick={handleUserClick}
+                  onUserClick={(uid) => setSelectedUserId(uid)}
                   loading={loading}
                   draftChanges={draftChanges}
                 />
@@ -365,11 +342,10 @@ export default function AccessControlClient() {
             tenantId={selectedTenant?.id || ''}
             onClose={() => setSelectedUserId(null)}
             userDetail={userDetail}
-            loading={userDetailloading}
+            loading={userDetailLoading}
             isHostAdmin={currentUserRole === ROLES.HOST_ADMIN}
             isAdmin={
-              currentUserRole === ROLES.HOST_ADMIN ||
-              currentUserRole === ROLES.CLIENT_ADMIN
+              currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.CLIENT_ADMIN
             }
           />
         </div>
