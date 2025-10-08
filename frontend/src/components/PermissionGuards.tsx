@@ -1,43 +1,42 @@
 "use client";
 
 import React from "react";
-import { usePermissions } from "@/hooks/usePermissions";
-import { FEATURES, PERMISSIONS } from "@/rbac/constants";
-import type { Feature, Permission } from "@/hooks/usePermissions";
+import {
+  usePermissions,
+  FEATURES,
+  PERMISSIONS,
+  type Feature,
+  type Permission,
+} from "@/hooks/usePermissions";
 
-/**
- * Core guard props
- */
-type PermissionGuardProps = {
+/* =========================
+ * Generic PermissionGuard
+ * ========================= */
+type GuardProps = {
   feature: Feature;
-  permission: Permission;
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-};
-
-/**
- * Base PermissionGuard: renders children if allowed, fallback otherwise.
- */
-export function PermissionGuard({
-  feature,
-  permission,
-  children,
-  fallback = null,
-}: PermissionGuardProps) {
-  const { checkPermission, loading } = usePermissions();
-  if (loading) return null;
-  const allowed = checkPermission(feature, permission);
-  return <>{allowed ? children : fallback}</>;
-}
-
-/**
- * Wrapper guards (default to VIEW permission)
- */
-type WrapperGuardProps = {
   permission?: Permission;
   children: React.ReactNode;
   fallback?: React.ReactNode;
 };
+
+export function PermissionGuard({
+  feature,
+  permission = PERMISSIONS.VIEW,
+  children,
+  fallback = null,
+}: GuardProps) {
+  const { hasPermission, isAuthenticated, isLoading } = usePermissions();
+
+  if (isLoading) return null;
+  if (!isAuthenticated) return <>{fallback}</>;
+
+  return hasPermission(feature, permission) ? <>{children}</> : <>{fallback}</>;
+}
+
+/* =========================
+ * Convenience Guards
+ * ========================= */
+type WrapperGuardProps = Omit<GuardProps, "feature">;
 
 export function WorkRequestGuard({
   permission = PERMISSIONS.VIEW,
@@ -87,128 +86,59 @@ export function RiskGuard({
   );
 }
 
-/**
- * Guarded buttons
- */
-type GuardedButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  children: React.ReactNode;
-  className?: string;
+/* =========================
+ * Action Buttons (guarded)
+ * ========================= */
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   fallback?: React.ReactNode;
 };
 
 export function WorkRequestCreateButton({
-  children,
   fallback = null,
   ...btnProps
-}: GuardedButtonProps) {
-  return (
-    <PermissionGuard
-      feature={FEATURES.WORK_REQUESTS as Feature}
-      permission={PERMISSIONS.CREATE}
-      fallback={fallback}
-    >
-      <button {...btnProps}>{children}</button>
-    </PermissionGuard>
-  );
+}: ButtonProps) {
+  const { canCreate } = usePermissions();
+  return canCreate(FEATURES.WORK_REQUESTS)
+    ? <button {...btnProps} />
+    : <>{fallback}</>;
 }
 
 export function WorkRequestApproveButton({
-  children,
   fallback = null,
   ...btnProps
-}: GuardedButtonProps) {
-  // If you don't have APPROVE in your PERMISSIONS, use UPDATE as the gate.
-  const approvePerm: Permission =
-    (PERMISSIONS as any).APPROVE ?? PERMISSIONS.UPDATE;
-  return (
-    <PermissionGuard
-      feature={FEATURES.WORK_REQUESTS as Feature}
-      permission={approvePerm}
-      fallback={fallback}
-    >
-      <button {...btnProps}>{children}</button>
-    </PermissionGuard>
-  );
+}: ButtonProps) {
+  const { canApprove } = usePermissions();
+  return canApprove(FEATURES.WORK_REQUESTS)
+    ? <button {...btnProps} />
+    : <>{fallback}</>;
 }
 
 export function ProjectCreateButton({
-  children,
   fallback = null,
   ...btnProps
-}: GuardedButtonProps) {
-  return (
-    <PermissionGuard
-      feature={FEATURES.PROJECT_MANAGEMENT as Feature}
-      permission={PERMISSIONS.CREATE}
-      fallback={fallback}
-    >
-      <button {...btnProps}>{children}</button>
-    </PermissionGuard>
-  );
+}: ButtonProps) {
+  const { canCreate } = usePermissions();
+  return canCreate(FEATURES.PROJECT_MANAGEMENT)
+    ? <button {...btnProps} />
+    : <>{fallback}</>;
 }
 
 export function ReportExportButton({
-  children,
   fallback = null,
   ...btnProps
-}: GuardedButtonProps) {
-  // Some code refers to FEATURES.DASHBOARDS; your constants have DASHBOARDS.
-  const REPORTING_FEATURE: Feature =
-    ((FEATURES as any).REPORTING as Feature) ?? (FEATURES.DASHBOARDS as Feature);
-
-  return (
-    <PermissionGuard
-      feature={REPORTING_FEATURE}
-      permission={PERMISSIONS.VIEW}
-      fallback={fallback}
-    >
-      <button {...btnProps}>{children}</button>
-    </PermissionGuard>
-  );
+}: ButtonProps) {
+  const { canExport } = usePermissions();
+  // Use DASHBOARDS as the reporting feature proxy
+  return canExport(FEATURES.DASHBOARDS)
+    ? <button {...btnProps} />
+    : <>{fallback}</>;
 }
 
-/**
- * Status pill to show permission result
- */
-export function PermissionStatus({
-  feature,
-  permission,
-}: {
-  feature: Feature;
-  permission: Permission;
-}) {
-  const { checkPermission, loading } = usePermissions();
-  if (loading) return null;
-  const ok = checkPermission(feature, permission);
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-        ok ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-      }`}
-    >
-      {ok ? "Allowed" : "Denied"}
-    </span>
-  );
-}
-
-/**
- * Minimal debug panel (kept so imports compile)
- */
-export function PermissionDebugPanel() {
-  const { currentUserRole, loading } = usePermissions();
-  if (loading) return null;
-  return (
-    <div className="text-sm text-gray-700">
-      <div>Current Role: {currentUserRole ?? "unknown"}</div>
-    </div>
-  );
-}
-
-/**
- * Simple fallback block
- */
+/* =========================
+ * Small helpers / UI bits
+ * ========================= */
 export function NoAccessFallback({
-  message = "You don’t have access to this.",
+  message = "You do not have access to this content.",
   className = "",
 }: {
   message?: string;
@@ -216,9 +146,72 @@ export function NoAccessFallback({
 }) {
   return (
     <div
-      className={`w-full rounded-md border border-dashed border-gray-300 bg-gray-50 p-4 text-gray-600 ${className}`}
+      className={`rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800 ${className}`}
     >
       {message}
+    </div>
+  );
+}
+
+export function PermissionStatus({
+  feature,
+  permission = PERMISSIONS.VIEW,
+}: {
+  feature: Feature;
+  permission?: Permission;
+}) {
+  const { hasPermission } = usePermissions();
+  const ok = hasPermission(feature, permission);
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        ok ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"
+      }`}
+    >
+      {ok ? "Allowed" : "No access"}
+    </span>
+  );
+}
+
+/* =========================
+ * Debug panel (optional)
+ * ========================= */
+export function PermissionDebugPanel() {
+  const {
+    currentUserRole,
+    getAccessibleFeatures,
+    getPermissionLevel,
+    FEATURES: F,
+  } = usePermissions();
+
+  const features = getAccessibleFeatures();
+  return (
+    <div className="rounded-lg border p-4">
+      <div className="mb-2 text-sm text-gray-600">
+        <strong>Role:</strong> {String(currentUserRole ?? "unknown")}
+      </div>
+      <div className="text-xs text-gray-700 space-y-1">
+        {features.length === 0 && <div>No accessible features.</div>}
+        {features.map((feat) => (
+          <div key={feat}>
+            <span className="font-mono">{feat}</span>{" "}
+            <span className="opacity-70">
+              [
+              {getPermissionLevel(feat)
+                .map((p) => p)
+                .join(", ")}
+              ]
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <details className="mt-3 text-xs text-gray-500">
+        <summary className="cursor-pointer select-none">Feature keys</summary>
+        <pre className="mt-2 max-h-56 overflow-auto rounded bg-gray-50 p-2">
+          {JSON.stringify(F, null, 2)}
+        </pre>
+      </details>
     </div>
   );
 }
