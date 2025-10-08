@@ -1,154 +1,536 @@
 // src/hooks/usePermissions.tsx
-"use client";
-
-import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState, ReactNode } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
- * Re-export the canonical RBAC constants from the source of truth so that
- * existing imports like:
- *   import { usePermissions, PERMISSIONS, FEATURES, ROLES } from "@/hooks/usePermissions";
- * keep working without touching other files.
+ * RBAC — single source of truth
+ * - Export constants & types for use across the app.
+ * - Provide a flexible hook (`usePermissions`) with helpers.
+ * - Include small guard components for backwards compatibility.
  */
-import { PERMISSIONS, FEATURES, ROLES } from "@/lib/rbac";
-export { PERMISSIONS, FEATURES, ROLES };
 
-// ---------- Types (kept intentionally flexible to match your app) ----------
-export type Permission = string;
-export type Feature = string;
-export type Role = string;
+/* =========================
+ * Features
+ * ========================= */
+export const FEATURES = {
+  // Data Management
+  MIGRATION_WORKBENCH: 'migration-workbench',
+  FILE_UPLOAD: 'file-upload',
+  DATA_VALIDATION: 'data-validation',
+  EMPLOYEE_DATA_PROCESSING: 'employee-data-processing',
 
-type FeaturePermissionMap = Record<Feature, Permission[]>;
+  // Core Business / Projects
+  PROJECT_MANAGEMENT: 'project-management',
+  WORK_REQUESTS: 'work-requests',
+  PROJECT_CHARTER: 'project-charter',
+  RISK_MANAGEMENT: 'risk-management',
+  RESOURCE_MANAGEMENT: 'resource-management',
 
-export type CheckPermission = {
-  // single-arg usage: check by permission only
-  (permission: Permission): boolean;
-  // two-arg usage: check within a feature gate
-  (feature: Feature, permission: Permission): boolean;
-};
+  // Reporting & Analytics
+  REPORTING: 'reporting',
+  DASHBOARDS: 'dashboards',
+  ANALYTICS: 'analytics',
+  HISTORICAL_DATA: 'historical-data',
 
-export interface UsePermissionsResult {
-  loading: boolean;
-  isAuthenticated: boolean;
-  currentUserRole: Role;
-  userPermissions: Permission[];
-  featurePermissions: FeaturePermissionMap;
+  // Administration
+  USER_MANAGEMENT: 'user-management',
+  ACCESS_CONTROL: 'access-control',
+  TENANT_MANAGEMENT: 'tenant-management',
+  SYSTEM_SETTINGS: 'system-settings',
+  AUDIT_LOGS: 'audit-logs',
+  AUDIT: 'audit',
+  SYSTEM_HEALTH: 'system-health',
+  API_CONFIG: 'api-config',
+  INTEGRATIONS: 'integrations',
 
-  // allow both call signatures
-  checkPermission: CheckPermission;
+  // Directory / HR
+  EMPLOYEES: 'employees',
+  EMPLOYEE_RECORDS: 'employee-records',
+  BENEFITS_MANAGEMENT: 'benefits-management',
+  PAYROLL_PROCESSING: 'payroll-processing',
 
-  // convenience helpers (optional, safe)
-  hasAny: (perms: Permission[]) => boolean;
-  hasAll: (perms: Permission[]) => boolean;
-  hasRole: (...roles: Role[]) => boolean;
+  // Talent (for DashboardLayout)
+  TALENT_JOBS: 'talent-jobs',
+  TALENT_CANDIDATES: 'talent-candidates',
+  TALENT_INTERVIEWS: 'talent-interviews',
+  TALENT_OFFERS: 'talent-offers',
+} as const
+export type Feature = typeof FEATURES[keyof typeof FEATURES]
+
+/* =========================
+ * Permissions
+ * ========================= */
+const CORE = {
+  VIEW: 'view',
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+  MANAGE: 'manage',
+  APPROVE: 'approve',
+  EXPORT: 'export',
+  IMPORT: 'import',
+} as const
+
+// Compatibility keys used around the app, all mapped to core semantics.
+// Values deliberately collapse to core so code like PERMISSIONS.PROJECT_READ === 'view'.
+export const PERMISSIONS = {
+  ...CORE,
+
+  // Menu/route gating aliases
+  JOB_MANAGE: 'manage',
+  CANDIDATE_READ: 'view',
+  INTERVIEW_MANAGE: 'manage',
+  OFFER_MANAGE: 'manage',
+
+  DATA_PROCESS: 'view',
+  DATA_ANALYZE: 'view',
+  DATA_MANAGE: 'manage',
+  DATA_VALIDATE: 'manage',
+  FILE_UPLOAD: 'import',
+
+  AUDIT_VIEW: 'view',
+  SYSTEM_HEALTH_VIEW: 'view',
+  SYSTEM_SETTINGS_MANAGE: 'manage',
+  API_CONFIG_MANAGE: 'manage',
+  INTEGRATION_MANAGE: 'manage',
+  ADMIN_ACCESS: 'view',
+
+  EMPLOYEE_READ: 'view',
+  EMPLOYEE_PROCESS: 'manage',
+  BENEFITS_MANAGE: 'manage',
+  PAYROLL_MANAGE: 'manage',
+
+  // RouteGuard / misc aliases used historically
+  TENANT_READ: 'view',
+  USER_READ: 'view',
+  PROJECT_READ: 'view',
+  WORK_REQUEST_READ: 'view',
+  REPORTING_VIEW: 'view',
+
+  // Composite legacy (feature_permission)
+  WORK_REQUESTS_CREATE: 'create',
+  WORK_REQUESTS_UPDATE: 'update',
+  WORK_REQUESTS_DELETE: 'delete',
+} as const
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS]
+
+/* =========================
+ * Roles
+ * ========================= */
+export const ROLES = {
+  HOST_ADMIN: 'host_admin',
+  CLIENT_ADMIN: 'client_admin',
+  PROGRAM_MANAGER: 'program_manager',
+  CLIENT_USER: 'client_user',
+  USER: 'user', // convenience alias used in some places
+} as const
+export type Role = typeof ROLES[keyof typeof ROLES]
+
+/* =========================
+ * Default role matrix
+ * ========================= */
+
+type RolePermissionEntry = { feature: Feature; permission: Permission }
+type RolePermissionsMatrix = Record<Role, { role: Role; permissions: RolePermissionEntry[] }>
+
+const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
+  [ROLES.HOST_ADMIN]: {
+    role: ROLES.HOST_ADMIN,
+    permissions: Object.values(FEATURES).map((feature) => ({
+      feature,
+      permission: CORE.MANAGE,
+    })),
+  },
+
+  [ROLES.PROGRAM_MANAGER]: {
+    role: ROLES.PROGRAM_MANAGER,
+    permissions: [
+      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE.MANAGE },
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.MANAGE },
+      { feature: FEATURES.PROJECT_CHARTER, permission: CORE.MANAGE },
+      { feature: FEATURES.RISK_MANAGEMENT, permission: CORE.MANAGE },
+      { feature: FEATURES.RESOURCE_MANAGEMENT, permission: CORE.MANAGE },
+      { feature: FEATURES.DASHBOARDS, permission: CORE.VIEW },
+      { feature: FEATURES.ANALYTICS, permission: CORE.VIEW },
+      { feature: FEATURES.USER_MANAGEMENT, permission: CORE.VIEW },
+      { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE.VIEW },
+      { feature: FEATURES.DATA_VALIDATION, permission: CORE.VIEW },
+    ],
+  },
+
+  [ROLES.CLIENT_ADMIN]: {
+    role: ROLES.CLIENT_ADMIN,
+    permissions: [
+      { feature: FEATURES.USER_MANAGEMENT, permission: CORE.MANAGE },
+      { feature: FEATURES.ACCESS_CONTROL, permission: CORE.VIEW },
+      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE.MANAGE },
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.MANAGE },
+      { feature: FEATURES.DASHBOARDS, permission: CORE.VIEW },
+      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: CORE.MANAGE },
+      { feature: FEATURES.EMPLOYEE_RECORDS, permission: CORE.MANAGE },
+      { feature: FEATURES.FILE_UPLOAD, permission: CORE.CREATE },
+      { feature: FEATURES.DATA_VALIDATION, permission: CORE.VIEW },
+      { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE.VIEW },
+    ],
+  },
+
+  [ROLES.CLIENT_USER]: {
+    role: ROLES.CLIENT_USER,
+    permissions: [
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.CREATE },
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.VIEW },
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.UPDATE },
+      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE.VIEW },
+      { feature: FEATURES.DASHBOARDS, permission: CORE.VIEW },
+      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: CORE.VIEW },
+      { feature: FEATURES.FILE_UPLOAD, permission: CORE.CREATE },
+      { feature: FEATURES.ACCESS_CONTROL, permission: CORE.VIEW },
+      { feature: FEATURES.USER_MANAGEMENT, permission: CORE.VIEW },
+    ],
+  },
+
+  [ROLES.USER]: {
+    role: ROLES.USER,
+    permissions: [
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.CREATE },
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.VIEW },
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE.UPDATE },
+      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE.VIEW },
+      { feature: FEATURES.DASHBOARDS, permission: CORE.VIEW },
+      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: CORE.VIEW },
+      { feature: FEATURES.FILE_UPLOAD, permission: CORE.CREATE },
+      { feature: FEATURES.ACCESS_CONTROL, permission: CORE.VIEW },
+      { feature: FEATURES.USER_MANAGEMENT, permission: CORE.VIEW },
+    ],
+  },
 }
 
-// ---------- Hook ----------
-export function usePermissions(): UsePermissionsResult {
-  const auth = useAuth?.(); // tolerate undefined in SSR edge cases
-  const loading = Boolean(auth?.loading);
-  const isAuthenticated = Boolean(auth?.isAuthenticated);
+/* =========================
+ * Hook
+ * ========================= */
 
-  // Try common places apps store RBAC details. All optional-safe.
-  const currentUserRole: Role =
-    (auth as any)?.tenantUser?.role ??
-    (auth as any)?.user?.role ??
-    (auth as any)?.role ??
-    ROLES.USER; // sensible default
+export function usePermissions() {
+  const { user, tenantUser, isAuthenticated, isDemoMode } = useAuth()
+  const [userPermissions, setUserPermissions] = useState<RolePermissionEntry[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const userPermissions: Permission[] =
-    (auth as any)?.tenantUser?.permissions ??
-    (auth as any)?.user?.permissions ??
-    (auth as any)?.permissions ??
-    [];
-
-  const featurePermissions: FeaturePermissionMap =
-    (auth as any)?.tenantUser?.featurePermissions ??
-    (auth as any)?.featurePermissions ??
-    {};
-
-  const checkPermission: CheckPermission = (
-    a: Permission | Feature,
-    b?: Permission,
-  ): boolean => {
-    // Two-arg mode: (feature, permission)
-    if (typeof b === "string") {
-      const feature = String(a);
-      const permission = b;
-
-      const byFeature = featurePermissions?.[feature] ?? [];
-      if (byFeature.includes(permission)) return true;
-
-      // Fallback: global permission list also grants it
-      return userPermissions.includes(permission);
+  useEffect(() => {
+    if (!isAuthenticated || !tenantUser) {
+      setUserPermissions([])
+      setIsLoading(false)
+      return
     }
+    const role = (tenantUser.role ?? ROLES.CLIENT_USER) as Role
+    const rolePermissions =
+      DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER]
+    setUserPermissions(rolePermissions.permissions)
+    setIsLoading(false)
+  }, [isAuthenticated, tenantUser])
 
-    // One-arg mode: (permission)
-    const permission = String(a);
-    return userPermissions.includes(permission);
-  };
+  // Collapse compatibility aliases to core semantics.
+  function normalizePermission(p: Permission): Permission {
+    switch (p) {
+      // -> MANAGE
+      case PERMISSIONS.JOB_MANAGE:
+      case PERMISSIONS.INTERVIEW_MANAGE:
+      case PERMISSIONS.OFFER_MANAGE:
+      case PERMISSIONS.DATA_MANAGE:
+      case PERMISSIONS.DATA_VALIDATE:
+      case PERMISSIONS.SYSTEM_SETTINGS_MANAGE:
+      case PERMISSIONS.API_CONFIG_MANAGE:
+      case PERMISSIONS.INTEGRATION_MANAGE:
+      case PERMISSIONS.EMPLOYEE_PROCESS:
+      case CORE.MANAGE:
+        return CORE.MANAGE
 
-  const hasAny = (perms: Permission[]) =>
-    perms.some((p) => checkPermission(p));
+      // -> VIEW
+      case PERMISSIONS.CANDIDATE_READ:
+      case PERMISSIONS.DATA_PROCESS:
+      case PERMISSIONS.DATA_ANALYZE:
+      case PERMISSIONS.AUDIT_VIEW:
+      case PERMISSIONS.SYSTEM_HEALTH_VIEW:
+      case PERMISSIONS.ADMIN_ACCESS:
+      case PERMISSIONS.EMPLOYEE_READ:
+      case PERMISSIONS.TENANT_READ:
+      case PERMISSIONS.USER_READ:
+      case PERMISSIONS.PROJECT_READ:
+      case PERMISSIONS.WORK_REQUEST_READ:
+      case PERMISSIONS.REPORTING_VIEW:
+      case CORE.VIEW:
+        return CORE.VIEW
 
-  const hasAll = (perms: Permission[]) =>
-    perms.every((p) => checkPermission(p));
+      // -> CREATE / UPDATE / DELETE
+      case PERMISSIONS.WORK_REQUESTS_CREATE:
+      case CORE.CREATE:
+        return CORE.CREATE
+      case PERMISSIONS.WORK_REQUESTS_UPDATE:
+      case CORE.UPDATE:
+        return CORE.UPDATE
+      case PERMISSIONS.WORK_REQUESTS_DELETE:
+      case CORE.DELETE:
+        return CORE.DELETE
 
-  const hasRole = (...roles: Role[]) => roles.includes(currentUserRole);
+      // -> IMPORT / EXPORT / APPROVE
+      case PERMISSIONS.FILE_UPLOAD:
+      case CORE.IMPORT:
+        return CORE.IMPORT
+      case CORE.EXPORT:
+        return CORE.EXPORT
+      case CORE.APPROVE:
+        return CORE.APPROVE
+
+      default:
+        return p
+    }
+  }
+
+  // Core check
+  function hasPermission(feature: Feature, permission: Permission): boolean {
+    if (isDemoMode) return true
+    if (!isAuthenticated || !tenantUser) return false
+    if ((tenantUser.role as Role) === ROLES.HOST_ADMIN) return true
+    const normalized = normalizePermission(permission)
+    return userPermissions.some(
+      (p) => p.feature === feature && normalizePermission(p.permission) === normalized,
+    )
+  }
+
+  /**
+   * Flexible checker
+   * - checkPermission(feature, permission)
+   * - checkPermission('feature.permission')
+   *
+   * Passing **only** a permission string is not supported (it collapses to core values
+   * like 'view' and becomes ambiguous). Prefer one of the forms above.
+   */
+  function checkPermission(arg1: Feature | string | undefined, arg2?: Permission): boolean {
+    if (arg1 === undefined) return true
+    if (typeof arg1 === 'string' && !arg2) {
+      const [f, p] = String(arg1).split('.') as [Feature, Permission]
+      if (!f || !p) return false
+      return hasPermission(f, normalizePermission(p))
+    }
+    return hasPermission(arg1 as Feature, normalizePermission(arg2 as Permission))
+  }
+
+  function checkAnyPermission(feature: Feature, permissions: Permission[]) {
+    return permissions.some((perm) => hasPermission(feature, perm))
+  }
+
+  function canAccessFeature(feature: Feature): boolean {
+    if (isDemoMode) return true
+    if (!isAuthenticated || !tenantUser) return false
+    if ((tenantUser.role as Role) === ROLES.HOST_ADMIN) return true
+    return userPermissions.some((p) => p.feature === feature)
+  }
+
+  function getPermissionLevel(feature: Feature): Permission[] {
+    if (isDemoMode || (tenantUser?.role as Role) === ROLES.HOST_ADMIN) return [CORE.MANAGE]
+    if (!isAuthenticated || !tenantUser) return []
+    return userPermissions
+      .filter((p) => p.feature === feature)
+      .map((p) => normalizePermission(p.permission))
+  }
+
+  // Helpers (feature-first)
+  const canCreate = (f: Feature | string) =>
+    hasPermission(resolveFeatureFromArg(f), CORE.CREATE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
+
+  const canUpdate = (f: Feature | string) =>
+    hasPermission(resolveFeatureFromArg(f), CORE.UPDATE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
+
+  const canDelete = (f: Feature | string) =>
+    hasPermission(resolveFeatureFromArg(f), CORE.DELETE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
+
+  const canView = (f: Feature | string) =>
+    hasPermission(resolveFeatureFromArg(f), CORE.VIEW) ||
+    hasPermission(resolveFeatureFromArg(f), CORE.MANAGE) ||
+    canCreate(f) ||
+    canUpdate(f)
+
+  const canManage = (arg: Feature | string): boolean => {
+    // If a "feature.permission" string was passed accidentally, try to parse it.
+    if (typeof arg === 'string' && arg.includes('.')) {
+      const [f] = arg.split('.')
+      return hasPermission(f as Feature, CORE.MANAGE)
+    }
+    return hasPermission(arg as Feature, CORE.MANAGE)
+  }
+
+  const canApprove = (f: Feature | string) =>
+    hasPermission(resolveFeatureFromArg(f), CORE.UPDATE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
+
+  const canExport = (f: Feature | string) =>
+    hasPermission(resolveFeatureFromArg(f), CORE.VIEW) ||
+    hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
+
+  const canImport = (f: Feature | string) =>
+    hasPermission(resolveFeatureFromArg(f), CORE.IMPORT) ||
+    hasPermission(resolveFeatureFromArg(f), CORE.MANAGE)
+
+  function resolveFeatureFromArg(arg: Feature | string): Feature {
+    const values = Object.values(FEATURES) as string[]
+    if (values.includes(String(arg))) return arg as Feature
+    // Default for ambiguous calls — keep legacy behavior minimal:
+    return FEATURES.WORK_REQUESTS
+  }
+
+  const getAccessibleFeatures = (): Feature[] => {
+    if (isDemoMode) return Object.values(FEATURES)
+    if (!isAuthenticated || !tenantUser) return []
+    if ((tenantUser.role as Role) === ROLES.HOST_ADMIN) return Object.values(FEATURES)
+    return Array.from(new Set(userPermissions.map((p) => p.feature))) as Feature[]
+  }
+
+  // Admin-ish helpers
+  const isAdmin = () =>
+    !!tenantUser &&
+    ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN] as readonly string[]).includes(
+      String(tenantUser.role),
+    )
+
+  const isHostAdmin = () => String(tenantUser?.role) === ROLES.HOST_ADMIN
+  const canManageUsers = () => hasPermission(FEATURES.USER_MANAGEMENT, CORE.MANAGE)
+  const canAccessAdmin = () =>
+    canAccessFeature(FEATURES.ACCESS_CONTROL) ||
+    canAccessFeature(FEATURES.USER_MANAGEMENT) ||
+    canAccessFeature(FEATURES.SYSTEM_SETTINGS)
+
+  const isSuperAdmin = () => {
+    if (!isAuthenticated || !tenantUser) return false
+    return ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN] as readonly string[]).includes(
+      String(tenantUser.role),
+    )
+  }
+
+  const getUserPermissions = () => ({
+    workRequests: {
+      view: canView(FEATURES.WORK_REQUESTS),
+      create: canCreate(FEATURES.WORK_REQUESTS),
+      update: canUpdate(FEATURES.WORK_REQUESTS),
+      approve: canApprove(FEATURES.WORK_REQUESTS),
+    },
+    projects: {
+      view: canView(FEATURES.PROJECT_MANAGEMENT),
+      create: canCreate(FEATURES.PROJECT_MANAGEMENT),
+      update: canUpdate(FEATURES.PROJECT_MANAGEMENT),
+      delete: canDelete(FEATURES.PROJECT_MANAGEMENT),
+    },
+    risks: {
+      view: canView(FEATURES.RISK_MANAGEMENT),
+      manage: canManage(FEATURES.RISK_MANAGEMENT),
+    },
+    users: {
+      view: canView(FEATURES.USER_MANAGEMENT),
+      manage: canManageUsers(),
+    },
+    reports: {
+      view: canView(FEATURES.DASHBOARDS),
+      export: canExport(FEATURES.DASHBOARDS),
+    },
+    admin: {
+      access: canAccessAdmin(),
+      isAdmin: isAdmin(),
+      isHostAdmin: isHostAdmin(),
+    },
+  })
 
   return {
-    loading,
-    isAuthenticated,
-    currentUserRole,
-    userPermissions,
-    featurePermissions,
+    // Checkers
+    hasPermission,
     checkPermission,
-    hasAny,
-    hasAll,
-    hasRole,
-  };
+    checkAnyPermission,
+    canAccessFeature,
+    getPermissionLevel,
+
+    // Action helpers
+    canCreate,
+    canUpdate,
+    canDelete,
+    canView,
+    canManage,
+    canApprove,
+    canExport,
+    canImport,
+
+    // Utilities
+    getAccessibleFeatures,
+    getUserPermissions,
+    isAdmin,
+    isHostAdmin,
+    canManageUsers,
+    canAccessAdmin,
+
+    // State
+    userPermissions,
+    isLoading,
+    loading: isLoading, // compat alias
+    Loading: isLoading, // compat alias
+    isDemoMode,
+    isAuthenticated,
+
+    // Current user info
+    currentRole: tenantUser?.role,
+    currentUserRole: tenantUser?.role, // compat alias
+    currentUserId: user?.id,
+    currentTenantId: tenantUser?.tenant_id,
+    isSuperAdmin,
+
+    // Re-export constants for convenience
+    FEATURES,
+    PERMISSIONS,
+    ROLES,
+  }
 }
 
-// ---------- Guard components kept for backward compatibility ----------
-type GuardCommonProps = {
-  fallback?: React.ReactNode;
-  children: React.ReactNode;
-};
+export default usePermissions
 
-export function PermissionGuard({
-  permission,
-  fallback = null,
-  children,
-}: GuardCommonProps & { permission: Permission }) {
-  const { loading, checkPermission } = usePermissions();
-  if (loading) return null;
-  return checkPermission(permission) ? <>{children}</> : <>{fallback}</>;
+/* =========================
+ * Lightweight Guard Components
+ * (Backwards compatibility)
+ * ========================= */
+
+type GuardBaseProps = {
+  children: ReactNode
+  fallback?: ReactNode
 }
 
 export function FeatureGuard({
   feature,
-  permission,
-  fallback = null,
   children,
-}: GuardCommonProps & { feature: Feature; permission: Permission }) {
-  const { loading, checkPermission } = usePermissions();
-  if (loading) return null;
-  return checkPermission(feature, permission) ? (
-    <>{children}</>
-  ) : (
-    <>{fallback}</>
-  );
+  fallback = null,
+}: GuardBaseProps & { feature: Feature }) {
+  const { canAccessFeature, isLoading } = usePermissions()
+  if (isLoading) return null
+  return canAccessFeature(feature) ? <>{children}</> : <>{fallback}</>
+}
+
+export function PermissionGuard({
+  feature,
+  permission,
+  children,
+  fallback = null,
+}: GuardBaseProps & { feature: Feature; permission: Permission }) {
+  const { hasPermission, isLoading } = usePermissions()
+  if (isLoading) return null
+  return hasPermission(feature, permission) ? <>{children}</> : <>{fallback}</>
 }
 
 export function RoleGuard({
-  roles,
-  fallback = null,
+  allow,
   children,
-}: GuardCommonProps & { roles: Role[] }) {
-  const { loading, currentUserRole } = usePermissions();
-  if (loading) return null;
-  return roles.includes(currentUserRole) ? <>{children}</> : <>{fallback}</>;
+  fallback = null,
+}: GuardBaseProps & { allow: Role | Role[] }) {
+  const { currentUserRole, isLoading } = usePermissions()
+  if (isLoading) return null
+  const allowed = Array.isArray(allow) ? allow : [allow]
+  return allowed.includes(String(currentUserRole) as Role) ? (
+    <>{children}</>
+  ) : (
+    <>{fallback}</>
+  )
 }
-
-// Keep default export for legacy imports
-export default usePermissions;

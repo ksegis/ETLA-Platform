@@ -329,7 +329,7 @@ export default function AccessControlPage() {
             loading={userDetailloading}
             isHostAdmin={currentUserRole === ROLES.HOST_ADMIN}
             isAdmin={
-              currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.TENANT_ADMIN
+              currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.CLIENT_ADMIN
             }
           />
         </div>
