@@ -29,7 +29,7 @@ interface InvitationData {
 }
 
 export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }: UserInviteModalProps) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
@@ -101,7 +101,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
   }
 
   const sendInvitations = async () => {
-    setLoading(true)
+    setloading(true)
     setError('')
     setSuccess('')
 
@@ -171,7 +171,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
       console.error('Error sending invitations:', error)
       setError(error.message || 'Failed to send invitations')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

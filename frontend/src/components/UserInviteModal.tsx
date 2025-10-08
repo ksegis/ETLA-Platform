@@ -36,7 +36,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
     message: '',
     expires_in_days: 7
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [error, setError] = useState('')
   const [emailCount, setEmailCount] = useState(0)
 
@@ -77,7 +77,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -123,7 +123,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
       setError(err instanceof Error ? err.message : 'An error occurred while sending invitations')
       console.error('Invitation error:', err)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

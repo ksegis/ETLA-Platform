@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
 export default function RBACtestPage() {
-  const { user, tenantUser, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, tenantUser, isAuthenticated, loading: authloading } = useAuth();
   const { canManage, currentRole } = usePermissions();
 
   const features = [
@@ -20,13 +20,13 @@ export default function RBACtestPage() {
     "settings-access",
   ];
 
-  if (authLoading) {
+  if (authloading) {
     return (
       <DashboardLayout>
         <div className="p-6 space-y-6">
           <h1 className="text-2xl font-bold text-gray-900">RBAC Test Page</h1>
           <p className="text-gray-600">
-            Loading authentication and permissions...
+            loading authentication and permissions...
           </p>
         </div>
       </DashboardLayout>

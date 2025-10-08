@@ -50,7 +50,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     `${FEATURES.PROJECT_CHARTER}:${PERMISSIONS.MANAGE}`,
     `${FEATURES.RISK_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
     `${FEATURES.RESOURCE_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
-    `${FEATURES.REPORTING}:${PERMISSIONS.VIEW}`,
+    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.ANALYTICS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.USER_MANAGEMENT}:${PERMISSIONS.VIEW}`,
@@ -62,7 +62,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     `${FEATURES.ACCESS_CONTROL}:${PERMISSIONS.VIEW}`,
     `${FEATURES.PROJECT_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
     `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.MANAGE}`,
-    `${FEATURES.REPORTING}:${PERMISSIONS.VIEW}`,
+    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.BENEFITS_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
     `${FEATURES.EMPLOYEE_RECORDS}:${PERMISSIONS.MANAGE}`,
@@ -75,7 +75,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.UPDATE}`,
     `${FEATURES.PROJECT_MANAGEMENT}:${PERMISSIONS.VIEW}`,
-    `${FEATURES.REPORTING}:${PERMISSIONS.VIEW}`,
+    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
     `${FEATURES.BENEFITS_MANAGEMENT}:${PERMISSIONS.VIEW}`,
     `${FEATURES.FILE_UPLOAD}:${PERMISSIONS.CREATE}`
@@ -237,7 +237,7 @@ export const ServiceAuth = {
     hasServicePermission(context || getServiceAuthContext(), FEATURES.WORK_REQUESTS, PERMISSIONS.UPDATE),
   
   canApproveWorkRequests: (context?: ServiceAuthContext) => 
-    hasServicePermission(context || getServiceAuthContext(), FEATURES.WORK_REQUESTS, PERMISSIONS.APPROVE),
+    hasServicePermission(context || getServiceAuthContext(), FEATURES.WORK_REQUESTS, PERMISSIONS.UPDATE),
 
   // Risk Management
   canViewRisks: (context?: ServiceAuthContext) => 
@@ -255,10 +255,10 @@ export const ServiceAuth = {
 
   // Reporting
   canViewReports: (context?: ServiceAuthContext) => 
-    hasServicePermission(context || getServiceAuthContext(), FEATURES.REPORTING, PERMISSIONS.VIEW),
+    hasServicePermission(context || getServiceAuthContext(), FEATURES.DASHBOARDS, PERMISSIONS.VIEW),
   
   canExportReports: (context?: ServiceAuthContext) => 
-    hasServicePermission(context || getServiceAuthContext(), FEATURES.REPORTING, PERMISSIONS.EXPORT),
+    hasServicePermission(context || getServiceAuthContext(), FEATURES.DASHBOARDS, PERMISSIONS.VIEW),
 
   // File Operations
   canUploadFiles: (context?: ServiceAuthContext) => 

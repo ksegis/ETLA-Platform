@@ -312,7 +312,7 @@ const WorkRequestModal = ({
 export default function WorkRequestsPage() {
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [filteredRequests, setFilteredRequests] = useState<WorkRequest[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -337,15 +337,15 @@ export default function WorkRequestsPage() {
   const loadWorkRequests = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
-      setLoading(false)
+      setloading(false)
       return
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('Loading work requests for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('loading work requests for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Query work requests with error handling
       const { data, error: queryError } = await supabase
@@ -383,7 +383,7 @@ export default function WorkRequestsPage() {
       setWorkRequests([])
       setFilteredRequests([])
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -743,7 +743,7 @@ export default function WorkRequestsPage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-gray-600 mt-2">Loading work requests...</p>
+                <p className="text-gray-600 mt-2">loading work requests...</p>
               </div>
             ) : filteredRequests.length === 0 ? (
               <div className="text-center py-12">

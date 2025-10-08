@@ -373,7 +373,7 @@ function WorkRequestModal({
 export default function WorkRequestsPage() {
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<WorkRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -400,7 +400,7 @@ export default function WorkRequestsPage() {
   const loadWorkRequests = async () => {
     if (!tenantId) return;
 
-    setLoading(true);
+    setloading(true);
     try {
       let requests: WorkRequest[];
 
@@ -425,7 +425,7 @@ export default function WorkRequestsPage() {
       setError("Failed to load work requests");
       console.error("Error loading work requests:", err);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
@@ -655,7 +655,7 @@ export default function WorkRequestsPage() {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-2">Loading work requests...</p>
+            <p className="text-gray-600 mt-2">loading work requests...</p>
           </div>
         ) : error ? (
           <div className="text-center py-12">

@@ -47,7 +47,7 @@ interface PasswordChangeData {
 
 interface ProfileState {
   profile: ProfileData | null
-  isLoading: boolean
+  Loading: boolean
   isSaving: boolean
   error: string
   success: string
@@ -73,7 +73,7 @@ export default function ProfilePage() {
   
   const [state, setState] = useState<ProfileState>({
     profile: null,
-    isLoading: true,
+    Loading: true,
     isSaving: false,
     error: '',
     success: '',
@@ -125,7 +125,7 @@ export default function ProfilePage() {
               updated_at: new Date().toISOString()
             },
             mfaEnabled: false,
-            isLoading: false
+            Loading: false
           }))
           return
         }
@@ -144,7 +144,7 @@ export default function ProfilePage() {
           setState(prev => ({ 
             ...prev, 
             error: 'Failed to load profile data',
-            isLoading: false 
+            Loading: false 
           }))
           return
         }
@@ -166,7 +166,7 @@ export default function ProfilePage() {
             updated_at: profileData?.updated_at || user.updated_at
           },
           mfaEnabled,
-          isLoading: false
+          Loading: false
         }))
 
       } catch (err: any) {
@@ -174,7 +174,7 @@ export default function ProfilePage() {
         setState(prev => ({ 
           ...prev, 
           error: 'Failed to load profile data',
-          isLoading: false 
+          Loading: false 
         }))
       }
     }
@@ -464,12 +464,12 @@ export default function ProfilePage() {
     }
   }
 
-  if (state.isLoading) {
+  if (state.Loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading profile...</p>
+          <p className="mt-2 text-gray-600">loading profile...</p>
         </div>
       </div>
     )

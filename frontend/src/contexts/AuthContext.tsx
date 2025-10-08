@@ -54,7 +54,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [isStable, setIsStable] = useState(false);
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(null);
           setTenantUser(null);
 
-          setLoading(false);
+          setloading(false);
           setIsStable(true);
           updateServiceAuthContext();
           console.log("✅ AuthProvider: Demo mode initialization completed");
@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser(null);
         }
 
-        setLoading(false);
+        setloading(false);
         setIsStable(true);
         updateServiceAuthContext();
         console.log(
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setTenantUser(null);
 
-        setLoading(false);
+        setloading(false);
         setIsStable(true);
         updateServiceAuthContext();
       }
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error("❌ AuthProvider: Error in auth state change:", error);
         } finally {
-          setLoading(false);
+          setloading(false);
           setIsStable(true);
           updateServiceAuthContext();
           console.log("✅ AuthProvider: Auth state change completed");
@@ -232,7 +232,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error("❌ AuthProvider: Sign in failed:", error);
-        setLoading(false);
+        setloading(false);
         setIsStable(true);
       } else {
         console.log(
@@ -243,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     } catch (error) {
       console.error("❌ AuthProvider: Sign in error:", error);
-      setLoading(false);
+      setloading(false);
       setIsStable(true);
       return { error };
     }
@@ -269,7 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       setTenantUser(null);
-      setLoading(false);
+      setloading(false);
       setIsStable(true);
       updateServiceAuthContext();
 

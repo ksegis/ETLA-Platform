@@ -11,16 +11,18 @@ import { supabase } from '@/lib/supabase'
 interface LoginState {
   email: string
   password: string
-  isLoading: boolean
+  Loading: boolean
   error: string
   resetEmail: string
-  isResetLoading: boolean
+  isResetloading: boolean
   resetError: string
   resetSuccess: boolean
   activeTab: 'login' | 'forgot'
-  isGoogleLoading: boolean
+  isGoogleloading: boolean
 }
-
+function LoadingFallback() {
+  return <div>Loading…</div>;
+}
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -29,14 +31,14 @@ function LoginForm() {
   const [state, setState] = useState<LoginState>({
     email: '',
     password: '',
-    isLoading: false,
+    Loading: false,
     error: '',
     resetEmail: '',
-    isResetLoading: false,
+    isResetloading: false,
     resetError: '',
     resetSuccess: false,
     activeTab: 'login',
-    isGoogleLoading: false
+    isGoogleloading: false
   })
 
   // Handle URL parameters and messages
@@ -60,7 +62,7 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setState(prev => ({ ...prev, isLoading: true, error: '' }))
+    setState(prev => ({ ...prev, Loading: true, error: '' }))
 
     try {
       console.log(`Attempting login with: ${state.email}`)
@@ -70,7 +72,7 @@ function LoginForm() {
         console.error('Login error:', error)
         setState(prev => ({ 
           ...prev, 
-          isLoading: false,
+          Loading: false,
           error: `Login failed: ${error.message}` 
         }))
       } else {
@@ -78,7 +80,7 @@ function LoginForm() {
         // Wait a moment for auth state to stabilize before redirecting
         setTimeout(() => {
           console.log('Redirecting to work-requests...')
-          setState(prev => ({ ...prev, isLoading: false }))
+          setState(prev => ({ ...prev, Loading: false }))
           router.push('/work-requests')
         }, 1000)
       }
@@ -86,14 +88,14 @@ function LoginForm() {
       console.error('Login exception:', err)
       setState(prev => ({ 
         ...prev, 
-        isLoading: false,
+        Loading: false,
         error: `Login error: ${err.message || 'Unknown error'}` 
       }))
     }
   }
 
   const handleGoogleSignIn = async () => {
-    setState(prev => ({ ...prev, isGoogleLoading: true, error: '' }))
+    setState(prev => ({ ...prev, isGoogleloading: true, error: '' }))
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -111,7 +113,7 @@ function LoginForm() {
         console.error('Google sign-in error:', error)
         setState(prev => ({ 
           ...prev, 
-          isGoogleLoading: false,
+          isGoogleloading: false,
           error: `Google sign-in failed: ${error.message}` 
         }))
       }
@@ -120,7 +122,7 @@ function LoginForm() {
       console.error('Google sign-in exception:', err)
       setState(prev => ({ 
         ...prev, 
-        isGoogleLoading: false,
+        isGoogleloading: false,
         error: `Google sign-in error: ${err.message || 'Unknown error'}` 
       }))
     }
@@ -128,7 +130,7 @@ function LoginForm() {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setState(prev => ({ ...prev, isResetLoading: true, resetError: '', resetSuccess: false }))
+    setState(prev => ({ ...prev, isResetloading: true, resetError: '', resetSuccess: false }))
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(state.resetEmail, {
@@ -138,20 +140,20 @@ function LoginForm() {
       if (error) {
         setState(prev => ({ 
           ...prev, 
-          isResetLoading: false,
+          isResetloading: false,
           resetError: error.message 
         }))
       } else {
         setState(prev => ({ 
           ...prev, 
-          isResetLoading: false,
+          isResetloading: false,
           resetSuccess: true 
         }))
       }
     } catch (err: any) {
       setState(prev => ({ 
         ...prev, 
-        isResetLoading: false,
+        isResetloading: false,
         resetError: err.message || 'Failed to send reset email' 
       }))
     }
@@ -234,10 +236,10 @@ function LoginForm() {
                     type="button"
                     variant="outline"
                     onClick={handleGoogleSignIn}
-                    disabled={state.isGoogleLoading || state.isLoading}
+                    disabled={state.isGoogleloading || state.Loading}
                     className="w-full"
                   >
-                    {state.isGoogleLoading ? (
+                    {state.isGoogleloading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         Connecting to Google...
@@ -291,7 +293,7 @@ function LoginForm() {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter your email"
-                      disabled={state.isLoading || state.isGoogleLoading}
+                      disabled={state.Loading || state.isGoogleloading}
                     />
                   </div>
 
@@ -307,7 +309,7 @@ function LoginForm() {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter your password"
-                      disabled={state.isLoading || state.isGoogleLoading}
+                      disabled={state.Loading || state.isGoogleloading}
                     />
                   </div>
 
@@ -320,10 +322,10 @@ function LoginForm() {
 
                   <Button
                     type="submit"
-                    disabled={state.isLoading || state.isGoogleLoading}
+                    disabled={state.Loading || state.isGoogleloading}
                     className="w-full"
                   >
-                    {state.isLoading ? (
+                    {state.Loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         Signing in...
@@ -341,7 +343,7 @@ function LoginForm() {
                       type="button"
                       onClick={() => switchTab('forgot')}
                       className="text-sm text-blue-600 hover:text-blue-500"
-                      disabled={state.isLoading || state.isGoogleLoading}
+                      disabled={state.Loading || state.isGoogleloading}
                     >
                       Forgot your password?
                     </button>
@@ -410,7 +412,7 @@ function LoginForm() {
                         required
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter your email address"
-                        disabled={state.isResetLoading}
+                        disabled={state.isResetloading}
                       />
                     </div>
 
@@ -423,10 +425,10 @@ function LoginForm() {
 
                     <Button
                       type="submit"
-                      disabled={state.isResetLoading}
+                      disabled={state.isResetloading}
                       className="w-full"
                     >
-                      {state.isResetLoading ? (
+                      {state.isResetloading ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
                           Sending reset link...
@@ -444,7 +446,7 @@ function LoginForm() {
                         type="button"
                         onClick={() => switchTab('login')}
                         className="text-sm text-blue-600 hover:text-blue-500"
-                        disabled={state.isResetLoading}
+                        disabled={state.isResetloading}
                       >
                         Back to Sign In
                       </button>
@@ -466,12 +468,12 @@ function LoginForm() {
   )
 }
 
-function LoadingFallback() {
+function loadingFallback() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-2 text-gray-600">Loading...</p>
+        <p className="mt-2 text-gray-600">loading...</p>
       </div>
     </div>
   )

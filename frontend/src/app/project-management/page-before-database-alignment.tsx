@@ -132,7 +132,7 @@ export default function EnhancedProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectCharter[]>([])
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [risks, setRisks] = useState<Risk[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -226,15 +226,15 @@ export default function EnhancedProjectManagementPage() {
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
-      setLoading(false)
+      setloading(false)
       return
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('Loading project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Check available tables first
       await checkAvailableTables()
@@ -329,7 +329,7 @@ export default function EnhancedProjectManagementPage() {
       console.error('Unexpected error loading data:', err)
       setError('Failed to load project management data. The database schema may need to be set up.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -1033,7 +1033,7 @@ export default function EnhancedProjectManagementPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">Loading project data...</span>
+          <span className="ml-2 text-gray-600">loading project data...</span>
         </div>
       </DashboardLayout>
     )

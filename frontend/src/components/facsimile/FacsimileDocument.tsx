@@ -72,7 +72,7 @@ export default function FacsimileDocument({
   }, [templateKey, data, employee, locale, facsimileTheme]);
 
   if (!state.mappedData) {
-    return <div className="p-4">Loading facsimile document...</div>;
+    return <div className="p-4">loading facsimile document...</div>;
   }
 
   const { colors, typography, layout } = facsimileTheme.design_tokens;

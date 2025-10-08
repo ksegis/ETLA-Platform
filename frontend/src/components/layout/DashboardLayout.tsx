@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["operations", "talent-management", "etl-cockpit"])
   const router = useRouter()
   const pathname = usePathname()
-  const { checkPermission, loading: permissionsLoading } = usePermissions();
+  const { checkPermission, loading: permissionsloading } = usePermissions();
 
   // REDESIGNED NAVIGATION GROUPS - USER-FRIENDLY WORKFLOW ORIENTED
   const navigationGroups: NavigationGroup[] = [
@@ -259,7 +259,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Filter navigation groups and items based on permissions
   const filteredNavigationGroups = useMemo(() => {
-    if (permissionsLoading) return [];
+    if (permissionsloading) return [];
 
     return navigationGroups.filter(group => {
       // Check if the group itself has a required permission
@@ -276,14 +276,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       // Only show group if it has accessible items or no items (e.g., just a header)
       return group.items.length > 0;
     });
-  }, [navigationGroups, checkPermission, permissionsLoading]);
+  }, [navigationGroups, checkPermission, permissionsloading]);
 
-  if (permissionsLoading) {
+  if (permissionsloading) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading permissions...</p>
+          <p className="text-gray-600">loading permissions...</p>
         </div>
       </div>
     );

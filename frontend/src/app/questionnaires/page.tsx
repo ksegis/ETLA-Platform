@@ -48,7 +48,7 @@ export default function QuestionnaireDashboard() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setloading] = useState<boolean>(true);
 
   const handleClone = (id: string) => {
     console.log(`Cloning questionnaire with ID: ${id}`);
@@ -157,7 +157,7 @@ export default function QuestionnaireDashboard() {
 
     setTimeout(() => {
       setQuestionnaires(mockQuestionnaires);
-      setLoading(false);
+      setloading(false);
     }, 1000);
   }, []);
 

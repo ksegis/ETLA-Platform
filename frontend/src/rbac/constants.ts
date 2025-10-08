@@ -1,39 +1,40 @@
-export const FEATURES = {
-  ACCESS_CONTROL: "access_control",
-  TENANT_MANAGEMENT: "tenant_management",
-  WORK_REQUESTS: "work_requests",
-  PROJECTS: "projects",
-  PROJECT_MANAGEMENT: "projects",  // legacy alias used in older code
-  RISK_MANAGEMENT: "risks",
-  EMPLOYEES: "employees",
-  PROFILES: "profiles",
-  TIMEKEEPING: "timekeeping",
-  DASHBOARDS: "dashboards",
-} as const;
-export type FeatureKey = keyof typeof FEATURES;
-export type Feature = typeof FEATURES[FeatureKey];
+// src/rbac/constants.ts
+import { FEATURES, PERMISSIONS, ROLES } from '@/hooks/usePermissions'
+import type { Feature, Permission, Role } from '@/hooks/usePermissions'
 
-export const PERMISSIONS = {
-  VIEW: "view",
-  CREATE: "create",
-  UPDATE: "update",
-  DELETE: "delete",
+export { FEATURES, PERMISSIONS, ROLES }
+export type { Feature, Permission, Role }
 
-  // legacy “read” aliases some pages still use:
-  USER_READ: "view",
-  TENANT_READ: "view",
-} as const;
-export type PermissionKey = keyof typeof PERMISSIONS;
-export type Permission = typeof PERMISSIONS[PermissionKey];
+export const ALL_ROLES: Role[] = [
+  ROLES.HOST_ADMIN,
+  ROLES.CLIENT_ADMIN,
+  ROLES.PROGRAM_MANAGER,
+  ROLES.CLIENT_USER,
+  ROLES.USER,
+]
 
-export const ROLES = {
-  PLATFORM_ADMIN: "platform_admin",
-  HOST_ADMIN: "platform_admin",   // legacy alias used by some UIs
-  TENANT_ADMIN: "tenant_admin",
-  MANAGER: "manager",
-  MEMBER: "member",
-  VIEWER: "viewer",
-} as const;
-export type RoleKey = keyof typeof ROLES;
-export type Role = typeof ROLES[RoleKey];
+// Optional legacy mirrors (handy for code search or gradual refactors)
+export const FEATURES_LEGACY = {
+  ACCESS_CONTROL:     FEATURES.ACCESS_CONTROL,
+  TENANT_MANAGEMENT:  FEATURES.TENANT_MANAGEMENT,
+  WORK_REQUESTS:      FEATURES.WORK_REQUESTS,
+  PROJECTS:           FEATURES.PROJECT_MANAGEMENT,
+  PROJECT_MANAGEMENT: FEATURES.PROJECT_MANAGEMENT,
+  RISK_MANAGEMENT:    FEATURES.RISK_MANAGEMENT,
+  EMPLOYEES:          FEATURES.EMPLOYEES,
+  PROFILES:           FEATURES.EMPLOYEE_RECORDS,
+  DASHBOARDS:         FEATURES.DASHBOARDS,
+  REPORTING:          FEATURES.REPORTING,
+  ANALYTICS:          FEATURES.ANALYTICS,
+} as const
 
+export const PERMISSIONS_LEGACY = {
+  VIEW:                 PERMISSIONS.VIEW,
+  CREATE:               PERMISSIONS.CREATE,
+  EDIT:                 PERMISSIONS.UPDATE, // map EDIT -> UPDATE
+  DELETE:               PERMISSIONS.DELETE,
+  APPROVE:              PERMISSIONS.APPROVE,
+  WORK_REQUESTS_CREATE: PERMISSIONS.WORK_REQUESTS_CREATE,
+  WORK_REQUESTS_UPDATE: PERMISSIONS.WORK_REQUESTS_UPDATE,
+  WORK_REQUESTS_DELETE: PERMISSIONS.WORK_REQUESTS_DELETE,
+} as const

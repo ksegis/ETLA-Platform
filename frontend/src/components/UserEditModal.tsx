@@ -64,7 +64,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
     can_manage_sub_clients: false,
     permission_scope: 'own'
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [error, setError] = useState('')
 
   // Initialize form data when user prop changes
@@ -104,7 +104,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -141,13 +141,13 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
       setError('An error occurred while updating the user')
       console.error('User update error:', err)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
   const handleDeactivate = async () => {
     if (window.confirm('Are you sure you want to deactivate this user? They will lose access to the system.')) {
-      setLoading(true)
+      setloading(true)
       setError('')
       
       try {
@@ -162,13 +162,13 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
         setError('An error occurred while deactivating the user')
         console.error('User deactivation error:', err)
       } finally {
-        setLoading(false)
+        setloading(false)
       }
     }
   }
 
   const handleActivate = async () => {
-    setLoading(true)
+    setloading(true)
     setError('')
     
     try {
@@ -183,7 +183,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
       setError('An error occurred while activating the user')
       console.error('User activation error:', err)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

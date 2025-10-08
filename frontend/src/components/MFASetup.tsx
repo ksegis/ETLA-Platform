@@ -18,7 +18,7 @@ interface MFAState {
   secret: string
   verificationCode: string
   backupCodes: string[]
-  isLoading: boolean
+  Loading: boolean
   error: string
   isVerifying: boolean
   secretCopied: boolean
@@ -31,7 +31,7 @@ export default function MFASetup({ onComplete, onCancel }: MFASetupProps) {
     secret: '',
     verificationCode: '',
     backupCodes: [],
-    isLoading: true,
+    Loading: true,
     error: '',
     isVerifying: false,
     secretCopied: false
@@ -43,7 +43,7 @@ export default function MFASetup({ onComplete, onCancel }: MFASetupProps) {
 
   const initializeMFA = async () => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: '' }))
+      setState(prev => ({ ...prev, Loading: true, error: '' }))
 
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -79,7 +79,7 @@ export default function MFASetup({ onComplete, onCancel }: MFASetupProps) {
         qrCodeUrl,
         secret: totp.secret,
         backupCodes,
-        isLoading: false,
+        Loading: false,
         factorId
       }))
 
@@ -87,7 +87,7 @@ export default function MFASetup({ onComplete, onCancel }: MFASetupProps) {
       console.error('MFA initialization error:', err)
       setState(prev => ({
         ...prev,
-        isLoading: false,
+        Loading: false,
         error: err.message || 'Failed to initialize MFA setup'
       }))
     }
@@ -178,7 +178,7 @@ Instructions:
     URL.revokeObjectURL(url)
   }
 
-  if (state.isLoading) {
+  if (state.Loading) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="flex items-center justify-center py-8">

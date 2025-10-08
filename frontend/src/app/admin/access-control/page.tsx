@@ -33,7 +33,7 @@ import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants";
 export default function AccessControlPage() {
   const router = useRouter();
   const { user, isAuthenticated, currentTenantId } = useAuth();
-  const { checkPermission, currentUserRole, loading: permissionsLoading } = usePermissions();
+  const { checkPermission, currentUserRole, loading: permissionsloading } = usePermissions();
 
   const [activeTab, setActiveTab] = useState("users");
   const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>(
@@ -47,11 +47,11 @@ export default function AccessControlPage() {
   const [permissionCatalog, setPermissionCatalog] = useState<
     RBACPermissionCatalog[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [userDetail, setUserDetail] = useState<RBACUserDetail | null>(null);
-  const [userDetailLoading, setUserDetailLoading] = useState(false);
+  const [userDetailloading, setUserDetailloading] = useState(false);
   const [draftChanges, setDraftChanges] = useState<
     Map<string, "allow" | "deny" | "none">
   >(new Map());
@@ -65,13 +65,13 @@ export default function AccessControlPage() {
     }
 
     // Check permission for accessing this page
-    if (!permissionsLoading && !checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW)) {
+    if (!permissionsloading && !checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW)) {
       router.push("/unauthorized");
       return;
     }
 
     const loadInitialData = async () => {
-      setLoading(true);
+      setloading(true);
       try {
         const fetchedTenants = await RBACAdminService.listTenants();
         setTenants(fetchedTenants);
@@ -84,14 +84,14 @@ export default function AccessControlPage() {
       } catch (error) {
         console.error("Error loading initial data:", error);
       } finally {
-        setLoading(false);
+        setloading(false);
       }
     };
 
     if (isAuthenticated) {
       loadInitialData();
     }
-  }, [isAuthenticated, router, checkPermission, permissionsLoading]);
+  }, [isAuthenticated, router, checkPermission, permissionsloading]);
 
   useEffect(() => {
     if (selectedTenant) {
@@ -106,7 +106,7 @@ export default function AccessControlPage() {
   }, [selectedUserId, selectedTenant]);
 
   const loadTenantUsers = async (tenantId: string, search?: string) => {
-    setLoading(true);
+    setloading(true);
     try {
       const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(
         tenantId,
@@ -128,19 +128,19 @@ export default function AccessControlPage() {
     } catch (error) {
       console.error("Error loading tenant users:", error);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
   const loadUserDetail = async (tenantId: string, userId: string) => {
-    setUserDetailLoading(true);
+    setUserDetailloading(true);
     try {
       const detail = await RBACAdminService.getUserDetail(tenantId, userId);
       setUserDetail(detail);
     } catch (error) {
       console.error("Error loading user detail:", error);
     } finally {
-      setUserDetailLoading(false);
+      setUserDetailloading(false);
     }
   };
 
@@ -200,7 +200,7 @@ export default function AccessControlPage() {
   const handleApplyChanges = async () => {
     if (changeQueue.length === 0 || !selectedTenant || !currentUserId) return;
 
-    setLoading(true);
+    setloading(true);
     try {
       const request: RBACApplyChangesRequest = {
         tenantId: selectedTenant.id,
@@ -222,7 +222,7 @@ export default function AccessControlPage() {
     } catch (error) {
       console.error("Error applying changes:", error);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
@@ -326,7 +326,7 @@ export default function AccessControlPage() {
             tenantId={selectedTenant?.id || ""}
             onClose={() => setSelectedUserId(null)}
             userDetail={userDetail}
-            loading={userDetailLoading}
+            loading={userDetailloading}
             isHostAdmin={currentUserRole === ROLES.HOST_ADMIN}
             isAdmin={
               currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.TENANT_ADMIN

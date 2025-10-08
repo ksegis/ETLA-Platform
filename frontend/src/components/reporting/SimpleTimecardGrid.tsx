@@ -33,7 +33,7 @@ export default function SimpleTimecardGrid({ tenantId }: SimpleTimecardGridProps
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setloading] = useState<boolean>(true);
   const { branding } = useCustomerBranding(tenantId);
 
   // Mock data for demonstration
@@ -85,7 +85,7 @@ export default function SimpleTimecardGrid({ tenantId }: SimpleTimecardGridProps
 
     setTimeout(() => {
       setTimecards(mockTimecards);
-      setLoading(false);
+      setloading(false);
     }, 1000);
   }, [tenantId]);
 

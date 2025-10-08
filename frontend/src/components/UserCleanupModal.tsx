@@ -28,7 +28,7 @@ interface CleanupPreview {
 }
 
 export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCleanupModalProps) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [step, setStep] = useState<'options' | 'preview' | 'confirm'>('options')
@@ -49,7 +49,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
   }
 
   const generatePreview = async () => {
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -74,12 +74,12 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
       setError('An error occurred while generating the cleanup preview')
       console.error('Cleanup preview error:', err)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
   const executeCleanup = async () => {
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -107,7 +107,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
       setError('An error occurred while executing the cleanup')
       console.error('Cleanup execution error:', err)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

@@ -180,7 +180,7 @@ interface EnhancedFilters {
 const EnhancedReportingPage: React.FC = () => {
   const { selectedTenant } = useTenant();
   const [activeTab, setActiveTab] = useState<string>('employees');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setloading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // Enhanced data states
@@ -216,7 +216,7 @@ const EnhancedReportingPage: React.FC = () => {
   const loadEmployeeData = async () => {
     if (!selectedTenant?.id) return;
     
-    setLoading(true);
+    setloading(true);
     setError(null);
     
     try {
@@ -232,14 +232,14 @@ const EnhancedReportingPage: React.FC = () => {
       console.error('Error loading employee data:', err);
       setError(`Failed to load employee data: ${err.message}`);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
   const loadPayStatementData = async () => {
     if (!selectedTenant?.id) return;
     
-    setLoading(true);
+    setloading(true);
     setError(null);
     
     try {
@@ -255,14 +255,14 @@ const EnhancedReportingPage: React.FC = () => {
       console.error('Error loading pay statement data:', err);
       setError(`Failed to load pay statement data: ${err.message}`);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
   const loadTimecardData = async () => {
     if (!selectedTenant?.id) return;
     
-    setLoading(true);
+    setloading(true);
     setError(null);
     
     try {
@@ -278,14 +278,14 @@ const EnhancedReportingPage: React.FC = () => {
       console.error('Error loading timecard data:', err);
       setError(`Failed to load timecard data: ${err.message}`);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
   const loadJobData = async () => {
     if (!selectedTenant?.id) return;
     
-    setLoading(true);
+    setloading(true);
     setError(null);
     
     try {
@@ -301,14 +301,14 @@ const EnhancedReportingPage: React.FC = () => {
       console.error('Error loading job data:', err);
       setError(`Failed to load job data: ${err.message}`);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
   const loadTaxData = async () => {
     if (!selectedTenant?.id) return;
     
-    setLoading(true);
+    setloading(true);
     setError(null);
     
     try {
@@ -324,7 +324,7 @@ const EnhancedReportingPage: React.FC = () => {
       console.error('Error loading tax data:', err);
       setError(`Failed to load tax data: ${err.message}`);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
@@ -332,7 +332,7 @@ const EnhancedReportingPage: React.FC = () => {
   const loadTabData = async (tabId: string) => {
     if (!selectedTenant?.id) return;
 
-    setLoading(true);
+    setloading(true);
     
     try {
       switch (tabId) {
@@ -368,7 +368,7 @@ const EnhancedReportingPage: React.FC = () => {
       console.error('Error loading tab data:', err);
       setError(`Failed to load data: ${err.message}`);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
@@ -960,10 +960,10 @@ const EnhancedReportingPage: React.FC = () => {
         {/* Enhanced Filters */}
         {renderEnhancedFilters()}
 
-        {/* Loading and Error States */}
+        {/* loading and Error States */}
         {loading && (
           <div className="flex justify-center items-center py-8">
-            <div className="text-lg">Loading enhanced data...</div>
+            <div className="text-lg">loading enhanced data...</div>
           </div>
         )}
 

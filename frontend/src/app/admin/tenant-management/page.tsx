@@ -86,11 +86,11 @@ interface AuthUser {
 
 export default function TenantManagementPage() {
   const { user, tenantUser, isAuthenticated } = useAuth();
-  const { checkPermission, loading: permissionsLoading } = usePermissions();
+  const { checkPermission, loading: permissionsloading } = usePermissions();
   const [tenants, setTenants] = useState<ExtendedTenant[]>([]);
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [allUsers, setAllUsers] = useState<AuthUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -103,7 +103,7 @@ export default function TenantManagementPage() {
       loadTenants();
       loadAllUsers();
     } else {
-      setLoading(false);
+      setloading(false);
     }
   }, [isAuthenticated, hasAdminAccess]);
 
@@ -153,7 +153,7 @@ export default function TenantManagementPage() {
 
   const loadTenantUsers = async (tenantId: string) => {
     try {
-      setLoading(true);
+      setloading(true);
       const { data, error } = await supabase
         .from("tenant_users")
         .select(
@@ -190,7 +190,7 @@ export default function TenantManagementPage() {
     } catch (error) {
       console.error("Error loading tenant users:", error);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
@@ -334,12 +334,12 @@ export default function TenantManagementPage() {
     }
   };
 
-  if (loading || permissionsLoading) {
+  if (loading || permissionsloading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading tenant management...</p>
+          <p className="text-gray-600">loading tenant management...</p>
         </div>
       </div>
     );
@@ -469,7 +469,7 @@ export default function TenantManagementPage() {
               {selectedTenantId ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {loading ? (
-                    <div className="text-center py-4">Loading users...</div>
+                    <div className="text-center py-4">loading users...</div>
                   ) : users.length === 0 ? (
                     <div className="text-center py-4 text-gray-500">
                       No users assigned to this tenant

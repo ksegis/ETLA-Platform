@@ -42,12 +42,7 @@ export default function ProjectManagementPageRBAC() {
   const router = useRouter();
 
   // ---- Permissions (new hook shape) ----
-  const {
-    canManage,
-    canView,
-    currentUserRole,
-    Loading: permissionsLoading,
-  } = usePermissions();
+const { canManage, canView, currentUserRole, loading: permissionsloading } = usePermissions();
 
   // Build a lightweight, safe-to-render permissions snapshot
   const debugPermissionsSummary = (() => {
@@ -93,7 +88,7 @@ export default function ProjectManagementPageRBAC() {
 
   // Load data based on user permissions
   useEffect(() => {
-    if (permissionsLoading) return;
+    if (permissionsloading) return;
 
     const loadData = async () => {
       try {
@@ -125,7 +120,7 @@ export default function ProjectManagementPageRBAC() {
     };
 
     loadData();
-  }, [permissionsLoading, canManage]);
+  }, [permissionsloading, canManage]);
 
   // Permission-based tab configuration
   const tabs = [
@@ -167,12 +162,12 @@ export default function ProjectManagementPageRBAC() {
     },
   ];
 
-  if (permissionsLoading) {
+  if (permissionsloading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading permissions...</p>
+          <p className="text-gray-600">loading permissions...</p>
         </div>
       </div>
     );
@@ -241,7 +236,7 @@ export default function ProjectManagementPageRBAC() {
 
               {/* Permission-based stats overview */}
               <PermissionGuard
-                feature={FEATURES.REPORTING}
+                feature={FEATURES.DASHBOARDS}
                 permission={PERMISSIONS.VIEW}
                 fallback={
                   <NoAccessFallback
@@ -381,7 +376,7 @@ export default function ProjectManagementPageRBAC() {
                             Reporting
                           </p>
                           <PermissionStatus
-                            feature={FEATURES.REPORTING}
+                            feature={FEATURES.DASHBOARDS}
                             permission={PERMISSIONS.VIEW}
                           />
                         </div>
@@ -747,7 +742,7 @@ export default function ProjectManagementPageRBAC() {
                   </RiskGuard>
 
                   <PermissionGuard
-                    feature={FEATURES.REPORTING}
+                    feature={FEATURES.DASHBOARDS}
                     permission={PERMISSIONS.VIEW}
                     fallback={null}
                   >

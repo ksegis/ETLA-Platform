@@ -20,7 +20,7 @@ interface UserCreationModalProps {
 }
 
 export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants }: UserCreationModalProps) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     email: '',
@@ -66,7 +66,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -142,7 +142,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
       console.error('Error creating user:', error)
       setError(error.message || 'Failed to create user')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

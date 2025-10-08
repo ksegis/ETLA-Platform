@@ -12,7 +12,7 @@ interface InviteAcceptanceState {
   fullName: string
   password: string
   confirmPassword: string
-  isLoading: boolean
+  Loading: boolean
   error: string | null
   success: boolean
   isValidInvite: boolean
@@ -24,7 +24,9 @@ interface InviteAcceptanceState {
     role?: string
   } | null
 }
-
+function LoadingFallback() {
+  return <div>Loading…</div>;
+}
 function AcceptInviteForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -36,7 +38,7 @@ function AcceptInviteForm() {
     fullName: '',
     password: '',
     confirmPassword: '',
-    isLoading: false,
+    Loading: false,
     error: null,
     success: false,
     isValidInvite: false,
@@ -155,7 +157,7 @@ function AcceptInviteForm() {
       return
     }
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    setState(prev => ({ ...prev, Loading: true, error: null }))
 
     try {
       // Update the user's password
@@ -166,7 +168,7 @@ function AcceptInviteForm() {
       if (passwordError) {
         setState(prev => ({
           ...prev,
-          isLoading: false,
+          Loading: false,
           error: passwordError.message
         }))
         return
@@ -190,7 +192,7 @@ function AcceptInviteForm() {
 
       setState(prev => ({
         ...prev,
-        isLoading: false,
+        Loading: false,
         success: true
       }))
 
@@ -203,7 +205,7 @@ function AcceptInviteForm() {
     } catch (err: any) {
       setState(prev => ({
         ...prev,
-        isLoading: false,
+        Loading: false,
         error: err.message || 'Failed to set up your account. Please try again.'
       }))
     }
@@ -213,7 +215,7 @@ function AcceptInviteForm() {
     router.push('/login?message=Please contact your administrator to request a new invitation.')
   }
 
-  // Loading state while checking invite
+  // loading state while checking invite
   if (state.isCheckingInvite) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -346,7 +348,7 @@ function AcceptInviteForm() {
                 onChange={(e: any) => handleFullNameChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter your full name"
-                disabled={state.isLoading}
+                disabled={state.Loading}
               />
             </div>
 
@@ -363,13 +365,13 @@ function AcceptInviteForm() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Create a secure password"
                   required
-                  disabled={state.isLoading}
+                  disabled={state.Loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.isLoading}
+                  disabled={state.Loading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -393,13 +395,13 @@ function AcceptInviteForm() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Confirm your password"
                   required
-                  disabled={state.isLoading}
+                  disabled={state.Loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.isLoading}
+                  disabled={state.Loading}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -423,9 +425,9 @@ function AcceptInviteForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={state.isLoading || !state.password || !state.confirmPassword}
+              disabled={state.Loading || !state.password || !state.confirmPassword}
             >
-              {state.isLoading ? (
+              {state.Loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Setting up your account...
@@ -443,7 +445,7 @@ function AcceptInviteForm() {
               variant="outline"
               onClick={() => router.push('/login')}
               className="w-full"
-              disabled={state.isLoading}
+              disabled={state.Loading}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sign In
@@ -455,14 +457,14 @@ function AcceptInviteForm() {
   )
 }
 
-function LoadingFallback() {
+function loadingFallback() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading...</span>
+            <span className="ml-3 text-gray-600">loading...</span>
           </div>
         </CardContent>
       </Card>

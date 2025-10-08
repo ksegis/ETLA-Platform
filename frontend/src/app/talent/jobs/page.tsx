@@ -78,7 +78,7 @@ const WORK_MODE_LABELS = {
 export default function JobsPage() {
   const { selectedTenant } = useTenant();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
@@ -95,7 +95,7 @@ export default function JobsPage() {
 
   const loadJobs = async () => {
     try {
-      setLoading(true);
+      setloading(true);
       
       // This would typically load from your jobs table
       // For now, using mock data
@@ -171,7 +171,7 @@ export default function JobsPage() {
     } catch (error) {
       console.error('Error loading jobs:', error);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 

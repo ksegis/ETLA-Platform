@@ -24,7 +24,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [initialized, setInitialized] = useState(false)
   const [isStable, setIsStable] = useState(false)
 
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setDemoUser()
       } finally {
         if (mounted) {
-          setLoading(false)
+          setloading(false)
           setInitialized(true)
           
           // Set stable after a brief delay to prevent flickering
@@ -176,7 +176,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       console.log('👋 Signing out...')
-      setLoading(true)
+      setloading(true)
       setIsStable(false)
       const { error } = await supabase.auth.signOut()
       if (error) {
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setDemoUser() // Fallback to demo user even on error
       throw error
     } finally {
-      setLoading(false)
+      setloading(false)
       setTimeout(() => setIsStable(true), 300)
     }
   }
@@ -290,7 +290,7 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">loading...</p>
           </div>
         </div>
       )

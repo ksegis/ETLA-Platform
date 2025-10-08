@@ -1,101 +1,224 @@
-'use client';
+"use client";
 
-import React, { type ReactNode } from 'react';
-import { usePermissions } from '@/hooks/usePermissions';
-import type { Feature, Permission } from '@/rbac/constants';
+import React from "react";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FEATURES, PERMISSIONS } from "@/rbac/constants";
+import type { Feature, Permission } from "@/hooks/usePermissions";
 
-export type PermissionGuardProps = {
+/**
+ * Core guard props
+ */
+type PermissionGuardProps = {
   feature: Feature;
   permission: Permission;
-  fallback?: ReactNode;
-  children: ReactNode;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 };
 
-
-
+/**
+ * Base PermissionGuard: renders children if allowed, fallback otherwise.
+ */
 export function PermissionGuard({
   feature,
   permission,
-  fallback = null,
   children,
+  fallback = null,
 }: PermissionGuardProps) {
   const { checkPermission, loading } = usePermissions();
-
   if (loading) return null;
-
   const allowed = checkPermission(feature, permission);
-  return allowed ? <>{children}</> : <>{fallback}</>;
+  return <>{allowed ? children : fallback}</>;
 }
 
+/**
+ * Wrapper guards (default to VIEW permission)
+ */
+type WrapperGuardProps = {
+  permission?: Permission;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+};
 
-// Placeholder components for other guards mentioned in page-rbac.tsx
-// These would typically have their own specific permission checks
-export const WorkRequestGuard = ({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGuard feature="work_requests" permission="view" fallback={fallback}>
-    {children}
-  </PermissionGuard>
-);
-export const ProjectGuard = ({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGuard feature="projects" permission="view" fallback={fallback}>
-    {children}
-  </PermissionGuard>
-);
-export const RiskGuard = ({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) => (
-  <<PermissionGuard feature={FEATURES.RISK_MANAGEMENT} permission={PERMISSIONS.VIEW} fallback={fallback}>
-    {children}
-  </PermissionGuard>
-);
-
-export const WorkRequestCreateButton = ({ children, fallback, ...props }: any) => (
-  <PermissionGuard feature="work_requests" permission="create" fallback={fallback}>
-    <button {...props}>{children}</button>
-  </PermissionGuard>
-);
-
-export const WorkRequestApproveButton = ({ children, fallback, ...props }: any) => (
-  <PermissionGuard feature="work_requests" permission="approve" fallback={fallback}>
-    <button {...props}>{children}</button>
-  </PermissionGuard>
-);
-
-export const ProjectCreateButton = ({ children, fallback, ...props }: any) => (
-  <PermissionGuard feature="project_management" permission="create" fallback={fallback}>
-    <button {...props}>{children}</button>
-  </PermissionGuard>
-);
-
-export const ReportExportButton = ({ children, fallback, ...props }: any) => (
-  <PermissionGuard feature="reporting" permission="view" fallback={fallback}>
-    <button {...props}>{children}</button>
-  </PermissionGuard>
-);
-
-export const NoAccessFallback = ({ message, className }: { message: string; className?: string }) => (
-  <div className={`bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative ${className}`}>
-    <strong className="font-bold">Access Denied:</strong>
-    <span className="block sm:inline"> {message}</span>
-  </div>
-);
-
-export const PermissionStatus = ({ feature, permission }: { feature: Feature; permission: Permission }) => {
-  const { checkPermission } = usePermissions();
-  const has = checkPermission(feature, permission);
+export function WorkRequestGuard({
+  permission = PERMISSIONS.VIEW,
+  children,
+  fallback = null,
+}: WrapperGuardProps) {
   return (
-    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${has ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-      {has ? 'Granted' : 'Denied'}
+    <PermissionGuard
+      feature={FEATURES.WORK_REQUESTS as Feature}
+      permission={permission}
+      fallback={fallback}
+    >
+      {children}
+    </PermissionGuard>
+  );
+}
+
+export function ProjectGuard({
+  permission = PERMISSIONS.VIEW,
+  children,
+  fallback = null,
+}: WrapperGuardProps) {
+  return (
+    <PermissionGuard
+      feature={FEATURES.PROJECT_MANAGEMENT as Feature}
+      permission={permission}
+      fallback={fallback}
+    >
+      {children}
+    </PermissionGuard>
+  );
+}
+
+export function RiskGuard({
+  permission = PERMISSIONS.VIEW,
+  children,
+  fallback = null,
+}: WrapperGuardProps) {
+  return (
+    <PermissionGuard
+      feature={FEATURES.RISK_MANAGEMENT as Feature}
+      permission={permission}
+      fallback={fallback}
+    >
+      {children}
+    </PermissionGuard>
+  );
+}
+
+/**
+ * Guarded buttons
+ */
+type GuardedButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: React.ReactNode;
+  className?: string;
+  fallback?: React.ReactNode;
+};
+
+export function WorkRequestCreateButton({
+  children,
+  fallback = null,
+  ...btnProps
+}: GuardedButtonProps) {
+  return (
+    <PermissionGuard
+      feature={FEATURES.WORK_REQUESTS as Feature}
+      permission={PERMISSIONS.CREATE}
+      fallback={fallback}
+    >
+      <button {...btnProps}>{children}</button>
+    </PermissionGuard>
+  );
+}
+
+export function WorkRequestApproveButton({
+  children,
+  fallback = null,
+  ...btnProps
+}: GuardedButtonProps) {
+  // If you don't have APPROVE in your PERMISSIONS, use UPDATE as the gate.
+  const approvePerm: Permission =
+    (PERMISSIONS as any).APPROVE ?? PERMISSIONS.UPDATE;
+  return (
+    <PermissionGuard
+      feature={FEATURES.WORK_REQUESTS as Feature}
+      permission={approvePerm}
+      fallback={fallback}
+    >
+      <button {...btnProps}>{children}</button>
+    </PermissionGuard>
+  );
+}
+
+export function ProjectCreateButton({
+  children,
+  fallback = null,
+  ...btnProps
+}: GuardedButtonProps) {
+  return (
+    <PermissionGuard
+      feature={FEATURES.PROJECT_MANAGEMENT as Feature}
+      permission={PERMISSIONS.CREATE}
+      fallback={fallback}
+    >
+      <button {...btnProps}>{children}</button>
+    </PermissionGuard>
+  );
+}
+
+export function ReportExportButton({
+  children,
+  fallback = null,
+  ...btnProps
+}: GuardedButtonProps) {
+  // Some code refers to FEATURES.DASHBOARDS; your constants have DASHBOARDS.
+  const REPORTING_FEATURE: Feature =
+    ((FEATURES as any).REPORTING as Feature) ?? (FEATURES.DASHBOARDS as Feature);
+
+  return (
+    <PermissionGuard
+      feature={REPORTING_FEATURE}
+      permission={PERMISSIONS.VIEW}
+      fallback={fallback}
+    >
+      <button {...btnProps}>{children}</button>
+    </PermissionGuard>
+  );
+}
+
+/**
+ * Status pill to show permission result
+ */
+export function PermissionStatus({
+  feature,
+  permission,
+}: {
+  feature: Feature;
+  permission: Permission;
+}) {
+  const { checkPermission, loading } = usePermissions();
+  if (loading) return null;
+  const ok = checkPermission(feature, permission);
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+        ok ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+      }`}
+    >
+      {ok ? "Allowed" : "Denied"}
     </span>
   );
-};
+}
 
-export const PermissionDebugPanel = () => {
-  const { currentUserRole, permissions } = usePermissions();
+/**
+ * Minimal debug panel (kept so imports compile)
+ */
+export function PermissionDebugPanel() {
+  const { currentUserRole, loading } = usePermissions();
+  if (loading) return null;
   return (
-    <div className="bg-gray-50 p-4 rounded-lg">
-      <h4 className="font-medium mb-2">Current User Role: {currentUserRole}</h4>
-      <h4 className="font-medium mb-2">All Permissions:</h4>
-      <pre className="text-xs text-gray-600 overflow-auto">
-        {JSON.stringify(permissions, null, 2)}
-      </pre>
+    <div className="text-sm text-gray-700">
+      <div>Current Role: {currentUserRole ?? "unknown"}</div>
     </div>
   );
-};
+}
+
+/**
+ * Simple fallback block
+ */
+export function NoAccessFallback({
+  message = "You don’t have access to this.",
+  className = "",
+}: {
+  message?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`w-full rounded-md border border-dashed border-gray-300 bg-gray-50 p-4 text-gray-600 ${className}`}
+    >
+      {message}
+    </div>
+  );
+}

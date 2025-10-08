@@ -268,11 +268,11 @@ interface EnhancedFilters {
 }
 
 const EnhancedReportingPage: React.FC = () => {
-  const { selectedTenant, isDemoMode, isLoading: tenantLoading } = useTenant();
+  const { selectedTenant, isDemoMode, Loading: tenantloading } = useTenant();
   const accessibleTenantIds = useAccessibleTenantIds();
   const { isMultiTenant, availableTenants } = useMultiTenantMode();
   const [activeTab, setActiveTab] = useState<string>('employees');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setloading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showSearchHelp, setShowSearchHelp] = useState<boolean>(false);
   const [isDashboardCollapsed, setIsDashboardCollapsed] = useState<boolean>(false);
@@ -609,9 +609,9 @@ const EnhancedReportingPage: React.FC = () => {
 
   const loadTabData = useCallback(async (tabId: string) => {
     // Don't load if tenant context is still loading
-    if (tenantLoading) return;
+    if (tenantloading) return;
     
-    setLoading(true);
+    setloading(true);
     setError(null);
 
     // Get tenant IDs with proper fallback logic
@@ -630,7 +630,7 @@ const EnhancedReportingPage: React.FC = () => {
     }
 
     if (!tenantIds || tenantIds.length === 0) {
-      setLoading(false);
+      setloading(false);
       setError("No tenant selected or accessible.");
       return;
     }
@@ -696,16 +696,16 @@ const EnhancedReportingPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
-  }, [tenantLoading, isDemoMode, isMultiTenant, tenantFilter, selectedTenant, availableTenants.length, accessibleTenantIds.length]);
+  }, [tenantloading, isDemoMode, isMultiTenant, tenantFilter, selectedTenant, availableTenants.length, accessibleTenantIds.length]);
 
   useEffect(() => {
     // Only load data when tenant context is ready and not loading
-    if (!tenantLoading && (isDemoMode || selectedTenant || accessibleTenantIds.length > 0)) {
+    if (!tenantloading && (isDemoMode || selectedTenant || accessibleTenantIds.length > 0)) {
       loadTabData(activeTab);
     }
-  }, [activeTab, tenantLoading, isDemoMode, selectedTenant?.id, accessibleTenantIds.length, loadTabData]);
+  }, [activeTab, tenantloading, isDemoMode, selectedTenant?.id, accessibleTenantIds.length, loadTabData]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -900,11 +900,11 @@ const EnhancedReportingPage: React.FC = () => {
         <Card className="p-4 md:p-6">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
-              <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading || tenantLoading}>
-                <RefreshCcw className={cn("w-4 h-4 mr-2", (loading || tenantLoading) && "animate-spin")} />
+              <Button variant="outline" onClick={() => loadTabData(activeTab)} disabled={loading || tenantloading}>
+                <RefreshCcw className={cn("w-4 h-4 mr-2", (loading || tenantloading) && "animate-spin")} />
                 Refresh Data
               </Button>
-              <Button variant="outline" onClick={() => console.log('Generate Report Clicked')} disabled={loading || tenantLoading}>
+              <Button variant="outline" onClick={() => console.log('Generate Report Clicked')} disabled={loading || tenantloading}>
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Generate Report
               </Button>
@@ -939,17 +939,17 @@ const EnhancedReportingPage: React.FC = () => {
               </div>
             )}
 
-            {tenantLoading && (
+            {tenantloading && (
               <div className="text-center py-8 text-gray-500">
-                <div className="animate-pulse">Loading tenant information...</div>
+                <div className="animate-pulse">loading tenant information...</div>
               </div>
             )}
-            {!tenantLoading && loading && (
+            {!tenantloading && loading && (
               <div className="text-center py-8 text-gray-500">
-                <div className="animate-pulse">Loading data...</div>
+                <div className="animate-pulse">loading data...</div>
               </div>
             )}
-            {!tenantLoading && error && (
+            {!tenantloading && error && (
               <div className="text-center py-8">
                 <div className="text-red-500 mb-4">Error: {error}</div>
                 <Button onClick={() => loadTabData(activeTab)} variant="outline">
@@ -958,7 +958,7 @@ const EnhancedReportingPage: React.FC = () => {
                 </Button>
               </div>
             )}
-            {!tenantLoading && !loading && !error && (
+            {!tenantloading && !loading && !error && (
               <div className="mt-6">
                 {renderDataTypeContent()}
               </div>

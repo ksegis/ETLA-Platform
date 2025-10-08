@@ -17,7 +17,7 @@ export default function ProjectManagementPage() {
     projectCharters: [],
     risks: []
   })
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedWorkRequest, setSelectedWorkRequest] = useState<any>(null)
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false)
@@ -27,7 +27,7 @@ export default function ProjectManagementPage() {
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
 
       const [workRequests, projectCharters, risks] = await Promise.all([
@@ -46,7 +46,7 @@ export default function ProjectManagementPage() {
       setError(`Failed to load data from database: ${errorMessage}`)
       console.error('Error loading dashboard data:', error)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -95,7 +95,7 @@ export default function ProjectManagementPage() {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading project management data...</p>
+              <p className="mt-4 text-gray-600">loading project management data...</p>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function ProjectManagementPage() {
             <div className="flex items-center">
               <div className="text-red-600 text-xl mr-3">⚠️</div>
               <div>
-                <h3 className="text-red-800 font-semibold">Error Loading Data</h3>
+                <h3 className="text-red-800 font-semibold">Error loading Data</h3>
                 <p className="text-red-700 mt-1">{error}</p>
                 <button 
                   onClick={loadDashboardData}

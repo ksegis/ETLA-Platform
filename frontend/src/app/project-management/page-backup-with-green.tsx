@@ -60,7 +60,7 @@ interface WorkRequest {
 export default function ProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectCharter[]>([])
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -72,15 +72,15 @@ export default function ProjectManagementPage() {
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
-      setLoading(false)
+      setloading(false)
       return
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('Loading project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Load projects
       const { data: projectData, error: projectError } = await supabase
@@ -119,7 +119,7 @@ export default function ProjectManagementPage() {
       console.error('Unexpected error loading data:', err)
       setError('Unexpected error occurred')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -205,7 +205,7 @@ export default function ProjectManagementPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">Loading project data...</span>
+          <span className="ml-2 text-gray-600">loading project data...</span>
         </div>
       </DashboardLayout>
     )
@@ -375,7 +375,7 @@ export default function ProjectManagementPage() {
             {loading ? (
               <div className="text-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-                <p className="text-gray-600">Loading real project data...</p>
+                <p className="text-gray-600">loading real project data...</p>
               </div>
             ) : filteredProjects.length === 0 ? (
               <div className="text-center py-12">

@@ -48,7 +48,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
     can_manage_sub_clients: false,
     permission_scope: 'own'
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [error, setError] = useState('')
 
   const handleInputChange = (field: keyof UserFormData, value: string | boolean) => {
@@ -78,7 +78,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -131,7 +131,7 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
       setError('An error occurred while creating the user')
       console.error('User creation error:', err)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

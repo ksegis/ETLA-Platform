@@ -36,7 +36,7 @@ interface ComplianceItem {
 
 export default function HRAnalyticsDashboard() {
   const { selectedTenant } = useTenant();
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState('current_year');
   
@@ -61,7 +61,7 @@ export default function HRAnalyticsDashboard() {
   }, [timeframe]);
 
   const loadHRAnalyticsData = async () => {
-    setLoading(true);
+    setloading(true);
     setError(null);
     
     try {
@@ -127,7 +127,7 @@ export default function HRAnalyticsDashboard() {
       console.error('Error loading HR analytics data:', err);
       setError('Failed to load HR analytics data');
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
@@ -474,7 +474,7 @@ export default function HRAnalyticsDashboard() {
       <DashboardLayout>
         <div className="p-8">
           <div className="flex items-center justify-center h-64">
-            <div className="text-lg">Loading HR Analytics Dashboard...</div>
+            <div className="text-lg">loading HR Analytics Dashboard...</div>
           </div>
         </div>
       </DashboardLayout>

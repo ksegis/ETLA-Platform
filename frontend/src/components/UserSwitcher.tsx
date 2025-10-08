@@ -84,12 +84,12 @@ const TEST_USERS: TestUser[] = [
 
 export default function UserSwitcher() {
   const { signIn, signOut, user, isAuthenticated } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [loadingUser, setLoadingUser] = useState<string | null>(null)
+  const [Loading, setIsloading] = useState(false)
+  const [loadingUser, setloadingUser] = useState<string | null>(null)
 
   const handleUserSwitch = async (testUser: TestUser) => {
-    setIsLoading(true)
-    setLoadingUser(testUser.email)
+    setIsloading(true)
+    setloadingUser(testUser.email)
     
     try {
       // Sign out current user first
@@ -138,20 +138,20 @@ export default function UserSwitcher() {
       alert(`Failed to switch to ${testUser.name}:\n\nError: ${errorMessage}\n\nCheck browser console for full details.`)
       console.error('Full error details:', { error, stack: errorStack })
     } finally {
-      setIsLoading(false)
-      setLoadingUser(null)
+      setIsloading(false)
+      setloadingUser(null)
     }
   }
 
   const handleSignOut = async () => {
-    setIsLoading(true)
+    setIsloading(true)
     try {
       await signOut()
       window.location.reload()
     } catch (error) {
       console.error('Sign out error:', error)
     } finally {
-      setIsLoading(false)
+      setIsloading(false)
     }
   }
 
@@ -189,12 +189,12 @@ export default function UserSwitcher() {
               </div>
               <Button
                 onClick={handleSignOut}
-                disabled={isLoading}
+                disabled={Loading}
                 variant="outline"
                 size="sm"
                 className="text-blue-700 border-blue-300 hover:bg-blue-100"
               >
-                {isLoading ? (
+                {Loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <LogOut className="h-4 w-4" />
@@ -211,7 +211,7 @@ export default function UserSwitcher() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {TEST_USERS.map((testUser: any) => {
               const isCurrentUser = currentUser?.email === testUser.email
-              const isLoadingThisUser = loadingUser === testUser.email
+              const isloadingThisUser = loadingUser === testUser.email
               
               return (
                 <div
@@ -242,12 +242,12 @@ export default function UserSwitcher() {
                     <div className="pt-2">
                       <Button
                         onClick={() => handleUserSwitch(testUser)}
-                        disabled={isLoading || isCurrentUser}
+                        disabled={Loading || isCurrentUser}
                         size="sm"
                         variant={isCurrentUser ? "secondary" : "default"}
                         className="w-full"
                       >
-                        {isLoadingThisUser ? (
+                        {isloadingThisUser ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             Switching...

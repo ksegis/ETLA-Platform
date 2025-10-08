@@ -105,7 +105,7 @@ class PMBOKService {
   // GRACEFUL work requests loading with missing customer handling
   async getWorkRequests(): Promise<WorkRequest[]> {
     try {
-      console.log('🔍 Loading work requests from database (graceful mode)...')
+      console.log('🔍 loading work requests from database (graceful mode)...')
       console.log('🏢 Tenant ID:', this.tenantId)
 
       // Build-safe check

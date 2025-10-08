@@ -40,7 +40,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Load roles data
@@ -49,7 +49,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
   }, []);
 
   const loadRoles = async () => {
-    setLoading(true);
+    setloading(true);
     setError(null);
     
     try {
@@ -147,7 +147,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
       console.error('Error loading roles:', err);
       setError('Failed to load roles data');
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
@@ -190,7 +190,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading roles and permissions...</p>
+          <p className="text-gray-600">loading roles and permissions...</p>
         </div>
       </div>
     );
@@ -201,7 +201,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({ select
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Roles</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading Roles</h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <Button onClick={loadRoles}>Try Again</Button>
         </div>

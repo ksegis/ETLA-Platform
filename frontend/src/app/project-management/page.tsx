@@ -186,7 +186,7 @@ export default function ProjectManagementPage() {
   const [departmentFilter, setDepartmentFilter] = useState('all')
   const [projectTypeFilter, setProjectTypeFilter] = useState('all')
   const [tenantFilter, setTenantFilter] = useState('') // New tenant filter
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Pagination state
@@ -433,15 +433,15 @@ export default function ProjectManagementPage() {
     
     if (!tenantIds || tenantIds.length === 0) {
       console.log('No accessible tenants, skipping load')
-      setLoading(false)
+      setloading(false)
       return
     }
     
-    setLoading(true)
+    setloading(true)
     setError(null)
     
     try {
-      console.log('Loading project data for tenants:', tenantIds)
+      console.log('loading project data for tenants:', tenantIds)
       
       // Load projects with error handling
       try {
@@ -504,7 +504,7 @@ export default function ProjectManagementPage() {
       console.error('Error loading data:', error)
       setError('Failed to load project management data. Please try again.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -872,7 +872,7 @@ export default function ProjectManagementPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading project management data...</p>
+            <p className="mt-4 text-gray-600">loading project management data...</p>
           </div>
         </div>
       </DashboardLayout>

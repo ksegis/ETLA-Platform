@@ -138,7 +138,7 @@ export class PMBOKService {
   // =====================================================
 
   async getWorkRequests(): Promise<WorkRequest[]> {
-    console.log('🔍 Loading work requests from database...')
+    console.log('🔍 loading work requests from database...')
     console.log('🏢 Tenant ID:', this.currentTenantId)
     
     if (!this.supabase) {
@@ -221,7 +221,7 @@ export class PMBOKService {
   // =====================================================
 
   async getProjectCharters(): Promise<ProjectCharter[]> {
-    console.log('📊 Loading project charters...')
+    console.log('📊 loading project charters...')
     
     if (!this.supabase) {
       throw new Error('Supabase client not initialized')
@@ -248,7 +248,7 @@ export class PMBOKService {
   }
 
   async getRisksByProject(projectId?: string): Promise<RiskRegister[]> {
-    console.log('🛡️ Loading risks...')
+    console.log('🛡️ loading risks...')
     
     if (!this.supabase) {
       throw new Error('Supabase client not initialized')

@@ -98,7 +98,7 @@ export default function AccessControlPage() {
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [notifications, setNotifications] = useState<AdminNotification[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState<string>('all')
@@ -137,7 +137,7 @@ export default function AccessControlPage() {
   useEffect(() => {
     // Allow access in demo mode or when authenticated with proper permissions
     if ((isAuthenticated || isDemoMode) && canManageUsers) {
-      console.log('✅ Loading Access Control data')
+      console.log('✅ loading Access Control data')
       loadData()
     } else {
       console.log('❌ Access denied - not loading data')
@@ -145,7 +145,7 @@ export default function AccessControlPage() {
   }, [isAuthenticated, isDemoMode, canManageUsers, selectedTenant])
 
   const loadData = async () => {
-    setLoading(true)
+    setloading(true)
     setError(null)
     try {
       await Promise.all([
@@ -158,7 +158,7 @@ export default function AccessControlPage() {
       console.error('Error loading data:', error)
       setError('Failed to load data. Please try again.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

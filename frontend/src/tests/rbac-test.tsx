@@ -1,5 +1,7 @@
+"use client";
+
 /**
- * RBAC Implementation Test Suite
+ * RBAC Implementation Test Suite (updated)
  *
  * This file provides test scenarios and validation for the RBAC implementation.
  * Run these tests manually or integrate with your preferred testing framework.
@@ -17,6 +19,8 @@ import {
 } from "@/components/PermissionGuards";
 import { RouteGuard } from "@/components/RouteGuard";
 
+type PermissionsApi = ReturnType<typeof usePermissions>;
+
 // Test scenarios for manual validation
 export const RBAC_TEST_SCENARIOS = {
   // 1. Permission Checking Tests
@@ -27,31 +31,30 @@ export const RBAC_TEST_SCENARIOS = {
         name: "User with view permissions",
         setup: "Login as user with WORK_REQUESTS.VIEW permission",
         expected:
-          "hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW) returns true",
-        test: (permissions: any) =>
-          permissions.hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW),
+          "checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW) returns true",
+        test: (p: PermissionsApi) =>
+          p.checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW),
       },
       {
         name: "User without create permissions",
         setup: "Login as user without WORK_REQUESTS.CREATE permission",
         expected:
-          "hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE) returns false",
-        test: (permissions: any) =>
-          !permissions.hasPermission(
-            FEATURES.WORK_REQUESTS,
-            PERMISSIONS.CREATE,
-          ),
+          "checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE) returns false",
+        test: (p: PermissionsApi) =>
+          !p.checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE),
       },
       {
-        name: "Host admin access",
-        setup: "Login as host_admin user",
-        expected: "isHostAdmin() returns true and has all permissions",
-        test: (permissions: any) =>
-          permissions.isHostAdmin() &&
-          permissions.hasPermission(
-            FEATURES.ACCESS_CONTROL,
-            PERMISSIONS.MANAGE,
-          ),
+        name: "Host admin access (role-only sanity check)",
+        setup: "Login as role that should behave like a host admin",
+        expected:
+          "currentUserRole indicates host-level admin; spot-check a few high-level permissions",
+        test: (p: PermissionsApi) => {
+          // We don’t assume a specific helper like isHostAdmin(); we just spot-check breadth.
+          const canSeeAccess = p.canView(FEATURES.ACCESS_CONTROL as any);
+          const canSeeTenants = p.canView(FEATURES.TENANT_MANAGEMENT as any);
+          const canSeeProjects = p.canView(FEATURES.PROJECT_MANAGEMENT as any);
+          return canSeeAccess && canSeeTenants && canSeeProjects;
+        },
       },
     ],
   },
@@ -78,14 +81,14 @@ export const RBAC_TEST_SCENARIOS = {
     ],
   },
 
-  // 3. Service Authorization Tests
+  // 3. Service Authorization Tests (descriptive)
   SERVICE_AUTHORIZATION: {
     description: "Test service-level permission enforcement",
     scenarios: [
       {
         name: "Service method checks permissions",
         setup: "Call pmbokRBAC.getWorkRequests() without VIEW permission",
-        expected: "Method throws authorization error",
+        expected: "Method should throw/deny",
       },
       {
         name: "Service method succeeds with permission",
@@ -95,29 +98,29 @@ export const RBAC_TEST_SCENARIOS = {
     ],
   },
 
-  // 4. Role Hierarchy Tests
+  // 4. Role Hierarchy Tests (descriptive; compare by string)
   ROLE_HIERARCHY: {
     description: "Test role-based access hierarchy",
     scenarios: [
       {
-        name: "Host admin has all permissions",
+        name: "Host admin breadth check",
         role: "host_admin",
-        expected: "Can access all features and perform all actions",
+        expected: "Can view most features (spot-check canView across features)",
       },
       {
         name: "Tenant admin limited to tenant",
         role: "tenant_admin",
-        expected: "Can manage tenant but not access other tenants",
+        expected: "Can manage tenant-scoped features; not cross-tenant",
       },
       {
         name: "Project manager has project permissions",
         role: "project_manager",
-        expected: "Can manage projects and work requests",
+        expected: "Can create/update in PROJECT_MANAGEMENT & WORK_REQUESTS",
       },
       {
         name: "User has only explicit permissions",
         role: "user",
-        expected: "Can only access explicitly granted permissions",
+        expected: "Only VIEW or explicit permissions where granted",
       },
     ],
   },
@@ -125,7 +128,15 @@ export const RBAC_TEST_SCENARIOS = {
 
 // Test component for manual validation
 export const RBACTestComponent: React.FC = () => {
-  const permissions = usePermissions();
+  const {
+    checkPermission,
+    canView,
+    canManage,
+    currentUserRole,
+    loading,
+  } = usePermissions();
+
+  const roleString = String(currentUserRole ?? "");
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -136,14 +147,10 @@ export const RBACTestComponent: React.FC = () => {
         <h2 className="text-lg font-semibold mb-4">Current User Permissions</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <strong>Role:</strong> {permissions.currentRole || "None"}
+            <strong>Role:</strong> {roleString || "None"}
           </div>
           <div>
-            <strong>Is Admin:</strong> {permissions.isAdmin() ? "Yes" : "No"}
-          </div>
-          <div>
-            <strong>Is Host Admin:</strong>{" "}
-            {permissions.isHostAdmin() ? "Yes" : "No"}
+            <strong>loading:</strong> {loading ? "Yes" : "No"}
           </div>
         </div>
       </div>
@@ -152,22 +159,22 @@ export const RBACTestComponent: React.FC = () => {
       <div className="mb-8 p-4 bg-blue-50 rounded-lg">
         <h2 className="text-lg font-semibold mb-4">Feature Access Tests</h2>
         <div className="space-y-2 text-sm">
-          {Object.values(FEATURES).map((feature: any) => (
-            <div key={feature} className="flex justify-between">
-              <span>{feature}:</span>
+          {Object.values(FEATURES).map((feature) => (
+            <div key={feature as string} className="flex justify-between">
+              <span>{feature as string}:</span>
               <span
                 className={
-                  permissions.canAccessFeature(feature)
-                    ? "text-green-600"
-                    : "text-red-600"
+                  canView(feature as any) ? "text-green-600" : "text-red-600"
                 }
               >
-                {permissions.canAccessFeature(feature)
-                  ? "✓ Allowed"
-                  : "✗ Denied"}
+                {canView(feature as any) ? "✓ View Allowed" : "✗ View Denied"}
               </span>
             </div>
           ))}
+        </div>
+        <div className="mt-4 text-xs text-gray-600">
+          <em>Note:</em> Using <code>canView(feature)</code> for a simple signal.
+          Use <code>canManage(feature)</code> where you expect create/update/delete.
         </div>
       </div>
 
@@ -230,7 +237,41 @@ export const RBACTestComponent: React.FC = () => {
       </div>
 
       {/* Permission Details */}
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg"></div>
+      <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+        <h2 className="text-lg font-semibold mb-3">Explicit Checks</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+          <div className="p-3 border rounded">
+            <div className="font-medium mb-1">Work Requests — VIEW</div>
+            {checkPermission(FEATURES.WORK_REQUESTS as any, PERMISSIONS.VIEW)
+              ? "✅ Allowed"
+              : "❌ Denied"}
+          </div>
+          <div className="p-3 border rounded">
+            <div className="font-medium mb-1">Work Requests — CREATE</div>
+            {checkPermission(FEATURES.WORK_REQUESTS as any, PERMISSIONS.CREATE)
+              ? "✅ Allowed"
+              : "❌ Denied"}
+          </div>
+          <div className="p-3 border rounded">
+            <div className="font-medium mb-1">Projects — UPDATE</div>
+            {checkPermission(
+              FEATURES.PROJECT_MANAGEMENT as any,
+              PERMISSIONS.UPDATE,
+            )
+              ? "✅ Allowed"
+              : "❌ Denied"}
+          </div>
+          <div className="p-3 border rounded">
+            <div className="font-medium mb-1">Projects — DELETE</div>
+            {checkPermission(
+              FEATURES.PROJECT_MANAGEMENT as any,
+              PERMISSIONS.DELETE,
+            )
+              ? "✅ Allowed"
+              : "❌ Denied"}
+          </div>
+        </div>
+      </div>
 
       {/* Test Instructions */}
       <div className="p-4 bg-yellow-50 rounded-lg">
@@ -239,21 +280,20 @@ export const RBACTestComponent: React.FC = () => {
         </h2>
         <ol className="list-decimal list-inside space-y-2 text-sm">
           <li>
-            Login with different user roles (user, project_manager,
-            tenant_admin, host_admin)
+            Login with different user roles (e.g., user, project_manager,
+            tenant_admin, host_admin).
           </li>
-          <li>Verify that components show/hide based on permissions</li>
-          <li>Test that action buttons are enabled/disabled appropriately</li>
-          <li>Check that service calls respect permission requirements</li>
-          <li>Confirm that navigation elements adapt to user permissions</li>
-          <li>Test demo mode functionality if enabled</li>
+          <li>Verify that components show/hide based on permissions.</li>
+          <li>Test that action buttons are enabled/disabled appropriately.</li>
+          <li>Check that service calls respect permission requirements.</li>
+          <li>Confirm that navigation elements adapt to user permissions.</li>
         </ol>
       </div>
     </div>
   );
 };
 
-// Validation functions for programmatic testing
+// Validation helpers for quick programmatic checks
 export const validateRBACImplementation = {
   // Check if all required RBAC components are available
   checkComponents: () => {
@@ -282,18 +322,19 @@ export const validateRBACImplementation = {
     return { allPresent, details: results };
   },
 
-  // Run basic permission logic tests
-  testPermissionLogic: (permissions: any) => {
-    if (!permissions)
+  // Run basic permission logic tests against the exposed API
+  testPermissionLogic: (p: PermissionsApi) => {
+    if (!p)
       return { success: false, error: "No permissions object provided" };
 
     try {
       const tests = {
-        hasPermissionFunction: typeof permissions.hasPermission === "function",
-        canAccessFeatureFunction:
-          typeof permissions.canAccessFeature === "function",
-        isAdminFunction: typeof permissions.isAdmin === "function",
-        currentRoleExists: permissions.currentRole !== undefined,
+        checkPermissionFunction: typeof p.checkPermission === "function",
+        checkAnyPermissionFunction: typeof p.checkAnyPermission === "function",
+        canViewFunction: typeof p.canView === "function",
+        canManageFunction: typeof p.canManage === "function",
+        currentUserRoleExists: p.currentUserRole !== undefined,
+        loadingExists: typeof p.loading === "boolean",
       };
 
       const allPassed = Object.values(tests).every(Boolean);

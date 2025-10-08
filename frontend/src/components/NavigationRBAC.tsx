@@ -269,9 +269,9 @@ export function NavigationRBAC({
   isCollapsed = false,
   className = "",
 }: NavigationRBACProps) {
-  const { loading: isLoading, currentUserRole } = usePermissions();
+  const { loading: Loading, currentUserRole } = usePermissions();
 
-  if (isLoading) {
+  if (Loading) {
     return (
       <nav className={`space-y-1 ${className}`}>
         <div className="animate-pulse">

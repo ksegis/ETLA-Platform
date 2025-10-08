@@ -211,7 +211,7 @@ class PMBOKService {
 
   async getWorkRequests(): Promise<WorkRequest[]> {
     try {
-      console.log('🔍 Loading work requests from database...')
+      console.log('🔍 loading work requests from database...')
       const currentUserId = this.getCurrentUserId()
       console.log('🏢 Current context:', { 
         userId: currentUserId, 
@@ -251,7 +251,7 @@ class PMBOKService {
 
   async getProjects(): Promise<ProjectCharter[]> {
     try {
-      console.log('📊 Loading projects from database...')
+      console.log('📊 loading projects from database...')
       
       const { data: projects, error } = await this.supabase
         .from('project_charters')
@@ -274,7 +274,7 @@ class PMBOKService {
 
   async getRisks(): Promise<Risk[]> {
     try {
-      console.log('⚠️ Loading risks from database...')
+      console.log('⚠️ loading risks from database...')
       
       const { data: risks, error } = await this.supabase
         .from('risks')
