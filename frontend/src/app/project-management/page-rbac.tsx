@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// ✅ Import RBAC constants + types from the single source of truth
+// ✅ Import from single RBAC source
 import {
   usePermissions,
   FEATURES,
@@ -57,7 +57,7 @@ export default function ProjectManagementPageRBAC() {
     loading: permissionsloading,
   } = usePermissions();
 
-  // Local typed feature aliases (prevents any accidental string widening)
+  // Narrow feature constants to the Feature type (fixes "string not assignable to Feature")
   const F_DASHBOARDS = FEATURES.DASHBOARDS as Feature;
   const F_WORK_REQUESTS = FEATURES.WORK_REQUESTS as Feature;
   const F_PROJECT_MANAGEMENT = FEATURES.PROJECT_MANAGEMENT as Feature;
@@ -68,7 +68,6 @@ export default function ProjectManagementPageRBAC() {
     const featureKeys = FEATURES ? Object.keys(FEATURES) : [];
     const permissionKeys = PERMISSIONS ? Object.keys(PERMISSIONS) : [];
     return {
-      // high-level areas the user can at least view
       features_viewable: featureKeys.filter((k) => {
         const key = (FEATURES as any)[k] ?? k;
         try {
@@ -77,7 +76,6 @@ export default function ProjectManagementPageRBAC() {
           return false;
         }
       }),
-      // granular actions the user can manage
       permissions_manageable: permissionKeys.filter((k) => {
         const key = (PERMISSIONS as any)[k] ?? k;
         try {
@@ -113,7 +111,6 @@ export default function ProjectManagementPageRBAC() {
       try {
         const dashboardData = await pmbokRBAC.getDashboardData();
 
-        // Load detailed data only if user has permissions
         const [workRequests, projects, risks] = await Promise.all([
           canManage(F_WORK_REQUESTS)
             ? pmbokRBAC.getWorkRequests()
@@ -134,7 +131,6 @@ export default function ProjectManagementPageRBAC() {
         });
       } catch (error) {
         console.error("Error loading dashboard data:", error);
-      } finally {
       }
     };
 
@@ -143,12 +139,7 @@ export default function ProjectManagementPageRBAC() {
 
   // Permission-based tab configuration
   const tabs = [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: "📊",
-      visible: true,
-    },
+    { id: "overview", label: "Overview", icon: "📊", visible: true },
     {
       id: "work-requests",
       label: "Work Requests",
@@ -204,8 +195,6 @@ export default function ProjectManagementPageRBAC() {
               </div>
               <div className="flex items-center space-x-4">
                 <QuickActionsRBAC />
-
-                {/* Permission-based export button */}
                 <ReportExportButton
                   onClick={() => console.log("Exporting report...")}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
@@ -332,14 +321,11 @@ export default function ProjectManagementPageRBAC() {
                       <button
                         key={tab.id}
                         onClick={() => setSelectedTab(tab.id)}
-                        className={`
-                          flex items-center py-4 px-1 border-b-2 font-medium text-sm
-                          ${
-                            selectedTab === tab.id
-                              ? "border-blue-500 text-blue-600"
-                              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                          }
-                        `}
+                        className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
+                          selectedTab === tab.id
+                            ? "border-blue-500 text-blue-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        }`}
                       >
                         <span className="mr-2">{tab.icon}</span>
                         {tab.label}
@@ -469,25 +455,16 @@ export default function ProjectManagementPageRBAC() {
                             <table className="min-w-full divide-y divide-gray-200">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Title
                                   </th>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status
                                   </th>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Priority
                                   </th>
-                                  <th scope="col" className="relative px-6 py-3">
+                                  <th className="relative px-6 py-3">
                                     <span className="sr-only">Actions</span>
                                   </th>
                                 </tr>
@@ -499,4 +476,133 @@ export default function ProjectManagementPageRBAC() {
                                       <div className="text-sm font-medium text-gray-900">
                                         {request.title}
                                       </div>
-                                      <div className="text-sm text-gra
+                                      <div className="text-sm text-gray-500">
+                                        {request.description}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <span
+                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                          request.status === "approved"
+                                            ? "bg-green-100 text-green-800"
+                                            : request.status === "pending"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : "bg-red-100 text-red-800"
+                                        }`}
+                                      >
+                                        {request.status}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {request.priority}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                      <div className="flex space-x-2">
+                                        <button
+                                          onClick={() =>
+                                            router.push(`/work-requests/${request.id}`)
+                                          }
+                                          className="text-blue-600 hover:text-blue-900"
+                                        >
+                                          View
+                                        </button>
+                                        <WorkRequestApproveButton
+                                          onClick={() => {
+                                            setSelectedWorkRequest(request);
+                                            setShowApprovalModal(true);
+                                          }}
+                                          className="text-green-600 hover:text-green-900"
+                                          fallback={null}
+                                        >
+                                          Approve
+                                        </WorkRequestApproveButton>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </WorkRequestGuard>
+                  )}
+
+                  {/* Projects Tab */}
+                  {selectedTab === "projects" && (
+                    <ProjectGuard
+                      fallback={
+                        <NoAccessFallback message="You don't have permission to view projects." />
+                      }
+                    >
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-medium text-gray-900">
+                            Projects
+                          </h3>
+                          <ProjectCreateButton
+                            onClick={() => router.push("/project-management/create")}
+                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                            fallback={null}
+                          >
+                            + New Project
+                          </ProjectCreateButton>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {data.projects.map((project: any) => (
+                            <div
+                              key={project.id}
+                              className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow"
+                            >
+                              <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-lg font-medium text-gray-900">
+                                  {project.title}
+                                </h4>
+                                <span
+                                  className={`px-2 py-1 text-xs rounded-full ${
+                                    project.status === "active"
+                                      ? "bg-green-100 text-green-800"
+                                      : project.status === "completed"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }`}
+                                >
+                                  {project.status}
+                                </span>
+                              </div>
+                              <p className="text-gray-600 text-sm mb-4">
+                                {project.description}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-500">
+                                  {project.assigned_to}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    router.push(
+                                      `/project-management/charters/${project.id}`
+                                    )
+                                  }
+                                  className="text-blue-600 hover:text-blue-900 text-sm"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </ProjectGuard>
+                  )}
+
+                  {/* Risks Tab */}
+                  {selectedTab === "risks" && (
+                    <RiskGuard
+                      fallback={
+                        <NoAccessFallback message="You don't have permission to view risks." />
+                      }
+                    >
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-medium text-gray-900">
