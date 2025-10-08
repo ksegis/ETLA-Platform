@@ -4,8 +4,9 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import type { User, Session, AuthError, AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { setServiceAuthContext } from "@/utils/serviceAuth";
-import { ROLES } from "@/lib/rbac"; // Import ROLES
+import { ROLES } from "@/lib/rbac"; // (kept; no functional change)
 
+/** ---------- Types (unchanged) ---------- */
 interface Tenant {
   id: string;
   name: string;
@@ -30,14 +31,8 @@ interface AuthContextType {
   tenantUser: TenantUser | null;
   session: Session | null;
   loading: boolean;
-  signIn: (
-    email: string,
-    password: string,
-  ) => Promise<{ error: AuthError | null }>;
-  signUp: (
-    email: string,
-    password: string,
-  ) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   refreshTenant: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -50,6 +45,27 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+/** Small utility: never let a background call block UI forever */
+function withTimeout<T>(p: Promise<T>, ms = 5000, label = "async op"): Promise<T | null> {
+  return new Promise((resolve) => {
+    const t = setTimeout(() => {
+      console.warn(`⏱️ AuthProvider: ${label} timed out after ${ms}ms`);
+      // resolve null on timeout so callers can proceed safely
+      // @ts-expect-error returning null by design
+      resolve(null);
+    }, ms);
+    p.then((v) => {
+      clearTimeout(t);
+      resolve(v);
+    }).catch((e) => {
+      clearTimeout(t);
+      console.error(`❌ AuthProvider: ${label} failed:`, e);
+      // @ts-expect-error returning null by design
+      resolve(null);
+    });
+  });
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -66,12 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder") ||
     process.env.NEXT_PUBLIC_SUPABASE_URL.includes("your-project") ||
     process.env.NEXT_PUBLIC_SUPABASE_URL === "https://your-project.supabase.co";
+
   const isAuthenticated = !!user && !!session && !loading;
   const currentUserId = user?.id || null;
   const currentTenantId = tenantUser?.tenant_id || null;
   const currentUserRole = tenantUser?.role || null;
 
-  const updateServiceAuthContext = () => {
+  /** Keep service layer in sync whenever auth/tenant changes */
+  useEffect(() => {
     setServiceAuthContext({
       userId: currentUserId,
       tenantId: currentTenantId,
@@ -79,29 +97,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       isDemoMode,
     });
-  };
+  }, [currentUserId, currentTenantId, currentUserRole, isAuthenticated, isDemoMode]);
 
   const loadTenantUser = async (userId: string) => {
     try {
-      console.log(
-        `🔍 AuthProvider: Starting loadTenantUser for userId: ${userId}`,
-      );
+      console.log(`🔍 AuthProvider: Starting loadTenantUser for userId: ${userId}`);
       const startTime = Date.now();
       const { data, error } = await supabase
         .from("tenant_users")
         .select("*")
         .eq("user_id", userId)
-        .single();
-      const endTime = Date.now();
+        .maybeSingle(); // more forgiving than .single()
+
       console.log(
-        `🔍 AuthProvider: loadTenantUser for userId: ${userId} completed in ${endTime - startTime}ms`,
+        `🔍 AuthProvider: loadTenantUser for userId: ${userId} completed in ${Date.now() - startTime}ms`,
       );
 
       if (error) {
         console.error("Error fetching tenant user:", error);
         setTenantUser(null);
       } else if (data) {
-        setTenantUser(data);
+        setTenantUser(data as TenantUser);
+      } else {
+        // no row is OK; RBAC will default to CLIENT_USER
+        setTenantUser(null);
       }
     } catch (error) {
       console.error("Unexpected error fetching tenant user:", error);
@@ -117,16 +136,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sessionStartTime = Date.now();
       try {
         if (isDemoMode) {
-          console.log(
-            "🎭 AuthProvider: Demo mode detected - skipping session check",
-          );
+          console.log("🎭 AuthProvider: Demo mode detected - skipping session check");
           setUser(null);
           setSession(null);
           setTenantUser(null);
-
           setloading(false);
           setIsStable(true);
-          updateServiceAuthContext();
           console.log("✅ AuthProvider: Demo mode initialization completed");
           return;
         }
@@ -145,7 +160,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log("✅ AuthProvider: Found existing session");
           setSession(initialSession);
           setUser(initialSession.user);
-          await loadTenantUser(initialSession.user.id);
+
+          // ⚠️ Do NOT await here — run in background with timeout
+          withTimeout(loadTenantUser(initialSession.user.id), 5000, "loadTenantUser(init)");
         } else {
           console.log("⚠️ AuthProvider: No existing session");
           setUser(null);
@@ -153,24 +170,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser(null);
         }
 
+        // Never block UI on tenant fetch
         setloading(false);
         setIsStable(true);
-        updateServiceAuthContext();
         console.log(
-          `✅ AuthProvider: Authentication state stabilized. getInitialSession completed in ${Date.now() - sessionStartTime}ms`,
+          `✅ AuthProvider: Authentication state stabilized. getInitialSession completed in ${
+            Date.now() - sessionStartTime
+          }ms`,
         );
       } catch (error) {
-        console.error(
-          "❌ AuthProvider: Unexpected error during initialization:",
-          error,
-        );
+        console.error("❌ AuthProvider: Unexpected error during initialization:", error);
         setUser(null);
         setSession(null);
         setTenantUser(null);
-
         setloading(false);
         setIsStable(true);
-        updateServiceAuthContext();
       }
     };
 
@@ -181,25 +195,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
         console.log("🔄 AuthProvider: Auth state changed:", event);
-
         try {
           if (newSession) {
             console.log("✅ AuthProvider: Setting new session and user");
             setSession(newSession);
             setUser(newSession.user);
 
-            try {
-              await loadTenantUser(newSession.user.id);
-              console.log(
-                "✅ AuthProvider: Tenant user loaded successfully (no timeout applied)",
-              );
-            } catch (tenantError) {
-              console.warn(
-                "❌ AuthProvider: Failed to load tenant user (no timeout applied):",
-                tenantError,
-              );
-              setTenantUser(null);
-            }
+            // Run tenant fetch in the background with timeout
+            withTimeout(loadTenantUser(newSession.user.id), 5000, "loadTenantUser(onAuthStateChange)");
           } else {
             console.log("⚠️ AuthProvider: User signed out");
             setUser(null);
@@ -211,7 +214,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           setloading(false);
           setIsStable(true);
-          updateServiceAuthContext();
           console.log("✅ AuthProvider: Auth state change completed");
         }
       },
@@ -220,45 +222,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [isDemoMode]);
 
+  /** ---------- Public API (unchanged) ---------- */
   const signIn = async (email: string, password: string) => {
     console.log("🔐 AuthProvider: Starting sign in process");
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         console.error("❌ AuthProvider: Sign in failed:", error);
         setloading(false);
         setIsStable(true);
       } else {
-        console.log(
-          "✅ AuthProvider: Sign in successful, waiting for auth state change",
-        );
+        console.log("✅ AuthProvider: Sign in successful, waiting for auth state change");
       }
-
       return { error };
     } catch (error) {
       console.error("❌ AuthProvider: Sign in error:", error);
       setloading(false);
       setIsStable(true);
-      return { error };
+      return { error: error as AuthError | null };
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signUp({ email, password });
       return { error };
     } catch (error) {
       console.error("❌ AuthProvider: Sign up error:", error);
-      return { error };
+      return { error: error as AuthError | null };
     }
   };
 
@@ -271,7 +264,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTenantUser(null);
       setloading(false);
       setIsStable(true);
-      updateServiceAuthContext();
 
       if (typeof window !== "undefined") {
         window.location.href = "/login";
@@ -286,8 +278,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshTenant = async () => {
     console.log("🔄 AuthProvider: Refreshing tenant information");
-    if (user) {
-      await loadTenantUser(user.id);
+    if (user?.id) {
+      // background + timeout
+      await withTimeout(loadTenantUser(user.id), 5000, "loadTenantUser(refreshTenant)");
     }
   };
 
@@ -304,14 +297,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         if (session?.user) {
           setUser(session.user);
-          await loadTenantUser(session.user.id);
+          await withTimeout(loadTenantUser(session.user.id), 5000, "loadTenantUser(refreshSession)");
         }
       }
     } catch (error) {
-      console.error(
-        "❌ AuthProvider: Unexpected error refreshing session:",
-        error,
-      );
+      console.error("❌ AuthProvider: Unexpected error refreshing session:", error);
     }
   };
 
@@ -346,4 +336,3 @@ export function useAuth() {
 }
 
 export default AuthContext;
-
