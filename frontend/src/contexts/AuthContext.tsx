@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import type { User, Session, AuthError, AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { setServiceAuthContext } from "@/utils/serviceAuth";
-import { ROLES } from "@/lib/rbac"; // (kept; no functional change)
+import { ROLES } from "@/lib/rbac"; // kept (no functional change)
 
 /** ---------- Types (unchanged) ---------- */
 interface Tenant {
@@ -46,13 +46,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/** Small utility: never let a background call block UI forever */
+/** Never let a background call block UI forever */
 function withTimeout<T>(p: Promise<T>, ms = 5000, label = "async op"): Promise<T | null> {
-  return new Promise((resolve) => {
+  return new Promise<T | null>((resolve) => {
     const t = setTimeout(() => {
       console.warn(`⏱️ AuthProvider: ${label} timed out after ${ms}ms`);
-      // resolve null on timeout so callers can proceed safely
-      // @ts-expect-error returning null by design
       resolve(null);
     }, ms);
     p.then((v) => {
@@ -61,7 +59,6 @@ function withTimeout<T>(p: Promise<T>, ms = 5000, label = "async op"): Promise<T
     }).catch((e) => {
       clearTimeout(t);
       console.error(`❌ AuthProvider: ${label} failed:`, e);
-      // @ts-expect-error returning null by design
       resolve(null);
     });
   });
@@ -119,7 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (data) {
         setTenantUser(data as TenantUser);
       } else {
-        // no row is OK; RBAC will default to CLIENT_USER
         setTenantUser(null);
       }
     } catch (error) {
@@ -161,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(initialSession);
           setUser(initialSession.user);
 
-          // ⚠️ Do NOT await here — run in background with timeout
+          // Run in background with timeout (don’t block UI)
           withTimeout(loadTenantUser(initialSession.user.id), 5000, "loadTenantUser(init)");
         } else {
           console.log("⚠️ AuthProvider: No existing session");
@@ -170,7 +166,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenantUser(null);
         }
 
-        // Never block UI on tenant fetch
         setloading(false);
         setIsStable(true);
         console.log(
@@ -201,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(newSession);
             setUser(newSession.user);
 
-            // Run tenant fetch in the background with timeout
+            // Background + timeout
             withTimeout(loadTenantUser(newSession.user.id), 5000, "loadTenantUser(onAuthStateChange)");
           } else {
             console.log("⚠️ AuthProvider: User signed out");
@@ -279,7 +274,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshTenant = async () => {
     console.log("🔄 AuthProvider: Refreshing tenant information");
     if (user?.id) {
-      // background + timeout
       await withTimeout(loadTenantUser(user.id), 5000, "loadTenantUser(refreshTenant)");
     }
   };
