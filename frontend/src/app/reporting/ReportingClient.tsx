@@ -13,7 +13,7 @@ import PreviewModal from "./_components/PreviewModal";
 import TraditionalReportTable from "@/components/reporting/TraditionalReportTable";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
