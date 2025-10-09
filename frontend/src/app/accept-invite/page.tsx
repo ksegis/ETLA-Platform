@@ -15,7 +15,7 @@ import {
   Mail,
   User,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 interface InviteAcceptanceState {
   email: string;
@@ -58,6 +58,7 @@ function AcceptInviteForm() {
   useEffect(() => {
     const validateInviteSession = async () => {
       try {
+        const supabase = createSupabaseBrowserClient();
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -171,6 +172,7 @@ function AcceptInviteForm() {
 
     try {
       // Update the user's password
+      const supabase = createSupabaseBrowserClient();
       const { error: passwordError } = await supabase.auth.updateUser({
         password: state.password,
       });
@@ -186,6 +188,7 @@ function AcceptInviteForm() {
 
       // Update user metadata if full name is provided
       if (state.fullName.trim()) {
+        const supabase = createSupabaseBrowserClient();
         const { error: metadataError } = await supabase.auth.updateUser({
           data: {
             full_name: state.fullName.trim(),
@@ -208,6 +211,7 @@ function AcceptInviteForm() {
 
       // Sign out the invite session and redirect after a brief delay
       setTimeout(async () => {
+        const supabase = createSupabaseBrowserClient();
         await supabase.auth.signOut();
         router.push(
           "/login?message=Account setup completed successfully. Please sign in with your new password."
