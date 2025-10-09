@@ -1,0 +1,717 @@
+"use client";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { SelectTrigger as BaseSelectTrigger } from "@/components/ui/select";
+import type {
+  ComponentProps,
+  ForwardRefExoticComponent,
+  HTMLAttributes,
+} from "react";
+
+// widen props just for this file
+type TriggerProps = ComponentProps<typeof BaseSelectTrigger> &
+  HTMLAttributes<HTMLButtonElement>;
+
+const SelectTrigger = BaseSelectTrigger as unknown as
+  ForwardRefExoticComponent<TriggerProps>;
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/Badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Building,
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  UserPlus,
+  Search,
+  AlertCircle,
+} from "lucide-react";
+import { Tenant, User } from "@/types";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { FEATURES, PERMISSIONS } from "@/rbac/constants"; // Corrected import path
+import { usePathname } from 'next/navigation';
+
+// Define NavigationGroup and related types if not already defined globally or in a shared types file
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: any; // You might want to replace 'any' with a more specific type for Lucide icons
+  isNew?: boolean;
+}
+
+interface NavigationGroup {
+  id: string;
+  title: string;
+  icon: any; // You might want to replace 'any' with a more specific type for Lucide icons
+  color: string;
+  bgColor: string;
+  hoverColor: string;
+  textColor: string;
+  defaultExpanded?: boolean;
+  items: NavigationItem[];
+}
+
+// Dummy data for navigation groups, replace with actual data or context if available
+const navigationGroups: NavigationGroup[] = [
+  {
+    id: 'admin',
+    title: 'Admin',
+    icon: Users,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-600',
+    hoverColor: 'hover:bg-blue-50',
+    textColor: 'text-blue-900',
+    items: [
+      { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
+      { name: 'User Management', href: '/admin/user-management', icon: Users },
+    ],
+  },
+];
+
+// Dummy functions for filteredNavigationGroups and toggleGroupExpansion
+const filteredNavigationGroups = navigationGroups;
+const toggleGroupExpansion = (groupId: string) => {
+  console.log(`Toggling expansion for group: ${groupId}`);
+};
+
+interface ExtendedTenant extends Tenant {
+  code?: string;
+  tenant_type?: string;
+  contact_email?: string;
+  is_active?: boolean;
+  tenant_level?: number;
+  max_projects?: number;
+  feature_flags?: Record<string, any>;
+  usage_quotas?: Record<string, any>;
+  rbac_settings?: Record<string, any>;
+}
+
+interface TenantUser {
+  id: string;
+  user_id: string;
+  tenant_id: string;
+  role: string;
+  is_active: boolean;
+  email?: string;
+  created_at: string;
+}
+
+interface AuthUser {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
+export default function TenantManagementClient() { // Renamed component
+  const { user, tenantUser, isAuthenticated } = useAuth();
+  const { checkPermission, loading: permissionsloading } = usePermissions();
+  const [tenants, setTenants] = useState<ExtendedTenant[]>([]);
+  const [users, setUsers] = useState<TenantUser[]>([]);
+  const [allUsers, setAllUsers] = useState<AuthUser[]>([]);
+  const [loading, setloading] = useState(true);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
+  // RBAC v2 API requires (feature, permission)
+  const hasAdminAccess = checkPermission(FEATURES.TENANT_MANAGEMENT, PERMISSIONS.TENANT_READ);
+
+  useEffect(() => {
+    if (isAuthenticated && hasAdminAccess) {
+      loadTenants();
+      loadAllUsers();
+    } else {
+      setloading(false);
+    }
+  }, [isAuthenticated, hasAdminAccess]);
+
+  useEffect(() => {
+    if (selectedTenantId) {
+      loadTenantUsers(selectedTenantId);
+    }
+  }, [selectedTenantId]);
+
+  const loadTenants = async () => {
+    try {
+      console.log("Attempting to load tenants...");
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("*")
+        .order("name");
+
+      if (error) {
+        console.error("Error loading tenants:", error);
+        throw error;
+      }
+      setTenants(data || []);
+      console.log("Tenants loaded successfully:", data);
+    } catch (error) {
+      console.error("Caught error loading tenants:", error);
+    }
+  };
+
+  const loadAllUsers = async () => {
+    try {
+      console.log("Attempting to load all users...");
+      const { data, error } = await supabase
+        .from("auth.users")
+        .select("id, email, created_at")
+        .order("email");
+
+      if (error) {
+        console.error("Error loading all users:", error);
+        throw error;
+      }
+      setAllUsers(data || []);
+      console.log("All users loaded successfully:", data);
+    } catch (error) {
+      console.error("Caught error loading all users:", error);
+    }
+  };
+
+  const loadTenantUsers = async (tenantId: string) => {
+    try {
+      setloading(true);
+      const { data, error } = await supabase
+        .from("tenant_users")
+        .select(
+          `
+          id,
+          user_id,
+          tenant_id,
+          role,
+          is_active,
+          created_at
+        `,
+        )
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const tenantUsersWithEmails = await Promise.all(
+        (data || []).map(async (tu: any) => {
+          const { data: userData } = await supabase
+            .from("auth.users")
+            .select("email")
+            .eq("id", tu.user_id)
+            .single();
+
+          return {
+            ...tu,
+            email: userData?.email || "Unknown",
+          };
+        }),
+      );
+
+      setUsers(tenantUsersWithEmails);
+    } catch (error) {
+      console.error("Error loading tenant users:", error);
+    } finally {
+      setloading(false);
+    }
+  };
+
+  const addUserToTenant = async (userId: string, role: string) => {
+    if (!selectedTenantId) return;
+
+    try {
+      const { error } = await supabase.from("tenant_users").insert({
+        user_id: userId,
+        tenant_id: selectedTenantId,
+        role: role,
+        is_active: true,
+      });
+
+      if (error) throw error;
+
+      setShowAddUserModal(false);
+      loadTenantUsers(selectedTenantId);
+    } catch (error) {
+      console.error("Error adding user to tenant:", error);
+    }
+  };
+
+  const removeUserFromTenant = async (tenantUserId: string) => {
+    try {
+      const { error } = await supabase
+        .from("tenant_users")
+        .update({ is_active: false })
+        .eq("id", tenantUserId);
+
+      if (error) throw error;
+
+      if (selectedTenantId) {
+        loadTenantUsers(selectedTenantId);
+      }
+    } catch (error) {
+      console.error("Error removing user from tenant:", error);
+    }
+  };
+
+  const updateUserRole = async (tenantUserId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from("tenant_users")
+        .update({ role: newRole })
+        .eq("id", tenantUserId);
+
+      if (error) throw error;
+
+      if (selectedTenantId) {
+        loadTenantUsers(selectedTenantId);
+      }
+    } catch (error) {
+      console.error("Error updating user role:", error);
+    }
+  };
+
+  const createTenant = async (tenantData: {
+    name: string;
+    code: string;
+    tenant_type: string;
+    contact_email: string;
+  }) => {
+    console.log("=== CREATE TENANT DEBUG START ====");
+    console.log("Input tenantData:", tenantData);
+
+    try {
+      const insertData = {
+        ...tenantData,
+        status: "active",
+        subscription_plan: "professional",
+        max_users: 25,
+        max_projects: 50,
+        is_active: true,
+        tenant_level: 1,
+        settings: {},
+        feature_flags: {},
+        usage_quotas: {},
+        rbac_settings: {},
+      };
+
+      console.log("Data to insert:", insertData);
+      console.log("Making Supabase insert call...");
+
+      const { data, error } = await supabase
+        .from("tenants")
+        .insert(insertData)
+        .select();
+
+      console.log("Supabase response - data:", data);
+      console.log("Supabase response - error:", error);
+
+      if (error) {
+        console.error("Supabase error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        throw error;
+      }
+
+      console.log(
+        "Tenant created successfully, closing modal and reloading tenants...",
+      );
+      setShowCreateTenantModal(false);
+      await loadTenants();
+      console.log("=== CREATE TENANT DEBUG END ====");
+    } catch (error) {
+      console.error("=== CREATE TENANT ERROR ====");
+      console.error("Error creating tenant:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      console.error("=== CREATE TENANT ERROR END ====");
+    }
+  };
+
+  const filteredTenants = tenants.filter(
+    (tenant: any) =>
+      tenant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.code?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "host_admin":
+        return "bg-red-100 text-red-800";
+      case "program_manager":
+        return "bg-blue-100 text-blue-800";
+      case "client_admin":
+        return "bg-green-100 text-green-800";
+      case "client_user":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (loading || permissionsloading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">loading tenant management...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAdminAccess) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900">
+                Access Denied
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                You do not have the required permissions to access this page.
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                Required permission: {PERMISSIONS.TENANT_READ}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <DashboardLayout
+      navigationGroups={filteredNavigationGroups}
+      toggleGroupExpansion={toggleGroupExpansion}
+    >
+      <div className="p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Tenant Management
+            </h1>
+            <p className="text-gray-600">Manage tenants and user assignments</p>
+          </div>
+          <Button onClick={() => setShowCreateTenantModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Tenant
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Tenants List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Tenants ({filteredTenants.length})
+              </CardTitle>
+              <CardDescription>
+                Select a tenant to manage its users
+              </CardDescription>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search tenants..."
+                  value={searchTerm}
+                  onChange={(e: any) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {filteredTenants.map((tenant: any) => (
+                  <div
+                    key={tenant.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedTenantId === tenant.id
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => setSelectedTenantId(tenant.id)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {tenant.name || "Unnamed Tenant"}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Code: {tenant.code || "No code"}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Type: {tenant.tenant_type || "Unknown"}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${tenant.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                      >
+                        {tenant.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tenant Users */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Tenant Users
+                {selectedTenantId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowAddUserModal(true)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add User
+                  </Button>
+                )}
+              </CardTitle>
+              <CardDescription>
+                {selectedTenantId
+                  ? `Users in ${tenants.find((t) => t.id === selectedTenantId)?.name}`
+                  : "Select a tenant to see its users"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {users.map((user: any) => (
+                  <div key={user.id} className="p-3 border rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {user.email}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Joined: {new Date(user.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={user.role}
+                          onValueChange={(newRole) =>
+                            updateUserRole(user.id, newRole)
+                          }
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="host_admin">Host Admin</SelectItem>
+                            <SelectItem value="program_manager">
+                              Program Manager
+                            </SelectItem>
+                            <SelectItem value="client_admin">Client Admin</SelectItem>
+                            <SelectItem value="client_user">Client User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeUserFromTenant(user.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Add User Modal */}
+        <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add User to Tenant</DialogTitle>
+              <DialogDescription>
+                Select a user and assign a role within the tenant.
+              </DialogDescription>
+            </DialogHeader>
+            <AddUserForm
+              allUsers={allUsers}
+              tenantUsers={users}
+              onAddUser={addUserToTenant}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Tenant Modal */}
+        <Dialog
+          open={showCreateTenantModal}
+          onOpenChange={setShowCreateTenantModal}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Tenant</DialogTitle>
+              <DialogDescription>
+                Enter the details for the new tenant.
+              </DialogDescription>
+            </DialogHeader>
+            <CreateTenantForm onCreateTenant={createTenant} />
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+function AddUserForm({ allUsers, tenantUsers, onAddUser }: any) {
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [role, setRole] = useState("client_user");
+
+  const availableUsers = allUsers.filter(
+    (u: any) => !tenantUsers.some((tu: any) => tu.user_id === u.id),
+  );
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    if (selectedUserId) {
+      onAddUser(selectedUserId, role);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="user">User</Label>
+        <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+          <SelectTrigger id="user">
+            <SelectValue placeholder="Select a user" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableUsers.map((u: any) => (
+              <SelectItem key={u.id} value={u.id}>
+                {u.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="role">Role</Label>
+        <Select value={role} onValueChange={setRole}>
+          <SelectTrigger id="role">
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="host_admin">Host Admin</SelectItem>
+            <SelectItem value="program_manager">Program Manager</SelectItem>
+            <SelectItem value="client_admin">Client Admin</SelectItem>
+            <SelectItem value="client_user">Client User</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <DialogFooter>
+        <Button type="submit">Add User</Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+function CreateTenantForm({ onCreateTenant }: any) {
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [tenantType, setTenantType] = useState("standard");
+  const [contactEmail, setContactEmail] = useState("");
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    onCreateTenant({ name, code, tenant_type: tenantType, contact_email: contactEmail });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Tenant Name</Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="code">Tenant Code</Label>
+        <Input
+          id="code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="tenantType">Tenant Type</Label>
+        <Select value={tenantType} onValueChange={setTenantType}>
+          <SelectTrigger id="tenantType">
+            <SelectValue placeholder="Select a type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="standard">Standard</SelectItem>
+            <SelectItem value="enterprise">Enterprise</SelectItem>
+            <SelectItem value="government">Government</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="contactEmail">Contact Email</Label>
+        <Input
+          id="contactEmail"
+          type="email"
+          value={contactEmail}
+          onChange={(e) => setContactEmail(e.target.value)}
+          required
+        />
+      </div>
+      <DialogFooter>
+        <Button type="submit">Create Tenant</Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
