@@ -25,19 +25,25 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
-// Lazy bits to keep TBT down on this page
+/* ---------- FIXED dynamic imports ---------- */
+// RBACMatrixGrid exports a *default*
 const RBACMatrixGrid = dynamic(
-  () => import('@/components/rbac/RBACMatrixGrid').then(m => m.default ?? m.RBACMatrixGrid),
+  () => import('@/components/rbac/RBACMatrixGrid'),
   { ssr: false }
 );
+
+// RolesPermissionsTab also has a *default*
 const RolesPermissionsTab = dynamic(
-  () => import('@/components/rbac/RolesPermissionsTab').then(m => m.default ?? m.RolesPermissionsTab),
+  () => import('@/components/rbac/RolesPermissionsTab'),
   { ssr: false }
 );
+
+// UserDetailPanel is a *named* export in your repo
 const UserDetailPanel = dynamic(
-  () => import('@/components/rbac/UserDetailPanel').then(m => m.default ?? m.UserDetailPanel),
+  () => import('@/components/rbac/UserDetailPanel').then(m => m.UserDetailPanel as any),
   { ssr: false }
 );
+/* ------------------------------------------- */
 
 export default function AccessControlClient() {
   const router = useRouter();
@@ -64,14 +70,14 @@ export default function AccessControlClient() {
 
   const currentUserId = user?.id ?? null;
 
-  // --- Prevent setState after unmount ---
+  // prevent setState after unmount
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
 
-  // --- Compute once when perms are ready; do NOT depend on function identity ---
+  // compute once after perms ready; don't depend on function identity
   const canViewAccess = useMemo(() => {
     if (permissionsLoading) return false;
     try {
@@ -79,10 +85,10 @@ export default function AccessControlClient() {
     } catch {
       return false;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [permissionsLoading]); // <- intentionally NOT depending on checkPermission
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permissionsLoading]);
 
-  // --- Initial load (run once when auth + perms are ready) ---
+  // initial load (run once)
   const initRan = useRef(false);
   useEffect(() => {
     if (!isAuthenticated || permissionsLoading || initRan.current) return;
@@ -105,7 +111,6 @@ export default function AccessControlClient() {
         if (!mounted.current) return;
 
         setTenants(fetchedTenants);
-        // only set default once
         if (!selectedTenant && fetchedTenants.length > 0) {
           setSelectedTenant(fetchedTenants[0]);
         }
@@ -120,7 +125,7 @@ export default function AccessControlClient() {
     load();
   }, [isAuthenticated, permissionsLoading, canViewAccess, router, selectedTenant]);
 
-  // --- Load tenant users when tenant/search changes (debounced) ---
+  // load tenant users (debounced)
   useEffect(() => {
     if (!selectedTenant) return;
 
@@ -153,7 +158,7 @@ export default function AccessControlClient() {
       } finally {
         mounted.current && !controller.signal.aborted && setLoading(false);
       }
-    }, 250); // debounce typing
+    }, 250);
 
     return () => {
       controller.abort();
@@ -161,7 +166,7 @@ export default function AccessControlClient() {
     };
   }, [selectedTenant?.id, searchQuery]);
 
-  // --- Load selected user detail ---
+  // load selected user detail
   useEffect(() => {
     if (!selectedUserId || !selectedTenant) return;
 
@@ -182,7 +187,6 @@ export default function AccessControlClient() {
     return () => { cancelled = true; };
   }, [selectedUserId, selectedTenant?.id]);
 
-  // --- Grid interactions ---
   const handleCellClick = (userId: string, permissionId: string) => {
     const row = users.find(u => u.userId === userId);
     const currentCell = row?.cells?.find(c => c.permissionId === permissionId);
@@ -225,8 +229,8 @@ export default function AccessControlClient() {
       await RBACAdminService.applyChanges(req);
       setDraftChanges(new Map());
       setChangeQueue([]);
-      // refresh
-      setSearchQuery(q => q); // trigger effect by no-op (kept for clarity)
+      // refresh list
+      setSearchQuery(q => q);
     } catch (e) {
       console.error('AccessControl: applyChanges failed', e);
     } finally {
@@ -287,7 +291,6 @@ export default function AccessControlClient() {
                 </div>
               </div>
 
-              {/* USERS */}
               <TabsContent value="users">
                 <RBACMatrixGrid
                   users={users}
@@ -308,17 +311,14 @@ export default function AccessControlClient() {
                 )}
               </TabsContent>
 
-              {/* ROLES */}
               <TabsContent value="roles">
                 <RolesPermissionsTab selectedTenantId={selectedTenant?.id} />
               </TabsContent>
 
-              {/* INVITATIONS */}
               <TabsContent value="invitations">
                 Invitations content here.
               </TabsContent>
 
-              {/* NOTIFICATIONS */}
               <TabsContent value="notifications">
                 Notifications content here.
               </TabsContent>
@@ -327,7 +327,6 @@ export default function AccessControlClient() {
         </Card>
       </div>
 
-      {/* RIGHT PANE */}
       {selectedUserId && (
         <div className="w-80 border-l bg-gray-50 p-6 overflow-y-auto">
           <UserDetailPanel
