@@ -1,4 +1,17 @@
 {
   "root": true,
-  "extends": ["next", "next/core-web-vitals"]
+  "extends": ["next", "next/core-web-vitals"],
+  "overrides": [
+    {
+      "files": ["src/services/**/*.ts", "src/app/**/route.ts", "src/app/**/actions.ts"],
+      "rules": {
+        "no-restricted-imports": ["error", {
+          "patterns": [
+            {"group": ["@/hooks/*", "@/contexts/*", "@/components/*"], "message": "Server code must not import client code"}
+          ]
+        }]
+      }
+    }
+  ]
 }
+
