@@ -1,9 +1,4 @@
-import dynamic from "next/dynamic";
-
-const TenantManagementClient = dynamic(
-  () => import("./TenantManagementClient"),
-  { ssr: false }
-);
+import TenantManagementClient from "./TenantManagementClient";
 
 export default function TenantManagementPage() {
   return <TenantManagementClient />;
