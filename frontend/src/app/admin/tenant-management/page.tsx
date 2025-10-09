@@ -58,7 +58,61 @@ import {
 } from "lucide-react";
 import { Tenant, User } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { SelectTrigger as BaseSelectTrigger } from "@/components/ui/select";
+import type {
+  ComponentProps,
+  ForwardRefExoticComponent,
+  HTMLAttributes,
+} from "react";
+
+// widen props just for this file
+type TriggerProps = ComponentProps<typeof BaseSelectTrigger> &
+  HTMLAttributes<HTMLButtonElement>;
+
+const SelectTrigger = BaseSelectTrigger as unknown as
+  ForwardRefExoticComponent<TriggerProps>;
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/Badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Building,
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  UserPlus,
+  Search,
+  AlertCircle,
+} from "lucide-react";
+import { Tenant, User } from "@/types";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { FEATURES, PERMISSIONS } from "@/rbac/constants"; // Corrected import path
 import { usePathname } from 'next/navigation';
 
 // Define NavigationGroup and related types if not already defined globally or in a shared types file
@@ -417,7 +471,10 @@ export default function TenantManagementPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      navigationGroups={filteredNavigationGroups}
+      toggleGroupExpansion={toggleGroupExpansion}
+    >
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
