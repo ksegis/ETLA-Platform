@@ -1,89 +1,110 @@
-'use client';
+"use client";
 
-import React, { useState, createContext, useContext } from 'react';
+import * as React from "react";
 
-interface TabsContextType {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+// If @radix-ui/react-tabs is available, keep this import.
+// If not, leave the simple controlled shim below (works for now).
+let TabsPrimitive: any;
+try {
+  TabsPrimitive = require("@radix-ui/react-tabs");
+} catch {
+  TabsPrimitive = null;
 }
 
-const TabsContext = createContext<TabsContextType | undefined>(undefined);
+// ---------- Option A: Radix-backed (preferred if installed) ----------
+if (TabsPrimitive) {
+  const { Root, List, Trigger, Content } = TabsPrimitive;
 
-interface TabsProps {
-  defaultValue: string;
-  className?: string;
-  children: React.ReactNode;
-}
+  export const Tabs = Root; // accepts value, defaultValue, onValueChange
+  export const TabsList = React.forwardRef<
+    HTMLDivElement,
+    React.ComponentPropsWithoutRef<typeof List>
+  >(({ className, ...props }, ref) => <List ref={ref} className={className} {...props} />);
+  TabsList.displayName = "TabsList";
 
-interface TabsListProps {
-  className?: string;
-  children: React.ReactNode;
-}
+  export const TabsTrigger = React.forwardRef<
+    HTMLButtonElement,
+    React.ComponentPropsWithoutRef<typeof Trigger>
+  >(({ className, ...props }, ref) => <Trigger ref={ref} className={className} {...props} />);
+  TabsTrigger.displayName = "TabsTrigger";
 
-interface TabsTriggerProps {
-  value: string;
-  className?: string;
-  children: React.ReactNode;
-}
+  export const TabsContent = React.forwardRef<
+    HTMLDivElement,
+    React.ComponentPropsWithoutRef<typeof Content>
+  >(({ className, ...props }, ref) => <Content ref={ref} className={className} {...props} />);
+  TabsContent.displayName = "TabsContent";
+} else {
+  // ---------- Option B: Minimal controlled shim (no Radix) ----------
+  type TabsProps = {
+    value?: string;
+    defaultValue?: string;
+    onValueChange?: (v: string) => void;
+    className?: string;
+    children: React.ReactNode;
+  };
 
-interface TabsContentProps {
-  value: string;
-  className?: string;
-  children: React.ReactNode;
-}
+  type Ctx = {
+    value: string;
+    setValue: (v: string) => void;
+  };
 
-export const Tabs: React.FC<TabsProps> = ({ defaultValue, className = '', children }) => {
-  const [activeTab, setActiveTab] = useState(defaultValue);
+  const Ctx = React.createContext<Ctx | null>(null);
 
-  return (
-    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+  export function Tabs({ value, defaultValue, onValueChange, className, children }: TabsProps) {
+    const [internal, setInternal] = React.useState<string>(defaultValue ?? "");
+    const current = value ?? internal;
+    const setValue = (v: string) => {
+      if (onValueChange) onValueChange(v);
+      if (value === undefined) setInternal(v);
+    };
+    return (
       <div className={className}>
-        {children}
+        <Ctx.Provider value={{ value: current, setValue }}>{children}</Ctx.Provider>
       </div>
-    </TabsContext.Provider>
-  );
-};
+    );
+  }
 
-export const TabsList: React.FC<TabsListProps> = ({ className = '', children }) => {
-  return (
-    <div className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 ${className}`}>
-      {children}
-    </div>
-  );
-};
+  export function TabsList({ children, className }: { children: React.ReactNode; className?: string }) {
+    return <div className={className}>{children}</div>;
+  }
 
-export const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, className = '', children }) => {
-  const context = useContext(TabsContext);
-  if (!context) throw new Error('TabsTrigger must be used within Tabs');
+  export function TabsTrigger({
+    value,
+    children,
+    className,
+  }: {
+    value: string;
+    children: React.ReactNode;
+    className?: string;
+  }) {
+    const ctx = React.useContext(Ctx);
+    if (!ctx) return null;
+    const selected = ctx.value === value;
+    return (
+      <button
+        type="button"
+        aria-selected={selected}
+        className={className}
+        onClick={() => ctx.setValue(value)}
+      >
+        {children}
+      </button>
+    );
+  }
 
-  const { activeTab, setActiveTab } = context;
-  const isActive = activeTab === value;
+  export function TabsContent({
+    value,
+    children,
+    className,
+  }: {
+    value: string;
+    children: React.ReactNode;
+    className?: string;
+  }) {
+    const ctx = React.useContext(Ctx);
+    if (!ctx) return null;
+    if (ctx.value !== value) return null;
+    return <div className={className}>{children}</div>;
+  }
+}
 
-  return (
-    <button
-      type="button"
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-        isActive 
-          ? 'bg-white text-gray-950 shadow-sm' 
-          : 'hover:bg-gray-200 hover:text-gray-900'
-      } ${className}`}
-      onClick={() => setActiveTab(value)}
-    >
-      {children}
-    </button>
-  );
-};
-
-export const TabsContent: React.FC<TabsContentProps> = ({ value, className = '', children }) => {
-  const context = useContext(TabsContext);
-  if (!context) throw new Error('TabsContent must be used within Tabs');
-
-  const { activeTab } = context;
-  if (activeTab !== value) return null;
-
-  return (
-    <div className={`mt-2 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${className}`}>
-      {children}
-    </div>
-  );
-};
