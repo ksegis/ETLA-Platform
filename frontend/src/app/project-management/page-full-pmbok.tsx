@@ -231,7 +231,7 @@ export default function FullPMBOKProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log(\'loading full PMBOK project data for tenant:\', selectedTenant)
+      console.log("loading full PMBOK project data for tenant:", selectedTenant);
 
       // Load projects with all available fields
       try {
@@ -1148,7 +1148,7 @@ export default function FullPMBOKProjectManagementPage() {
                     ? `${filteredWorkRequests.length} of ${workRequests.length} work requests`
                     : `${filteredRisks.length} of ${risks.length} risks`
                   }
-                  {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
+                  {selectedTenant && <span className="ml-2">| Tenant ID: {selectedTenant}</span>}
                 </CardDescription>
               </div>
             </div>
