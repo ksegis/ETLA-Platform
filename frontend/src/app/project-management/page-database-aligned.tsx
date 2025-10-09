@@ -221,6 +221,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
   // Enhanced load data function with database-aligned queries
   const loadData = async () => {
+    const supabase = createSupabaseBrowserClient();
     if (!selectedTenant) {
       console.log('No tenant selected, skipping load')
       setloading(false)
@@ -232,18 +233,16 @@ export default function DatabaseAlignedProjectManagementPage() {
       setError(null)
       
       console.log('loading project data for tenant:', selectedTenant)
-
       // Load projects from project_charters table
       try {
-        const supabase = createSupabaseBrowserClient();
-        console.log('loading from project_charters table...')
+        console.log(\'loading from project_charters table...\');
         const { data: projectData, error: projectError } = await supabase
-          .from('project_charters')
-          .select('*')
-          .eq('tenant_id', selectedTenant)
-          .order('created_at', { ascending: false })
+          .from(\'project_charters\')
+          .select(\'*\')
+          .eq(\'tenant_id\', selectedTenant)
+          .order(\'created_at\', { ascending: false });
 
-        if (projectError) {
+        if (projectError) {{
           console.error('Project charters query error:', projectError)
           setError(`Failed to load projects: ${projectError.message}`)
         } else {
@@ -258,8 +257,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
       // Load work requests
       try {
-        const supabase = createSupabaseBrowserClient();
-        console.log(\'loading from work_requests table...\')
+        console.log('loading from work_requests table...')
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('*')
@@ -281,8 +279,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
       // Load risks from risk_register table
       try {
-        const supabase = createSupabaseBrowserClient();
-        console.log(\'loading from risk_register table...\')
+        console.log("loading from risk_register table...")
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('*')
