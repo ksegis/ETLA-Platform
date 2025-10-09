@@ -48,6 +48,106 @@ const navigation = [
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'talent-management', 'etl-cockpit'])
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // REDESIGNED NAVIGATION GROUPS - USER-FRIENDLY WORKFLOW ORIENTED
+  const navigationGroups: NavigationGroup[] = [
+    {
+      id: 'operations',
+      title: 'Operations',
+      icon: Briefcase,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-600',
+      hoverColor: 'hover:bg-blue-50',
+      textColor: 'text-blue-900',
+      items: [
+        { name: 'Work Requests', href: '/work-requests', icon: FileText },
+        { name: 'Project Management', href: '/project-management', icon: Calendar },
+        { name: 'Reporting', href: '/reporting', icon: TrendingUp },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true }
+      ]
+    },
+    {
+      id: 'talent-management',
+      title: 'Talent Management',
+      icon: Users2,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-600',
+      hoverColor: 'hover:bg-emerald-50',
+      textColor: 'text-emerald-900',
+      items: [
+        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3 },
+        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase },
+        { name: 'Candidates', href: '/talent/candidates', icon: Users },
+        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp },
+        { name: 'Interviews', href: '/talent/interviews', icon: Calendar },
+        { name: 'Offers', href: '/talent/offers', icon: FileText }
+      ]
+    },
+    {
+      id: 'etl-cockpit',
+      title: 'ETL Cockpit',
+      icon: Database,
+      color: 'text-green-600',
+      bgColor: 'bg-green-600',
+      hoverColor: 'hover:bg-green-50',
+      textColor: 'text-green-900',
+      items: [
+        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3 },
+        { name: 'Job Management', href: '/jobs', icon: Briefcase },
+        { name: 'Employee Data Processing', href: '/employees', icon: Users },
+        { name: 'Data Analytics', href: '/analytics', icon: Database },
+        { name: 'Audit Trail', href: '/audit', icon: Eye }
+      ]
+    },
+    {
+      id: 'data-management',
+      title: 'Data Management',
+      icon: Database,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-600',
+      hoverColor: 'hover:bg-indigo-50',
+      textColor: 'text-indigo-900',
+      items: [
+        { name: 'File Upload', href: '/upload', icon: Upload },
+        { name: 'Data Validation', href: '/validation', icon: CheckCircle },
+        { name: 'System Health', href: '/system-health', icon: Activity }
+      ]
+    },
+    {
+      id: 'configuration',
+      title: 'Configuration',
+      icon: Settings,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-600',
+      hoverColor: 'hover:bg-purple-50',
+      textColor: 'text-purple-900',
+      items: [
+        { name: 'System Settings', href: '/settings', icon: Settings },
+        { name: 'API Configuration', href: '/api-config', icon: Zap },
+        { name: 'Integration Settings', href: '/integrations', icon: Target }
+      ]
+    },
+    {
+      id: 'administration',
+      title: 'Administration',
+      icon: Shield,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-600',
+      hoverColor: 'hover:bg-orange-50',
+      textColor: 'text-orange-900',
+      items: [
+        { name: 'Access Control', href: '/admin/access-control', icon: Shield },
+        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
+        { name: 'Timecard Utilities', href: '/admin/timecard-utilities', icon: Clock },
+        { name: 'Employee Directory', href: '/employee-directory', icon: Users },
+        { name: 'Benefits Management', href: '/benefits', icon: Building },
+        { name: 'Payroll Management', href: '/payroll', icon: DollarSign }
+      ]
+    }
+  ]
 
   useEffect(() => {
     // Get current user

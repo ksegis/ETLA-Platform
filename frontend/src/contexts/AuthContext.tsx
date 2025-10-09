@@ -52,24 +52,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          role: 'user'
-        })
-        // Set a default tenant for demo purposes
-        setTenant({
-          id: '1',
-          name: 'Demo Company',
-          status: 'active'
-        })
-      } else {
-        setUser(null)
-        setTenant(null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, newSession: Session | null) => {
+        console.log('🔄 AuthProvider: Auth state changed:', event)
+        
+        try {
+          if (newSession) {
+            console.log('✅ AuthProvider: Setting new session and user')
+            setSession(newSession)
+            setUser(newSession.user)
+            
+            // Load tenant user with timeout protection
+            try {
+              await Promise.race([
+                loadTenantUser(newSession.user.id),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Tenant user load timeout')), 15000)
+                )
+              ])
+              console.log('✅ AuthProvider: Tenant user loaded successfully')
+            } catch (tenantError) {
+              console.warn('⚠️ AuthProvider: Failed to load tenant user:', tenantError)
+              // Continue with login even if tenant user fails to load
+              setTenantUser(null)
+            }
+          } else {
+            console.log('⚠️ AuthProvider: User signed out')
+            setUser(null)
+            setSession(null)
+            setTenantUser(null)
+          }
+        } catch (error) {
+          console.error('❌ AuthProvider: Error in auth state change:', error)
+        } finally {
+          // Always clear loading state
+          clearTimeout(initTimeout)
+          setLoading(false)
+          setIsStable(true)
+          updateServiceAuthContext()
+          console.log('✅ AuthProvider: Auth state change completed')
+        }
       }
       setLoading(false)
     })
