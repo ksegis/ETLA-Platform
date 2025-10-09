@@ -33,7 +33,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 import UserCreationModal from '@/components/UserCreationModal'
 import UserInviteModal from '@/components/UserInviteModal'
 
