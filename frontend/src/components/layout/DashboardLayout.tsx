@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'talent-management', 'etl-cockpit'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit', 'talent-management', 'administration'])
   const router = useRouter()
   const pathname = usePathname()
 
@@ -82,8 +82,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       items: [
         { name: 'Work Requests', href: '/work-requests', icon: FileText },
         { name: 'Project Management', href: '/project-management', icon: Calendar },
-        { name: 'Reporting', href: '/reporting', icon: TrendingUp },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true }
+        { name: 'Reporting Cockpit', href: '/reporting', icon: TrendingUp, isNew: true },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart }
       ]
     },
     {
@@ -148,6 +148,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       ]
     },
     {
+      id: 'talent-management',
+      title: 'Talent Management',
+      icon: Users2,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-600',
+      hoverColor: 'hover:bg-emerald-50',
+      textColor: 'text-emerald-900',
+      items: [
+        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3 },
+        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase },
+        { name: 'Candidates', href: '/talent/candidates', icon: Users },
+        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp },
+        { name: 'Interviews', href: '/talent/interviews', icon: Calendar },
+        { name: 'Offers', href: '/talent/offers', icon: FileText }
+      ]
+    },
+
+    {
       id: 'administration',
       title: 'Administration',
       icon: Shield,
@@ -173,8 +191,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
       } catch (error) {
-        console.log('Supabase not available, using demo user')
-        setUser({ email: 'demo@company.com' })
+        console.log('Supabase not available, user will remain null')
+        setUser(null)
       }
     }
 
@@ -366,7 +384,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.email || 'demo@company.com'}
+                  {user?.email || 'Loading...'}
                 </p>
                 <button
                   onClick={handleSignOut}
@@ -411,7 +429,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <div className="flex flex-col items-start">
                     <span className="text-xs text-gray-500 uppercase tracking-wide">Profile</span>
                     <span className="text-sm font-medium text-gray-900 truncate max-w-32">
-                      {user?.email || 'demo@company.com'}
+                      {user?.email || 'Loading...'}
                     </span>
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-400 ml-2" />
@@ -424,7 +442,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       {/* User Info Header */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {user?.email || 'demo@company.com'}
+                          {user?.email || 'Loading...'}
                         </p>
                         <p className="text-xs text-gray-500">
                           {user?.user_metadata?.full_name || 'User Account'}

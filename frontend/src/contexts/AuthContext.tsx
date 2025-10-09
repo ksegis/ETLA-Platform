@@ -58,11 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantUser, setTenantUser] = useState<TenantUser | null>(null)
 
   // Computed properties for RBAC
-  const isDemoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                     process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co' ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project') ||
-                     process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://your-project.supabase.co'
+  const isDemoMode = false // Disable demo mode - use real authentication
   const isAuthenticated = !!user && !!session && !loading
   const currentUserId = user?.id || null
   const currentTenantId = tenantUser?.tenant_id || null
@@ -101,7 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize authentication state
   useEffect(() => {
-    console.log('🔐 AuthProvider: Initializing authentication state')
+    console.log("🔐 AuthProvider: Initializing authentication state. Current user:", user?.id, "isStable:", isStable, "loading:", loading)
+
     
     // Add timeout to prevent infinite loading
     const initTimeout = setTimeout(() => {
@@ -218,8 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signIn = async (email: string, password: string) => {
-    console.log('🔐 AuthProvider: Starting sign in process')
+  const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -239,14 +235,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (error) {
       console.error('❌ AuthProvider: Sign in error:', error)
-      // Ensure loading state is cleared on exception
-      setLoading(false)
-      setIsStable(true)
-      return { error }
+      return { error: error as AuthError }
     }
   }
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -255,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (error) {
       console.error('❌ AuthProvider: Sign up error:', error)
-      return { error }
+      return { error: error as AuthError }
     }
   }
 
