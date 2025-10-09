@@ -59,7 +59,7 @@ import {
 } from "lucide-react";
 import { Tenant, User } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { FEATURES, PERMISSIONS } from "@/rbac/constants"; // Corrected import path
+import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants"; // Corrected import path
 import { usePathname } from 'next/navigation';
 
 // Define NavigationGroup and related types if not already defined globally or in a shared types file

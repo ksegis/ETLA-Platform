@@ -1,0 +1,493 @@
+/home/ubuntu/ETLA-Platform/frontend/src/app/admin/access-control/AccessControlClient.tsx:106:      return checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW);
+/home/ubuntu/ETLA-Platform/frontend/src/app/admin/access-control/actions.ts:13:    await assertPermission({ id: actorId }, FEATURES.ACCESS_CONTROL, PERMISSIONS.EDIT);
+/home/ubuntu/ETLA-Platform/frontend/src/app/admin/tenant-management/TenantManagementClient.tsx:150:    const hasAdminAccess = checkPermission(FEATURES.TENANT_MANAGEMENT, PERMISSIONS.VIEW);
+/home/ubuntu/ETLA-Platform/frontend/src/app/admin/tenant-management/TenantManagementClient.tsx:421:                Required permission: {PERMISSIONS.VIEW}
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:65:    checkPermission(`${featureSlug(feature)}:${PERMISSIONS.VIEW}`);
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:69:      `${featureSlug(feature)}:${PERMISSIONS.CREATE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:70:      `${featureSlug(feature)}:${PERMISSIONS.EDIT}`,
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:71:      `${featureSlug(feature)}:${PERMISSIONS.DELETE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:72:      `${featureSlug(feature)}:${PERMISSIONS.APPROVE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:166:      permission: PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:245:                permission={PERMISSIONS.VIEW}
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:358:                            permission={PERMISSIONS.VIEW}
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:367:                            permission={PERMISSIONS.VIEW}
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:376:                            permission={PERMISSIONS.VIEW}
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:385:                            permission={PERMISSIONS.VIEW}
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:623:                            permission={PERMISSIONS.CREATE}
+/home/ubuntu/ETLA-Platform/frontend/src/app/project-management/page-rbac.tsx:739:                    permission={PERMISSIONS.VIEW}
+/home/ubuntu/ETLA-Platform/frontend/src/app/work-requests/page-broken.tsx:530:              canManage(PERMISSIONS.WORK_REQUESTS_CREATE) && (
+/home/ubuntu/ETLA-Platform/frontend/src/app/work-requests/page-broken.tsx:681:            {canManage(PERMISSIONS.WORK_REQUESTS_CREATE) && workRequests.length === 0 && (
+/home/ubuntu/ETLA-Platform/frontend/src/app/work-requests/page-broken.tsx:753:                        {canManage(PERMISSIONS.WORK_REQUESTS_UPDATE) && (
+/home/ubuntu/ETLA-Platform/frontend/src/app/work-requests/page-broken.tsx:762:                        {canManage(PERMISSIONS.WORK_REQUESTS_DELETE) && (
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:31:    requiredPermission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:37:        requiredPermission: PERMISSIONS.WORK_REQUEST_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:43:        requiredPermission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:49:        requiredPermission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:55:        requiredPermission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:64:    requiredPermission: PERMISSIONS.WORK_REQUEST_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:71:    requiredPermission: PERMISSIONS.REPORTING_VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:77:        requiredPermission: PERMISSIONS.REPORTING_VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:83:        requiredPermission: PERMISSIONS.REPORTING_VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:92:    requiredPermission: PERMISSIONS.EDIT, // Assuming data management is a high-level permission
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:98:        requiredPermission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:104:        requiredPermission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:110:        requiredPermission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:119:    requiredPermission: PERMISSIONS.USER_READ, // Assuming benefits viewing requires user read
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:125:        requiredPermission: PERMISSIONS.USER_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:131:        requiredPermission: PERMISSIONS.TIMECARD_READ_ALL,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:140:    requiredPermission: PERMISSIONS.USER_READ, // General admin access requires user read
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:146:        requiredPermission: PERMISSIONS.USER_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:152:        requiredPermission: PERMISSIONS.USER_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:158:        requiredPermission: PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:164:        requiredPermission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:170:        requiredPermission: PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:380:    requiredPermission: PERMISSIONS.WORK_REQUEST_CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:388:    requiredPermission: PERMISSIONS.PROJECT_CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/components/NavigationRBAC.tsx:396:    requiredPermission: PERMISSIONS.EDIT, // Assuming file upload is a high-level permission
+/home/ubuntu/ETLA-Platform/frontend/src/components/PermissionGuards.tsx:24:  permission = PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/PermissionGuards.tsx:42:  permission = PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/PermissionGuards.tsx:58:  permission = PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/PermissionGuards.tsx:74:  permission = PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/PermissionGuards.tsx:158:  permission = PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:188:                    checkPermission(PERMISSIONS.USER_READ)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:193:                  {checkPermission(PERMISSIONS.USER_READ)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:202:                    checkPermission(PERMISSIONS.PROJECT_CREATE)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:207:                  {checkPermission(PERMISSIONS.PROJECT_CREATE)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:216:                    checkPermission(PERMISSIONS.REPORTING_VIEW)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:221:                  {checkPermission(PERMISSIONS.REPORTING_VIEW)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:230:                    checkPermission(PERMISSIONS.TENANT_UPDATE)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RBACTestPanel.tsx:235:                  {checkPermission(PERMISSIONS.TENANT_UPDATE)
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:20:    permission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:24:    permission: PERMISSIONS.PROJECT_CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:28:    permission: PERMISSIONS.WORK_REQUEST_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:32:    permission: PERMISSIONS.WORK_REQUEST_CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:36:    permission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:40:    permission: PERMISSIONS.PROJECT_CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:44:    permission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:48:    permission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:54:    permission: PERMISSIONS.WORK_REQUEST_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:58:    permission: PERMISSIONS.WORK_REQUEST_CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:64:    permission: PERMISSIONS.USER_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:68:    permission: PERMISSIONS.USER_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:72:    permission: PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:76:    permission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:80:    permission: PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:84:  "/reporting": { feature: "reporting", permission: PERMISSIONS.REPORTING_VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:87:    permission: PERMISSIONS.REPORTING_VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:91:    permission: PERMISSIONS.REPORTING_VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:97:    permission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:101:    permission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:105:    permission: PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:111:    permission: PERMISSIONS.USER_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:115:    permission: PERMISSIONS.TIMECARD_READ_ALL,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:119:    permission: PERMISSIONS.USER_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:279:        permission: PERMISSIONS.WORK_REQUEST_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:284:        permission: PERMISSIONS.WORK_REQUEST_UPDATE,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:289:        permission: PERMISSIONS.WORK_REQUEST_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:294:        permission: PERMISSIONS.PROJECT_READ,
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:389:    <RouteGuard feature="user" permission={PERMISSIONS.USER_READ}>
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:397:    <RouteGuard feature="tenant" permission={PERMISSIONS.VIEW}>
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:405:    <RouteGuard feature="project" permission={PERMISSIONS.PROJECT_READ}>
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:413:    <RouteGuard feature="work_request" permission={PERMISSIONS.WORK_REQUEST_READ}>
+/home/ubuntu/ETLA-Platform/frontend/src/components/RouteGuard.tsx:421:    <RouteGuard feature="reporting" permission={PERMISSIONS.REPORTING_VIEW}>
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:99:      UNIQUE_PERMISSIONS.map((permission) => ({
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:144:              permission === PERMISSIONS.MANAGE ||
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:145:              permission === PERMISSIONS.VIEW ||
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:146:              permission === PERMISSIONS.CREATE ||
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:147:              permission === PERMISSIONS.UPDATE
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:151:            return permission === PERMISSIONS.VIEW;
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:154:            return permission === PERMISSIONS.VIEW;
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:160:            return permission === PERMISSIONS.VIEW;
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:173:              permission === PERMISSIONS.VIEW ||
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:174:              permission === PERMISSIONS.CREATE ||
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:175:              permission === PERMISSIONS.UPDATE
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:183:            return permission === PERMISSIONS.VIEW;
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:186:            return permission === PERMISSIONS.CREATE;
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:192:            return permission === PERMISSIONS.VIEW;
+/home/ubuntu/ETLA-Platform/frontend/src/components/rbac/RolesPermissionsTab.tsx:412:                      {UNIQUE_PERMISSIONS.map((permission) => {
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:29:    permissions: Object.values(FEATURES).map((feature) => ({ feature, permission: CORE_PERMISSIONS.MANAGE })),
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:35:      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:36:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:37:      { feature: FEATURES.PROJECT_CHARTER, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:38:      { feature: FEATURES.RISK_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:39:      { feature: FEATURES.RESOURCE_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:40:      { feature: FEATURES.DASHBOARDS, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:41:      { feature: FEATURES.ANALYTICS, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:42:      { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:43:      { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:44:      { feature: FEATURES.DATA_VALIDATION, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:51:      { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:52:      { feature: FEATURES.ACCESS_CONTROL, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:53:      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:54:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:55:      { feature: FEATURES.DASHBOARDS, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:56:      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:57:      { feature: FEATURES.EMPLOYEE_RECORDS, permission: CORE_PERMISSIONS.MANAGE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:58:      { feature: FEATURES.FILE_UPLOAD, permission: CORE_PERMISSIONS.CREATE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:59:      { feature: FEATURES.DATA_VALIDATION, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:60:      { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:67:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.CREATE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:68:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:69:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.UPDATE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:70:      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:71:      { feature: FEATURES.DASHBOARDS, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:72:      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:73:      { feature: FEATURES.FILE_UPLOAD, permission: CORE_PERMISSIONS.CREATE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:74:      { feature: FEATURES.ACCESS_CONTROL, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:75:      { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:82:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.CREATE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:83:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:84:      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.UPDATE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:85:      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:86:      { feature: FEATURES.DASHBOARDS, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:87:      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:88:      { feature: FEATURES.FILE_UPLOAD, permission: CORE_PERMISSIONS.CREATE },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:89:      { feature: FEATURES.ACCESS_CONTROL, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:90:      { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:117:      case PERMISSIONS.JOB_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:118:      case PERMISSIONS.INTERVIEW_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:119:      case PERMISSIONS.OFFER_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:120:      case PERMISSIONS.DATA_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:121:      case PERMISSIONS.DATA_VALIDATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:122:      case PERMISSIONS.SYSTEM_SETTINGS_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:123:      case PERMISSIONS.API_CONFIG_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:124:      case PERMISSIONS.INTEGRATION_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:125:      case PERMISSIONS.EMPLOYEE_PROCESS:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:126:      case CORE_PERMISSIONS.MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:127:        return CORE_PERMISSIONS.MANAGE;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:129:      case PERMISSIONS.CANDIDATE_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:130:      case PERMISSIONS.DATA_PROCESS:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:131:      case PERMISSIONS.DATA_ANALYZE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:132:      case PERMISSIONS.AUDIT_VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:133:      case PERMISSIONS.SYSTEM_HEALTH_VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:134:      case PERMISSIONS.ADMIN_ACCESS:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:135:      case PERMISSIONS.EMPLOYEE_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:137:      case PERMISSIONS.USER_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:138:      case PERMISSIONS.PROJECT_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:139:      case PERMISSIONS.WORK_REQUEST_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:140:      case PERMISSIONS.REPORTING_VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:141:      case CORE_PERMISSIONS.VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:142:        return CORE_PERMISSIONS.VIEW;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:144:      case PERMISSIONS.WORK_REQUESTS_CREATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:145:      case CORE_PERMISSIONS.CREATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:146:        return CORE_PERMISSIONS.CREATE;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:148:      case PERMISSIONS.WORK_REQUESTS_UPDATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:149:      case CORE_PERMISSIONS.UPDATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:150:        return CORE_PERMISSIONS.UPDATE;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:152:      case PERMISSIONS.WORK_REQUESTS_DELETE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:153:      case CORE_PERMISSIONS.DELETE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:154:        return CORE_PERMISSIONS.DELETE;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:156:      case PERMISSIONS.FILE_UPLOAD:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:157:      case CORE_PERMISSIONS.IMPORT:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:158:        return CORE_PERMISSIONS.IMPORT;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:160:      case CORE_PERMISSIONS.EXPORT:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:161:        return CORE_PERMISSIONS.EXPORT;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:163:      case CORE_PERMISSIONS.APPROVE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:164:        return CORE_PERMISSIONS.APPROVE;
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:205:    if (isDemoMode || (tenantUser?.role as Role) === ROLES.HOST_ADMIN) return [CORE_PERMISSIONS.MANAGE];
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:214:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.CREATE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:215:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:218:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.UPDATE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:219:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:222:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.DELETE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:223:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:226:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.VIEW) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:227:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:234:   *    in which case we assume WORK_REQUESTS feature (to satisfy calls like canManage(PERMISSIONS.WORK_REQUESTS_CREATE)).
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:241:      if (perm === CORE_PERMISSIONS.MANAGE) return hasPermission(feature, CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:244:    return hasPermission(arg as Feature, CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:248:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.UPDATE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:249:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:252:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.VIEW) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:253:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:256:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.IMPORT) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:257:    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.ts:278:  const canManageUsers = () => hasPermission(FEATURES.USER_MANAGEMENT, CORE_PERMISSIONS.MANAGE);
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:31:      case PERMISSIONS.JOB_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:32:      case PERMISSIONS.INTERVIEW_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:33:      case PERMISSIONS.OFFER_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:34:      case PERMISSIONS.DATA_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:35:      case PERMISSIONS.DATA_VALIDATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:36:      case PERMISSIONS.SYSTEM_SETTINGS_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:37:      case PERMISSIONS.API_CONFIG_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:38:      case PERMISSIONS.INTEGRATION_MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:39:      case PERMISSIONS.EMPLOYEE_PROCESS:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:40:      case PERMISSIONS.MANAGE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:41:        return PERMISSIONS.MANAGE
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:43:      case PERMISSIONS.CANDIDATE_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:44:      case PERMISSIONS.DATA_PROCESS:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:45:      case PERMISSIONS.DATA_ANALYZE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:46:      case PERMISSIONS.AUDIT_VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:47:      case PERMISSIONS.SYSTEM_HEALTH_VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:48:      case PERMISSIONS.ADMIN_ACCESS:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:49:      case PERMISSIONS.EMPLOYEE_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:50:      case PERMISSIONS.TENANT_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:51:      case PERMISSIONS.USER_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:52:      case PERMISSIONS.PROJECT_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:53:      case PERMISSIONS.WORK_REQUEST_READ:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:54:      case PERMISSIONS.REPORTING_VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:55:      case PERMISSIONS.VIEW:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:56:        return PERMISSIONS.VIEW
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:58:      case PERMISSIONS.WORK_REQUESTS_CREATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:59:      case PERMISSIONS.CREATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:60:        return PERMISSIONS.CREATE
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:61:      case PERMISSIONS.WORK_REQUESTS_UPDATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:62:      case PERMISSIONS.UPDATE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:63:        return PERMISSIONS.UPDATE
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:64:      case PERMISSIONS.WORK_REQUESTS_DELETE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:65:      case PERMISSIONS.DELETE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:66:        return PERMISSIONS.DELETE
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:68:      case PERMISSIONS.FILE_UPLOAD:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:69:      case PERMISSIONS.IMPORT:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:70:        return PERMISSIONS.IMPORT
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:71:      case PERMISSIONS.EXPORT:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:72:        return PERMISSIONS.EXPORT
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:73:      case PERMISSIONS.APPROVE:
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:74:        return PERMISSIONS.APPROVE
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:113:    if (isDemoMode || (tenantUser?.role as Role) === ROLES.HOST_ADMIN) return [PERMISSIONS.MANAGE]
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:127:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.CREATE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:128:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:131:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.UPDATE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:132:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:135:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.DELETE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:136:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:139:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.VIEW) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:140:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:145:    hasPermission(resolveFeatureFromArg(arg), PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:148:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.UPDATE) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:149:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:152:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.VIEW) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:153:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:156:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.IMPORT) ||
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:157:    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/hooks/usePermissions.tsx:173:  const canManageUsers = () => hasPermission(FEATURES.USER_MANAGEMENT, PERMISSIONS.MANAGE)
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:79:  JOB_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:80:  CANDIDATE_READ: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:81:  INTERVIEW_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:82:  OFFER_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:84:  DATA_PROCESS: CORE_PERMISSIONS.PROCESS,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:85:  DATA_ANALYZE: CORE_PERMISSIONS.ANALYZE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:86:  DATA_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:87:  DATA_VALIDATE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:88:  FILE_UPLOAD: CORE_PERMISSIONS.IMPORT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:90:  AUDIT_VIEW: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:91:  SYSTEM_HEALTH_VIEW: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:92:  SYSTEM_SETTINGS_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:93:  API_CONFIG_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:94:  INTEGRATION_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:95:  ADMIN_ACCESS: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:97:  EMPLOYEE_READ: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:98:  EMPLOYEE_PROCESS: CORE_PERMISSIONS.PROCESS,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:99:  BENEFITS_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:100:  PAYROLL_MANAGE: CORE_PERMISSIONS.EDIT,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:103:  TENANT_READ: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:104:  USER_READ: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:105:  PROJECT_READ: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:106:  WORK_REQUEST_READ: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:107:  REPORTING_VIEW: CORE_PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:110:  WORK_REQUESTS_CREATE: CORE_PERMISSIONS.CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:111:  WORK_REQUESTS_UPDATE: CORE_PERMISSIONS.UPDATE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:112:  WORK_REQUESTS_DELETE: CORE_PERMISSIONS.DELETE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:143:    [FEATURES.MIGRATION_WORKBENCH]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:144:    [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:145:    [FEATURES.DATA_VALIDATION]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:146:    [FEATURES.EMPLOYEE_DATA_PROCESSING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:147:    [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:148:    [FEATURES.WORK_REQUESTS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:149:    [FEATURES.PROJECT_CHARTER]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:150:    [FEATURES.RISK_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:151:    [FEATURES.RESOURCE_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:152:    [FEATURES.REPORTING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:153:    [FEATURES.DASHBOARDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:154:    [FEATURES.ANALYTICS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:155:    [FEATURES.HISTORICAL_DATA]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:156:    [FEATURES.USER_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:157:    [FEATURES.ACCESS_CONTROL]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:158:    [FEATURES.TENANT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:159:    [FEATURES.SYSTEM_SETTINGS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:160:    [FEATURES.AUDIT_LOGS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:161:    [FEATURES.AUDIT]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:162:    [FEATURES.SYSTEM_HEALTH]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:163:    [FEATURES.API_CONFIG]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:164:    [FEATURES.INTEGRATIONS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:165:    [FEATURES.EMPLOYEES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:166:    [FEATURES.EMPLOYEE_RECORDS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:167:    [FEATURES.BENEFITS_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:168:    [FEATURES.PAYROLL_PROCESSING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:169:    [FEATURES.TALENT_JOBS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:170:    [FEATURES.TALENT_CANDIDATES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:171:    [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:172:    [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:175:    [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:176:    [FEATURES.DATA_VALIDATION]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:177:    [FEATURES.EMPLOYEE_DATA_PROCESSING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:178:    [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:179:    [FEATURES.WORK_REQUESTS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:180:    [FEATURES.PROJECT_CHARTER]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:181:    [FEATURES.RISK_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:182:    [FEATURES.RESOURCE_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:183:    [FEATURES.REPORTING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:184:    [FEATURES.DASHBOARDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:185:    [FEATURES.ANALYTICS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:186:    [FEATURES.HISTORICAL_DATA]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:187:    [FEATURES.USER_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:188:    [FEATURES.ACCESS_CONTROL]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:189:    [FEATURES.TENANT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:190:    [FEATURES.SYSTEM_SETTINGS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:191:    [FEATURES.AUDIT_LOGS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:192:    [FEATURES.AUDIT]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:193:    [FEATURES.SYSTEM_HEALTH]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:194:    [FEATURES.API_CONFIG]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:195:    [FEATURES.INTEGRATIONS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:196:    [FEATURES.EMPLOYEES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:197:    [FEATURES.EMPLOYEE_RECORDS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:198:    [FEATURES.BENEFITS_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:199:    [FEATURES.PAYROLL_PROCESSING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:200:    [FEATURES.TALENT_JOBS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:201:    [FEATURES.TALENT_CANDIDATES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:202:    [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:203:    [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:206:    [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:207:    [FEATURES.DATA_VALIDATION]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:208:    [FEATURES.EMPLOYEE_DATA_PROCESSING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:209:    [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:210:    [FEATURES.WORK_REQUESTS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:211:    [FEATURES.PROJECT_CHARTER]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:212:    [FEATURES.RISK_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:213:    [FEATURES.RESOURCE_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:214:    [FEATURES.REPORTING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:215:    [FEATURES.DASHBOARDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:216:    [FEATURES.ANALYTICS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:217:    [FEATURES.HISTORICAL_DATA]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:218:    [FEATURES.USER_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:219:    [FEATURES.ACCESS_CONTROL]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:220:    [FEATURES.SYSTEM_SETTINGS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:221:    [FEATURES.AUDIT_LOGS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:222:    [FEATURES.AUDIT]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:223:    [FEATURES.SYSTEM_HEALTH]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:224:    [FEATURES.EMPLOYEES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:225:    [FEATURES.EMPLOYEE_RECORDS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:226:    [FEATURES.BENEFITS_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:227:    [FEATURES.PAYROLL_PROCESSING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:228:    [FEATURES.TALENT_JOBS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:229:    [FEATURES.TALENT_CANDIDATES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:230:    [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:231:    [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:234:    [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:235:    [FEATURES.DATA_VALIDATION]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:236:    [FEATURES.EMPLOYEE_DATA_PROCESSING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:237:    [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:238:    [FEATURES.WORK_REQUESTS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:239:    [FEATURES.PROJECT_CHARTER]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:240:    [FEATURES.RISK_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:241:    [FEATURES.RESOURCE_MANAGEMENT]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:242:    [FEATURES.REPORTING]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:243:    [FEATURES.DASHBOARDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:244:    [FEATURES.ANALYTICS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:245:    [FEATURES.HISTORICAL_DATA]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:246:    [FEATURES.EMPLOYEES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:247:    [FEATURES.EMPLOYEE_RECORDS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.EXPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:248:    [FEATURES.BENEFITS_MANAGEMENT]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:249:    [FEATURES.PAYROLL_PROCESSING]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:250:    [FEATURES.TALENT_JOBS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:251:    [FEATURES.TALENT_CANDIDATES]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:252:    [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:253:    [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:256:    [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:257:    [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:258:    [FEATURES.WORK_REQUESTS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:259:    [FEATURES.REPORTING]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:260:    [FEATURES.DASHBOARDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:261:    [FEATURES.EMPLOYEES]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:262:    [FEATURES.EMPLOYEE_RECORDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:263:    [FEATURES.TALENT_JOBS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:264:    [FEATURES.TALENT_CANDIDATES]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:265:    [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:266:    [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:269:    [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:270:    [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:271:    [FEATURES.WORK_REQUESTS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:272:    [FEATURES.REPORTING]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:273:    [FEATURES.DASHBOARDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:274:    [FEATURES.EMPLOYEES]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:275:    [FEATURES.EMPLOYEE_RECORDS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:276:    [FEATURES.TALENT_JOBS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:277:    [FEATURES.TALENT_CANDIDATES]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:278:    [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:279:    [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW],
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:309:  VIEW:                 PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:310:  CREATE:               PERMISSIONS.CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:311:  EDIT:                 PERMISSIONS.UPDATE, // EDIT -> UPDATE
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:312:  DELETE:               PERMISSIONS.DELETE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:313:  APPROVE:              PERMISSIONS.APPROVE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:314:  WORK_REQUESTS_CREATE: PERMISSIONS.WORK_REQUESTS_CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:315:  WORK_REQUESTS_UPDATE: PERMISSIONS.WORK_REQUESTS_UPDATE,
+/home/ubuntu/ETLA-Platform/frontend/src/rbac/constants/index.ts:316:  WORK_REQUESTS_DELETE: PERMISSIONS.WORK_REQUESTS_DELETE,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:57:      PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:92:      PERMISSIONS.CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:133:      PERMISSIONS.UPDATE,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:168:      PERMISSIONS.UPDATE,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:203:      PERMISSIONS.UPDATE,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:240:      PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:270:      PERMISSIONS.CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:310:      PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:340:      PERMISSIONS.CREATE,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:380:      PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/services/pmbok_service_rbac.ts:418:      PERMISSIONS.VIEW,
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:34:          "checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW) returns true",
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:36:          p.checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:42:          "checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE) returns false",
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:44:          !p.checkPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE),
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:245:            {checkPermission(FEATURES.WORK_REQUESTS as any, PERMISSIONS.VIEW)
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:251:            {checkPermission(FEATURES.WORK_REQUESTS as any, PERMISSIONS.CREATE)
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:259:              PERMISSIONS.UPDATE,
+/home/ubuntu/ETLA-Platform/frontend/src/tests/rbac-test.tsx:268:              PERMISSIONS.DELETE,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:48:    `${FEATURES.PROJECT_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:49:    `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:50:    `${FEATURES.PROJECT_CHARTER}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:51:    `${FEATURES.RISK_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:52:    `${FEATURES.RESOURCE_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:53:    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:54:    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:55:    `${FEATURES.ANALYTICS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:56:    `${FEATURES.USER_MANAGEMENT}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:57:    `${FEATURES.MIGRATION_WORKBENCH}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:58:    `${FEATURES.DATA_VALIDATION}:${PERMISSIONS.VIEW}`
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:61:    `${FEATURES.USER_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:62:    `${FEATURES.ACCESS_CONTROL}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:63:    `${FEATURES.PROJECT_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:64:    `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:65:    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:66:    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:67:    `${FEATURES.BENEFITS_MANAGEMENT}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:68:    `${FEATURES.EMPLOYEE_RECORDS}:${PERMISSIONS.MANAGE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:69:    `${FEATURES.FILE_UPLOAD}:${PERMISSIONS.CREATE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:70:    `${FEATURES.DATA_VALIDATION}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:71:    `${FEATURES.MIGRATION_WORKBENCH}:${PERMISSIONS.VIEW}`
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:74:    `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.CREATE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:75:    `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:76:    `${FEATURES.WORK_REQUESTS}:${PERMISSIONS.UPDATE}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:77:    `${FEATURES.PROJECT_MANAGEMENT}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:78:    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:79:    `${FEATURES.DASHBOARDS}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:80:    `${FEATURES.BENEFITS_MANAGEMENT}:${PERMISSIONS.VIEW}`,
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:81:    `${FEATURES.FILE_UPLOAD}:${PERMISSIONS.CREATE}`
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:121:  const managePermissionKey = `${feature}:${PERMISSIONS.MANAGE}`
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:122:  if (permission !== PERMISSIONS.MANAGE && rolePermissions.includes(managePermissionKey)) {
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:218:    hasServicePermission(context || getServiceAuthContext(), FEATURES.PROJECT_MANAGEMENT, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:221:    hasServicePermission(context || getServiceAuthContext(), FEATURES.PROJECT_MANAGEMENT, PERMISSIONS.CREATE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:224:    hasServicePermission(context || getServiceAuthContext(), FEATURES.PROJECT_MANAGEMENT, PERMISSIONS.UPDATE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:227:    hasServicePermission(context || getServiceAuthContext(), FEATURES.PROJECT_MANAGEMENT, PERMISSIONS.DELETE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:231:    hasServicePermission(context || getServiceAuthContext(), FEATURES.WORK_REQUESTS, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:234:    hasServicePermission(context || getServiceAuthContext(), FEATURES.WORK_REQUESTS, PERMISSIONS.CREATE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:237:    hasServicePermission(context || getServiceAuthContext(), FEATURES.WORK_REQUESTS, PERMISSIONS.UPDATE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:240:    hasServicePermission(context || getServiceAuthContext(), FEATURES.WORK_REQUESTS, PERMISSIONS.UPDATE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:244:    hasServicePermission(context || getServiceAuthContext(), FEATURES.RISK_MANAGEMENT, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:247:    hasServicePermission(context || getServiceAuthContext(), FEATURES.RISK_MANAGEMENT, PERMISSIONS.MANAGE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:251:    hasServicePermission(context || getServiceAuthContext(), FEATURES.USER_MANAGEMENT, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:254:    hasServicePermission(context || getServiceAuthContext(), FEATURES.USER_MANAGEMENT, PERMISSIONS.MANAGE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:258:    hasServicePermission(context || getServiceAuthContext(), FEATURES.DASHBOARDS, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:261:    hasServicePermission(context || getServiceAuthContext(), FEATURES.DASHBOARDS, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:265:    hasServicePermission(context || getServiceAuthContext(), FEATURES.FILE_UPLOAD, PERMISSIONS.CREATE),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:269:    hasServicePermission(context || getServiceAuthContext(), FEATURES.MIGRATION_WORKBENCH, PERMISSIONS.VIEW),
+/home/ubuntu/ETLA-Platform/frontend/src/utils/serviceAuth.ts:272:    hasServicePermission(context || getServiceAuthContext(), FEATURES.MIGRATION_WORKBENCH, PERMISSIONS.MANAGE)

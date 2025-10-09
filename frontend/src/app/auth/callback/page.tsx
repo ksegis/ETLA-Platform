@@ -11,6 +11,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        const supabase = createSupabaseBrowserClient();
         // Handle the OAuth callback
         const { data, error } = await supabase.auth.getSession()
         

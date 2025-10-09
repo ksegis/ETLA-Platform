@@ -46,7 +46,7 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-
+      const supabase = createSupabaseBrowserClient();
       // Fetch recent ETL jobs
       const { data: jobsData, error: jobsError } = await supabase
         .from('etl_jobs')

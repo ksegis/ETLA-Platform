@@ -3,7 +3,7 @@
 // src/hooks/usePermissions.tsx
 import { useEffect, useState, ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { ROLES, FEATURES, PERMISSIONS, ROLE_MATRIX } from '@/rbac/constants';
+import { ROLES, FEATURES, CORE_PERMISSIONS, PERMISSIONS, ROLE_MATRIX } from '@/rbac/constants';
 
 /* =========================
  * Hook
@@ -37,8 +37,8 @@ export function usePermissions() {
       case PERMISSIONS.API_CONFIG_MANAGE:
       case PERMISSIONS.INTEGRATION_MANAGE:
       case PERMISSIONS.EMPLOYEE_PROCESS:
-      case PERMISSIONS.MANAGE:
-        return PERMISSIONS.MANAGE
+      case CORE_PERMISSIONS.MANAGE:
+        return CORE_PERMISSIONS.MANAGE
 
       case PERMISSIONS.CANDIDATE_READ:
       case PERMISSIONS.DATA_PROCESS:
@@ -52,26 +52,26 @@ export function usePermissions() {
       case PERMISSIONS.PROJECT_READ:
       case PERMISSIONS.WORK_REQUEST_READ:
       case PERMISSIONS.REPORTING_VIEW:
-      case PERMISSIONS.VIEW:
-        return PERMISSIONS.VIEW
+      case CORE_PERMISSIONS.VIEW:
+        return CORE_PERMISSIONS.VIEW
 
       case PERMISSIONS.WORK_REQUESTS_CREATE:
-      case PERMISSIONS.CREATE:
-        return PERMISSIONS.CREATE
+      case CORE_PERMISSIONS.CREATE:
+        return CORE_PERMISSIONS.CREATE
       case PERMISSIONS.WORK_REQUESTS_UPDATE:
-      case PERMISSIONS.UPDATE:
-        return PERMISSIONS.UPDATE
+      case CORE_PERMISSIONS.UPDATE:
+        return CORE_PERMISSIONS.UPDATE
       case PERMISSIONS.WORK_REQUESTS_DELETE:
-      case PERMISSIONS.DELETE:
-        return PERMISSIONS.DELETE
+      case CORE_PERMISSIONS.DELETE:
+        return CORE_PERMISSIONS.DELETE
 
       case PERMISSIONS.FILE_UPLOAD:
-      case PERMISSIONS.IMPORT:
-        return PERMISSIONS.IMPORT
-      case PERMISSIONS.EXPORT:
-        return PERMISSIONS.EXPORT
-      case PERMISSIONS.APPROVE:
-        return PERMISSIONS.APPROVE
+      case CORE_PERMISSIONS.IMPORT:
+        return CORE_PERMISSIONS.IMPORT
+      case CORE_PERMISSIONS.EXPORT:
+        return CORE_PERMISSIONS.EXPORT
+      case CORE_PERMISSIONS.APPROVE:
+        return CORE_PERMISSIONS.APPROVE
 
       default:
         return p
@@ -110,7 +110,7 @@ export function usePermissions() {
   }
 
   function getPermissionLevel(feature: Feature): Permission[] {
-    if (isDemoMode || (tenantUser?.role as Role) === ROLES.HOST_ADMIN) return [PERMISSIONS.MANAGE]
+    if (isDemoMode || (tenantUser?.role as Role) === ROLES.HOST_ADMIN) return [CORE_PERMISSIONS.MANAGE]
     if (!isAuthenticated || !tenantUser) return []
     return userPermissions
       .filter((p) => p.feature === feature)
@@ -124,37 +124,42 @@ export function usePermissions() {
   }
 
   const canCreate = (f: Feature | string) =>
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.CREATE) ||
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.CREATE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE)
 
   const canUpdate = (f: Feature | string) =>
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.UPDATE) ||
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.UPDATE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE)
 
   const canDelete = (f: Feature | string) =>
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.DELETE) ||
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.DELETE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE)
 
   const canView = (f: Feature | string) =>
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.VIEW) ||
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.VIEW) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE) ||
     canCreate(f) ||
     canUpdate(f)
 
-  const canManage = (arg: Feature | string): boolean =>
-    hasPermission(resolveFeatureFromArg(arg), PERMISSIONS.MANAGE)
+  const canManage = (arg: Feature | string): boolean => {
+    if (typeof arg !== 'string') {
+      return hasPermission(arg, CORE_PERMISSIONS.MANAGE);
+    }
+    const feature = resolveFeatureFromArg(arg);
+    return hasPermission(feature, CORE_PERMISSIONS.MANAGE);
+  };
 
   const canApprove = (f: Feature | string) =>
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.UPDATE) ||
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.UPDATE) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE)
 
   const canExport = (f: Feature | string) =>
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.VIEW) ||
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.VIEW) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE)
 
   const canImport = (f: Feature | string) =>
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.IMPORT) ||
-    hasPermission(resolveFeatureFromArg(f), PERMISSIONS.MANAGE)
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.IMPORT) ||
+    hasPermission(resolveFeatureFromArg(f), CORE_PERMISSIONS.MANAGE)
 
   const getAccessibleFeatures = (): Feature[] => {
     if (isDemoMode) return Object.values(FEATURES)
@@ -170,7 +175,7 @@ export function usePermissions() {
     )
 
   const isHostAdmin = () => String(tenantUser?.role) === ROLES.HOST_ADMIN
-  const canManageUsers = () => hasPermission(FEATURES.USER_MANAGEMENT, PERMISSIONS.MANAGE)
+  const canManageUsers = () => hasPermission(FEATURES.USER_MANAGEMENT, CORE_PERMISSIONS.MANAGE)
   const canAccessAdmin = () =>
     canAccessFeature(FEATURES.ACCESS_CONTROL) ||
     canAccessFeature(FEATURES.USER_MANAGEMENT) ||

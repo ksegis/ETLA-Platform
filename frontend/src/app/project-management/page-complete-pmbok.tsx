@@ -185,6 +185,7 @@ export default function ProjectManagementPage() {
     setError(null)
     
     try {
+      const supabase = createSupabaseBrowserClient();
       // Load projects with error handling
       try {
         const { data: projectsData, error: projectsError } = await supabase
@@ -298,6 +299,7 @@ export default function ProjectManagementPage() {
         updated_at: new Date().toISOString()
       }
 
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from('project_charters')
         .insert([newProject])
@@ -318,9 +320,10 @@ export default function ProjectManagementPage() {
     }
   }
 
-  // Update project
-  const handleUpdateProject = async (projectId: string, updates: Partial<ProjectCharter>) => {
+  // Update p  const handleUpdateProject = async (projectId: string, updates: Partial<ProjectCharter>) => {
     try {
+      const supabase = createSupabaseBrowserClient();
+
       const { data, error } = await supabase
         .from('project_charters')
         .update({
@@ -351,6 +354,7 @@ export default function ProjectManagementPage() {
     if (!confirm('Are you sure you want to delete this project?')) return
 
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase
         .from('project_charters')
         .delete()

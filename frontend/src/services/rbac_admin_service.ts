@@ -128,7 +128,8 @@ export class RBACAdminService {
           description: `${permission.charAt(0).toUpperCase() + permission.slice(1)} ${feature.replace(/-/g, " ")}`
         })
       })
-    })   return catalog
+    })
+    return catalog
   }
 
   /**

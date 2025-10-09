@@ -65,6 +65,7 @@ export default function HRAnalyticsDashboard() {
     setError(null);
     
     try {
+      const supabase = createSupabaseBrowserClient();
       // Load employee metrics - try with tenant first, fallback to all data
       let employeesQuery = supabase.from('employees').select('*');
       if (selectedTenant) {

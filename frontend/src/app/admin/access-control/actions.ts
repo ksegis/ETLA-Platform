@@ -2,7 +2,7 @@
 
 import { RBACAdminService } from '@/services/rbac_admin_service';
 import { RBACApplyChangesRequest } from '@/types';
-import { FEATURES, PERMISSIONS } from '@/rbac/constants';
+import { FEATURES, PERMISSIONS, ROLES, Role } from '@/rbac/constants';
 import { logger } from '@/lib/logger';
 import { assertPermission } from '@/server/rbac';
 
@@ -10,7 +10,7 @@ export async function applyRbacChangesAction(request: RBACApplyChangesRequest, a
   try {
     // Server-side permission enforcement
     // Assuming the actor needs to have 'EDIT' permission on 'ACCESS_CONTROL' feature to apply RBAC changes
-    await assertPermission({ id: actorId }, FEATURES.ACCESS_CONTROL, PERMISSIONS.EDIT);
+    await assertPermission({ userId: actorId, tenantId: request.tenantId, role: ROLES.HOST_ADMIN as Role }, FEATURES.ACCESS_CONTROL, PERMISSIONS.EDIT);
 
     // If permission is granted, proceed with applying changes
     const result = await RBACAdminService.applyChanges(request);

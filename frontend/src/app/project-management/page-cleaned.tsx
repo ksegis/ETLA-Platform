@@ -81,7 +81,7 @@ export default function ProjectManagementPage() {
       setError(null)
       
    console.log('loading project data for tenant:', selectedTenant);
-
+      const supabase = createSupabaseBrowserClient();
       const { data: projectData, error: projectError } = await supabase
         .from('project_charters')
         .select('*')

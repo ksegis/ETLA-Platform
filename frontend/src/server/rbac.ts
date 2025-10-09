@@ -1,7 +1,7 @@
 // server-safe RBAC
 import { ROLES, FEATURES, PERMISSIONS, ROLE_MATRIX } from "@/rbac/constants";
 
-type ActorCtx = { userId: string; tenantId: string; role: keyof typeof ROLES };
+type ActorCtx = { userId: string; tenantId: string; role: (typeof ROLES)[keyof typeof ROLES] };
 
 export function assertPermission(
   actor: ActorCtx,
