@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
@@ -22,23 +23,45 @@ import { Button } from '@/components/ui/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/Input';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 
-/* ---------- dynamic imports ---------- */
+/* ---------- dynamic imports (typed) ---------- */
 const RBACMatrixGrid = dynamic(
   () => import('@/components/rbac/RBACMatrixGrid'),
   { ssr: false }
 );
-const RolesPermissionsTab = dynamic(
-  () => import('@/components/rbac/RolesPermissionsTab'),
+
+type RolesPermissionsTabProps = { selectedTenantId?: string };
+const RolesPermissionsTab = dynamic<RolesPermissionsTabProps>(
+  () =>
+    import('@/components/rbac/RolesPermissionsTab').then(
+      (m) => (m.default || m.RolesPermissionsTab) as React.ComponentType<RolesPermissionsTabProps>
+    ),
   { ssr: false }
 );
-const UserDetailPanel = dynamic(
-  () => import('@/components/rbac/UserDetailPanel').then(m => m.UserDetailPanel as any),
+
+type UserDetailPanelProps = {
+  userId: string;
+  tenantId: string;
+  onClose: () => void;
+  userDetail: RBACUserDetail | null;
+  loading: boolean;
+  isHostAdmin: boolean;
+  isAdmin: boolean;
+};
+const UserDetailPanel = dynamic<UserDetailPanelProps>(
+  () =>
+    import('@/components/rbac/UserDetailPanel').then(
+      (m) => (m.UserDetailPanel as React.ComponentType<UserDetailPanelProps>)
+    ),
   { ssr: false }
 );
-/* ------------------------------------- */
+/* -------------------------------------------- */
 
 type TabKey = 'users' | 'roles' | 'invitations' | 'notifications';
 
@@ -70,7 +93,9 @@ export default function AccessControlClient() {
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   const canViewAccess = useMemo(() => {
@@ -134,7 +159,10 @@ export default function AccessControlClient() {
         if (!mounted.current || controller.signal.aborted) return;
 
         const userIds = fetchedUsers.map(u => u.userId);
-        const effectivePermissions = await RBACAdminService.getEffectivePermissions(selectedTenant.id, userIds);
+        const effectivePermissions = await RBACAdminService.getEffectivePermissions(
+          selectedTenant.id,
+          userIds
+        );
 
         if (!mounted.current || controller.signal.aborted) return;
 
@@ -176,7 +204,9 @@ export default function AccessControlClient() {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [selectedUserId, selectedTenant?.id]);
 
   const handleCellClick = (userId: string, permissionId: string) => {
@@ -221,7 +251,7 @@ export default function AccessControlClient() {
       await RBACAdminService.applyChanges(req);
       setDraftChanges(new Map());
       setChangeQueue([]);
-      setSearchQuery(q => q);
+      setSearchQuery(q => q); // reload via effect
     } catch (e) {
       console.error('AccessControl: applyChanges failed', e);
     } finally {
@@ -244,7 +274,6 @@ export default function AccessControlClient() {
               </div>
             </CardTitle>
           </CardHeader>
-
           <CardContent>
             <Tabs
               value={activeTab}
@@ -258,7 +287,6 @@ export default function AccessControlClient() {
                   <TabsTrigger value="invitations">Invitations</TabsTrigger>
                   <TabsTrigger value="notifications">Notifications</TabsTrigger>
                 </TabsList>
-
                 <div className="flex space-x-2">
                   <Input
                     placeholder="Search users..."
@@ -279,7 +307,9 @@ export default function AccessControlClient() {
                     </SelectTrigger>
                     <SelectContent>
                       {tenants.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -298,7 +328,13 @@ export default function AccessControlClient() {
                 {pendingChangesCount > 0 && (
                   <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white p-3 rounded-lg shadow-lg flex items-center space-x-4 z-50">
                     <span>{pendingChangesCount} pending changes</span>
-                    <Button variant="secondary" onClick={() => { setDraftChanges(new Map()); setChangeQueue([]); }}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setDraftChanges(new Map());
+                        setChangeQueue([]);
+                      }}
+                    >
                       Discard
                     </Button>
                     <Button onClick={handleApplyChanges}>Apply Changes</Button>
@@ -310,13 +346,8 @@ export default function AccessControlClient() {
                 <RolesPermissionsTab selectedTenantId={selectedTenant?.id} />
               </TabsContent>
 
-              <TabsContent value="invitations">
-                Invitations content here.
-              </TabsContent>
-
-              <TabsContent value="notifications">
-                Notifications content here.
-              </TabsContent>
+              <TabsContent value="invitations">Invitations content here.</TabsContent>
+              <TabsContent value="notifications">Notifications content here.</TabsContent>
             </Tabs>
           </CardContent>
         </Card>
@@ -331,7 +362,10 @@ export default function AccessControlClient() {
             userDetail={userDetail}
             loading={userDetailLoading}
             isHostAdmin={currentUserRole === ROLES.HOST_ADMIN}
-            isAdmin={currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.CLIENT_ADMIN}
+            isAdmin={
+              currentUserRole === ROLES.HOST_ADMIN ||
+              currentUserRole === ROLES.CLIENT_ADMIN
+            }
           />
         </div>
       )}
