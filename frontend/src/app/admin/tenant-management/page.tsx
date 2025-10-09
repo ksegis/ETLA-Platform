@@ -599,73 +599,57 @@ export default function TenantManagementPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Create Tenant Modal */}
-        <Dialog
-          open={showCreateTenantModal}
-          onOpenChange={setShowCreateTenantModal}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Tenant</DialogTitle>
-              <DialogDescription>
-                Enter the details for the new tenant.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tenant-name" className="text-right">
-                  Name
-                </Label>
-                <Input
+      {/* Create Tenant Modal */}
+      {showCreateTenantModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Create New Tenant</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tenant Name
+                </label>
+                <input
                   id="tenant-name"
-                  value={newTenant.name}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, name: e.target.value })
-                  }
-                  className="col-span-3"
+                  type="text"
+                  placeholder="Enter tenant name"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tenant-code" className="text-right">
-                  Code
-                </Label>
-                <Input
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tenant Code
+                </label>
+                <input
                   id="tenant-code"
-                  value={newTenant.code}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, code: e.target.value })
-                  }
-                  className="col-span-3"
+                  type="text"
+                  placeholder="Enter tenant code"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tenant-type" className="text-right">
-                  Type
-                </Label>
-                <Input
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tenant Type
+                </label>
+                <select
                   id="tenant-type"
-                  value={newTenant.tenant_type}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, tenant_type: e.target.value })
-                  }
-                  className="col-span-3"
-                />
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select tenant type</option>
+                  <option value="host">Host</option>
+                  <option value="primary">Primary</option>
+                  <option value="sub">Sub-client</option>
+                </select>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="contact-email" className="text-right">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Contact Email
-                </Label>
-                <Input
-                  id="contact-email"
+                </label>
+                <input
+                  id="tenant-contact-email"
                   type="email"
-                  value={newTenant.contact_email}
-                  onChange={(e) =>
-                    setNewTenant({
-                      ...newTenant,
-                      contact_email: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
+                  placeholder="Enter contact email"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -673,9 +657,29 @@ export default function TenantManagementPage() {
               <Button onClick={() => createTenant(newTenant)}>
                 Create Tenant
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <Button
+                onClick={() => {
+                  const nameInput = document.getElementById('tenant-name') as HTMLInputElement
+                  const codeInput = document.getElementById('tenant-code') as HTMLInputElement
+                  const typeSelect = document.getElementById('tenant-type') as HTMLSelectElement
+                  const emailInput = document.getElementById('tenant-contact-email') as HTMLInputElement
+                  
+                  if (nameInput.value && codeInput.value && typeSelect.value && emailInput.value) {
+                    createTenant({
+                      name: nameInput.value,
+                      code: codeInput.value,
+                      tenant_type: typeSelect.value,
+                      contact_email: emailInput.value
+                    })
+                  }
+                }}
+              >
+                Create
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </DashboardLayout>
   );

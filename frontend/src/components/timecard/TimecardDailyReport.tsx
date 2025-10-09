@@ -1,259 +1,267 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/Badge'
 import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select'
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/Table'
+import { 
+  AlertTriangle, 
   Calendar, 
-  Download, 
   Clock, 
-  User, 
-  Building, 
-  FileSpreadsheet, 
-  Edit3,
-  Search,
-  Filter,
-  RefreshCw
-} from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useTenant } from '@/contexts/TenantContext';
-import { timecardService, TimecardDailySummary, GetDailySummariesParams } from '@/services/timecardService';
-import CorrectionModal from './CorrectionModal';
-import { exportToCSV, exportToExcel } from '@/utils/exportUtils';
+  Download, 
+  Edit, 
+  Filter, 
+  RefreshCw, 
+  Search, 
+  User 
+} from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useTenant } from '@/contexts/TenantContext'
+import timecardService, { TimecardDailySummaryV2, TimecardFilters } from '@/services/timecardService'
+import { CorrectionModal } from './CorrectionModal'
 
 interface TimecardDailyReportProps {
-  className?: string;
+  className?: string
 }
 
 export default function TimecardDailyReport({ className = '' }: TimecardDailyReportProps) {
-  const { user } = useAuth();
-  const { selectedTenant: contextTenant } = useTenant();
+  const { user } = useAuth()
+  const { selectedTenant: contextTenant } = useTenant()
   
   // State
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [summaries, setSummaries] = useState<TimecardDailySummary[]>([]);
-  const [employees, setEmployees] = useState<Array<{
-    employee_ref: string;
-    employee_name: string;
-    employee_code: string;
-  }>>([]);
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<TimecardDailySummaryV2[]>([])
   const [tenants, setTenants] = useState<Array<{
-    id: string;
-    name: string;
-    legal_name: string;
-  }>>([]);
+    id: string
+    name: string
+    legal_name: string
+  }>>([])
+  const [employees, setEmployees] = useState<Array<{
+    employee_ref: string
+    employee_name: string
+    employee_id?: string
+    employee_code?: string
+  }>>([])
 
-  // Filters
-  const [selectedTenant, setSelectedTenant] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  // Filter state
+  const [selectedTenant, setSelectedTenant] = useState<string>('')
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('')
+  const [searchTerm, setSearchTerm] = useState<string>('')
 
-  // Correction modal
-  const [correctionModal, setCorrectionModal] = useState<{
-    isOpen: boolean;
-    tenantId: string;
-    employeeRef: string;
-    employeeName: string;
-    workDate: string;
-  }>({
-    isOpen: false,
-    tenantId: '',
-    employeeRef: '',
-    employeeName: '',
-    workDate: ''
-  });
+  // Correction modal state
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState<TimecardDailySummaryV2 | null>(null)
 
-  // Check user permissions
-  const isHostAdmin = user?.role === 'host_admin';
-  const canCorrect = ['host_admin', 'tenant_admin', 'payroll_manager'].includes(user?.role || '');
+  // Permission checks
+  const isHostAdmin = user?.role === 'host_admin'
+  const isTenantAdmin = user?.role === 'tenant_admin'
+  const isPayrollManager = user?.role === 'payroll_manager'
+  const canCorrect = isHostAdmin || isTenantAdmin || isPayrollManager
 
   // Initialize dates to current week
   useEffect(() => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6); // Saturday
+    const today = new Date()
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - today.getDay()) // Sunday
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 6) // Saturday
 
-    setStartDate(startOfWeek.toISOString().split('T')[0]);
-    setEndDate(endOfWeek.toISOString().split('T')[0]);
-  }, []);
+    setStartDate(startOfWeek.toISOString().split('T')[0])
+    setEndDate(endOfWeek.toISOString().split('T')[0])
+  }, [])
 
   // Set default tenant
   useEffect(() => {
     if (contextTenant && !isHostAdmin) {
-      setSelectedTenant(contextTenant.id);
+      setSelectedTenant(contextTenant.id)
+    } else if (isHostAdmin && tenants.length > 0 && !selectedTenant) {
+      // For host admins, if no tenant is selected, default to the first available tenant
+      setSelectedTenant(tenants[0].id)
     }
-  }, [contextTenant, isHostAdmin]);
+  }, [contextTenant, isHostAdmin, tenants, selectedTenant])
 
   // Load tenants for host admin
   useEffect(() => {
     if (isHostAdmin) {
-      loadTenants();
+      loadTenants()
     }
-  }, [isHostAdmin]);
+  }, [isHostAdmin])
 
   // Load employees when tenant changes
   useEffect(() => {
     if (selectedTenant) {
-      loadEmployees();
+      loadEmployees()
     }
-  }, [selectedTenant]);
+  }, [selectedTenant])
 
-  // Load summaries when filters change
+  // Load data when filters change
   useEffect(() => {
     if (selectedTenant && startDate && endDate) {
-      loadSummaries();
+      loadData()
     }
-  }, [selectedTenant, startDate, endDate, selectedEmployee]);
+  }, [selectedTenant, startDate, endDate, selectedEmployee])
 
   const loadTenants = async () => {
     try {
-      const data = await timecardService.getTenants();
-      setTenants(data);
-    } catch (err) {
-      console.error('Error loading tenants:', err);
+      const tenantsData = await timecardService.getTenants()
+      setTenants(tenantsData)
+    } catch (error) {
+      console.error('Error loading tenants:', error)
+      setError('Failed to load tenants')
     }
-  };
+  }
 
   const loadEmployees = async () => {
-    if (!selectedTenant) return;
-    
+    if (!selectedTenant) return
+
     try {
-      const data = await timecardService.getEmployees(selectedTenant);
-      setEmployees(data);
-    } catch (err) {
-      console.error('Error loading employees:', err);
+      const employeesData = await timecardService.getEmployees(selectedTenant)
+      setEmployees(employeesData)
+    } catch (error) {
+      console.error('Error loading employees:', error)
+      setError('Failed to load employees')
     }
-  };
+  }
 
-  const loadSummaries = async () => {
-    if (!selectedTenant || !startDate || !endDate) return;
+  const loadData = async () => {
+    if (!selectedTenant || !startDate || !endDate) return
 
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
-      const params: GetDailySummariesParams = {
+      const filters: TimecardFilters = {
         tenant_id: selectedTenant,
         start_date: startDate,
         end_date: endDate
-      };
-
-      if (selectedEmployee) {
-        params.employee_ref = selectedEmployee;
       }
 
-      const data = await timecardService.getDailySummaries(params);
-      setSummaries(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load timecard summaries');
+      if (selectedEmployee) {
+        filters.employee_ref = selectedEmployee
+      }
+
+      const summaries = await timecardService.getDailySummaries(filters)
+      setData(summaries)
+    } catch (error) {
+      console.error('Error loading timecard data:', error)
+      setError('Failed to load timecard data')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // Filter summaries by search term
-  const filteredSummaries = useMemo(() => {
-    if (!searchTerm) return summaries;
+  const handleCorrection = (record: TimecardDailySummaryV2) => {
+    setSelectedRecord(record)
+    setCorrectionModalOpen(true)
+  }
 
-    const term = searchTerm.toLowerCase();
-    return summaries.filter(summary =>
-      summary.employee_name.toLowerCase().includes(term) ||
-      summary.employee_code.toLowerCase().includes(term)
-    );
-  }, [summaries, searchTerm]);
+  const handleCorrectionSaved = () => {
+    setCorrectionModalOpen(false)
+    setSelectedRecord(null)
+    loadData() // Refresh data to show corrections
+  }
 
-  // Format time
+  const handleExportCSV = async () => {
+    if (!selectedTenant || !startDate || !endDate) return
+
+    try {
+      const filters: TimecardFilters = {
+        tenant_id: selectedTenant,
+        start_date: startDate,
+        end_date: endDate
+      }
+
+      if (selectedEmployee) {
+        filters.employee_ref = selectedEmployee
+      }
+
+      const csvData = await timecardService.exportToCSV(filters)
+      
+      // Create and download file
+      const blob = new Blob([csvData], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `timecard-summaries-${startDate}-to-${endDate}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error exporting CSV:', error)
+      setError('Failed to export CSV')
+    }
+  }
+
   const formatTime = (timeString: string | null): string => {
-    if (!timeString) return '--:--';
-    return timeString.substring(0, 5);
-  };
+    if (!timeString) return '--'
+    // Handle both HH:MM and HH:MM:SS formats
+    return timeString.substring(0, 5)
+  }
 
-  // Format hours
-  const formatHours = (hours: number): string => {
-    return hours.toFixed(2);
-  };
+  const formatHours = (hours: number | null): string => {
+    return hours !== null ? hours.toFixed(2) : '0.00'
+  }
 
-  // Handle correction
-  const handleCorrect = (summary: TimecardDailySummary) => {
-    setCorrectionModal({
-      isOpen: true,
-      tenantId: summary.tenant_id,
-      employeeRef: summary.employee_ref,
-      employeeName: summary.employee_name,
-      workDate: summary.work_date
-    });
-  };
-
-  const handleCorrectionSave = () => {
-    setCorrectionModal(prev => ({ ...prev, isOpen: false }));
-    // Reload summaries to show updated data
-    loadSummaries();
-  };
-
-  // Export functions
-  const exportToCSVHandler = () => {
-    const exportData = filteredSummaries.map(summary => ({
-      'Employee Name': summary.employee_name,
-      'Employee Code': summary.employee_code,
-      'Work Date': new Date(summary.work_date).toLocaleDateString(),
-      'First Clock In': formatTime(summary.first_clock_in),
-      'Last Clock Out': formatTime(summary.last_clock_out),
-      'Regular Hours': formatHours(summary.regular_hours),
-      'Overtime Hours': formatHours(summary.ot_hours),
-      'Double Time Hours': formatHours(summary.dt_hours),
-      'Total Hours': formatHours(summary.total_hours),
-      'Status': summary.is_corrected ? 'Corrected' : 'Calculated'
-    }));
-
-    const tenantName = tenants.find(t => t.id === selectedTenant)?.legal_name || 'Timecard';
-    exportToCSV(exportData, `${tenantName}_Daily_Summaries_${new Date().toISOString().split('T')[0]}.csv`);
-  };
-
-  const exportToExcelHandler = () => {
-    const exportData = filteredSummaries.map(summary => ({
-      'Employee Name': summary.employee_name,
-      'Employee Code': summary.employee_code,
-      'Work Date': new Date(summary.work_date).toLocaleDateString(),
-      'First Clock In': formatTime(summary.first_clock_in),
-      'Last Clock Out': formatTime(summary.last_clock_out),
-      'Regular Hours': summary.regular_hours,
-      'Overtime Hours': summary.ot_hours,
-      'Double Time Hours': summary.dt_hours,
-      'Total Hours': summary.total_hours,
-      'Status': summary.is_corrected ? 'Corrected' : 'Calculated'
-    }));
-
-    const tenantName = tenants.find(t => t.id === selectedTenant)?.legal_name || 'Timecard';
-    exportToExcel(exportData, `${tenantName}_Daily_Summaries_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
+  // Filter data based on search term
+  const filteredData = data.filter(record => 
+    !searchTerm || 
+    record.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.employee_ref?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Timecard Daily Summaries</h2>
-          <p className="text-gray-600">View and correct daily timecard summaries</p>
+          <h1 className="text-2xl font-bold text-gray-900">Timecard Daily Summaries</h1>
+          <p className="text-gray-600">View and manage daily timecard summaries with correction capabilities</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={loadSummaries} variant="outline" size="sm" disabled={loading}>
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={loadData}
+            disabled={loading || !selectedTenant}
+            variant="outline"
+            size="sm"
+          >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button onClick={exportToCSVHandler} variant="outline" size="sm" disabled={!filteredSummaries.length}>
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-          <Button onClick={exportToExcelHandler} variant="outline" size="sm" disabled={!filteredSummaries.length}>
+          <Button
+            onClick={handleExportCSV}
+            disabled={loading || !selectedTenant || data.length === 0}
+            variant="outline"
+            size="sm"
+          >
             <Download className="h-4 w-4 mr-2" />
-            Export Excel
+            Export CSV
           </Button>
         </div>
       </div>
@@ -268,80 +276,71 @@ export default function TimecardDailyReport({ className = '' }: TimecardDailyRep
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Tenant Selector (only for host_admin) */}
+            {/* Tenant Selector (Host Admin Only) */}
             {isHostAdmin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tenant <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedTenant}
-                  onChange={(e) => setSelectedTenant(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select tenant...</option>
-                  {tenants.map(tenant => (
-                    <option key={tenant.id} value={tenant.id}>
-                      {tenant.legal_name}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-2">
+                <Label htmlFor="tenant">Tenant</Label>
+                <Select value={selectedTenant} onValueChange={setSelectedTenant}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tenant..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tenants.map((tenant) => (
+                      <SelectItem key={tenant.id} value={tenant.id}>
+                        {tenant.legal_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
             {/* Date Range */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date <span className="text-red-500">*</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date</Label>
               <Input
+                id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full"
-                required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date <span className="text-red-500">*</span>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End Date</Label>
               <Input
+                id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full"
-                required
               />
             </div>
 
             {/* Employee Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-              <select
-                value={selectedEmployee}
-                onChange={(e) => setSelectedEmployee(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All employees</option>
-                {employees.map(emp => (
-                  <option key={emp.employee_ref} value={emp.employee_ref}>
-                    {emp.employee_name} ({emp.employee_code})
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-2">
+              <Label htmlFor="employee">Employee</Label>
+              <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All employees" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All employees</SelectItem>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.employee_ref} value={employee.employee_ref}>
+                      {employee.employee_name} ({employee.employee_ref})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           {/* Search */}
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search by employee name or code..."
+                placeholder="Search by employee name or reference..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -356,106 +355,138 @@ export default function TimecardDailyReport({ className = '' }: TimecardDailyRep
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
             <div className="flex items-center text-red-800">
-              <Clock className="h-5 w-5 mr-2" />
+              <AlertTriangle className="h-5 w-5 mr-2" />
               {error}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Results */}
+      {/* Data Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Daily Summaries ({filteredSummaries.length})</span>
-            {loading && (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-            )}
+            <div className="flex items-center">
+              <Clock className="h-5 w-5 mr-2" />
+              Daily Summaries ({filteredData.length} records)
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredSummaries.length === 0 && !loading ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+              Loading timecard data...
+            </div>
+          ) : filteredData.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {selectedTenant && startDate && endDate ? 
-                'No timecard summaries found for the selected criteria.' :
-                'Please select a tenant and date range to view summaries.'
-              }
+              No timecard data found for the selected criteria.
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-3 font-medium text-gray-700">Employee</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700">Date</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700">First Clock In</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700">Last Clock Out</th>
-                    <th className="text-right py-3 px-3 font-medium text-gray-700">Regular</th>
-                    <th className="text-right py-3 px-3 font-medium text-gray-700">Overtime</th>
-                    <th className="text-right py-3 px-3 font-medium text-gray-700">Double Time</th>
-                    <th className="text-right py-3 px-3 font-medium text-gray-700">Total</th>
-                    <th className="text-center py-3 px-3 font-medium text-gray-700">Status</th>
-                    {canCorrect && (
-                      <th className="text-center py-3 px-3 font-medium text-gray-700">Actions</th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSummaries.map((summary, index) => (
-                    <tr key={`${summary.employee_ref}-${summary.work_date}`} 
-                        className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-3">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Clock In</TableHead>
+                    <TableHead>Clock Out</TableHead>
+                    <TableHead>Clock In</TableHead>
+                    <TableHead>Clock Out</TableHead>
+                    <TableHead className="text-right">Regular Hrs</TableHead>
+                    <TableHead className="text-right">OT Hrs</TableHead>
+                    <TableHead className="text-right">DT Hrs</TableHead>
+                    <TableHead className="text-right">Total Hrs</TableHead>
+                    <TableHead>Status</TableHead>
+                    {canCorrect && <TableHead>Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.map((record, index) => (
+                    <TableRow key={`${record.employee_ref}-${record.work_date}`}>
+                      <TableCell>
                         <div>
-                          <div className="font-medium text-gray-900">{summary.employee_name}</div>
-                          <div className="text-xs text-gray-500">{summary.employee_code}</div>
+                          <div className="font-medium">{record.employee_name}</div>
+                          <div className="text-sm text-gray-500">{record.employee_ref}</div>
                         </div>
-                      </td>
-                      <td className="py-3 px-3">
-                        {new Date(summary.work_date).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-3">{formatTime(summary.first_clock_in)}</td>
-                      <td className="py-3 px-3">{formatTime(summary.last_clock_out)}</td>
-                      <td className="py-3 px-3 text-right font-mono">{formatHours(summary.regular_hours)}</td>
-                      <td className="py-3 px-3 text-right font-mono">{formatHours(summary.ot_hours)}</td>
-                      <td className="py-3 px-3 text-right font-mono">{formatHours(summary.dt_hours)}</td>
-                      <td className="py-3 px-3 text-right font-mono font-semibold">{formatHours(summary.total_hours)}</td>
-                      <td className="py-3 px-3 text-center">
-                        <Badge variant={summary.is_corrected ? 'default' : 'secondary'}>
-                          {summary.is_corrected ? 'Corrected' : 'Calculated'}
-                        </Badge>
-                      </td>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                          {new Date(record.work_date).toLocaleDateString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatTime(record.first_clock_in)}</TableCell>
+                      <TableCell>{formatTime(record.mid_clock_out)}</TableCell>
+                      <TableCell>{formatTime(record.mid_clock_in)}</TableCell>
+                      <TableCell>{formatTime(record.last_clock_out)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatHours(record.regular_hours)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatHours(record.ot_hours)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatHours(record.dt_hours)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold">
+                        {formatHours(record.total_hours)}
+                      </TableCell>
+                      <TableCell>
+                        {record.is_corrected ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                  Corrected
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="text-sm">
+                                  <div><strong>Corrected by:</strong> {record.corrected_by}</div>
+                                  <div><strong>Corrected at:</strong> {record.corrected_at ? new Date(record.corrected_at).toLocaleString() : 'Unknown'}</div>
+                                  {record.correction_reason && (
+                                    <div><strong>Reason:</strong> {record.correction_reason}</div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            Calculated
+                          </Badge>
+                        )}
+                      </TableCell>
                       {canCorrect && (
-                        <td className="py-3 px-3 text-center">
+                        <TableCell>
                           <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCorrect(summary)}
-                            className="h-8 w-8 p-0"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleCorrection(record)}
+                            className="text-gray-500 hover:text-gray-900"
                           >
-                            <Edit3 className="h-4 w-4" />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        </td>
+                        </TableCell>
                       )}
-                    </tr>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Correction Modal */}
-      <CorrectionModal
-        isOpen={correctionModal.isOpen}
-        onClose={() => setCorrectionModal(prev => ({ ...prev, isOpen: false }))}
-        tenantId={correctionModal.tenantId}
-        employeeRef={correctionModal.employeeRef}
-        employeeName={correctionModal.employeeName}
-        workDate={correctionModal.workDate}
-        onSave={handleCorrectionSave}
-        currentUserId={user?.id || ''}
-      />
+      {selectedRecord && (
+        <CorrectionModal
+          isOpen={correctionModalOpen}
+          onClose={() => setCorrectionModalOpen(false)}
+          onSave={handleCorrectionSaved}
+          initialData={selectedRecord}
+        />
+      )}
     </div>
-  );
+  )
 }

@@ -1,424 +1,346 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { X, Clock, AlertCircle, Save } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { timecardService, TimecardDailyRecord, CorrectionData } from '@/services/timecardService';
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { AlertTriangle, Clock } from 'lucide-react'
+import timecardService, { TimecardDailySummaryV2, TimecardCorrectionData } from '@/services/timecardService'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface CorrectionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  tenantId: string;
-  employeeRef: string;
-  employeeName: string;
-  workDate: string;
-  onSave: () => void;
-  currentUserId: string;
+  isOpen: boolean
+  onClose: () => void
+  onSave: () => void
+  initialData: TimecardDailySummaryV2 | null
 }
 
-export default function CorrectionModal({
-  isOpen,
-  onClose,
-  tenantId,
-  employeeRef,
-  employeeName,
-  workDate,
-  onSave,
-  currentUserId
-}: CorrectionModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [record, setRecord] = useState<TimecardDailyRecord | null>(null);
-  
-  // Form state
-  const [formData, setFormData] = useState<CorrectionData>({
-    override_first_clock_in: null,
-    override_last_clock_out: null,
-    override_total_hours: null,
-    override_regular_hours: null,
-    override_ot_hours: null,
-    override_dt_hours: null,
-    correction_reason: ''
-  });
+export function CorrectionModal({ isOpen, onClose, onSave, initialData }: CorrectionModalProps) {
+  const { user } = useAuth()
+  const [formData, setFormData] = useState({
+    first_clock_in: '',
+    mid_clock_out: '',
+    mid_clock_in: '',
+    last_clock_out: '',
+    total_hours: '',
+    regular_hours: '',
+    ot_hours: '',
+    dt_hours: '',
+    correction_reason: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Load the current record when modal opens
   useEffect(() => {
-    if (isOpen && tenantId && employeeRef && workDate) {
-      loadRecord();
+    if (initialData) {
+      setFormData({
+        first_clock_in: initialData.first_clock_in || '',
+        mid_clock_out: initialData.mid_clock_out || '',
+        mid_clock_in: initialData.mid_clock_in || '',
+        last_clock_out: initialData.last_clock_out || '',
+        total_hours: initialData.total_hours?.toString() || '',
+        regular_hours: initialData.regular_hours?.toString() || '',
+        ot_hours: initialData.ot_hours?.toString() || '',
+        dt_hours: initialData.dt_hours?.toString() || '',
+        correction_reason: initialData.correction_reason || '',
+      })
     }
-  }, [isOpen, tenantId, employeeRef, workDate]);
+  }, [initialData])
 
-  const loadRecord = async () => {
-    setLoading(true);
-    setError(null);
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const validateTime = (time: string): boolean => {
+    if (!time) return true // Allow empty for optional punches
+    const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/
+    return regex.test(time)
+  }
+
+  const validateHours = (hours: string): boolean => {
+    if (!hours) return true // Allow empty
+    const num = parseFloat(hours)
+    return !isNaN(num) && num >= 0 && num <= 24
+  }
+
+  const calculateHours = (start: string | null, end: string | null): number => {
+    if (!start || !end) return 0
+    const [startH, startM] = start.split(':').map(Number)
+    const [endH, endM] = end.split(':').map(Number)
+
+    const startTime = startH * 60 + startM
+    const endTime = endH * 60 + endM
+
+    let diff = endTime - startTime
+    if (diff < 0) diff += 24 * 60 // Handle overnight shifts
+
+    return diff / 60
+  }
+
+  const handleAutoCalculate = () => {
+    const firstSegmentHours = calculateHours(formData.first_clock_in, formData.mid_clock_out)
+    const secondSegmentHours = calculateHours(formData.mid_clock_in, formData.last_clock_out)
+    const totalHours = firstSegmentHours + secondSegmentHours
     
-    try {
-      const data = await timecardService.getDailyRecord(tenantId, employeeRef, workDate);
-      if (data) {
-        setRecord(data);
-        // Pre-fill form with existing override values
-        setFormData({
-          override_first_clock_in: data.override_first_clock_in || null,
-          override_last_clock_out: data.override_last_clock_out || null,
-          override_total_hours: data.override_total_hours || null,
-          override_regular_hours: data.override_regular_hours || null,
-          override_ot_hours: data.override_ot_hours || null,
-          override_dt_hours: data.override_dt_hours || null,
-          correction_reason: ''
-        });
-      } else {
-        setError('Timecard record not found');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load record');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Simple calculation - can be enhanced with business rules
+    const regularHours = Math.min(totalHours, 8)
+    const otHours = Math.max(0, Math.min(totalHours - 8, 4))
+    const dtHours = Math.max(0, totalHours - 12)
 
-  const handleInputChange = (field: keyof CorrectionData, value: string | number | null) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
-    }));
-  };
+      total_hours: totalHours.toFixed(2),
+      regular_hours: regularHours.toFixed(2),
+      ot_hours: otHours.toFixed(2),
+      dt_hours: dtHours.toFixed(2)
+    }))
+  }
 
-  const handleTimeChange = (field: 'override_first_clock_in' | 'override_last_clock_out', value: string) => {
-    // Convert time input to HH:MM format
-    const timeValue = value ? value : null;
-    handleInputChange(field, timeValue);
-  };
+  const handleSubmit = async () => {
+    if (!initialData || !user) return
 
-  const handleNumberChange = (field: keyof CorrectionData, value: string) => {
-    const numValue = value === '' ? null : parseFloat(value);
-    handleInputChange(field, numValue);
-  };
-
-  const formatTime = (timeString: string | null | undefined): string => {
-    if (!timeString) return '';
-    // Handle both HH:MM and HH:MM:SS formats
-    return timeString.substring(0, 5);
-  };
-
-  const formatHours = (hours: number | null | undefined): string => {
-    return hours !== null && hours !== undefined ? hours.toFixed(2) : '';
-  };
-
-  const handleSave = async () => {
+    // Basic validation
     if (!formData.correction_reason.trim()) {
-      setError('Correction reason is required');
-      return;
+      setError('Correction reason is required.')
+      return
     }
 
-    setSaving(true);
-    setError(null);
+    if (!validateTime(formData.first_clock_in) ||
+        !validateTime(formData.mid_clock_out) ||
+        !validateTime(formData.mid_clock_in) ||
+        !validateTime(formData.last_clock_out)) {
+      setError('Invalid time format. Please use HH:MM.')
+      return
+    }
+
+    if (!validateHours(formData.total_hours) ||
+        !validateHours(formData.regular_hours) ||
+        !validateHours(formData.ot_hours) ||
+        !validateHours(formData.dt_hours)) {
+      setError('Invalid hours format. Please enter valid numbers.')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
 
     try {
+      const correctionData: TimecardCorrectionData = {
+        override_first_clock_in: formData.first_clock_in || null,
+        override_mid_clock_out: formData.mid_clock_out || null,
+        override_mid_clock_in: formData.mid_clock_in || null,
+        override_last_clock_out: formData.last_clock_out || null,
+        override_total_hours: formData.total_hours ? parseFloat(formData.total_hours) : null,
+        override_regular_hours: formData.regular_hours ? parseFloat(formData.regular_hours) : null,
+        override_ot_hours: formData.ot_hours ? parseFloat(formData.ot_hours) : null,
+        override_dt_hours: formData.dt_hours ? parseFloat(formData.dt_hours) : null,
+        correction_reason: formData.correction_reason.trim(),
+        corrected_by: user.email || 'Unknown'
+      }
+
       await timecardService.correctDailySummary(
-        tenantId,
-        employeeRef,
-        workDate,
-        formData,
-        currentUserId
-      );
-      
-      onSave();
-      onClose();
+        initialData.tenant_id,
+        initialData.employee_ref,
+        initialData.work_date,
+        correctionData
+      )
+
+      onSave()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save correction');
+      console.error('Error saving correction:', err)
+      setError('Failed to save correction. Please try again.')
     } finally {
-      setSaving(false);
+      setLoading(false)
     }
-  };
-
-  const handleClose = () => {
-    setFormData({
-      override_first_clock_in: null,
-      override_last_clock_out: null,
-      override_total_hours: null,
-      override_regular_hours: null,
-      override_ot_hours: null,
-      override_dt_hours: null,
-      correction_reason: ''
-    });
-    setError(null);
-    onClose();
-  };
-
-  if (!isOpen) return null;
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-full overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white z-10 p-6 border-b border-gray-200 flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-blue-600" />
-              Correct Timecard Entry
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              {employeeName} • {new Date(workDate).toLocaleDateString()}
-            </p>
-          </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {loading && (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader>
+          <DialogTitle>Edit Timecard Correction</DialogTitle>
+          {initialData && (
+            <div className="text-sm text-gray-600">
+              {initialData.employee_name} - {new Date(initialData.work_date).toLocaleDateString()}
             </div>
           )}
-
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-              <span className="text-red-800">{error}</span>
+            <div className="flex items-center text-red-500 text-sm">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              {error}
             </div>
           )}
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span>Clock Times</span>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAutoCalculate}
+                  disabled={!formData.first_clock_in || !formData.last_clock_out}
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  Auto Calculate
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_clock_in">First Clock In</Label>
+                  <Input
+                    id="first_clock_in"
+                    type="time"
+                    value={formData.first_clock_in}
+                    onChange={(e) => handleInputChange('first_clock_in', e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
 
-          {record && !loading && (
-            <div className="space-y-6">
-              {/* Current Values Display */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Current Calculated Values</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">First Clock In</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {formatTime(record.first_clock_in) || '--:--'}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Last Clock Out</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {formatTime(record.last_clock_out) || '--:--'}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Total Hours</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {formatHours(record.total_hours)}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Regular Hours</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {formatHours(record.regular_hours)}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Overtime Hours</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {formatHours(record.ot_hours)}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Double Time Hours</label>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {formatHours(record.dt_hours)}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="mid_clock_out">Mid Clock Out</Label>
+                  <Input
+                    id="mid_clock_out"
+                    type="time"
+                    value={formData.mid_clock_out}
+                    onChange={(e) => handleInputChange('mid_clock_out', e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
 
-              {/* Override Values Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Override Values</CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Leave fields empty to use calculated values. Enter values to override.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Time Fields */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-900">Time Overrides</h4>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Override First Clock In
-                        </label>
-                        <Input
-                          type="time"
-                          value={formatTime(formData.override_first_clock_in)}
-                          onChange={(e) => handleTimeChange('override_first_clock_in', e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mid_clock_in">Mid Clock In</Label>
+                  <Input
+                    id="mid_clock_in"
+                    type="time"
+                    value={formData.mid_clock_in}
+                    onChange={(e) => handleInputChange('mid_clock_in', e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Override Last Clock Out
-                        </label>
-                        <Input
-                          type="time"
-                          value={formatTime(formData.override_last_clock_out)}
-                          onChange={(e) => handleTimeChange('override_last_clock_out', e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="last_clock_out">Last Clock Out</Label>
+                  <Input
+                    id="last_clock_out"
+                    type="time"
+                    value={formData.last_clock_out}
+                    onChange={(e) => handleInputChange('last_clock_out', e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                    {/* Hours Fields */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-900">Hours Overrides</h4>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Override Total Hours
-                        </label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="24"
-                          value={formatHours(formData.override_total_hours)}
-                          onChange={(e) => handleNumberChange('override_total_hours', e.target.value)}
-                          placeholder="0.00"
-                          className="w-full"
-                        />
-                      </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Hours Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="regular_hours">Regular Hours</Label>
+                  <Input
+                    id="regular_hours"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="24"
+                    value={formData.regular_hours}
+                    onChange={(e) => handleInputChange('regular_hours', e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Override Regular Hours
-                        </label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="24"
-                          value={formatHours(formData.override_regular_hours)}
-                          onChange={(e) => handleNumberChange('override_regular_hours', e.target.value)}
-                          placeholder="0.00"
-                          className="w-full"
-                        />
-                      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ot_hours">Overtime Hours</Label>
+                  <Input
+                    id="ot_hours"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="24"
+                    value={formData.ot_hours}
+                    onChange={(e) => handleInputChange('ot_hours', e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Override Overtime Hours
-                        </label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="24"
-                          value={formatHours(formData.override_ot_hours)}
-                          onChange={(e) => handleNumberChange('override_ot_hours', e.target.value)}
-                          placeholder="0.00"
-                          className="w-full"
-                        />
-                      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dt_hours">Double Time Hours</Label>
+                  <Input
+                    id="dt_hours"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="24"
+                    value={formData.dt_hours}
+                    onChange={(e) => handleInputChange('dt_hours', e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Override Double Time Hours
-                        </label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="24"
-                          value={formatHours(formData.override_dt_hours)}
-                          onChange={(e) => handleNumberChange('override_dt_hours', e.target.value)}
-                          placeholder="0.00"
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="total_hours">Total Hours</Label>
+                  <Input
+                    id="total_hours"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="24"
+                    value={formData.total_hours}
+                    onChange={(e) => handleInputChange('total_hours', e.target.value)}
+                    className="font-mono font-semibold"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                  {/* Correction Reason */}
-                  <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Correction Reason <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={formData.correction_reason}
-                      onChange={(e) => handleInputChange('correction_reason', e.target.value)}
-                      placeholder="Please provide a reason for this correction..."
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Previous Corrections */}
-              {(record.corrected_by || record.corrected_at) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Previous Correction</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center space-x-4">
-                      <Badge variant="secondary">Corrected</Badge>
-                      <span className="text-sm text-gray-600">
-                        Corrected by {record.corrected_by} on{' '}
-                        {record.corrected_at ? new Date(record.corrected_at).toLocaleString() : 'Unknown'}
-                      </span>
-                    </div>
-                    {record.correction_reason && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-700">
-                          <strong>Reason:</strong> {record.correction_reason}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Correction Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="correction_reason">Correction Reason *</Label>
+                <Textarea
+                  id="correction_reason"
+                  placeholder="Briefly describe the reason for this correction."
+                  value={formData.correction_reason}
+                  onChange={(e) => handleInputChange('correction_reason', e.target.value)}
+                  rows={3}
+                />
+              </div>
+              {initialData?.corrected_by && (
+                <div className="text-sm text-gray-500 mt-2">
+                  Last corrected by {initialData.corrected_by} on {initialData.corrected_at ? new Date(initialData.corrected_at).toLocaleString() : 'Unknown'}
+                </div>
               )}
-            </div>
-          )}
+            </CardContent>
+          </Card>
         </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={saving}
-          >
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !formData.correction_reason.trim()}
-            className="flex items-center"
-          >
-            {saving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Correction
-              </>
-            )}
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Saving...' : 'Save Correction'}
           </Button>
-        </div>
-      </div>
-    </div>
-  );
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }

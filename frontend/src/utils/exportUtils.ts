@@ -1,23 +1,8 @@
 // Export utilities for CSV and Excel functionality
 
-export interface ExportColumn<T extends object> {
-  key: keyof T;
-  title: string;
-  width?: number;
-}
+import { TimecardDailySummaryV2 } from '@/services/timecardService'
 
-export interface ExportOptions {
-  filename?: string;
-  sheetName?: string;
-  includeTimestamp?: boolean;
-}
-
-// CSV Export Function
-export function exportToCSV<T extends object>(
-  data: T[],
-  filename?: string,
-  options: ExportOptions = {}
-): void {
+export const exportToCSV = (data: any[], filename: string) => {
   if (!data || data.length === 0) {
     console.warn('No data provided for CSV export');
     return;
@@ -59,96 +44,114 @@ export function exportToCSV<T extends object>(
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
-}
+};
 
-// Excel Export Function (simplified - creates CSV with .xlsx extension)
-// For full Excel functionality, you would need a library like xlsx or exceljs
-export function exportToExcel<T extends object>(
-  data: T[],
-  filename?: string,
-  options: ExportOptions = {}
-): void {
+/**
+ * Export timecard data to CSV with proper formatting
+ */
+export const exportTimecardToCSV = (data: TimecardDailySummaryV2[], filename: string) => {
   if (!data || data.length === 0) {
-    console.warn('No data provided for Excel export');
+    console.warn('No timecard data to export');
     return;
   }
 
-  const finalFilename = filename || `export_${new Date().toISOString().split('T')[0]}.xlsx`;
+  const headers = [
+    'Employee Name',
+    'Employee Ref',
+    'Employee ID',
+    'Employee Code',
+    'Work Date',
+    'Clock In',
+    'Clock Out',
+    'Clock In',
+    'Clock Out',
+    'Total Hours',
+    'Regular Hours',
+    'OT Hours',
+    'DT Hours',
+    'Is Corrected',
+    'Corrected By',
+    'Corrected At',
+    'Correction Reason'
+  ];
+
+  const csvRows = [
+    headers.join(','),
+    ...data.map(row => [
+      `"${row.employee_name || ''}"`,
+      `"${row.employee_ref || ''}"`,
+      `"${row.employee_id || ''}"`,
+      `"${row.employee_code || ''}"`,
+      `"${row.work_date || ''}"`,
+      `"${row.first_clock_in || ''}"`,
+      `"${row.mid_clock_out || ''}"`,
+      `"${row.mid_clock_in || ''}"`,
+      `"${row.last_clock_out || ''}"`,
+      row.total_hours?.toFixed(2) || '0.00',
+      row.regular_hours?.toFixed(2) || '0.00',
+      row.ot_hours?.toFixed(2) || '0.00',
+      row.dt_hours?.toFixed(2) || '0.00',
+      row.is_corrected ? 'Yes' : 'No',
+      `"${row.corrected_by || ''}"`,
+      `"${row.corrected_at || ''}"`,
+      `"${row.correction_reason || ''}"`
+    ].join(','))
+  ];
+
+  const csvContent = csvRows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
   
-  // For now, we'll create a CSV file with .xlsx extension
-  // In a production environment, you'd want to use a proper Excel library
-  exportToCSV(data, finalFilename.replace('.xlsx', '.csv'), options);
-}
-
-// Utility function to format data for export
-export function prepareDataForExport<T extends object>(
-  data: T[],
-  columns?: ExportColumn<T>[]
-): Record<string, any>[] {
-  if (!columns) {
-    return data as Record<string, any>[];
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
+};
 
-  return data.map(item => {
-    const exportItem: Record<string, any> = {};
-    columns.forEach(col => {
-      exportItem[col.title] = (item as any)[col.key];
-    });
-    return exportItem;
-  });
-}
-
-// Utility function to validate export data
-export function validateExportData<T extends object>(
-  data: T[],
-  columns?: ExportColumn<T>[]
-): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  if (!data || !Array.isArray(data)) {
-    errors.push('Data must be an array');
-    return { isValid: false, errors };
-  }
-
-  if (data.length === 0) {
-    errors.push('Data array is empty');
-    return { isValid: false, errors };
-  }
-
-  if (columns) {
-    const sampleRow = data[0];
-    if (!sampleRow || typeof sampleRow !== 'object') {
-      errors.push('Data items must be objects');
-      return { isValid: false, errors };
-    }
-
-    // Check if all specified columns exist in the data
-    const missingKeys = columns
-      .map(col => col.key)
-      .filter(key => !(key in sampleRow));
-
-    if (missingKeys.length > 0) {
-      errors.push(`Missing data keys: ${missingKeys.join(', ')}`);
-    }
-  }
-
-  return { isValid: errors.length === 0, errors };
-}
-
-// Utility function to generate filename with timestamp
-export function generateExportFilename(
-  baseName: string,
-  extension: string = 'csv',
-  includeTimestamp: boolean = true
-): string {
-  const timestamp = includeTimestamp 
-    ? `_${new Date().toISOString().split('T')[0]}_${new Date().toTimeString().split(' ')[0].replace(/:/g, '-')}`
-    : '';
+export const exportToExcel = (data: any[], filename: string) => {
+  // For now, export as CSV since we don't have xlsx library
+  // In production, you would use a library like xlsx or exceljs
+  const excelFilename = filename.replace('.xlsx', '.csv');
+  exportToCSV(data, excelFilename);
   
-  return `${baseName}${timestamp}.${extension}`;
+  console.warn('Excel export not implemented, exported as CSV instead');
+};
+
+/**
+ * Export timecard data to Excel format (currently CSV)
+ */
+export const exportTimecardToExcel = (data: TimecardDailySummaryV2[], filename: string) => {
+  const excelFilename = filename.replace('.xlsx', '.csv');
+  exportTimecardToCSV(data, excelFilename);
+  
+  console.warn('Excel export not implemented, exported as CSV instead');
+};
+
+export interface ExportOptions {
+  title?: string;
+  author?: string;
+  subject?: string;
+  creator?: string;
 }
 
-// Utility function to sanitize filename
-export function sanitizeFilename(filename: string): string {
-  return filename.replace(/[^a-z0-9.-]/gi, '_');
-}
+export const exportToPDF = (data: any[], filename: string, options?: ExportOptions) => {
+  // Mock PDF export - in production, you would use a library like jsPDF or puppeteer
+  console.warn('PDF export not implemented, exporting as CSV instead');
+  const pdfFilename = filename.replace('.pdf', '.csv');
+  exportToCSV(data, pdfFilename);
+};
+
+/**
+ * Export timecard data to PDF format (currently CSV)
+ */
+export const exportTimecardToPDF = (data: TimecardDailySummaryV2[], filename: string, options?: ExportOptions) => {
+  console.warn('PDF export not implemented, exported as CSV instead');
+  const pdfFilename = filename.replace('.pdf', '.csv');
+  exportTimecardToCSV(data, pdfFilename);
+};
+
