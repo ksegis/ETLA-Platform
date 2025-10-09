@@ -188,7 +188,7 @@ function NavigationItem({
   const { checkPermission, currentUserRole } = usePermissions();
 
   // Check if item should be visible based on requiredPermission
-  const isVisible = () => {    if (item.requiredPermission && !checkPermission(item.feature, item.requiredPermission)) {
+  const isVisible = () => {    if (item.requiredPermission && !checkPermission(item.feature || item.id, item.requiredPermission)) {
       return false;
     }
     return true;

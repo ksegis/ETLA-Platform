@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 interface User {
   id: string
@@ -19,6 +19,8 @@ interface Tenant {
 interface AuthContextType {
   user: User | null
   tenant: Tenant | null
+  isAuthenticated: boolean
+  isDemoMode: boolean
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Get initial session
+        const supabase = createSupabaseBrowserClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser({
@@ -52,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = createSupabaseBrowserClient().auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
         console.log("🔄 AuthProvider: Auth state changed:", event)
         
@@ -99,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -107,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     setUser(null)
@@ -117,9 +122,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenant(newTenant)
   }
 
+  const isAuthenticated = !!user;
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
   const value = {
     user,
     tenant,
+    isAuthenticated,
+    isDemoMode,
     loading,
     signIn,
     signOut,

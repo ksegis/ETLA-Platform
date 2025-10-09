@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { 
   RBACMatrixRowUser, 
   RBACPermissionCatalog, 
@@ -9,6 +9,7 @@ import {
   User
 } from '@/types'
 import { FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
+import { logger } from '@/lib/logger'
 
 export class RBACAdminService {
   /**
@@ -16,6 +17,7 @@ export class RBACAdminService {
    */
   static async listTenants(): Promise<Array<{ id: string; name: string }>> {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from('tenants')
         .select('id, name')
@@ -25,7 +27,7 @@ export class RBACAdminService {
       if (error) throw error
       return data || []
     } catch (error) {
-      console.error('Error listing tenants:', error)
+      logger.error("Error listing tenants:", { error: error instanceof Error ? error.message : String(error), action: "listTenants" })
       throw error
     }
   }
@@ -54,8 +56,9 @@ export class RBACAdminService {
       const { page = 1, limit = 50, search } = options
       const offset = (page - 1) * limit
 
+      const supabase = createSupabaseBrowserClient();
       let query = supabase
-        .from('tenant_users')
+        .from("tenant_users")
         .select(`
           user_id,
           role,
@@ -74,8 +77,8 @@ export class RBACAdminService {
       }
 
       // Get total count
-      const { count } = await supabase
-        .from('tenant_users')
+      const { count } = await createSupabaseBrowserClient()
+        .from("tenant_users")
         .select('*', { count: 'exact', head: true })
         .eq('tenant_id', tenantId)
 
@@ -101,7 +104,7 @@ export class RBACAdminService {
         total: count || 0
       }
     } catch (error) {
-      console.error('Error listing tenant users:', error)
+      logger.error("Error listing tenant users:", { tenantId, error: error instanceof Error ? error.message : String(error), action: "listTenantUsers" })
       throw error
     }
   }
@@ -159,7 +162,7 @@ export class RBACAdminService {
 
       return effectivePermissions
     } catch (error) {
-      console.error('Error getting effective permissions:', error)
+      logger.error("Error getting effective permissions:", { tenantId, userIds, error: error instanceof Error ? error.message : String(error), action: "getEffectivePermissions" })
       throw error
     }
   }
@@ -170,6 +173,7 @@ export class RBACAdminService {
   static async getUserDetail(tenantId: string, userId: string): Promise<RBACUserDetail> {
     try {
       // Get user profile
+      const supabase = createSupabaseBrowserClient();
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -179,7 +183,7 @@ export class RBACAdminService {
       if (profileError) throw profileError
 
       // Get tenant membership
-      const { data: membership, error: membershipError } = await supabase
+      const { data: membership, error: membershipError } = await createSupabaseBrowserClient()
         .from('tenant_users')
         .select('role, is_active, tenant_id')
         .eq('user_id', userId)
@@ -191,8 +195,8 @@ export class RBACAdminService {
       // Get user overrides (if table exists)
       let overrides: Array<{ permissionId: string; effect: 'allow' | 'deny' }> = []
       try {
-        const { data: overrideData } = await supabase
-          .from('user_tenant_permissions')
+        const { data: overrideData } = await createSupabaseBrowserClient()
+          .from("user_tenant_permissions")
           .select('permission_id, effect')
           .eq('user_id', userId)
           .eq('tenant_id', tenantId)
@@ -219,7 +223,7 @@ export class RBACAdminService {
         roles: [membership.role] // For now, users have single role
       }
     } catch (error) {
-      console.error('Error getting user detail:', error)
+      logger.error("Error getting user detail:", { tenantId, userId, error: error instanceof Error ? error.message : String(error), action: "getUserDetail" })
       throw error
     }
   }
@@ -308,7 +312,8 @@ export class RBACAdminService {
   static async applyChanges(request: RBACApplyChangesRequest): Promise<{ success: boolean; error?: string }> {
     try {
       // Start a transaction by calling a stored procedure
-      const { data, error } = await supabase.rpc('apply_rbac_changes', {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase.rpc("apply_rbac_changes", {
         p_tenant_id: request.tenantId,
         p_actor_user_id: request.actorUserId,
         p_role_assignments: request.roleAssignments || [],
@@ -317,16 +322,16 @@ export class RBACAdminService {
       })
 
       if (error) {
-        console.error('Error applying RBAC changes:', error)
+        logger.error("Error applying RBAC changes:", { tenantId: request.tenantId, actorUserId: request.actorUserId, action: "applyChanges", error: error instanceof Error ? error.message : String(error) })
         return { success: false, error: error.message }
       }
 
       return { success: true }
     } catch (error) {
-      console.error('Error applying RBAC changes:', error)
+      logger.error("Error applying RBAC changes:", { tenantId: request.tenantId, actorUserId: request.actorUserId, action: "applyChanges", error: error instanceof Error ? error.message : String(error) })
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: error instanceof Error ? error.message : \'Unknown error occurred\'
       }
     }
   }
@@ -336,6 +341,7 @@ export class RBACAdminService {
    */
   static async getAuditLog(tenantId: string, limit: number = 100): Promise<any[]> {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from('activity_log')
         .select(`
@@ -350,7 +356,7 @@ export class RBACAdminService {
       if (error) throw error
       return data || []
     } catch (error) {
-      console.error('Error getting audit log:', error)
+      logger.error("Error getting audit log:", { tenantId, error: error instanceof Error ? error.message : String(error), action: "getAuditLog" })
       return []
     }
   }

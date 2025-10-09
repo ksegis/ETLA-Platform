@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
-import { FEATURES, PERMISSIONS, type Feature } from "@/rbac/constants";
+import { FEATURES, PERMISSIONS, ROLES, type Feature } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
 import {
   PermissionGuard,
@@ -226,8 +226,8 @@ export default function ProjectManagementPageRBAC() {
                   </div>
 
                   {/* Admin-only debug panel toggle */}
-                  {(currentRole === "host_admin" ||
-                    currentRole === "tenant_admin") &&
+                  {(currentRole === ROLES.HOST_ADMIN ||
+                    currentRole === ROLES.CLIENT_ADMIN) &&
                     process.env.NODE_ENV !== "production" && (
                       <button
                         onClick={() => setSelectedTab("debug")}

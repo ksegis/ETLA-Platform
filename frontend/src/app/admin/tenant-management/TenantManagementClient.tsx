@@ -5,7 +5,7 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -167,6 +167,7 @@ export default function TenantManagementClient() { // Renamed component
   const loadTenants = async () => {
     try {
       console.log("Attempting to load tenants...");
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("tenants")
         .select("*")
@@ -186,6 +187,7 @@ export default function TenantManagementClient() { // Renamed component
   const loadAllUsers = async () => {
     try {
       console.log("Attempting to load all users...");
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("auth.users")
         .select("id, email, created_at")
@@ -205,6 +207,7 @@ export default function TenantManagementClient() { // Renamed component
   const loadTenantUsers = async (tenantId: string) => {
     try {
       setloading(true);
+            const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("tenant_users")
         .select(
@@ -224,6 +227,7 @@ export default function TenantManagementClient() { // Renamed component
 
       const tenantUsersWithEmails = await Promise.all(
         (data || []).map(async (tu: any) => {
+          const supabase = createSupabaseBrowserClient();
           const { data: userData } = await supabase
             .from("auth.users")
             .select("email")
@@ -249,6 +253,7 @@ export default function TenantManagementClient() { // Renamed component
     if (!selectedTenantId) return;
 
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase.from("tenant_users").insert({
         user_id: userId,
         tenant_id: selectedTenantId,
@@ -267,6 +272,7 @@ export default function TenantManagementClient() { // Renamed component
 
   const removeUserFromTenant = async (tenantUserId: string) => {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase
         .from("tenant_users")
         .update({ is_active: false })
@@ -284,6 +290,7 @@ export default function TenantManagementClient() { // Renamed component
 
   const updateUserRole = async (tenantUserId: string, newRole: string) => {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase
         .from("tenant_users")
         .update({ role: newRole })
@@ -326,6 +333,7 @@ export default function TenantManagementClient() { // Renamed component
       console.log("Data to insert:", insertData);
       console.log("Making Supabase insert call...");
 
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("tenants")
         .insert(insertData)
@@ -372,13 +380,13 @@ export default function TenantManagementClient() { // Renamed component
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "host_admin":
+      case ROLES.HOST_ADMIN:
         return "bg-red-100 text-red-800";
-      case "program_manager":
+      case ROLES.PROGRAM_MANAGER:
         return "bg-blue-100 text-blue-800";
-      case "client_admin":
+      case ROLES.CLIENT_ADMIN:
         return "bg-green-100 text-green-800";
-      case "client_user":
+      case ROLES.CLIENT_USER:
         return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";

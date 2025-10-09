@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { FEATURES, PERMISSIONS, ROLES } from '@/rbac/constants';
 import { RBACAdminService } from '@/services/rbac_admin_service';
+import { applyRbacChangesAction } from './actions';
 
 import type {
   RBACMatrixRowUser,
@@ -249,7 +250,7 @@ export default function AccessControlClient() {
         actorUserId: currentUserId,
         changes: changeQueue,
       };
-      await RBACAdminService.applyChanges(req);
+      await applyRbacChangesAction(req, currentUserId);
       setDraftChanges(new Map());
       setChangeQueue([]);
       setSearchQuery(q => q); // reload via effect
