@@ -7,6 +7,7 @@ export const fetchCache = 'force-no-store';
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -133,7 +134,9 @@ interface AuthUser {
 }
 
 export default function TenantManagementClient() { // Renamed component
-  const { user, tenantUser, isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+  const { tenantUser } = useTenant();
   const { checkPermission, loading: permissionsloading } = usePermissions();
   const [tenants, setTenants] = useState<ExtendedTenant[]>([]);
   const [users, setUsers] = useState<TenantUser[]>([]);
