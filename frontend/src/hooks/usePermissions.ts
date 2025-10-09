@@ -23,7 +23,7 @@ export type { Feature, Permission, Role };
 type RolePermissionEntry = { feature: Feature; permission: Permission };
 type RolePermissionsMatrix = Record<Role, { role: Role; permissions: RolePermissionEntry[] }>;
 
-const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
+export const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
   [ROLES.HOST_ADMIN]: {
     role: ROLES.HOST_ADMIN,
     permissions: Object.values(FEATURES).map((feature) => ({ feature, permission: CORE_PERMISSIONS.MANAGE })),
@@ -370,6 +370,3 @@ export function usePermissions() {
 export default usePermissions;
 
 
-
-
-export { DEFAULT_ROLE_PERMISSIONS };

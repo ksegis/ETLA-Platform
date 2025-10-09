@@ -61,10 +61,10 @@ export default function ProjectManagementPage() {
   
   // Load data when auth is stable
   useEffect(() => {
-    if (auth.isStable) {
+    if (auth.isReady) {
       loadDashboardData()
     }
-  }, [auth.isStable])
+  }, [auth.isReady])
 
   const loadDashboardData = async () => {
     try {

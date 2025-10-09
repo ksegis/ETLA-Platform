@@ -9,7 +9,9 @@ import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { isDemoMode, isAuthenticated } = useAuth()
+  const { user } = useAuth()
+  const isAuthenticated = !!user;
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
   // Redirect if not authenticated and not in demo mode
   useEffect(() => {

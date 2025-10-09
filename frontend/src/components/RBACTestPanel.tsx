@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { PERMISSIONS, ROLES, CORE_PERMISSIONS } from "@/rbac/constants";
-import { DEFAULT_ROLE_PERMISSIONS } from "@/hooks/usePermissions";
+
 
 interface TestResult {
   permission: string;

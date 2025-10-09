@@ -61,18 +61,17 @@ export default function ProjectManagementPage() {
   
   // Load data when auth is stable
   useEffect(() => {
-    if (auth.isStable) {
+    if (auth.isReady) {
       loadDashboardData()
     }
-  }, [auth.isStable])
+  }, [auth.isReady])
 
   const loadDashboardData = async () => {
     try {
       setloading(true)
       setError(null)
       
-      console.log('📊 loading dashboard data with stable auth:', auth.isStable)
-
+      console.log(\'📊 loading dashboard data with ready auth:\', auth.isReady);
       // Load all data in parallel
       const [workRequests, projectCharters, risks] = await Promise.all([
         pmbok.getWorkRequests(),

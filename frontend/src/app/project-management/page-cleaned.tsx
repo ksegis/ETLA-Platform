@@ -70,7 +70,7 @@ export default function ProjectManagementPage() {
 
   // Load projects and work requests from database
   const loadData = async () => {
-    if (!selectedTenant?.id) {
+    if (!selectedTenant) {
       console.log('No tenant selected, skipping load')
       setloading(false)
       return
@@ -80,13 +80,12 @@ export default function ProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
+   console.log('loading project data for tenant:', selectedTenant);
 
-      // Load projects
       const { data: projectData, error: projectError } = await supabase
         .from('project_charters')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .eq('tenant_id', selectedTenant)
         .order('created_at', { ascending: false })
 
       if (projectError) {
@@ -100,7 +99,7 @@ export default function ProjectManagementPage() {
       const { data: workRequestData, error: workRequestError } = await supabase
         .from('work_requests')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
+        .eq('tenant_id', selectedTenant)
         .order('created_at', { ascending: false })
 
       if (workRequestError) {
@@ -351,7 +350,7 @@ export default function ProjectManagementPage() {
             <CardTitle className="text-gray-900">Projects</CardTitle>
             <CardDescription className="text-gray-600">
               {filteredProjects.length} of {projects.length} projects
-              {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
+              
             </CardDescription>
           </CardHeader>
           <CardContent>

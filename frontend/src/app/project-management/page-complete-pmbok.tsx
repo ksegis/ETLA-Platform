@@ -173,13 +173,13 @@ export default function ProjectManagementPage() {
 
   // Load data on component mount
   useEffect(() => {
-    if (selectedTenant?.id) {
+    if (selectedTenant) {
       loadData()
     }
-  }, [selectedTenant?.id])
+  }, [selectedTenant])
 
   const loadData = async () => {
-    if (!selectedTenant?.id) return
+    if (!selectedTenant) return
     
     setloading(true)
     setError(null)
@@ -190,7 +190,7 @@ export default function ProjectManagementPage() {
         const { data: projectsData, error: projectsError } = await supabase
           .from('project_charters')
           .select('*')
-          .eq('selectedTenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
           .order('created_at', { ascending: false })
         
         if (projectsError) {
@@ -209,7 +209,7 @@ export default function ProjectManagementPage() {
         const { data: workRequestsData, error: workRequestsError } = await supabase
           .from('work_requests')
           .select('*')
-          .eq('selectedTenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
           .order('created_at', { ascending: false })
         
         if (workRequestsError) {
@@ -228,7 +228,7 @@ export default function ProjectManagementPage() {
         const { data: risksData, error: risksError } = await supabase
           .from('risk_register')
           .select('*')
-          .eq('selectedTenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
           .order('created_at', { ascending: false })
         
         if (risksError) {
@@ -288,12 +288,13 @@ export default function ProjectManagementPage() {
 
   // Create new project
   const handleCreateProject = async (projectData: Partial<ProjectCharter>) => {
-    if (!selectedTenant?.id || !user?.id) return
+    if (!selectedTenant || !user?.id) return
 
     try {
       const newProject = {
         ...projectData,
-        selectedTenant_id: selectedTenant?.id,        created_at: new Date().toISOString(),
+        tenant_id: selectedTenant,
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
 
@@ -498,928 +499,272 @@ export default function ProjectManagementPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <header className="flex items-center justify-between pb-4 border-b">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
-            <p className="text-gray-600 mt-1">Comprehensive project lifecycle management with PMBOK framework</p>
+            <h1 className="text-3xl font-bold text-gray-900">Project Management Hub</h1>
+            <p className="text-gray-500">Comprehensive overview of all project-related activities</p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
-              <span className="text-red-800">{error}</span>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800"
-            >
-              ×
-            </button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
           </div>
-        )}
+        </header>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-4">
-          {statisticsCards.map((stat, index: any) => (
+        {/* Statistics Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {statisticsCards.map((stat, index) => (
             <Card key={index} className={`${stat.bgColor} border-0`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  </div>
-                  <stat.icon className={`h-8 w-8 ${stat.iconColor}`} />
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className={`text-sm font-medium ${stat.iconColor}`}>{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                 </div>
+                <stat.icon className={`h-8 w-8 ${stat.iconColor}`} />
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 overflow-x-auto">
-            {tabs.map((tab: any) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <tab.icon className="h-4 w-4 mr-2" />
-                {tab.label}
-                {tab.count !== undefined && (
-                  <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
+        {/* Main Content Area with Tabs */}
+        <div>
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`${
                     activeTab === tab.id
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-        </div>
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+                >
+                  <tab.icon className="h-5 w-5 mr-2" />
+                  {tab.label}
+                  {tab.count !== undefined && (
+                    <span
+                      className={`${
+                        activeTab === tab.id
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-gray-100 text-gray-600'
+                      } ml-2 py-0.5 px-2 rounded-full text-xs font-medium`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-        {/* Tab Content */}
-        {activeTab === 'projects' && (
-          <div className="space-y-6">
-            {/* Filters and Search */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Enhanced Filters & Search</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-                <div className="lg:col-span-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search projects..."
-                      value={searchTerm}
-                      onChange={(e: any) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+          {/* Tab Content */}
+          <div className="mt-6">
+            {activeTab === 'projects' && (
+              <div>
+                {/* Project Filters and View Toggle */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search projects..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-64"
+                      />
+                    </div>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="border-gray-300 rounded-md"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                      <option value="on_hold">On Hold</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setViewMode('list')}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setViewMode('grid')}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <select
-                  value={statusFilter}
-                  onChange={(e: any) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                  <option value="on_hold">On Hold</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <select
-                  value={priorityFilter}
-                  onChange={(e: any) => setPriorityFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Priorities</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-                <select
-                  value={departmentFilter}
-                  onChange={(e: any) => setDepartmentFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Departments</option>
-                  <option value="IT">IT</option>
-                  <option value="HR">HR</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Operations">Operations</option>
-                  <option value="Marketing">Marketing</option>
-                </select>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchTerm('')
-                    setStatusFilter('all')
-                    setPriorityFilter('all')
-                    setDepartmentFilter('all')
-                    setProjectTypeFilter('all')
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            </div>
 
-            {/* Project List Header */}
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Enhanced Projects ({filteredProjects.length} records)
-              </h3>
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </button>
-                </div>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export JSON
-                </Button>
-              </div>
-            </div>
-
-            {/* Projects Display */}
-            {viewMode === 'list' ? (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team Lead</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredProjects.map((project: any) => (
-                        <tr key={project.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{getProjectName(project)}</div>
-                              {project.project_code && (
-                                <div className="text-sm text-gray-500">{project.project_code}</div>
-                              )}
+                {/* Project List/Grid */}
+                {viewMode === 'list' ? (
+                  <div className="space-y-3">
+                    {filteredProjects.map((project) => (
+                      <Card key={project.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-semibold text-lg">{getProjectName(project)}</h3>
+                              <Badge>{project.charter_status}</Badge>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <User className="h-4 w-4 text-gray-400 mr-2" />
-                              <span className="text-sm text-gray-900">{getProjectTeamLead(project)}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={project.charter_status === 'active' ? 'default' : 'secondary'}>
-                              {project.charter_status || 'draft'}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={project.priority === 'high' ? 'destructive' : 'secondary'}>
-                              {project.priority || 'medium'}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                <div 
-                                  className="bg-blue-600 h-2 rounded-full" 
-                                  style={{ width: `${project.completion_percentage || 0}%` }}
-                                ></div>
+                            <p className="text-sm text-gray-500 mt-1">{project.description}</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {getProjectTeamLead(project)}
                               </div>
-                              <span className="text-sm text-gray-600">{project.completion_percentage || 0}%</span>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(project.start_date || '').toLocaleDateString()} - {new Date(project.end_date || '').toLocaleDateString()}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <DollarSign className="h-3 w-3" />
+                                {`$${(project.budget || 0).toLocaleString()}`}
+                              </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${(project.budget || project.estimated_budget || 0).toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex items-center space-x-2">
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedProject(project)
-                                  setIsEditModalOpen(true)
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleDeleteProject(project.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => {
+                              setSelectedProject(project);
+                              setIsEditModalOpen(true);
+                            }}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-red-500" onClick={() => handleDeleteProject(project.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredProjects.map((project) => (
+                      <Card key={project.id} className="flex flex-col">
+                        <CardHeader>
+                          <CardTitle>{getProjectName(project)}</CardTitle>
+                          <CardDescription>{project.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="font-medium">Status</span>
+                              <Badge>{project.charter_status}</Badge>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project: any) => (
-                  <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{getProjectName(project)}</CardTitle>
-                          {project.project_code && (
-                            <CardDescription>{project.project_code}</CardDescription>
-                          )}
-                        </div>
-                        <div className="flex space-x-1">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedProject(project)
-                              setIsEditModalOpen(true)
-                            }}
-                          >
+                            <div className="flex justify-between">
+                              <span className="font-medium">Team Lead</span>
+                              <span>{getProjectTeamLead(project)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium">Budget</span>
+                              <span>{`$${(project.budget || 0).toLocaleString()}`}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium">End Date</span>
+                              <span>{new Date(project.end_date || '').toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                        <div className="p-4 border-t flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            setSelectedProject(project);
+                            setIsEditModalOpen(true);
+                          }}>
                             <Edit className="h-4 w-4" />
                           </Button>
+                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => handleDeleteProject(project.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Status:</span>
-                          <Badge variant={project.charter_status === 'active' ? 'default' : 'secondary'}>
-                            {project.charter_status || 'draft'}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Priority:</span>
-                          <Badge variant={project.priority === 'high' ? 'destructive' : 'secondary'}>
-                            {project.priority || 'medium'}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Team Lead:</span>
-                          <span className="text-sm font-medium">{getProjectTeamLead(project)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Budget:</span>
-                          <span className="text-sm font-medium">
-                            ${(project.budget || project.estimated_budget || 0).toLocaleString()}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm text-gray-600">Progress:</span>
-                            <span className="text-sm font-medium">{project.completion_percentage || 0}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full" 
-                              style={{ width: `${project.completion_percentage || 0}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-
-        {/* Other tab content placeholders */}
-        {activeTab === 'work-requests' && (
-          <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Work Requests</h3>
-            <p className="text-gray-600">Work request management functionality coming soon.</p>
-          </div>
-        )}
-
-        {activeTab === 'risks' && (
-          <div className="text-center py-12">
-            <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Risk Management</h3>
-            <p className="text-gray-600">Risk register and management functionality coming soon.</p>
-          </div>
-        )}
-
-        {activeTab === 'charter' && (
-          <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Project Charter</h3>
-            <p className="text-gray-600">Project charter management functionality coming soon.</p>
-          </div>
-        )}
-
-        {activeTab === 'wbs' && (
-          <div className="text-center py-12">
-            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Work Breakdown Structure</h3>
-            <p className="text-gray-600">WBS management functionality coming soon.</p>
-          </div>
-        )}
-
-        {activeTab === 'schedule' && (
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Project Schedule</h3>
-            <p className="text-gray-600">Schedule management functionality coming soon.</p>
-          </div>
-        )}
-
-        {activeTab === 'evm' && (
-          <div className="text-center py-12">
-            <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Earned Value Management</h3>
-            <p className="text-gray-600">EVM functionality coming soon.</p>
-          </div>
-        )}
-
-        {activeTab === 'stakeholders' && (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Stakeholder Management</h3>
-            <p className="text-gray-600">Stakeholder management functionality coming soon.</p>
-          </div>
-        )}
-
-        {activeTab === 'compliance' && (
-          <div className="text-center py-12">
-            <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Compliance Management</h3>
-            <p className="text-gray-600">Compliance tracking functionality coming soon.</p>
-          </div>
-        )}
+        </div>
       </div>
-
-      {/* Create Project Modal */}
-      {isCreateModalOpen && (
-        <CreateProjectModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onSubmit={handleCreateProject}
-          workRequests={workRequests}
-        />
-      )}
-
-      {/* Edit Project Modal */}
-      {isEditModalOpen && selectedProject && (
-        <EditProjectModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false)
-            setSelectedProject(null)
-          }}
-          onSubmit={(updates: any) => handleUpdateProject(selectedProject.id, updates)}
-          project={selectedProject}
-          workRequests={workRequests}
-        />
-      )}
     </DashboardLayout>
   )
 }
 
-// Create Project Modal Component
-function CreateProjectModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  workRequests 
-}: { 
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (data: Partial<ProjectCharter>) => void
-  workRequests: WorkRequest[]
-}) {
-  const [formData, setFormData] = useState<Partial<ProjectCharter>>({
-    title: '',
-    project_name: '',
-    project_code: '',
-    priority: 'medium',
-    charter_status: 'draft',
-    completion_percentage: 0,
-    project_type: 'internal',
-    billing_type: 'fixed'
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Create New Project</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
-                <Input
-                  value={formData.title || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter project title"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
-                <Input
-                  value={formData.project_code || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, project_code: e.target.value }))}
-                  placeholder="e.g., PROJ-2024-001"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Project description"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select
-                    value={formData.priority || 'medium'}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Type</label>
-                  <select
-                    value={formData.project_type || 'internal'}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, project_type: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="internal">Internal</option>
-                    <option value="external">External</option>
-                    <option value="customer">Customer</option>
-                    <option value="maintenance">Maintenance</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Team & Organization */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Team & Organization</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Team Lead</label>
-                <Input
-                  value={formData.assigned_team_lead || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
-                  placeholder="Assigned team lead"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sponsor</label>
-                <Input
-                  value={formData.sponsor || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, sponsor: e.target.value }))}
-                  placeholder="Project sponsor"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <select
-                    value={formData.department || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Department</option>
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Marketing">Marketing</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
-                  <Input
-                    value={formData.division || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, division: e.target.value }))}
-                    placeholder="Division"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Work Request Reference</label>
-                <select
-                  value={formData.work_request_id || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, work_request_id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Create without work request</option>
-                  {workRequests.filter((wr: any) => wr.status === 'approved').map((wr) => (
-                    <option key={wr.id} value={wr.id}>
-                      {wr.title || `Work Request ${wr.id.slice(0, 8)}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* PMBOK Framework Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">PMBOK Framework</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Scope</label>
-                <textarea
-                  value={formData.project_scope || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, project_scope: e.target.value }))}
-                  placeholder="Define project scope and boundaries"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Success Criteria</label>
-                <textarea
-                  value={formData.success_criteria || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, success_criteria: e.target.value }))}
-                  placeholder="Define success criteria and acceptance criteria"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Business Case</label>
-                <textarea
-                  value={formData.business_case || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, business_case: e.target.value }))}
-                  placeholder="Business justification for the project"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Project Details</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                  <Input
-                    type="date"
-                    value={formData.start_date || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                  <Input
-                    type="date"
-                    value={formData.end_date || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
-                <Input
-                  type="number"
-                  value={formData.budget || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0.00"
-                  step="0.01"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Risk Assessment</label>
-                <textarea
-                  value={formData.risk_assessment || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, risk_assessment: e.target.value }))}
-                  placeholder="Initial risk assessment and mitigation strategies"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Quality Metrics</label>
-                <textarea
-                  value={formData.quality_metrics || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, quality_metrics: e.target.value }))}
-                  placeholder="Quality standards and metrics"
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-4 pt-6 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-              Create Project
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// Edit Project Modal Component
-function EditProjectModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  project,
-  workRequests 
-}: { 
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (data: Partial<ProjectCharter>) => void
-  project: ProjectCharter
-  workRequests: WorkRequest[]
-}) {
-  const [formData, setFormData] = useState<Partial<ProjectCharter>>(project)
+// Modal for creating/editing a project (simplified)
+// A real implementation would use a library like Radix or a separate component
+const ProjectModal = ({ isOpen, onClose, project, onSave }: {
+  isOpen: boolean;
+  onClose: () => void;
+  project?: ProjectCharter | null;
+  onSave: (data: Partial<ProjectCharter>) => void;
+}) => {
+  const [formData, setFormData] = useState<Partial<ProjectCharter>>({});
 
   useEffect(() => {
-    setFormData(project)
-  }, [project])
+    if (project) {
+      setFormData(project);
+    } else {
+      setFormData({});
+    }
+  }, [project]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
+    e.preventDefault();
+    onSave(formData);
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Project</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
-                <Input
-                  value={formData.title || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter project title"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Code</label>
-                <Input
-                  value={formData.project_code || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, project_code: e.target.value }))}
-                  placeholder="e.g., PROJ-2024-001"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Project description"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    value={formData.charter_status || 'draft'}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, charter_status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="active">Active</option>
-                    <option value="completed">Completed</option>
-                    <option value="on_hold">On Hold</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select
-                    value={formData.priority || 'medium'}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Completion Percentage</label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.completion_percentage || 0}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, completion_percentage: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-8 w-full max-w-2xl">
+        <h2 className="text-2xl font-bold mb-4">{project ? 'Edit Project' : 'Create Project'}</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
+            <Input id="title" name="title" value={formData.title || ''} onChange={handleChange} required />
+          </div>
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+            <textarea id="description" name="description" value={formData.description || ''} onChange={handleChange} className="w-full border-gray-300 rounded-md" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">Start Date</label>
+              <Input id="start_date" name="start_date" type="date" value={formData.start_date || ''} onChange={handleChange} />
             </div>
-
-            {/* Team & Organization */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Team & Organization</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Team Lead</label>
-                <Input
-                  value={formData.assigned_team_lead || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, assigned_team_lead: e.target.value }))}
-                  placeholder="Assigned team lead"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sponsor</label>
-                <Input
-                  value={formData.sponsor || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, sponsor: e.target.value }))}
-                  placeholder="Project sponsor"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <select
-                    value={formData.department || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Department</option>
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Marketing">Marketing</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
-                  <Input
-                    value={formData.division || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, division: e.target.value }))}
-                    placeholder="Division"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                  <Input
-                    type="date"
-                    value={formData.start_date || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                  <Input
-                    type="date"
-                    value={formData.end_date || ''}
-                    onChange={(e: any) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
-                <Input
-                  type="number"
-                  value={formData.budget || ''}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0.00"
-                  step="0.01"
-                />
-              </div>
+            <div>
+              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">End Date</label>
+              <Input id="end_date" name="end_date" type="date" value={formData.end_date || ''} onChange={handleChange} />
             </div>
           </div>
-
-          <div className="flex justify-end space-x-4 pt-6 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-              Update Project
-            </Button>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button type="submit">Save Project</Button>
           </div>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
