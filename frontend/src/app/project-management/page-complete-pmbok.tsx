@@ -315,15 +315,14 @@ export default function ProjectManagementPage() {
       setProjects(prev => [data, ...prev])
       setIsCreateModalOpen(false)
     } catch (error) {
-      console.error('Error creating project:', error)
-      setError('Failed to create project. Please try again.')
+      console.error(\'Error creating project:\', error)
+      setError(\'Failed to create project. Please try again.\')
     }
   }
 
-  // Update p  const handleUpdateProject = async (projectId: string, updates: Partial<ProjectCharter>) => {
+  const handleUpdateProject = async (projectId: string, updates: Partial<ProjectCharter>) => {
     try {
       const supabase = createSupabaseBrowserClient();
-
       const { data, error } = await supabase
         .from('project_charters')
         .update({
