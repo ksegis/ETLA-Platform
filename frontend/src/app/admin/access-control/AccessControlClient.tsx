@@ -25,25 +25,22 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
-/* ---------- FIXED dynamic imports ---------- */
-// RBACMatrixGrid exports a *default*
+/* ---------- dynamic imports ---------- */
 const RBACMatrixGrid = dynamic(
   () => import('@/components/rbac/RBACMatrixGrid'),
   { ssr: false }
 );
-
-// RolesPermissionsTab also has a *default*
 const RolesPermissionsTab = dynamic(
   () => import('@/components/rbac/RolesPermissionsTab'),
   { ssr: false }
 );
-
-// UserDetailPanel is a *named* export in your repo
 const UserDetailPanel = dynamic(
   () => import('@/components/rbac/UserDetailPanel').then(m => m.UserDetailPanel as any),
   { ssr: false }
 );
-/* ------------------------------------------- */
+/* ------------------------------------- */
+
+type TabKey = 'users' | 'roles' | 'invitations' | 'notifications';
 
 export default function AccessControlClient() {
   const router = useRouter();
@@ -51,7 +48,7 @@ export default function AccessControlClient() {
   const { user, isAuthenticated } = useAuth();
   const { checkPermission, currentUserRole, loading: permissionsLoading } = usePermissions();
 
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'invitations' | 'notifications'>('users');
+  const [activeTab, setActiveTab] = useState<TabKey>('users');
 
   const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedTenant, setSelectedTenant] = useState<{ id: string; name: string } | null>(null);
@@ -70,14 +67,12 @@ export default function AccessControlClient() {
 
   const currentUserId = user?.id ?? null;
 
-  // prevent setState after unmount
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
 
-  // compute once after perms ready; don't depend on function identity
   const canViewAccess = useMemo(() => {
     if (permissionsLoading) return false;
     try {
@@ -88,7 +83,6 @@ export default function AccessControlClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permissionsLoading]);
 
-  // initial load (run once)
   const initRan = useRef(false);
   useEffect(() => {
     if (!isAuthenticated || permissionsLoading || initRan.current) return;
@@ -125,7 +119,6 @@ export default function AccessControlClient() {
     load();
   }, [isAuthenticated, permissionsLoading, canViewAccess, router, selectedTenant]);
 
-  // load tenant users (debounced)
   useEffect(() => {
     if (!selectedTenant) return;
 
@@ -166,7 +159,6 @@ export default function AccessControlClient() {
     };
   }, [selectedTenant?.id, searchQuery]);
 
-  // load selected user detail
   useEffect(() => {
     if (!selectedUserId || !selectedTenant) return;
 
@@ -229,7 +221,6 @@ export default function AccessControlClient() {
       await RBACAdminService.applyChanges(req);
       setDraftChanges(new Map());
       setChangeQueue([]);
-      // refresh list
       setSearchQuery(q => q);
     } catch (e) {
       console.error('AccessControl: applyChanges failed', e);
@@ -255,7 +246,11 @@ export default function AccessControlClient() {
           </CardHeader>
 
           <CardContent>
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={(v: string) => setActiveTab(v as TabKey)}
+              className="w-full"
+            >
               <div className="flex items-center justify-between mb-4">
                 <TabsList>
                   <TabsTrigger value="users">Users</TabsTrigger>
