@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   Search, 
   Filter, 
@@ -182,7 +181,7 @@ interface Application {
 }
 
 export default function PipelinePage() {
-  const { selectedTenant } = useTenant();
+  const { currentTenant } = useTenant();
   const [applications, setApplications] = useState<Application[]>(MOCK_APPLICATIONS);
   const [searchTerm, setSearchTerm] = useState('');
   const [jobFilter, setJobFilter] = useState('all');
@@ -265,8 +264,7 @@ export default function PipelinePage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -588,7 +586,6 @@ export default function PipelinePage() {
           )}
         </DialogContent>
       </Dialog>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

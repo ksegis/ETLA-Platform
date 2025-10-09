@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   Search, 
   Filter, 
@@ -237,7 +236,7 @@ interface Candidate {
 }
 
 export default function CandidatesPage() {
-  const { selectedTenant } = useTenant();
+  const { currentTenant } = useTenant();
   const [candidates, setCandidates] = useState<Candidate[]>(MOCK_CANDIDATES);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -291,8 +290,7 @@ export default function CandidatesPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -878,7 +876,6 @@ export default function CandidatesPage() {
           )}
         </DialogContent>
       </Dialog>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   FileText, 
   DollarSign, 
@@ -248,7 +247,7 @@ interface Offer {
 }
 
 export default function OffersPage() {
-  const { selectedTenant } = useTenant();
+  const { currentTenant } = useTenant();
   const [offers, setOffers] = useState<Offer[]>(MOCK_OFFERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -318,8 +317,7 @@ export default function OffersPage() {
   });
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -984,7 +982,6 @@ export default function OffersPage() {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

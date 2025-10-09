@@ -5,10 +5,14 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase, Tenant, User } from '@/lib/supabase'
 
 interface TenantContextType {
-  currentTenant: string | null
-  userRole: string | null
-  userProfile: User | null
-  switchTenant: (tenantId: string) => void
+  // Current selected tenant (for filtering)
+  selectedTenant: Tenant | null
+  setSelectedTenant: (tenant: Tenant | null) => void
+  
+  // Current tenant (alias for selectedTenant for compatibility)
+  currentTenant: Tenant | null
+  
+  // Available tenants for current user
   availableTenants: Tenant[]
   loading: boolean
 }
@@ -77,8 +81,35 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const switchTenant = (tenantId: string) => {
-    setCurrentTenant(tenantId)
+  // Get all accessible tenant IDs for data loading
+  const getAllAccessibleTenantIds = (): string[] => {
+    if (isDemoMode) {
+      return [demoTenant.id]
+    }
+    return availableTenants.map(tenant => tenant.id)
+  }
+
+  // Check if user has access to multiple tenants
+  const isMultiTenant = (): boolean => {
+    return availableTenants.length > 1
+  }
+
+  // Load tenants when auth state changes
+  useEffect(() => {
+    loadAvailableTenants()
+  }, [isAuthenticated, user, tenantUser, isDemoMode])
+
+  const value: TenantContextType = {
+    selectedTenant,
+    setSelectedTenant,
+    currentTenant: selectedTenant, // Alias for compatibility
+    availableTenants,
+    isLoading,
+    loadAvailableTenants,
+    canSelectTenant,
+    getAllAccessibleTenantIds,
+    isMultiTenant,
+    isDemoMode
   }
 
   return (

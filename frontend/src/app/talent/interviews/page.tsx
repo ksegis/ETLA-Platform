@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -208,7 +207,7 @@ interface Interview {
 }
 
 export default function InterviewsPage() {
-  const { selectedTenant } = useTenant();
+  const { currentTenant } = useTenant();
   const [interviews, setInterviews] = useState<Interview[]>(MOCK_INTERVIEWS);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -285,8 +284,7 @@ export default function InterviewsPage() {
   }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -865,7 +863,6 @@ export default function InterviewsPage() {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

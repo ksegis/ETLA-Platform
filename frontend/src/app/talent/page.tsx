@@ -46,20 +46,20 @@ interface RecentActivity {
 }
 
 export default function TalentDashboard() {
-  const { selectedTenant } = useTenant();
+  const { currentTenant } = useTenant();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setloading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (selectedTenant?.id) {
+    if (currentTenant?.id) {
       loadDashboardData();
     }
-  }, [selectedTenant?.id]);
+  }, [currentTenant?.id]);
 
   const loadDashboardData = async () => {
     try {
-      setloading(true);
+      setLoading(true);
       
       // Load metrics and recent activity
       await Promise.all([
@@ -69,7 +69,7 @@ export default function TalentDashboard() {
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
