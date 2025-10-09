@@ -1,298 +1,415 @@
 'use client'
 
-import { useState } from 'react'
-import { Eye, EyeOff, LogIn, Mail, Lock, UserPlus } from 'lucide-react'
+import React, { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { supabase } from '@/lib/supabase'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { LogIn, Loader2, AlertCircle, Mail, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { userManagement } from '@/lib/supabase'
 
-export default function LoginPage() {
+interface ForgotPasswordState {
+  email: string
+  isLoading: boolean
+  error: string | null
+  success: boolean
+}
+
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [message, setMessage] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [activeTab, setActiveTab] = useState<'login' | 'forgot'>('login')
+  const { signIn } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const [forgotState, setForgotState] = useState<ForgotPasswordState>({
+    email: '',
+    isLoading: false,
+    error: null,
+    success: false
+  })
+
+  // Handle URL parameters and messages
+  useEffect(() => {
+    const urlMessage = searchParams.get('message')
+    const tab = searchParams.get('tab')
+    
+    if (urlMessage) {
+      setMessage(urlMessage)
+    }
+    
+    if (tab === 'forgot') {
+      setActiveTab('forgot')
+    }
+  }, [searchParams])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
 
     try {
-      console.log('Attempting login with:', email)
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      })
-
-      if (error) {
-        console.error('Login error:', error)
-        setError(error.message)
-        return
-      }
-
-      console.log('Login successful:', data)
-
-      if (data.user) {
-        alert('Login successful!')
-        // Redirect to dashboard or work requests
-        window.location.href = '/work-requests'
-      }
-    } catch (err) {
-      console.error('Login exception:', err)
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
-      setError(errorMessage)
+      await signIn(email, password)
+      router.push('/dashboard')
+    } catch (err: any) {
+      setError(err.message || 'Login failed')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!email || !password) {
-      setError('Please enter email and password')
+    if (!forgotState.email) {
+      setForgotState(prev => ({ ...prev, error: 'Please enter your email address' }))
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
-    }
-
-    setIsLoading(true)
-    setError('')
+    setForgotState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
-      console.log('Attempting signup with:', email)
-      
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password,
-        options: {
-          data: {
-            first_name: 'Demo',
-            last_name: 'User',
-            role: 'client_user'
-          }
-        }
-      })
-
-      if (error) {
-        console.error('Signup error:', error)
-        setError(error.message)
-        return
-      }
-
-      console.log('Signup response:', data)
-
-      if (data.user) {
-        if (data.user.email_confirmed_at) {
-          // User is immediately confirmed
-          alert('Account created and logged in successfully!')
-          window.location.href = '/work-requests'
-        } else {
-          // Email confirmation required
-          alert('Account created! Please check your email for confirmation, or try logging in directly.')
-          setIsSignUp(false)
-          
-          // Try to sign in immediately (some Supabase configs allow this)
-          setTimeout(async () => {
-            try {
-              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                email: email.trim(),
-                password: password,
-              })
-              
-              if (!signInError && signInData.user) {
-                window.location.href = '/work-requests'
-              }
-            } catch (e) {
-              console.log('Auto sign-in failed, user needs to confirm email')
-            }
-          }, 1000)
-        }
-      }
-    } catch (err) {
-      console.error('Signup exception:', err)
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
-      setError(errorMessage)
-    } finally {
-      setIsLoading(false)
+      await userManagement.sendPasswordReset(forgotState.email)
+      setForgotState(prev => ({
+        ...prev,
+        isLoading: false,
+        success: true
+      }))
+    } catch (err: any) {
+      setForgotState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: err.message || 'Failed to send reset email. Please try again.'
+      }))
     }
   }
 
-  const fillDemoCredentials = () => {
-    setEmail('demo@example.com')
-    setPassword('password123')
-    setError('')
+  const fillTestCredentials = (role: 'host_admin' | 'host_manager' | 'primary_client_admin' | 'sub_client_user') => {
+    const credentials = {
+      host_admin: { email: 'kevin.shelton@outlook.com', password: 'TestPassword123!' },
+      host_manager: { email: 'kt.shelton@outlook.com', password: 'TestPassword123!' },
+      primary_client_admin: { email: 'ke.shelton@outlook.com', password: 'TestPassword123!' },
+      sub_client_user: { email: 'kevin.shelton@invictusbpo.com', password: 'TestPassword123!' }
+    }
+    
+    const cred = credentials[role]
+    setEmail(cred.email)
+    setPassword(cred.password)
+    setActiveTab('login')
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">E</span>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-gray-900">ETLA Platform</CardTitle>
+          <CardDescription className="text-gray-600">
+            Sign in to access your account
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {message && (
+            <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-3">
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                <p className="text-sm text-green-600">{message}</p>
+              </div>
             </div>
-            <span className="text-2xl font-bold text-gray-900">ETLA</span>
+          )}
+
+          {/* Tab Navigation */}
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('login')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'login'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <LogIn className="h-4 w-4 inline mr-2" />
+              Sign In
+            </button>
+            <button
+              onClick={() => setActiveTab('forgot')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'forgot'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Mail className="h-4 w-4 inline mr-2" />
+              Forgot Password
+            </button>
           </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          {isSignUp ? 'Create your account' : 'Sign in to your account'}
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Access your work requests and project management
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={isSignUp ? handleSignUp : handleLogin}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+          {activeTab === 'login' ? (
+            <>
+              {/* Login Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  </div>
+                )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your email"
-                />
-                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-            </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your email"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password {isSignUp && <span className="text-xs text-gray-500">(min 6 characters)</span>}
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your password"
-                />
-                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
+                      placeholder="Enter your password"
+                      required
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Signing In...
+                    </>
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <>
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In
+                    </>
                   )}
-                </button>
-              </div>
-            </div>
+                </Button>
 
-            <div className="space-y-3">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {isSignUp ? 'Creating account...' : 'Signing in...'}
-                  </>
-                ) : (
-                  <>
-                    {isSignUp ? (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('forgot')}
+                    className="text-sm text-blue-600 hover:text-blue-500"
+                    disabled={isLoading}
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              </form>
+
+              {/* Test Credentials */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Test Credentials</h3>
+                <p className="text-xs text-gray-500 mb-3">Click to fill in test user credentials</p>
+                
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('host_admin')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    Host Admin
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('host_manager')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                    Host Manager
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('primary_client_admin')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                    Primary Client Admin
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fillTestCredentials('sub_client_user')}
+                    className="w-full text-left justify-start"
+                    disabled={isLoading}
+                  >
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Sub Client User
+                  </Button>
+                </div>
+
+                <div className="mt-4 text-center">
+                  <a
+                    href="/rbac-test"
+                    className="text-sm text-blue-600 hover:text-blue-500"
+                  >
+                    RBAC Test Page
+                  </a>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Forgot Password Form */}
+              {forgotState.success ? (
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Check Your Email</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      We've sent a password reset link to <strong>{forgotState.email}</strong>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Didn't receive the email? Check your spam folder or try again.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setForgotState({ email: '', isLoading: false, error: null, success: false })}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Send Another Email
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Reset Your Password</h3>
+                    <p className="text-sm text-gray-600">
+                      Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                  </div>
+
+                  {forgotState.error && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                      <div className="flex items-center">
+                        <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
+                        <p className="text-sm text-red-600">{forgotState.error}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      value={forgotState.email}
+                      onChange={(e) => setForgotState(prev => ({ ...prev, email: e.target.value, error: null }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter your email address"
+                      required
+                      disabled={forgotState.isLoading}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={forgotState.isLoading || !forgotState.email}
+                  >
+                    {forgotState.isLoading ? (
                       <>
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Create Account
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Sending Reset Link...
                       </>
                     ) : (
                       <>
-                        <LogIn className="h-4 w-4 mr-2" />
-                        Sign In
+                        <Mail className="h-4 w-4 mr-2" />
+                        Send Reset Link
                       </>
                     )}
-                  </>
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsSignUp(!isSignUp)
-                  setError('')
-                }}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-              </Button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo Access</span>
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={fillDemoCredentials}
-                className="w-full"
-              >
-                Fill Demo Credentials
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => window.location.href = '/work-requests'}
-                className="w-full"
-              >
-                Continue as Guest (Demo Mode)
-              </Button>
-            </div>
-
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Testing options:</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• <strong>Create account:</strong> Use any email/password</li>
-                <li>• <strong>Demo credentials:</strong> demo@example.com / password123</li>
-                <li>• <strong>Guest mode:</strong> No login required</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+                  </Button>
+                </form>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading...</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <LoginForm />
+    </Suspense>
   )
 }
 

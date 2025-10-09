@@ -10,16 +10,14 @@ import { supabase } from '@/lib/supabase'
 interface PasswordResetState {
   password: string
   confirmPassword: string
-  Loading: boolean
+  isLoading: boolean
   error: string | null
   success: boolean
   isValidSession: boolean
   isCheckingSession: boolean
 }
-function LoadingFallback() {
-  return <div>Loading…</div>;
-}
-function PasswordResetForm() {
+
+function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
@@ -28,21 +26,20 @@ function PasswordResetForm() {
   const [state, setState] = useState<PasswordResetState>({
     password: '',
     confirmPassword: '',
-    Loading: false,
+    isLoading: false,
     error: null,
     success: false,
     isValidSession: false,
     isCheckingSession: true
   })
 
-  // Check for recovery session on component mount
+  // Validate recovery session on component mount
   useEffect(() => {
-    const checkRecoverySession = async () => {
+    const validateRecoverySession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('Session error:', error)
           setState(prev => ({
             ...prev,
             isValidSession: false,
@@ -53,13 +50,7 @@ function PasswordResetForm() {
         }
 
         // Check if this is a recovery session
-        // Recovery sessions have a specific type or the user came from a password reset email
-        const isRecoverySession = session?.user?.aud === 'authenticated' && 
-          (searchParams.get('type') === 'recovery' || 
-           searchParams.get('token_hash') || 
-           session?.user?.recovery_sent_at)
-
-        if (isRecoverySession && session?.user) {
+        if (session?.user?.recovery_sent_at) {
           setState(prev => ({
             ...prev,
             isValidSession: true,
@@ -74,7 +65,6 @@ function PasswordResetForm() {
           }))
         }
       } catch (err) {
-        console.error('Recovery session check failed:', err)
         setState(prev => ({
           ...prev,
           isValidSession: false,
@@ -84,8 +74,8 @@ function PasswordResetForm() {
       }
     }
 
-    checkRecoverySession()
-  }, [searchParams])
+    validateRecoverySession()
+  }, [])
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
@@ -137,10 +127,9 @@ function PasswordResetForm() {
       return
     }
 
-    setState(prev => ({ ...prev, Loading: true, error: null }))
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
-      // Update the user's password using the recovery session
       const { error } = await supabase.auth.updateUser({
         password: state.password
       })
@@ -148,7 +137,7 @@ function PasswordResetForm() {
       if (error) {
         setState(prev => ({
           ...prev,
-          Loading: false,
+          isLoading: false,
           error: error.message
         }))
         return
@@ -156,7 +145,7 @@ function PasswordResetForm() {
 
       setState(prev => ({
         ...prev,
-        Loading: false,
+        isLoading: false,
         success: true
       }))
 
@@ -169,17 +158,17 @@ function PasswordResetForm() {
     } catch (err: any) {
       setState(prev => ({
         ...prev,
-        Loading: false,
+        isLoading: false,
         error: err.message || 'Failed to update password. Please try again.'
       }))
     }
   }
 
-  const handleRequestNewReset = () => {
-    router.push('/login?tab=forgot&message=Please enter your email to request a new password reset.')
+  const handleRetryReset = () => {
+    router.push('/login?tab=forgot')
   }
 
-  // loading state while checking session
+  // Loading state while checking session
   if (state.isCheckingSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -211,10 +200,9 @@ function PasswordResetForm() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={handleRequestNewReset}
+              onClick={handleRetryReset}
               className="w-full"
             >
-              <Lock className="h-4 w-4 mr-2" />
               Request New Reset Link
             </Button>
             <Button 
@@ -240,7 +228,7 @@ function PasswordResetForm() {
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
-            <CardTitle className="text-xl text-gray-900">Password Updated!</CardTitle>
+            <CardTitle className="text-xl text-gray-900">Password Updated</CardTitle>
             <CardDescription className="text-gray-600">
               Your password has been successfully updated. You will be redirected to sign in shortly.
             </CardDescription>
@@ -266,7 +254,7 @@ function PasswordResetForm() {
           </div>
           <CardTitle className="text-xl text-gray-900">Reset Your Password</CardTitle>
           <CardDescription className="text-gray-600">
-            Enter your new password below
+            Enter your new password below. Make sure it's strong and secure.
           </CardDescription>
         </CardHeader>
 
@@ -290,17 +278,17 @@ function PasswordResetForm() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={state.password}
-                  onChange={(e: any) => handlePasswordChange(e.target.value)}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Enter your new password"
                   required
-                  disabled={state.Loading}
+                  disabled={state.isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.Loading}
+                  disabled={state.isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -320,17 +308,17 @@ function PasswordResetForm() {
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={state.confirmPassword}
-                  onChange={(e: any) => handleConfirmPasswordChange(e.target.value)}
+                  onChange={(e) => handleConfirmPasswordChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Confirm your new password"
                   required
-                  disabled={state.Loading}
+                  disabled={state.isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.Loading}
+                  disabled={state.isLoading}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -354,18 +342,15 @@ function PasswordResetForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={state.Loading || !state.password || !state.confirmPassword}
+              disabled={state.isLoading || !state.password || !state.confirmPassword}
             >
-              {state.Loading ? (
+              {state.isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Updating password...
+                  Updating Password...
                 </>
               ) : (
-                <>
-                  <Lock className="h-4 w-4 mr-2" />
-                  Update Password
-                </>
+                'Update Password'
               )}
             </Button>
 
@@ -374,7 +359,7 @@ function PasswordResetForm() {
               variant="outline"
               onClick={() => router.push('/login')}
               className="w-full"
-              disabled={state.Loading}
+              disabled={state.isLoading}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Sign In
@@ -386,14 +371,14 @@ function PasswordResetForm() {
   )
 }
 
-function loadingFallback() {
+function LoadingFallback() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">loading...</span>
+            <span className="ml-3 text-gray-600">Loading...</span>
           </div>
         </CardContent>
       </Card>
@@ -404,7 +389,7 @@ function loadingFallback() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <PasswordResetForm />
+      <ResetPasswordForm />
     </Suspense>
   )
 }
