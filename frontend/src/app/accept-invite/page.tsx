@@ -55,7 +55,7 @@ function AcceptInviteForm() {
             ...prev,
             isValidInvite: false,
             isCheckingInvite: false,
-            error: 'Invalid or expired invite link. Please contact your administrator for a new invitation.'
+            error: &apos;Invalid or expired invite link. Please contact your administrator for a new invitation.&apos;
           }))
           return
         }
@@ -81,7 +81,7 @@ function AcceptInviteForm() {
             ...prev,
             isValidInvite: false,
             isCheckingInvite: false,
-            error: 'Invalid or expired invite link. Please contact your administrator for a new invitation.'
+            error: &apos;Invalid or expired invite link. Please contact your administrator for a new invitation.&apos;
           }))
         }
       } catch (err) {
@@ -89,7 +89,7 @@ function AcceptInviteForm() {
           ...prev,
           isValidInvite: false,
           isCheckingInvite: false,
-          error: 'Failed to validate invite link. Please try again.'
+          error: &apos;Failed to validate invite link. Please try again.&apos;
         }))
       }
     }
@@ -151,7 +151,7 @@ function AcceptInviteForm() {
     }
 
     if (state.password !== state.confirmPassword) {
-      setState(prev => ({ ...prev, error: 'Passwords do not match' }))
+      setState(prev => ({ ...prev, error: &apos;Passwords do not match&apos; }))
       return
     }
 
@@ -300,7 +300,7 @@ function AcceptInviteForm() {
           </div>
           <CardTitle className="text-xl text-gray-900">Welcome to ETLA Platform</CardTitle>
           <CardDescription className="text-gray-600">
-            You've been invited to join as <strong>{state.inviteData?.role || 'a user'}</strong>
+            You&apos;veYou&apos;ve been invited to join as <strong>{state.inviteData?.role || &apos;a user&apos;}</strong>ong>}</strong>
             {state.inviteData?.tenant_name && (
               <> at <strong>{state.inviteData.tenant_name}</strong></>
             )}

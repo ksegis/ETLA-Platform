@@ -28,3 +28,16 @@ export type PermissionKey = keyof typeof PERMISSIONS;
 // ---- Add these aliases to satisfy existing imports ----
 export type Feature = FeatureKey;
 export type Permission = PermissionKey;
+
+
+export const ROLES = {
+  HOST_ADMIN: 'host_admin',
+  CLIENT_ADMIN: 'client_admin',
+  TENANT_ADMIN: 'tenant_admin',
+  ETL_MANAGER: 'etl_manager',
+  DATA_ANALYST: 'data_analyst',
+} as const;
+
+export type RoleKey = keyof typeof ROLES;
+export type Role = RoleKey;
+

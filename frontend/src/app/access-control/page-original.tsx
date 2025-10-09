@@ -373,7 +373,7 @@ export default function AccessControlPage() {
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
-            <p className="text-gray-500">You don't have permission to access user management.</p>
+            <p className="text-gray-500">You don&apos;t have permission to access user management.</p>
           </div>
         </div>
       </DashboardLayout>

@@ -93,11 +93,11 @@ export default function JobDetailsPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Raw Input</h4>
                     <div className="bg-white border rounded p-3 text-xs font-mono">
-                      <div>emp_id: "EMP001245"</div>
-                      <div>emp_ssn: "123456789"</div>
-                      <div>hire_dt: "01/15/2024"</div>
-                      <div>salary: "75000"</div>
-                      <div>pay_grp: "STD"</div>
+                      <div>emp_id: &quot;EMP001245&quot;</div>
+                      <div>emp_ssn: &quot;123456789&quot;</div>
+                      <div>hire_dt: &quot;01/15/2024&quot;</div>
+                      <div>salary: &quot;75000&quot;</div>
+                      <div>pay_grp: &quot;STD&quot;</div>
                     </div>
                   </div>
                   
@@ -108,11 +108,11 @@ export default function JobDetailsPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Transformed Output</h4>
                     <div className="bg-white border rounded p-3 text-xs font-mono">
-                      <div>employee_id: "EMP001245"</div>
-                      <div>social_security_number: "123-45-6789"</div>
-                      <div>hire_date: "2024-01-15"</div>
-                      <div>annual_salary: "$75,000.00"</div>
-                      <div>pay_group: "STANDARD"</div>
+                      <div>employee_id: &quot;EMP001245&quot;</div>
+                      <div>social_security_number: &quot;123-45-6789&quot;</div>
+                      <div>hire_date: &quot;2024-01-15&quot;</div>
+                      <div>annual_salary: &quot;$75,000.00&quot;</div>
+                      <div>pay_group: &quot;STANDARD&quot;</div>
                     </div>
                   </div>
                 </div>
@@ -129,11 +129,11 @@ export default function JobDetailsPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Raw Input</h4>
                     <div className="bg-white border rounded p-3 text-xs font-mono">
-                      <div>emp_id: "EMP001247"</div>
-                      <div className="text-red-600">emp_ssn: "123-45-67890"</div>
-                      <div>hire_dt: "01/15/2024"</div>
-                      <div>salary: "85000"</div>
-                      <div className="text-red-600">pay_grp: ""</div>
+                      <div>emp_id: &quot;EMP001247&quot;</div>
+                      <div className="text-red-600">emp_ssn: &quot;123-45-67890&quot;</div>
+                      <div>hire_dt: &quot;01/15/2024&quot;</div>
+                      <div>salary: &quot;85000&quot;</div>
+                      <div className="text-red-600">pay_grp: &quot;&quot;</div>
                     </div>
                   </div>
                   
@@ -165,11 +165,11 @@ export default function JobDetailsPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Raw Input</h4>
                     <div className="bg-white border rounded p-3 text-xs font-mono">
-                      <div>emp_id: "EMP001250"</div>
-                      <div>emp_ssn: "987654321"</div>
-                      <div className="text-orange-600">hire_dt: "12/31/2023"</div>
-                      <div>salary: "125000"</div>
-                      <div>pay_grp: "EXEC"</div>
+                      <div>emp_id: &quot;EMP001250&quot;</div>
+                      <div>emp_ssn: &quot;987654321&quot;</div>
+                      <div className="text-orange-600">hire_dt: &quot;01/15/2024&quot;</div>
+                      <div>salary: &quot;125000&quot;</div>
+                      <div>pay_grp: &quot;EXEC&quot;</div>
                     </div>
                   </div>
                   
@@ -180,11 +180,11 @@ export default function JobDetailsPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Transformed with Warnings</h4>
                     <div className="bg-white border rounded p-3 text-xs">
-                      <div className="text-gray-600">employee_id: "EMP001250"</div>
-                      <div className="text-gray-600">social_security_number: "987-65-4321"</div>
-                      <div className="text-orange-600">⚠️ hire_date: "2023-12-31" (weekend)</div>
-                      <div className="text-orange-600">⚠️ annual_salary: "$125,000.00" (above avg)</div>
-                      <div className="text-gray-600">pay_group: "EXECUTIVE"</div>
+                      <div className="text-gray-600">employee_id: &quot;EMP001250&quot;</div>
+                      <div className="text-gray-600">social_security_number: &quot;987-65-4321&quot;</div>
+                      <div className="text-orange-600">⚠️ hire_dt: &quot;12/31/2023&quot;1" (weekend)</div>
+                      <div className="text-orange-600">⚠️ annual_salary: &quot;$125,000.00&quot; (above avg)</div>
+                      <div className="text-gray-600">pay_group: &quot;EXECUTIVE&quot;</div>
                     </div>
                   </div>
                 </div>
@@ -251,10 +251,10 @@ export default function JobDetailsPage() {
             <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
               <div className="text-sm font-medium text-blue-800 mb-1">Processing Details</div>
               <div className="text-xs text-blue-700">
-                <div>• Started: 2024-01-15 14:45:10</div>
-                <div>• Validation completed: 2024-01-15 14:47:22 (2m 12s)</div>
-                <div>• Transformation completed: 2024-01-15 14:58:45 (11m 23s)</div>
-                <div>• Load failed: 2024-01-15 15:02:33 (3m 48s) - 47 records rejected</div>
+                <div>• Started: &quot;2024-01-15 14:45:10&quot;</div>
+                <div>• Validation completed: &quot;2024-01-15 14:47:22&quot; (2m 12s) </div>
+                <div>• Transformation completed: &quot;2024-01-15 14:58:45&quot; (11m 23s) </div>
+                <div>• Load failed: &quot;2024-01-15 15:02:33&quot; (3m 48s) - 47 records rejected</div>
               </div>
             </div>
           </CardContent>
