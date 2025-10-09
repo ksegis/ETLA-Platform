@@ -331,7 +331,7 @@ export class RBACAdminService {
       logger.error("Error applying RBAC changes:", { tenantId: request.tenantId, actorUserId: request.actorUserId, action: "applyChanges", error: error instanceof Error ? error.message : String(error) })
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : \'Unknown error occurred\'
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       }
     }
   }
