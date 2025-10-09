@@ -221,7 +221,7 @@ export default function FullPMBOKProjectManagementPage() {
 
   // Enhanced load data function using all available fields
   const loadData = async () => {
-    if (!selectedTenant?.id) {
+    if (!selectedTenant) {
       console.log('No tenant selected, skipping load')
       setloading(false)
       return
@@ -231,7 +231,7 @@ export default function FullPMBOKProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log('loading full PMBOK project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log(\'loading full PMBOK project data for tenant:\', selectedTenant)
 
       // Load projects with all available fields
       try {
@@ -250,7 +250,8 @@ export default function FullPMBOKProjectManagementPage() {
             department, division, cost_center, work_request_id, customer_id,
             external_project_id, contract_number, billing_type, created_at, updated_at
           `)
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
+
           .order('created_at', { ascending: false })
 
         if (projectError) {
@@ -272,7 +273,8 @@ export default function FullPMBOKProjectManagementPage() {
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('id, name, title, description, status, priority, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
+
           .order('created_at', { ascending: false })
 
         if (workRequestError) {
@@ -293,7 +295,8 @@ export default function FullPMBOKProjectManagementPage() {
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('id, name, title, description, status, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
+
           .order('created_at', { ascending: false })
 
         if (riskError) {
@@ -432,7 +435,7 @@ export default function FullPMBOKProjectManagementPage() {
 
   // Enhanced create project function using all new fields
   const handleCreateProject = async () => {
-    if (!selectedTenant?.id || !newProject.title) {
+  if (!selectedTenant || !newProject.title) {
       setError('Please provide a project title and ensure a tenant is selected.')
       return
     }
@@ -479,7 +482,7 @@ export default function FullPMBOKProjectManagementPage() {
         external_project_id: newProject.external_project_id,
         contract_number: newProject.contract_number,
         billing_type: newProject.billing_type,
-        tenant_id: selectedTenant.id,
+        tenant_id: selectedTenant,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
