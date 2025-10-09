@@ -23,7 +23,23 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/**/*"],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist",
+
+    // Legacy/backup patterns (app + components)
+    "src/**/*-original*.ts",
+    "src/**/*-original*.tsx",
+    "src/**/*-backup*.ts",
+    "src/**/*-backup*.tsx",
+    "src/**/*-old*.ts",
+    "src/**/*-old*.tsx",
+    "src/**/page-before-*.ts",
+    "src/**/page-before-*.tsx",
+    "src/**/page-backup*.ts",
+    "src/**/page-backup*.tsx"
+  ]
 }
 
