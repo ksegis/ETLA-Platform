@@ -103,11 +103,13 @@ export default function AdminDashboard() {
         `)
         .order('name', { ascending: true })
 
-      if (!clientsError && clientsData) {
-        const transformedClients = clientsData.map(client => ({
+      type ClientRecord = { id: string; name: string; status?: string | null; subscription_tier?: string | null; updated_at?: string | null; projects?: any[]; client_kpis?: any[] };
+
+      if (!clientsError && (clientsData?.length ?? 0) > 0) {
+        const transformedClients = (clientsData as ClientRecord[]).map((client: ClientRecord) => ({
           id: client.id,
           name: client.name,
-          status: client.status,
+          status: client.status ?? "unknown",
           subscription_plan: client.subscription_tier || 'trial',
           active_projects: Array.isArray(client.projects) 
             ? client.projects.filter((p: any) => p.status === 'in_progress').length 
@@ -118,7 +120,7 @@ export default function AdminDashboard() {
           monthly_revenue: Array.isArray(client.client_kpis) && client.client_kpis.length > 0
             ? client.client_kpis[0].monthly_revenue || 0
             : Math.floor(Math.random() * 50000) + 10000, // Mock: $10k-60k
-          last_activity: client.updated_at,
+          last_activity: client.updated_at || new Date().toISOString(),
           industry: 'Technology' // Mock data
         }))
         setClients(transformedClients)
