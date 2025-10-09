@@ -3,3 +3,10 @@ node_modules
 out
 dist
 public
+
+
+src/app/**/page-*.tsx
+src/app/**/*-original*.tsx
+src/app/**/*-backup*.tsx
+src/app/**/*-old*.tsx
+

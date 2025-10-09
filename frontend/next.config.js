@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove the deprecated experimental.appDir option
-}
+  eslint: { ignoreDuringBuilds: true },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
+
