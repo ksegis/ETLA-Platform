@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { 
   Search, 
   Filter, 
@@ -53,7 +53,7 @@ export default function ProjectManagementPage() {
     try {
       setLoading(true)
       
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('work_requests')
         .select('*')
         .order('created_at', { ascending: false })
@@ -109,7 +109,7 @@ export default function ProjectManagementPage() {
 
     try {
       if (action === 'approve') {
-        const { error } = await supabase
+        const { error } = await createSupabaseBrowserClient()
           .from('work_requests')
           .update({ status: 'approved' })
           .in('id', selectedRequests)
@@ -122,7 +122,7 @@ export default function ProjectManagementPage() {
           ))
         }
       } else if (action === 'reject') {
-        const { error } = await supabase
+        const { error } = await createSupabaseBrowserClient()
           .from('work_requests')
           .update({ status: 'rejected' })
           .in('id', selectedRequests)

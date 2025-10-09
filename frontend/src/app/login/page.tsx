@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { LogIn, Loader2, AlertCircle, Mail, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { userManagement } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 interface ForgotPasswordState {
   email: string
@@ -75,7 +75,8 @@ function LoginForm() {
     setForgotState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
-      await userManagement.sendPasswordReset(forgotState.email)
+      const supabase = createSupabaseBrowserClient();
+      await supabase.auth.resetPasswordForEmail(forgotState.email);
       setForgotState(prev => ({
         ...prev,
         isLoading: false,

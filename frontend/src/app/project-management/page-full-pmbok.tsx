@@ -57,7 +57,7 @@ import { Badge } from '@/components/ui/Badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 // Enhanced interfaces using all the new database fields
 interface ProjectCharter {

@@ -25,7 +25,7 @@ import {
   Download
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 interface ProfileData {
   id: string
@@ -133,6 +133,7 @@ export default function ProfilePage() {
         if (!user?.id) return
 
         // Load profile from profiles table
+        const supabase = createSupabaseBrowserClient();
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')

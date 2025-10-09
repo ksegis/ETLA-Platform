@@ -8,7 +8,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
 import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
 import { useTenant } from '@/contexts/TenantContext';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseBrowserClient } from '@/lib/createSupabaseBrowserClient()/browser';
 import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3 } from 'lucide-react';
 
 // Enhanced interfaces for the new database schema
@@ -320,7 +320,7 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('employee_comprehensive_report')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
@@ -343,7 +343,7 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('pay_statements_comprehensive_report')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
@@ -366,7 +366,7 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('timecards_comprehensive_report')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
@@ -389,7 +389,7 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('jobs_comprehensive_report')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
@@ -412,7 +412,7 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('tax_records_comprehensive_report')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
@@ -435,7 +435,7 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('benefits_deductions_comprehensive_report')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
@@ -458,7 +458,7 @@ const EnhancedReportingPage: React.FC = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createSupabaseBrowserClient()
         .from('compliance_records_comprehensive_report')
         .select('*')
         .eq('tenant_id', selectedTenant.id)

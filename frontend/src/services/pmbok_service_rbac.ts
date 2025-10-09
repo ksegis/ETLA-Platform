@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { withPermissionCheck, ServiceAuth, getServiceAuthContext } from '@/utils/serviceAuth'
 import { FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
 import type { WorkRequest, ProjectCharter, Risk } from '@/types'
@@ -21,10 +21,7 @@ class PMBOKServiceRBAC {
 
   constructor() {
     // Create Supabase client with environment variables
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || ''
-    )
+    this.supabase = createSupabaseBrowserClient()
     console.log('🔧 PMBOK Service RBAC: Created with default demo context')
   }
 

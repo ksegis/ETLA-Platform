@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { BarChart3, Users, FileText, TrendingUp, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface DashboardStats {

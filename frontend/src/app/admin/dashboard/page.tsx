@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { 
   Building2, 
   Users, 
@@ -67,6 +67,7 @@ export default function AdminDashboard() {
       setLoading(true)
 
       // Fetch global analytics
+      const supabase = createSupabaseBrowserClient();
       const { data: analyticsData, error: analyticsError } = await supabase
         .from('global_analytics')
         .select('*')
@@ -84,7 +85,8 @@ export default function AdminDashboard() {
       }
 
       // Fetch clients with project counts
-      const { data: clientsData, error: clientsError } = await supabase
+      const supabaseClients = createSupabaseBrowserClient();
+      const { data: clientsData, error: clientsError } = await supabaseClients
         .from('tenants')
         .select(`
           id,

@@ -4,13 +4,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     // This endpoint would typically set up required storage buckets
     // For now, returning a simple response to fix the build error
     
+    const supabase = createSupabaseServerClient();
+    // Example: Create a bucket (replace with actual logic)
+    // const { data, error } = await supabase.storage.createBucket('my-new-bucket');
+    // if (error) throw error;
+
     return NextResponse.json({
       success: true,
       message: 'Buckets setup endpoint - implementation pending'

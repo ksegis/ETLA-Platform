@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -6,12 +7,12 @@ import { useTenant } from '@/contexts/TenantContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { 
-  Users, 
-  UserPlus, 
-  Mail, 
-  Shield, 
-  Settings, 
+import {
+  Users,
+  UserPlus,
+  Mail,
+  Shield,
+  Settings,
   Search,
   Filter,
   Download,
@@ -32,7 +33,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import UserCreationModal from '@/components/UserCreationModal'
 import UserInviteModal from '@/components/UserInviteModal'
 
@@ -164,6 +165,7 @@ export default function AccessControlPage() {
 
   const loadUsers = async () => {
     try {
+      const supabase = createSupabaseBrowserClient();
       let query = supabase
         .from('profiles')
         .select(`
@@ -252,6 +254,7 @@ export default function AccessControlPage() {
 
   const loadTenants = async () => {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { data: tenants, error } = await supabase
         .from('tenants')
         .select('*')
@@ -268,6 +271,7 @@ export default function AccessControlPage() {
 
   const loadInvitations = async () => {
     try {
+      const supabase = createSupabaseBrowserClient();
       let query = supabase
         .from('user_invitations')
         .select(`
@@ -307,6 +311,7 @@ export default function AccessControlPage() {
 
   const loadNotifications = async () => {
     try {
+      const supabase = createSupabaseBrowserClient();
       let query = supabase
         .from('admin_notifications')
         .select('*')
@@ -503,20 +508,6 @@ export default function AccessControlPage() {
                       <Clock className="h-8 w-8 text-yellow-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Pending Assignment</p>
-                      <p className="text-2xl font-semibold text-gray-900">{stats.pendingUsers}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Mail className="h-8 w-8 text-purple-600" />
-                    </div>
-                    <div className="ml-4">
                       <p className="text-sm font-medium text-gray-500">Pending Invites</p>
                       <p className="text-2xl font-semibold text-gray-900">{stats.pendingInvites}</p>
                     </div>
@@ -531,37 +522,40 @@ export default function AccessControlPage() {
                       <AlertCircle className="h-8 w-8 text-red-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Notifications</p>
+                      <p className="text-sm font-medium text-gray-500">Unread Notifications</p>
                       <p className="text-2xl font-semibold text-gray-900">{stats.unreadNotifications}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Building className="h-8 w-8 text-purple-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Total Tenants</p>
+                      <p className="text-2xl font-semibold text-gray-900">{tenants.length}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Role Distribution */}
+            {/* Role Distribution Chart */}
             <Card>
               <CardHeader>
                 <CardTitle>Role Distribution</CardTitle>
-                <CardDescription>Current user distribution across roles and levels</CardDescription>
+                <CardDescription>Breakdown of users by assigned roles</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(roleDistribution).map(([role, count]: any) => (
-                    <div key={role} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Shield className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium capitalize">{role.replace('_', ' ')}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500">{count} users</span>
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${(count / stats.totalUsers) * 100}%` }}
-                          />
-                        </div>
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(roleDistribution).map(([role, count]) => (
+                    <div key={role} className="flex items-center space-x-3">
+                      <Badge variant="secondary" className="capitalize">{role.replace('_', ' ')}</Badge>
+                      <span className="text-lg font-semibold">{count}</span>
                     </div>
                   ))}
                 </div>
@@ -572,185 +566,116 @@ export default function AccessControlPage() {
 
         {activeTab === 'users' && (
           <div className="space-y-6">
-            {/* Search and Filters */}
+            {/* User Management Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
                     type="text"
-                    placeholder="Search users..."
+                    placeholder="Search users by name or email..."
                     value={searchTerm}
-                    onChange={(e: any) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2"
                   />
                 </div>
               </div>
               <select
                 value={filterRole}
-                onChange={(e: any) => setFilterRole(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Roles</option>
                 <option value="host_admin">Host Admin</option>
                 <option value="client_admin">Client Admin</option>
-                <option value="user">User</option>
+                <option value="program_manager">Program Manager</option>
+                <option value="client_user">Client User</option>
               </select>
               <select
                 value={filterStatus}
-                onChange={(e: any) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">All Status</option>
+                <option value="all">All Statuses</option>
                 <option value="active">Active</option>
                 <option value="pending_assignment">Pending Assignment</option>
-                <option value="suspended">Suspended</option>
+                <option value="inactive">Inactive</option>
               </select>
-              <Button
-                onClick={loadData}
-                variant="outline"
-                disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
             </div>
 
-            {/* Users Table */}
+            {/* User Table */}
             <Card>
-              <CardContent className="p-0">
+              <CardHeader>
+                <CardTitle>User Accounts</CardTitle>
+                <CardDescription>Manage user roles, permissions, and access</CardDescription>
+              </CardHeader>
+              <CardContent>
                 {loading ? (
                   <div className="flex items-center justify-center h-64">
-                    <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-                  </div>
-                ) : filteredUsers.length === 0 ? (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Users Found</h3>
-                      <p className="text-gray-500">
-                        {users.length === 0 
-                          ? "No users have been created yet." 
-                          : "No users match your search criteria."
-                        }
-                      </p>
-                      {users.length === 0 && (
-                        <Button
-                          onClick={() => setShowCreateModal(true)}
-                          className="mt-4"
-                        >
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Create First User
-                        </Button>
-                      )}
-                    </div>
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            User
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Role & Tenant
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Last Login
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Sign-in</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredUsers.map((user: any) => (
-                          <tr key={user.id} className="hover:bg-gray-50">
+                        {filteredUsers.map((user) => (
+                          <tr key={user.id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                <div className="flex-shrink-0 h-10 w-10">
-                                  <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                    <span className="text-sm font-medium text-gray-700">
-                                      {user.full_name.charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                </div>
                                 <div className="ml-4">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {user.full_name}
-                                    {user.is_primary_tenant && (
-                                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        Primary
-                                      </span>
-                                    )}
-                                  </div>
+                                  <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
                                   <div className="text-sm text-gray-500">{user.email}</div>
-                                  {user.job_title && (
-                                    <div className="text-xs text-gray-400">{user.job_title}</div>
-                                  )}
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900 capitalize">
-                                {user.role.replace('_', ' ')}
-                              </div>
-                              <div className="text-sm text-gray-500">{user.tenant_name}</div>
-                              {user.role_level && (
-                                <div className="text-xs text-gray-400 capitalize">
-                                  {user.role_level.replace('_', ' ')}
-                                </div>
-                              )}
+                              <Badge variant="secondary" className="capitalize">{user.role.replace('_', ' ')}</Badge>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex flex-col space-y-1">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  user.is_active && user.status === 'active'
+                              <div className="text-sm text-gray-900">{user.tenant_name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge
+                                className={
+                                  user.status === 'active'
                                     ? 'bg-green-100 text-green-800'
                                     : user.status === 'pending_assignment'
                                     ? 'bg-yellow-100 text-yellow-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {user.is_active && user.status === 'active' ? 'Active' : 
-                                   user.status === 'pending_assignment' ? 'Pending' : 'Inactive'}
-                                </span>
-                                {user.requires_password_change && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                    Password Reset Required
-                                  </span>
-                                )}
-                              </div>
+                                    : 'bg-gray-100 text-gray-800'
+                                }
+                              >
+                                {user.status.replace('_', ' ')}
+                              </Badge>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {user.last_sign_in_at 
-                                ? new Date(user.last_sign_in_at).toLocaleDateString()
-                                : 'Never'
-                              }
+                              {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <div className="flex items-center space-x-2">
-                                <Button
-                                  onClick={() => {
-                                    setSelectedUser(user)
-                                    setShowEditModal(true)
-                                  }}
-                                  variant="outline"
-                                  size="sm"
-                                >
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  setSelectedUser(user)
+                                  setShowEditModal(true)
+                                }}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedUser(user)
-                                    setShowPasswordModal(true)
-                                  }}
-                                  variant="outline"
-                                  size="sm"
-                                >
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  setSelectedUser(user)
+                                  setShowPasswordModal(true)
+                                }}>
                                   <Key className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => console.log('Delete user', user.id)}>
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </td>
@@ -765,76 +690,179 @@ export default function AccessControlPage() {
           </div>
         )}
 
-        {/* Other tabs would be implemented similarly */}
+        {activeTab === 'roles' && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Role-Based Access Control (RBAC)</CardTitle>
+                <CardDescription>Define and manage roles and their associated permissions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700">This section allows you to configure roles and their permissions. Changes made here will affect how users can interact with different features and data within the platform.</p>
+                <Button className="mt-4" onClick={() => console.log('Configure RBAC')}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure RBAC
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Permission Overrides</CardTitle>
+                <CardDescription>Grant or deny specific permissions to individual users, overriding their role-based access</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700">Use this feature sparingly for exceptional cases where a user's access needs to deviate from their assigned role. Overrides take precedence over role permissions.</p>
+                <Button className="mt-4" onClick={() => console.log('Manage Overrides')}>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Manage Overrides
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {activeTab === 'invites' && (
           <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Pending Invitations</CardTitle>
-                <CardDescription>Manage user invitations and track their status</CardDescription>
+                <CardDescription>View and manage outstanding user invitations</CardDescription>
               </CardHeader>
               <CardContent>
-                {invitations.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Invitations</h3>
-                    <p className="text-gray-500">No user invitations have been sent yet.</p>
+                {loading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Invitee
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Role & Tenant
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Invited By
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Expires
-                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invited By</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {invitations.map((invitation: any) => (
-                          <tr key={invitation.id}>
+                        {invitations.map((invite) => (
+                          <tr key={invite.id}>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {invitation.full_name || 'N/A'}
-                                </div>
-                                <div className="text-sm text-gray-500">{invitation.email}</div>
-                              </div>
+                              <div className="text-sm font-medium text-gray-900">{invite.email}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900 capitalize">
-                                {invitation.role.replace('_', ' ')}
-                              </div>
-                              <div className="text-sm text-gray-500">{invitation.tenant_name}</div>
+                              <Badge variant="secondary" className="capitalize">{invite.role.replace('_', ' ')}</Badge>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                invitation.status === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : invitation.status === 'accepted'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {invitation.status}
-                              </span>
+                              <div className="text-sm text-gray-900">{invite.tenant_name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{invite.invited_by_name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge
+                                className={
+                                  invite.status === 'pending'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }
+                              >
+                                {invite.status}
+                              </Badge>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {invitation.invited_by_name}
+                              {new Date(invite.expires_at).toLocaleDateString()}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(invitation.expires_at).toLocaleDateString()}
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                <Button variant="ghost" size="sm" onClick={() => console.log('Resend invite', invite.id)}>
+                                  <Send className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => console.log('Revoke invite', invite.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'notifications' && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Notifications</CardTitle>
+                <CardDescription>Important alerts and system messages</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {notifications.map((notification) => (
+                          <tr key={notification.id} className={notification.is_read ? 'text-gray-500' : 'font-medium'}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge
+                                className={
+                                  notification.type === 'alert'
+                                    ? 'bg-red-100 text-red-800'
+                                    : notification.type === 'info'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }
+                              >
+                                {notification.type}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm">{notification.title}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm max-w-xs truncate">{notification.message}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              {new Date(notification.created_at).toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                {!notification.is_read && (
+                                  <Button variant="ghost" size="sm" onClick={() => console.log('Mark as read', notification.id)}>
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {notification.is_read && (
+                                  <Button variant="ghost" size="sm" onClick={() => console.log('Mark as unread', notification.id)}>
+                                    <EyeOff className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => console.log('Delete notification', notification.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -848,32 +876,39 @@ export default function AccessControlPage() {
         )}
       </div>
 
-      {/* Modals would be implemented here */}
-      {showCreateModal && (
+      <UserCreationModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onUserCreated={loadData}
+      />
+
+      <UserInviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onInviteSent={loadData}
+      />
+
+      {/* Edit User Modal */}
+      {selectedUser && (
         <UserCreationModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            loadData()
-            setShowCreateModal(false)
-          }}
-          tenants={tenants}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onUserCreated={loadData} // Re-fetch data after edit
+          initialUserData={selectedUser}
         />
       )}
 
-      {showInviteModal && (
-        <UserInviteModal
-          isOpen={showInviteModal}
-          onClose={() => setShowInviteModal(false)}
-          onSuccess={() => {
-            loadData()
-            setShowInviteModal(false)
-          }}
-          tenants={tenants}
+      {/* Change Password Modal */}
+      {selectedUser && (
+        <UserCreationModal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          onUserCreated={loadData} // Re-fetch data after password change
+          initialUserData={selectedUser}
+          changePasswordMode={true}
         />
       )}
     </DashboardLayout>
   )
 }
 
-export const dynamic = "force-dynamic"

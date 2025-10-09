@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { 
   RBACMatrixRowUser, 
   RBACPermissionCatalog, 
