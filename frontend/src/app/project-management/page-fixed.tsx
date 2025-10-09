@@ -174,7 +174,7 @@ export default function EnhancedProjectManagementPage() {
 
   // Enhanced load data function with better error handling
   const loadData = async () => {
-    if (!selectedTenant?.id) {
+    if (!selectedTenant) {
       console.log('No tenant selected, skipping load')
       setloading(false)
       return
@@ -184,14 +184,13 @@ export default function EnhancedProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
-
+     console.log("loading project data for tenant:", selectedTenant);
       // Load projects with enhanced error handling
       try {
         const { data: projectData, error: projectError } = await supabase
           .from('project_charters')
           .select('*')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
           .order('created_at', { ascending: false })
 
         if (projectError) {
@@ -217,7 +216,7 @@ export default function EnhancedProjectManagementPage() {
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('*')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
           .order('created_at', { ascending: false })
 
         if (workRequestError) {
@@ -243,7 +242,7 @@ export default function EnhancedProjectManagementPage() {
         const { data: riskData, error: riskError } = await supabase
           .from('risks')
           .select('*')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant)
           .order('created_at', { ascending: false })
 
         if (riskError) {
@@ -389,7 +388,7 @@ export default function EnhancedProjectManagementPage() {
 
   // Enhanced create new project with better error handling
   const handleCreateProject = async () => {
-    if (!selectedTenant?.id || !newProject.title) {
+    if (!selectedTenant || !newProject.title) {
       setError('Please provide a project title and ensure a tenant is selected.')
       return
     }
@@ -398,7 +397,7 @@ export default function EnhancedProjectManagementPage() {
       setError(null)
       const projectData = {
         ...newProject,
-        tenant_id: selectedTenant.id,
+                tenant_id: selectedTenant,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -1169,7 +1168,7 @@ export default function EnhancedProjectManagementPage() {
                     ? `${filteredRisks.length} of ${risks.length} risks`
                     : 'Feature coming soon'
                   }
-                  {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
+                  {selectedTenant && <span className="ml-2">| Tenant ID: {selectedTenant}</span>}
                 </CardDescription>
               </div>
             </div>
