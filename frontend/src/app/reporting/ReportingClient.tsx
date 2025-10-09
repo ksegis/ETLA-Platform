@@ -480,7 +480,7 @@ export default function ReportingClient() { // Renamed component
             columns={[
               { key: "employee_name", label: "Employee Name" },
               { key: "pay_date", label: "Pay Date" },
-              { key: "check_number", label: "check &amp;num;" },
+              { key: "check_number", label: "check &num;" },
               { key: "pay_period_start", label: "Period Start" },
               { key: "pay_period_end", label: "Period End" },
               { key: "gross_pay", label: "Gross Pay", render: (item) => `$${(item.gross_pay || 0).toFixed(2)}` },
