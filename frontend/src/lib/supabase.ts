@@ -1,91 +1,110 @@
-import { createClient } from '@supabase/supabase-js';
+// lib/supabase.ts
+import { createClient } from '@supabase/supabase-js'
 
-const NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const NEXT_PUBLIC_SUPABASE_ANON_TOKEN = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxMjM0NTYsImV4cCI6MTk2MDY5OTQ1Nn0.dummySignatureForBuildTime';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
 
-// Force real Supabase client usage - disable mock client detection
-const useMockClient = false;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Create a mock client for build time or demo mode
-const createMockClient = () => ({
-  from: (table: string) => ({
-    select: (columns?: string) => ({
-      eq: (column: string, value: any) => ({
-        order: (column: string, options?: any) => ({
-          limit: (limit: number) => Promise.resolve({ data: [], error: null }),
-          then: (resolve: any) => resolve({ data: [], error: null })
-        }),
-        then: (resolve: any) => resolve({ data: [], error: null })
-      }),
-      in: (column: string, values: any[]) => ({
-        order: (column: string, options?: any) => ({
-          limit: (limit: number) => Promise.resolve({ data: [], error: null }),
-          then: (resolve: any) => resolve({ data: [], error: null })
-        }),
-        then: (resolve: any) => resolve({ data: [], error: null })
-      }),
-      or: (condition: string) => ({
-        order: (column: string, options?: any) => ({
-          limit: (limit: number) => Promise.resolve({ data: [], error: null }),
-          then: (resolve: any) => resolve({ data: [], error: null })
-        }),
-        then: (resolve: any) => resolve({ data: [], error: null })
-      }),
-      order: (column: string, options?: any) => ({
-        then: (resolve: any) => resolve({ data: [], error: null })
-      }),
-      then: (resolve: any) => resolve({ data: [], error: null })
-    }),
-    insert: (data: any) => ({
-      select: () => ({
-        single: () => Promise.resolve({ data: null, error: null })
-      }),
-      then: (resolve: any) => resolve({ data: null, error: null })
-    }),
-    update: (data: any) => ({
-      eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
-    }),
-    delete: () => ({
-      eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
-    })
-  }),
-  auth: {
-    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-    signInWithPassword: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
-    signUp: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
-    signOut: () => Promise.resolve({ error: null }),
-    resetPasswordForEmail: () => Promise.resolve({ data: {}, error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-    admin: {
-      createUser: () => Promise.resolve({ data: { user: null }, error: null }),
-      deleteUser: () => Promise.resolve({ data: {}, error: null }),
-      updateUserById: () => Promise.resolve({ data: { user: null }, error: null }),
-      inviteUserByEmail: () => Promise.resolve({ data: {}, error: null })
-    }
-  }
-});
-
-// Initialize the Supabase client conditionally with error handling
-let supabaseClient: any;
-
-try {
-  if (useMockClient) {
-    console.log('🔧 Using mock Supabase client (demo mode)');
-    supabaseClient = createMockClient();
-  } else if (NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_TOKEN) {
-    console.log('🔗 Initializing real Supabase client');
-    supabaseClient = createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_TOKEN);
-  } else {
-    console.warn('⚠️ Missing Supabase environment variables, falling back to mock client');
-    supabaseClient = createMockClient();
-  }
-} catch (error) {
-  console.error('❌ Error initializing Supabase client, using mock client:', error);
-  supabaseClient = createMockClient();
+// Database types
+export interface WorkRequest {
+  id: string
+  tenant_id: string
+  title: string
+  description: string
+  category: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  urgency: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+  customer_id: string
+  assigned_to?: string
+  estimated_hours?: number
+  actual_hours: number
+  budget?: number
+  required_completion_date?: string
+  created_at: string
+  updated_at: string
 }
 
-export const supabase = supabaseClient;
+export interface Project {
+  id: string
+  tenant_id: string
+  work_request_id: string
+  title: string
+  description?: string
+  status: 'scheduled' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  assigned_team_lead: string
+  estimated_hours: number
+  actual_hours: number
+  budget?: number
+  start_date: string
+  end_date: string
+  completion_percentage: number
+  client_satisfaction_score?: number
+  on_time_delivery?: boolean
+  created_at: string
+  updated_at: string
+}
 
-// Export a function to check if the client is in demo mode
-export const isSupabaseDemoMode = useMockClient;
+export interface Tenant {
+  id: string
+  company_name: string
+  subdomain?: string
+  industry?: string
+  status: 'active' | 'trial' | 'suspended' | 'cancelled'
+  subscription_plan: 'trial' | 'professional' | 'enterprise'
+  created_at: string
+}
+
+export interface User {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  role: 'host_admin' | 'program_manager' | 'client_admin' | 'client_user'
+  tenant_id?: string
+  is_active: boolean
+  created_at: string
+}
+
+// Auth helpers
+export const signInWithRole = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+  
+  if (data.user) {
+    // Get user profile with role and tenant
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role, tenant_id, first_name, last_name')
+      .eq('id', data.user.id)
+      .single()
+    
+    return { user: data.user, profile, error }
+  }
+  
+  return { user: null, profile: null, error }
+}
+
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut()
+  return { error }
+}
+
+// Database helpers
+export const getCurrentUser = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  
+  const { data: profile } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+  
+  return { ...user, profile }
+}
+

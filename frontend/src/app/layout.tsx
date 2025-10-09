@@ -1,20 +1,14 @@
-import { AuthProvider } from '@/contexts/AuthContext'
-import { TenantProvider } from '@/contexts/TenantContext'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import { TenantProvider } from '@/contexts/TenantContext'
+import { AuthProvider } from '@/contexts/AuthContext'
 
-// Force dynamic rendering & disable static caches across the app
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-export const fetchCache = 'force-no-store'
+const inter = Inter({ subsets: ['latin'] })
 
-export const metadata = {
-  title: 'HelixBridge - Enterprise Workforce Management',
-  description: 'Connecting Enterprise Operations Through Intelligent Workforce Management',
-  icons: {
-    icon: '/helix-icon.png',
-    shortcut: '/helix-icon.png',
-    apple: '/helix-icon.png',
-  },
+export const metadata: Metadata = {
+  title: 'ETLA Platform',
+  description: 'Enterprise payroll and HR management platform',
 }
 
 export default function RootLayout({
@@ -23,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
+    <html lang="en">
+      <body className={inter.className}>
         <AuthProvider>
           <TenantProvider>
             {children}

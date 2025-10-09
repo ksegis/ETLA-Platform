@@ -17,6 +17,7 @@ import {
   Send
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface WorkRequest {
   id: string
@@ -49,78 +50,150 @@ interface WorkRequest {
     authorRole: 'customer' | 'program_manager'
     content: string
     createdAt: string
-    isInternal: boolean
   }>
 }
 
 const mockRequest: WorkRequest = {
-  id: '2',
-  title: 'Benefits Enrollment Setup',
-  description: 'Configure benefits enrollment for Q4 open enrollment period. Need to set up automated enrollment workflows, configure benefit plans, and integrate with existing HRIS system. This includes setting up employee self-service portal and manager approval workflows.',
-  customerName: 'TechStart Inc',
-  customerEmail: 'hr@techstart.com',
-  category: 'benefits_configuration',
-  priority: 'medium',
-  urgency: 'low',
-  status: 'submitted',
-  submittedAt: '2024-08-12T10:30:00Z',
-  updatedAt: '2024-08-12T10:30:00Z',
-  estimatedHours: 20,
-  budget: 4000,
-  requiredCompletionDate: '2024-09-30',
-  tags: ['benefits', 'enrollment', 'q4', 'automation'],
+  id: '1',
+  title: 'Payroll System Integration',
+  description: 'We need to integrate our existing payroll system with the new HRIS platform. This includes data migration, API setup, and testing to ensure seamless operation.',
+  customerName: 'Acme Corporation',
+  customerEmail: 'john.doe@acme.com',
+  category: 'system_integration',
+  priority: 'high',
+  urgency: 'medium',
+  status: 'under_review',
+  submittedAt: '2024-08-10T09:00:00Z',
+  updatedAt: '2024-08-12T14:30:00Z',
+  estimatedHours: 40,
+  budget: 8000,
+  requiredCompletionDate: '2024-08-30',
+  tags: ['payroll', 'integration', 'hris', 'api'],
   attachments: [
     {
       id: '1',
-      filename: 'benefit_plans_overview.pdf',
-      size: 1536000,
-      uploadedAt: '2024-08-12T10:35:00Z'
+      filename: 'system_requirements.pdf',
+      size: 2048000,
+      uploadedAt: '2024-08-10T09:00:00Z'
     },
     {
       id: '2',
-      filename: 'current_enrollment_process.docx',
-      size: 768000,
-      uploadedAt: '2024-08-12T10:36:00Z'
+      filename: 'current_payroll_schema.xlsx',
+      size: 512000,
+      uploadedAt: '2024-08-10T09:05:00Z'
     }
   ],
   comments: [
     {
       id: '1',
-      authorName: 'HR Manager',
+      authorName: 'John Doe',
       authorRole: 'customer',
-      content: 'We need this completed before October 1st for our Q4 open enrollment. Current process is manual and error-prone.',
-      createdAt: '2024-08-12T10:30:00Z',
-      isInternal: false
+      content: 'This is a high priority project for us. We need to complete this before the end of the month.',
+      createdAt: '2024-08-10T09:30:00Z'
+    },
+    {
+      id: '2',
+      authorName: 'Sarah Johnson',
+      authorRole: 'program_manager',
+      content: 'I\'ve reviewed the requirements. This looks feasible within the timeline. I\'ll need to coordinate with our technical team.',
+      createdAt: '2024-08-12T10:15:00Z'
     }
   ]
 }
 
-const teamMembers = [
-  { id: '1', name: 'Sarah Johnson', role: 'Senior Consultant', availability: 'Available', expertise: ['Benefits', 'HRIS'] },
-  { id: '2', name: 'Mike Chen', role: 'Technical Lead', availability: 'Busy until 8/20', expertise: ['Integration', 'Automation'] },
-  { id: '3', name: 'Lisa Wang', role: 'Project Manager', availability: 'Available', expertise: ['Project Management', 'Benefits'] },
-  { id: '4', name: 'David Kim', role: 'Developer', availability: 'Available', expertise: ['Frontend', 'Workflows'] }
-]
+const statusColors = {
+  submitted: 'bg-blue-100 text-blue-800',
+  under_review: 'bg-yellow-100 text-yellow-800',
+  approved: 'bg-green-100 text-green-800',
+  rejected: 'bg-red-100 text-red-800',
+  scheduled: 'bg-purple-100 text-purple-800',
+  in_progress: 'bg-indigo-100 text-indigo-800',
+  completed: 'bg-green-100 text-green-800',
+  cancelled: 'bg-gray-100 text-gray-800'
+}
 
-export default async function RequestReviewPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+const priorityColors = {
+  low: 'bg-gray-100 text-gray-800',
+  medium: 'bg-blue-100 text-blue-800',
+  high: 'bg-orange-100 text-orange-800',
+  critical: 'bg-red-100 text-red-800'
+}
+
+export default function RequestReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const [request, setRequest] = useState<WorkRequest>(mockRequest)
-  const [reviewNotes, setReviewNotes] = useState('')
-  const [estimatedEffort, setEstimatedEffort] = useState('')
-  const [proposedTimeline, setProposedTimeline] = useState('')
-  const [selectedAssignee, setSelectedAssignee] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [showApprovalForm, setShowApprovalForm] = useState(false)
-  const [showRejectionForm, setShowRejectionForm] = useState(false)
+  const [newComment, setNewComment] = useState('')
+  const [estimatedHours, setEstimatedHours] = useState(request.estimatedHours?.toString() || '')
+  const [assignedTo, setAssignedTo] = useState(request.assignedTo || '')
+  const [scheduledStart, setScheduledStart] = useState(request.scheduledStartDate || '')
+  const [scheduledEnd, setScheduledEnd] = useState(request.scheduledEndDate || '')
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  const teamMembers = ['Sarah Johnson', 'Mike Chen', 'Lisa Wang', 'David Kim']
+
+  const handleApprove = () => {
+    setRequest(prev => ({
+      ...prev,
+      status: 'approved',
+      estimatedHours: parseInt(estimatedHours) || prev.estimatedHours,
+      assignedTo,
+      scheduledStartDate: scheduledStart,
+      scheduledEndDate: scheduledEnd,
+      updatedAt: new Date().toISOString()
+    }))
+    alert('Request approved successfully!')
+  }
+
+  const handleReject = () => {
+    const reason = prompt('Please provide a reason for rejection:')
+    if (reason) {
+      setRequest(prev => ({
+        ...prev,
+        status: 'rejected',
+        updatedAt: new Date().toISOString(),
+        comments: [...prev.comments, {
+          id: Date.now().toString(),
+          authorName: 'Program Manager',
+          authorRole: 'program_manager',
+          content: `Request rejected: ${reason}`,
+          createdAt: new Date().toISOString()
+        }]
+      }))
+      alert('Request rejected')
+    }
+  }
+
+  const handleAddComment = () => {
+    if (newComment.trim()) {
+      setRequest(prev => ({
+        ...prev,
+        comments: [...prev.comments, {
+          id: Date.now().toString(),
+          authorName: 'Program Manager',
+          authorRole: 'program_manager',
+          content: newComment,
+          createdAt: new Date().toISOString()
+        }],
+        updatedAt: new Date().toISOString()
+      }))
+      setNewComment('')
+    }
+  }
+
+  const handleSchedule = () => {
+    if (!assignedTo || !scheduledStart || !scheduledEnd) {
+      alert('Please fill in all scheduling fields')
+      return
+    }
+    
+    setRequest(prev => ({
+      ...prev,
+      status: 'scheduled',
+      assignedTo,
+      scheduledStartDate: scheduledStart,
+      scheduledEndDate: scheduledEnd,
+      estimatedHours: parseInt(estimatedHours) || prev.estimatedHours,
+      updatedAt: new Date().toISOString()
+    }))
+    alert('Request scheduled successfully!')
   }
 
   const formatFileSize = (bytes: number) => {
@@ -131,467 +204,329 @@ export default async function RequestReviewPage({ params }: { params: Promise<{ 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const formatCategory = (category: string) => {
-    return category.split('_').map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
-
-  const handleApprove = async () => {
-    setIsProcessing(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const comment = {
-        id: Date.now().toString(),
-        authorName: 'Program Manager',
-        authorRole: 'program_manager' as const,
-        content: `Request approved. ${reviewNotes}`,
-        createdAt: new Date().toISOString(),
-        isInternal: false
-      }
-      
-      setRequest(prev => ({
-        ...prev,
-        status: 'approved',
-        assignedTo: selectedAssignee || undefined,
-        comments: [...prev.comments, comment],
-        updatedAt: new Date().toISOString()
-      }))
-      
-      setIsProcessing(false)
-      setShowApprovalForm(false)
-    }, 1500)
-  }
-
-  const handleReject = async () => {
-    setIsProcessing(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const comment = {
-        id: Date.now().toString(),
-        authorName: 'Program Manager',
-        authorRole: 'program_manager' as const,
-        content: `Request rejected. ${reviewNotes}`,
-        createdAt: new Date().toISOString(),
-        isInternal: false
-      }
-      
-      setRequest(prev => ({
-        ...prev,
-        status: 'rejected',
-        comments: [...prev.comments, comment],
-        updatedAt: new Date().toISOString()
-      }))
-      
-      setIsProcessing(false)
-      setShowRejectionForm(false)
-    }, 1500)
-  }
-
-  const getRiskLevel = () => {
-    const risks = []
-    
-    if (request.priority === 'critical' || request.urgency === 'urgent') {
-      risks.push('High priority/urgency')
-    }
-    
-    if (request.budget && request.budget > 10000) {
-      risks.push('High budget')
-    }
-    
-    if (request.requiredCompletionDate) {
-      const daysUntilDeadline = Math.ceil((new Date(request.requiredCompletionDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-      if (daysUntilDeadline < 30) {
-        risks.push('Tight deadline')
-      }
-    }
-    
-    return risks
-  }
-
-  const risks = getRiskLevel()
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => window.location.href = '/project-management'}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Project Management
-          </Button>
-        </div>
-        
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{request.title}</h1>
-            <div className="flex items-center gap-3 mb-4">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                request.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
-                request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                request.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                'bg-yellow-100 text-yellow-800'
-              }`}>
-                {request.status.toUpperCase()}
-              </span>
-              <span className="text-sm text-gray-600">Request #{request.id}</span>
-            </div>
+    <DashboardLayout>
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.location.href = '/project-management'}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Queue
+            </Button>
           </div>
           
-          {request.status === 'submitted' && (
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{request.title}</h1>
+              <div className="flex items-center gap-4">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[request.status]}`}>
+                  {request.status.replace('_', ' ').toUpperCase()}
+                </span>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority]}`}>
+                  {request.priority.toUpperCase()} PRIORITY
+                </span>
+                <span className="text-sm text-gray-600">
+                  Submitted: {formatDate(request.submittedAt)}
+                </span>
+              </div>
+            </div>
+            
             <div className="flex gap-2">
-              <Button 
-                onClick={() => setShowApprovalForm(true)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-              <Button 
-                onClick={() => setShowRejectionForm(true)}
-                variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
+              {request.status === 'under_review' && (
+                <>
+                  <Button 
+                    variant="outline"
+                    onClick={handleReject}
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button 
+                    onClick={handleApprove}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Approve
+                  </Button>
+                </>
+              )}
+              {request.status === 'approved' && (
+                <Button 
+                  onClick={handleSchedule}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule Project
+                </Button>
+              )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Request Details */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Details</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Description</label>
-                <p className="text-gray-900 mt-1 leading-relaxed">{request.description}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Category</label>
-                  <p className="text-gray-900">{formatCategory(request.category)}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Customer</label>
-                  <p className="text-gray-900">{request.customerName}</p>
-                  <p className="text-sm text-gray-600">{request.customerEmail}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Priority</label>
-                  <p className={`text-sm font-medium ${
-                    request.priority === 'critical' ? 'text-red-600' :
-                    request.priority === 'high' ? 'text-orange-600' :
-                    request.priority === 'medium' ? 'text-blue-600' :
-                    'text-gray-600'
-                  }`}>
-                    {request.priority.toUpperCase()}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Urgency</label>
-                  <p className={`text-sm font-medium ${
-                    request.urgency === 'urgent' ? 'text-red-600' :
-                    request.urgency === 'high' ? 'text-orange-600' :
-                    request.urgency === 'medium' ? 'text-blue-600' :
-                    'text-gray-600'
-                  }`}>
-                    {request.urgency.toUpperCase()}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Submitted</label>
-                  <p className="text-gray-900 text-sm">{formatDate(request.submittedAt)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Risk Assessment */}
-          {risks.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                <h3 className="text-lg font-semibold text-yellow-800">Risk Assessment</h3>
-              </div>
-              <ul className="space-y-1">
-                {risks.map((risk, index: any) => (
-                  <li key={index} className="text-yellow-700 text-sm">• {risk}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Budget & Timeline */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Budget & Timeline</h2>
-            
-            <div className="grid grid-cols-3 gap-4">
-              {request.estimatedHours && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <Clock className="h-4 w-4 inline mr-1" />
-                    Estimated Hours
-                  </label>
-                  <p className="text-gray-900 text-lg font-semibold">{request.estimatedHours}h</p>
-                </div>
-              )}
-              
-              {request.budget && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <DollarSign className="h-4 w-4 inline mr-1" />
-                    Budget
-                  </label>
-                  <p className="text-gray-900 text-lg font-semibold">${request.budget.toLocaleString()}</p>
-                </div>
-              )}
-              
-              {request.requiredCompletionDate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Required Completion
-                  </label>
-                  <p className="text-gray-900 text-lg font-semibold">
-                    {new Date(request.requiredCompletionDate).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Attachments */}
-          {request.attachments.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Request Details */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                <Paperclip className="h-5 w-5 inline mr-2" />
-                Supporting Documents
-              </h2>
-              <div className="space-y-3">
-                {request.attachments.map((attachment: any) => (
-                  <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">{attachment.filename}</p>
-                      <p className="text-sm text-gray-600">
-                        {formatFileSize(attachment.size)} • Uploaded {formatDate(attachment.uploadedAt)}
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Comments */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              <MessageCircle className="h-5 w-5 inline mr-2" />
-              Communication History
-            </h2>
-            
-            <div className="space-y-4">
-              {request.comments.map((comment: any) => (
-                <div key={comment.id} className="border-l-4 border-blue-200 pl-4 py-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-medium text-gray-900">{comment.authorName}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      comment.authorRole === 'customer' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {comment.authorRole === 'customer' ? 'Customer' : 'Program Manager'}
-                    </span>
-                    <span className="text-sm text-gray-500">{formatDate(comment.createdAt)}</span>
-                  </div>
-                  <p className="text-gray-700">{comment.content}</p>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Details</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <p className="text-gray-900">{request.description}</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Team Assignment */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              <Users className="h-5 w-5 inline mr-2" />
-              Team Assignment
-            </h2>
-            
-            <div className="space-y-3">
-              {teamMembers.map((member: any) => (
-                <div key={member.id} className="p-3 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">{member.name}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      member.availability === 'Available' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {member.availability}
-                    </span>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                    <p className="text-gray-900">{request.customerName}</p>
+                    <p className="text-sm text-gray-600">{request.customerEmail}</p>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">{member.role}</p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <p className="text-gray-900">{request.category.replace('_', ' ').toUpperCase()}</p>
+                  </div>
+                </div>
+                
+                {request.requiredCompletionDate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Required Completion Date</label>
+                    <p className="text-gray-900">{new Date(request.requiredCompletionDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                   <div className="flex flex-wrap gap-1">
-                    {member.expertise.map((skill: any) => (
-                      <span key={skill} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                        {skill}
+                    {request.tags.map(tag => (
+                      <span key={tag} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                        {tag}
                       </span>
                     ))}
                   </div>
                 </div>
-              ))}
+              </div>
+            </div>
+
+            {/* Project Planning */}
+            {(request.status === 'under_review' || request.status === 'approved') && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Project Planning</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Hours</label>
+                    <input
+                      type="number"
+                      value={estimatedHours}
+                      onChange={(e) => setEstimatedHours(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter estimated hours"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+                    <select
+                      value={assignedTo}
+                      onChange={(e) => setAssignedTo(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select team member</option>
+                      {teamMembers.map(member => (
+                        <option key={member} value={member}>{member}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Scheduled Start Date</label>
+                    <input
+                      type="date"
+                      value={scheduledStart}
+                      onChange={(e) => setScheduledStart(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Scheduled End Date</label>
+                    <input
+                      type="date"
+                      value={scheduledEnd}
+                      onChange={(e) => setScheduledEnd(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Attachments */}
+            {request.attachments.length > 0 && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Attachments</h2>
+                
+                <div className="space-y-3">
+                  {request.attachments.map(attachment => (
+                    <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Paperclip className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{attachment.filename}</p>
+                          <p className="text-xs text-gray-600">
+                            {formatFileSize(attachment.size)} • {formatDate(attachment.uploadedAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Download
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Comments */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Comments</h2>
+              
+              <div className="space-y-4 mb-6">
+                {request.comments.map(comment => (
+                  <div key={comment.id} className="border-l-4 border-blue-200 pl-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-gray-900">{comment.authorName}</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        comment.authorRole === 'customer' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {comment.authorRole === 'customer' ? 'Customer' : 'Program Manager'}
+                      </span>
+                      <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
+                    </div>
+                    <p className="text-gray-700">{comment.content}</p>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex gap-3">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    rows={3}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                  <Button 
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            
-            <div className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => window.location.href = `/project-management/schedule?request=${request.id}`}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Project
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Contact Customer
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Generate Proposal
-              </Button>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Quick Info */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Info</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Estimated Hours</p>
+                    <p className="text-sm text-gray-600">{request.estimatedHours || 'Not set'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <DollarSign className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Budget</p>
+                    <p className="text-sm text-gray-600">${request.budget?.toLocaleString() || 'Not set'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Assigned To</p>
+                    <p className="text-sm text-gray-600">{request.assignedTo || 'Unassigned'}</p>
+                  </div>
+                </div>
+                
+                {request.scheduledStartDate && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Scheduled</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(request.scheduledStartDate).toLocaleDateString()} - {new Date(request.scheduledEndDate!).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Activity Timeline */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Request Submitted</p>
+                    <p className="text-xs text-gray-600">{formatDate(request.submittedAt)}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Under Review</p>
+                    <p className="text-xs text-gray-600">{formatDate(request.updatedAt)}</p>
+                  </div>
+                </div>
+                
+                {request.status === 'approved' && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Approved</p>
+                      <p className="text-xs text-gray-600">{formatDate(request.updatedAt)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Approval Modal */}
-      {showApprovalForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Approve Request</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assign to Team Member
-                </label>
-                <select
-                  value={selectedAssignee}
-                  onChange={(e: any) => setSelectedAssignee(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select team member</option>
-                  {teamMembers.filter((m: any) => m.availability === 'Available').map((member) => (
-                    <option key={member.id} value={member.name}>{member.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Approval Notes
-                </label>
-                <textarea
-                  value={reviewNotes}
-                  onChange={(e: any) => setReviewNotes(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Add any notes about the approval..."
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-2 mt-6">
-              <Button 
-                variant="outline"
-                onClick={() => setShowApprovalForm(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleApprove}
-                disabled={isProcessing}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {isProcessing ? 'Processing...' : 'Approve Request'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Rejection Modal */}
-      {showRejectionForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Request</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rejection Reason *
-                </label>
-                <textarea
-                  value={reviewNotes}
-                  onChange={(e: any) => setReviewNotes(e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Please provide a clear reason for rejection..."
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-2 mt-6">
-              <Button 
-                variant="outline"
-                onClick={() => setShowRejectionForm(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleReject}
-                disabled={isProcessing || !reviewNotes.trim()}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isProcessing ? 'Processing...' : 'Reject Request'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </DashboardLayout>
   )
 }
 

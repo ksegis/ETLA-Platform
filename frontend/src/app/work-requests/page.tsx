@@ -1,926 +1,649 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Filter, RefreshCw, Plus, Eye, Edit, MoreHorizontal, Database, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import WorkRequestForm from '@/components/work-requests/WorkRequestForm'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
-import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
 
-// Types matching the database schema exactly
 interface WorkRequest {
   id: string
-  tenant_id: string
+  request_id: string
   title: string
   description: string
   category: string
-  priority: 'low' | 'medium' | 'high' | 'critical'  // priority_level enum
-  urgency: 'low' | 'medium' | 'high' | 'urgent'    // urgency_level enum
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'  // request_status enum
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  urgency: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'submitted' | 'under_review' | 'in_progress' | 'completed' | 'cancelled'
   customer_id: string
-  assigned_to?: string
+  tenant_id: string
   estimated_hours?: number
-  actual_hours?: number
   budget?: number
-  estimated_budget?: number
   required_completion_date?: string
-  requested_completion_date?: string
-  scheduled_start_date?: string
-  scheduled_end_date?: string
-  actual_start_date?: string
-  actual_completion_date?: string
-  rejection_reason?: string
   internal_notes?: string
-  customer_notes?: string
-  tags?: string[]
-  attachments?: any
   created_at: string
   updated_at: string
-  request_id?: string
-  approval_status?: string
-  decline_reason?: string
-  approved_by?: string
-  approved_at?: string
-  project_id?: string
-  business_justification?: string
-  impact_assessment?: string
+  profiles?: {
+    full_name?: string
+    phone?: string
+    department?: string
+    job_title?: string
+  }
+  customers?: {
+    email: string
+    first_name?: string
+    last_name?: string
+    company_name?: string
+  }
 }
 
-interface WorkRequestStats {
-  total: number
-  submitted: number
-  under_review: number
-  approved: number
-  in_progress: number
-  completed: number
+const priorityColors = {
+  low: 'bg-gray-100 text-gray-800',
+  medium: 'bg-blue-100 text-blue-800',
+  high: 'bg-orange-100 text-orange-800',
+  critical: 'bg-red-100 text-red-800'
 }
 
-// Status configuration - FIXED to match database enum values
-const statusConfig = {
-  submitted: { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Submitted' },
-  under_review: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Under Review' },
-  approved: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', label: 'Approved' },
-  rejected: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100', label: 'Rejected' },
-  scheduled: { icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-100', label: 'Scheduled' },
-  in_progress: { icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-100', label: 'In Progress' },
-  completed: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', label: 'Completed' },
-  cancelled: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-100', label: 'Cancelled' }
+const urgencyColors = {
+  low: 'bg-gray-100 text-gray-800',
+  medium: 'bg-yellow-100 text-yellow-800',
+  high: 'bg-orange-100 text-orange-800',
+  urgent: 'bg-red-100 text-red-800'
 }
 
-// Priority configuration - FIXED to match database enum values
-const priorityConfig = {
-  low: { color: 'text-gray-600', bg: 'bg-gray-100', label: 'Low' },
-  medium: { color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Medium' },
-  high: { color: 'text-orange-600', bg: 'bg-orange-100', label: 'High' },
-  critical: { color: 'text-red-600', bg: 'bg-red-100', label: 'Critical' }
+const statusColors = {
+  submitted: 'bg-blue-100 text-blue-800',
+  under_review: 'bg-yellow-100 text-yellow-800',
+  in_progress: 'bg-orange-100 text-orange-800',
+  completed: 'bg-green-100 text-green-800',
+  cancelled: 'bg-gray-100 text-gray-800'
+}
+
+const categoryLabels: { [key: string]: string } = {
+  payroll_setup: 'Payroll Setup',
+  data_migration: 'Data Migration',
+  system_integration: 'System Integration',
+  reporting_setup: 'Reporting Setup',
+  benefits_configuration: 'Benefits Configuration',
+  compliance_audit: 'Compliance Audit',
+  training_support: 'Training Support',
+  custom_development: 'Custom Development',
+  other: 'Other'
 }
 
 export default function WorkRequestsPage() {
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [filteredRequests, setFilteredRequests] = useState<WorkRequest[]>([])
-  const [loading, setloading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [priorityFilter, setPriorityFilter] = useState('')
-  const [tenantFilter, setTenantFilter] = useState('') // New tenant filter
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false) // Add view modal state
-  const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null)
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
-  const [availableTenantsForCustomer, setAvailableTenantsForCustomer] = useState<Array<{id: string, name: string}>>([])
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [priorityFilter, setPriorityFilter] = useState('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [dataSource, setDataSource] = useState<'database' | 'localStorage' | 'none'>('none')
+  const [lastLoaded, setLastLoaded] = useState<string>('')
 
-  // Load available tenants for customer selection (for host admins and primary customer admins)
-  const loadAvailableTenants = async () => {
-    if (tenantUser?.role === 'host_admin') {
-      try {
-        const { data, error } = await supabase
-          .from('tenants')
-          .select('id, name')
-          .order('name')
-
-        if (error) throw error
-        setAvailableTenantsForCustomer(data || [])
-      } catch (err) {
-        console.error('Error loading tenants:', err)
-      }
-    } else if (tenantUser?.role === 'primary_customer_admin' && selectedTenant) {
-      // Primary customer admins can see their own tenant
-      setAvailableTenantsForCustomer([{ id: selectedTenant.id, name: selectedTenant.name }])
-      setSelectedCustomerId(selectedTenant.id)
-    }
-  }
-  const [stats, setStats] = useState<WorkRequestStats>({
-    total: 0,
-    submitted: 0,
-    under_review: 0,
-    approved: 0,
-    in_progress: 0,
-    completed: 0
-  })
-
-  const { user, tenantUser } = useAuth()
-  const { selectedTenant } = useTenant()
-  const accessibleTenantIds = useAccessibleTenantIds()
-  const { isMultiTenant, availableTenants } = useMultiTenantMode()
-
-  // Load work requests from database - UPDATED for multi-tenant support
+  // Load work requests from database
   const loadWorkRequests = async () => {
-    const tenantIds = accessibleTenantIds
-    
-    if (!tenantIds || tenantIds.length === 0) {
-      console.log('No accessible tenants, skipping load')
-      setloading(false)
-      return
-    }
-
     try {
-      setloading(true)
+      setIsLoading(true)
       setError(null)
-      
-      console.log('loading work requests for tenants:', tenantIds)
+      console.log('🔍 Loading work requests from database...')
 
-      // Query work requests for ALL accessible tenants
-      const { data, error: queryError } = await supabase
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        console.warn('⚠️ No authenticated user, falling back to localStorage')
+        loadFromLocalStorage()
+        return
+      }
+
+      setCurrentUser(user)
+      console.log('👤 Loading requests for user:', user.email, 'ID:', user.id)
+
+      // First, try to query work_requests with profiles (since foreign key points to profiles)
+      console.log('🔍 Attempting to query work_requests with profiles relationship...')
+      const { data: workRequestsData, error: requestsError } = await supabase
         .from('work_requests')
-        .select('*')
-        .in('tenant_id', tenantIds)  // Load from ALL accessible tenants
+        .select(`
+          *,
+          profiles!work_requests_customer_id_fkey (
+            full_name, phone, department, job_title
+          )
+        `)
+        .eq('customer_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (queryError) {
-        console.error('Database query error:', queryError)
-        setError(`Failed to load work requests: ${queryError.message || 'Unknown error'}`)
+      if (requestsError) {
+        console.error('❌ Error loading work requests with profiles:', requestsError)
+        
+        // If profiles relationship fails, try without relationships
+        console.log('🔍 Falling back to simple work_requests query...')
+        const { data: simpleData, error: simpleError } = await supabase
+          .from('work_requests')
+          .select('*')
+          .eq('customer_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (simpleError) {
+          console.error('❌ Error loading simple work requests:', simpleError)
+          setError(`Database error: ${simpleError.message}`)
+          loadFromLocalStorage()
+          return
+        }
+
+        console.log('✅ Successfully loaded work requests (simple query):', simpleData?.length || 0)
+        const requests = simpleData || []
+        setWorkRequests(requests)
+        setFilteredRequests(requests)
+        setDataSource('database')
+        setLastLoaded(new Date().toLocaleTimeString())
+
+        // Try to get customer info separately
+        if (requests.length > 0) {
+          await loadCustomerInfo(requests)
+        }
+
+        return
+      }
+
+      console.log('✅ Successfully loaded work requests with profiles:', workRequestsData?.length || 0)
+      console.log('📋 Work requests data:', workRequestsData)
+
+      const requests = workRequestsData || []
+      setWorkRequests(requests)
+      setFilteredRequests(requests)
+      setDataSource('database')
+      setLastLoaded(new Date().toLocaleTimeString())
+
+      // If no database records, also check localStorage
+      if (requests.length === 0) {
+        console.log('📦 No database records found, checking localStorage...')
+        loadFromLocalStorage(true) // true = append to database results
+      }
+
+    } catch (error) {
+      console.error('❌ Error in loadWorkRequests:', error)
+      setError(error instanceof Error ? error.message : 'Unknown error occurred')
+      loadFromLocalStorage()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Load customer info separately if needed
+  const loadCustomerInfo = async (requests: WorkRequest[]) => {
+    try {
+      console.log('🔍 Loading customer info separately...')
+      
+      // Get unique customer IDs - FIXED: Use Array.from instead of spread operator
+      const customerIds = Array.from(new Set(requests.map(r => r.customer_id)))
+      
+      // Try to get from customers table
+      const { data: customersData, error: customersError } = await supabase
+        .from('customers')
+        .select('id, email, first_name, last_name, company_name')
+        .in('id', customerIds)
+
+      if (!customersError && customersData) {
+        console.log('✅ Successfully loaded customer info:', customersData.length)
+        
+        // Merge customer info with requests
+        const updatedRequests = requests.map(request => ({
+          ...request,
+          customers: customersData.find(c => c.id === request.customer_id)
+        }))
+        
+        setWorkRequests(updatedRequests)
+        setFilteredRequests(updatedRequests)
+      } else {
+        console.warn('⚠️ Could not load customer info:', customersError?.message)
+      }
+    } catch (error) {
+      console.error('❌ Error loading customer info:', error)
+    }
+  }
+
+  // Load work requests from localStorage as fallback
+  const loadFromLocalStorage = (append = false) => {
+    try {
+      console.log('📦 Loading work requests from localStorage...')
+      const stored = localStorage.getItem('etla_work_requests')
+      const localRequests = stored ? JSON.parse(stored) : []
+      
+      console.log('📦 Found localStorage requests:', localRequests.length)
+
+      if (localRequests.length > 0) {
+        // Convert localStorage format to match database format
+        const convertedRequests = localRequests.map((req: any) => ({
+          id: req.id || `local-${Date.now()}-${Math.random()}`,
+          request_id: req.request_id || req.id || 'LOCAL-REQUEST',
+          title: req.title || 'Untitled Request',
+          description: req.description || '',
+          category: req.category || 'other',
+          priority: req.priority || 'medium',
+          urgency: req.urgency || 'medium',
+          status: req.status || 'submitted',
+          customer_id: req.customer_id || 'unknown',
+          tenant_id: req.tenant_id || 'unknown',
+          estimated_hours: req.estimatedHours ? parseInt(req.estimatedHours) : null,
+          budget: req.budget ? parseFloat(req.budget) : null,
+          required_completion_date: req.requiredCompletionDate || null,
+          internal_notes: req.tags ? req.tags.join(', ') : null,
+          created_at: req.createdAt || new Date().toISOString(),
+          updated_at: req.updatedAt || new Date().toISOString(),
+          customers: {
+            email: req.createdBy || 'Unknown User',
+            first_name: 'Local',
+            last_name: 'User',
+            company_name: 'Local Storage'
+          }
+        }))
+
+        if (append) {
+          setWorkRequests(prev => [...prev, ...convertedRequests])
+          setFilteredRequests(prev => [...prev, ...convertedRequests])
+          setDataSource('database') // Keep as database since we have both
+        } else {
+          setWorkRequests(convertedRequests)
+          setFilteredRequests(convertedRequests)
+          setDataSource('localStorage')
+        }
+        
+        setLastLoaded(new Date().toLocaleTimeString())
+        console.log('✅ Successfully loaded from localStorage')
+      } else {
+        if (!append) {
+          setWorkRequests([])
+          setFilteredRequests([])
+          setDataSource('none')
+        }
+        console.log('📦 No localStorage requests found')
+      }
+    } catch (error) {
+      console.error('❌ Error loading from localStorage:', error)
+      if (!append) {
         setWorkRequests([])
         setFilteredRequests([])
-        return
+        setDataSource('none')
       }
-
-      console.log('Loaded work requests from all tenants:', data)
-      setWorkRequests(data || [])
-      setFilteredRequests(data || [])
-
-      // Calculate stats - FIXED to use correct enum values
-      const requestStats = {
-        total: data?.length || 0,
-        submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
-        under_review: data?.filter((r: any) => r.status === 'under_review').length || 0,
-        approved: data?.filter((r: any) => r.status === 'approved').length || 0,
-        in_progress: data?.filter((r: any) => r.status === 'in_progress').length || 0,
-        completed: data?.filter((r: any) => r.status === 'completed').length || 0
-      }
-      setStats(requestStats)
-
-    } catch (err) {
-      console.error('Error loading work requests:', err)
-      setError('Failed to load work requests')
-      setWorkRequests([])
-      setFilteredRequests([])
-    } finally {
-      setloading(false)
     }
   }
 
-  // Create new work request - FIXED with proper field mapping and NULL handling
-  const handleCreateRequest = async (requestData: Partial<WorkRequest>) => {
-    if (!selectedTenant?.id || !user?.id) {
-      setError('Missing tenant or user information')
-      return
-    }
+  // Initial load
+  useEffect(() => {
+    loadWorkRequests()
+  }, [])
 
-    try {
-      // Determine customer_id based on user role and context
-      // customer_id must reference profiles table, not tenants
-      let customerId: string
-      
-      if (tenantUser?.role === 'host_admin') {
-        // Host admins can create work requests for any selected customer/tenant
-        // But customer_id must be a profile ID, so use the authenticated user's ID
-        customerId = user.id
-        console.log('Using host_admin user ID as customer_id:', customerId)
-      } else if (tenantUser?.role === 'client_admin' || tenantUser?.role === 'primary_customer_admin') {
-        // Client/customer admins can create work requests for their tenant
-        // Use their own profile ID as customer
-        customerId = user.id
-      } else {
-        // Regular users create work requests for themselves within their tenant
-        customerId = user.id
-      }
-
-      console.log('Determined customer_id (profile ID):', customerId, 'for user role:', tenantUser?.role)
-
-      // FIXED: Map to correct database fields with proper NULL handling
-      const newRequest = {
-        // Required fields (NOT NULL in database)
-        tenant_id: selectedTenant.id,
-        title: requestData.title,
-        description: requestData.description,
-        category: requestData.category,
-        priority: requestData.priority,
-        urgency: requestData.urgency || 'medium',
-        customer_id: customerId, // Dynamic based on user role and permissions
-        
-        // Optional fields (nullable in database) - use NULL instead of empty strings
-        status: requestData.status || 'submitted',
-        assigned_to: null,
-        estimated_hours: requestData.estimated_hours || null,
-        actual_hours: 0, // Default value as per schema
-        budget: requestData.budget || null,
-        estimated_budget: requestData.estimated_budget || null,
-        required_completion_date: requestData.required_completion_date || null,
-        requested_completion_date: requestData.requested_completion_date || null,
-        scheduled_start_date: null,
-        scheduled_end_date: null,
-        actual_start_date: null,
-        actual_completion_date: null,
-        rejection_reason: null,
-        internal_notes: null,
-        customer_notes: null,
-        tags: null,
-        attachments: [],
-        request_id: null,
-        approval_status: 'submitted',
-        decline_reason: null,
-        approved_by: null,
-        approved_at: null,
-        project_id: null,
-        business_justification: requestData.business_justification || null,
-        impact_assessment: requestData.impact_assessment || null,
-        
-        // Timestamps
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-
-      console.log('Creating work request with proper mapping:', newRequest)
-
-      const { data, error } = await supabase
-        .from('work_requests')
-        .insert([newRequest])
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Error creating work request:', error)
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
-        console.error('Request data that failed:', newRequest)
-        setError(`Failed to create work request: ${error.message}`)
-        return
-      }
-
-      console.log('Created work request:', data)
-      setWorkRequests(prev => [data, ...prev])
-      setIsCreateModalOpen(false)
-      loadWorkRequests() // Reload to update stats
-      setError(null)
-    } catch (error) {
-      console.error('Error creating work request:', error)
-      setError('Failed to create work request. Please try again.')
-    }
-  }
-
-  // Update work request - FIXED with proper field mapping
-  const handleUpdateRequest = async (requestData: Partial<WorkRequest>) => {
-    if (!selectedRequest?.id) {
-      setError('No request selected for update')
-      return
-    }
-
-    try {
-      // FIXED: Map to correct database fields with proper NULL handling
-      const updateData = {
-        title: requestData.title,
-        description: requestData.description,
-        category: requestData.category,
-        priority: requestData.priority,
-        urgency: requestData.urgency,
-        status: requestData.status,
-        budget: requestData.budget || null,
-        estimated_budget: requestData.estimated_budget || null,
-        estimated_hours: requestData.estimated_hours || null,
-        required_completion_date: requestData.required_completion_date || null,
-        requested_completion_date: requestData.requested_completion_date || null,
-        business_justification: requestData.business_justification || null,
-        impact_assessment: requestData.impact_assessment || null,
-        updated_at: new Date().toISOString()
-      }
-
-      console.log('Updating work request with proper mapping:', updateData)
-
-      const { data, error } = await supabase
-        .from('work_requests')
-        .update(updateData)
-        .eq('id', selectedRequest.id)
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Error updating work request:', error)
-        setError(`Failed to update work request: ${error.message}`)
-        return
-      }
-
-      console.log('Updated work request:', data)
-      setWorkRequests(prev => prev.map((req: any) => req.id === selectedRequest.id ? data : req))
-      setIsEditModalOpen(false)
-      setSelectedRequest(null)
-      setError(null)
-
-    } catch (err) {
-      console.error('Error updating work request:', err)
-      setError('Failed to update work request. Please try again.')
-    }
-  }
-
-  // Delete work request
-  const handleDeleteRequest = async (requestId: string) => {
-    if (!confirm('Are you sure you want to delete this work request?')) return
-
-    try {
-      const { error } = await supabase
-        .from('work_requests')
-        .delete()
-        .eq('id', requestId)
-
-      if (error) {
-        console.error('Error deleting work request:', error)
-        setError(`Failed to delete work request: ${error.message}`)
-        return
-      }
-
-      setWorkRequests(prev => prev.filter((r: any) => r.id !== requestId))
-      loadWorkRequests() // Reload to update stats
-      setError(null)
-    } catch (error) {
-      console.error('Error deleting work request:', error)
-      setError('Failed to delete work request. Please try again.')
-    }
-  }
-
-  // Filter requests based on search and filters
+  // Filter and search
   useEffect(() => {
     let filtered = workRequests
 
+    // Search filter
     if (searchTerm) {
-      filtered = filtered.filter((request: any) =>
-        request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.business_justification?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(request =>
+        request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.request_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (request.customers?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (request.profiles?.full_name || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
-    if (statusFilter) {
-      filtered = filtered.filter((request: any) => request.status === statusFilter)
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(request => request.status === statusFilter)
     }
 
-    if (priorityFilter) {
-      filtered = filtered.filter((request: any) => request.priority === priorityFilter)
-    }
-
-    if (tenantFilter) {
-      filtered = filtered.filter((request: any) => request.tenant_id === tenantFilter)
+    // Priority filter
+    if (priorityFilter !== 'all') {
+      filtered = filtered.filter(request => request.priority === priorityFilter)
     }
 
     setFilteredRequests(filtered)
-  }, [workRequests, searchTerm, statusFilter, priorityFilter, tenantFilter])
+  }, [workRequests, searchTerm, statusFilter, priorityFilter])
 
-  // Load data when accessible tenants change
-  useEffect(() => {
-    loadWorkRequests()
-    loadAvailableTenants()
-  }, [accessibleTenantIds.join(','), tenantUser?.role]) // Use accessible tenant IDs instead of selected tenant
+  // Calculate statistics
+  const stats = {
+    total: workRequests.length,
+    submitted: workRequests.filter(r => r.status === 'submitted').length,
+    inProgress: workRequests.filter(r => r.status === 'in_progress').length,
+    completed: workRequests.filter(r => r.status === 'completed').length
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
   }
 
-  const getRequestName = (request: WorkRequest) => {
-    return request.title || `Request ${request.id?.slice(0, 8)}`
+  const getCustomerName = (request: WorkRequest) => {
+    // Try profiles first
+    if (request.profiles?.full_name) {
+      return request.profiles.full_name
+    }
+    
+    // Then try customers
+    if (request.customers) {
+      const { first_name, last_name, email, company_name } = request.customers
+      if (first_name && last_name) {
+        return `${first_name} ${last_name}`
+      }
+      if (company_name) {
+        return company_name
+      }
+      return email
+    }
+    
+    // Fallback to current user
+    if (currentUser?.email) {
+      return currentUser.email
+    }
+    
+    return 'Unknown User'
   }
 
-  const getBudgetAmount = (request: WorkRequest) => {
-    return request.budget || request.estimated_budget || 0
+  const handleRefresh = () => {
+    loadWorkRequests()
   }
 
-  const getCompletionDate = (request: WorkRequest) => {
-    return request.required_completion_date || request.requested_completion_date
+  const handleViewRequest = (requestId: string) => {
+    window.location.href = `/work-requests/${requestId}`
+  }
+
+  const handleEditRequest = (requestId: string) => {
+    window.location.href = `/work-requests/${requestId}/edit`
   }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Error Display */}
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
+            <p className="text-gray-600">Manage and track your work requests</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button
+              onClick={() => window.location.href = '/work-requests/new'}
+              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              New Request
+            </Button>
+          </div>
+        </div>
+
+        {/* Debug Information */}
+        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <h3 className="text-sm font-medium text-gray-900 mb-2">Debug Information</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-600">
+            <div>
+              <span className="font-medium">📊 Total requests loaded:</span> {workRequests.length}
+            </div>
+            <div>
+              <span className="font-medium">🔍 Filtered requests shown:</span> {filteredRequests.length}
+            </div>
+            <div>
+              <span className="font-medium">📦 Data source:</span> {dataSource}
+            </div>
+            <div>
+              <span className="font-medium">🕒 Last loaded:</span> {lastLoaded}
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            💡 Check browser console for detailed logs
+          </p>
+        </div>
+
+        {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <XCircle className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-                <button
-                  onClick={() => setError(null)}
-                  className="text-red-700 underline text-sm mt-1"
-                >
-                  Dismiss
-                </button>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <p className="text-sm font-medium text-red-900">Database Error</p>
+                <p className="text-xs text-red-700">{error}</p>
+                <p className="text-xs text-gray-600 mt-1">Falling back to localStorage data if available</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
-            <p className="text-gray-600">Manage and track your work requests</p>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Requests</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+              <Database className="h-8 w-8 text-blue-600" />
+            </div>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            New Request
-          </Button>
+
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Submitted</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.submitted}</p>
+              </div>
+              <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="h-4 w-4 bg-blue-600 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.inProgress}</p>
+              </div>
+              <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <RefreshCw className="h-4 w-4 text-orange-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+              </div>
+              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="h-4 w-4 bg-green-600 rounded-full"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Stats Cards - FIXED mapping */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                </div>
-                <Clock className="h-8 w-8 text-gray-400" />
+        {/* Search and Filters */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Search requests..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-600">Submitted</p>
-                  <p className="text-2xl font-bold text-blue-900">{stats.submitted}</p>
-                </div>
-                <Clock className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-yellow-600">Under Review</p>
-                  <p className="text-2xl font-bold text-yellow-900">{stats.under_review}</p>
-                </div>
-                <AlertCircle className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600">Approved</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.approved}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-indigo-600">In Progress</p>
-                  <p className="text-2xl font-bold text-indigo-900">{stats.in_progress}</p>
-                </div>
-                <Clock className="h-8 w-8 text-indigo-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600">Completed</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.completed}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters and View Toggle */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search requests..."
-                    value={searchTerm}
-                    onChange={(e: any) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+            </div>
+            <div className="flex gap-3">
               <select
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={statusFilter}
-                onChange={(e: any) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <option value="">All Status</option>
+                <option value="all">All Status</option>
                 <option value="submitted">Submitted</option>
                 <option value="under_review">Under Review</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
               <select
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={priorityFilter}
-                onChange={(e: any) => setPriorityFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setPriorityFilter(e.target.value)}
               >
-                <option value="">All Priority</option>
+                <option value="all">All Priority</option>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
                 <option value="critical">Critical</option>
               </select>
-              
-              {/* Tenant Filter - Only show for multi-tenant users */}
-              {isMultiTenant && (
-                <select
-                  value={tenantFilter}
-                  onChange={(e: any) => setTenantFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Tenants</option>
-                  {availableTenants.map((tenant) => (
-                    <option key={tenant.id} value={tenant.id}>
-                      {tenant.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-              
-              {/* View Toggle */}
-              <div className="flex border border-gray-300 rounded-md">
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="rounded-r-none"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="rounded-l-none"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Work Requests List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Work Requests ({filteredRequests.length})</CardTitle>
-            <CardDescription>
-              {filteredRequests.length} of {workRequests.length} requests
-              {isMultiTenant ? (
-                <span className="ml-2">
-                  | {tenantFilter ? 
-                    `Filtered to: ${availableTenants.find(t => t.id === tenantFilter)?.name}` : 
-                    `From ${availableTenants.length} tenants`
-                  }
-                </span>
-              ) : (
-                selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-gray-600 mt-2">loading work requests...</p>
-              </div>
-            ) : filteredRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No work requests found</h3>
-                <p className="text-gray-600 mb-4">
-                  {workRequests.length === 0 
-                    ? "Get started by creating your first work request."
-                    : "Try adjusting your search or filter criteria."
-                  }
-                </p>
-                {workRequests.length === 0 && (
-                  <Button onClick={() => setIsCreateModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Request
-                  </Button>
-                )}
-              </div>
-            ) : viewMode === 'list' ? (
-              /* List View */
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Request
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Priority
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Budget
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredRequests.map((request: any) => {
-                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
-                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
+        {/* Loading State */}
+        {isLoading && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8">
+            <div className="flex items-center justify-center">
+              <RefreshCw className="h-6 w-6 animate-spin text-blue-600 mr-3" />
+              <span className="text-gray-600">Loading work requests...</span>
+            </div>
+          </div>
+        )}
 
-                      return (
-                        <tr key={request.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{getRequestName(request)}</div>
-                              <div className="text-sm text-gray-500">{request.description?.slice(0, 100)}...</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={request.status === 'approved' ? 'default' : 'secondary'}>
-                              <StatusIcon className="w-3 h-3 mr-1" />
-                              {statusStyle.label}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
-                              {request.priority || 'medium'}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${getBudgetAmount(request).toLocaleString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(request.created_at)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedRequest(request)
-                                  setIsViewModalOpen(true)
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedRequest(request)
-                                  setIsEditModalOpen(true)
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleDeleteRequest(request.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              /* Grid View */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRequests.map((request: any) => {
-                  const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
-                  const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
+        {/* Empty State */}
+        {!isLoading && filteredRequests.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8">
+            <div className="text-center">
+              <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No work requests found</h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
+                  ? 'Try adjusting your search or filters'
+                  : 'Get started by creating your first work request'}
+              </p>
+              <Button
+                onClick={() => window.location.href = '/work-requests/new'}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Create Work Request
+              </Button>
+            </div>
+          </div>
+        )}
 
-                  return (
-                    <Card key={request.id} className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
+        {/* Requests Table */}
+        {!isLoading && filteredRequests.length > 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Request
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Priority
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Urgency
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredRequests.map((request) => (
+                    <tr key={request.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
                           <div>
-                            <CardTitle className="text-lg">{getRequestName(request)}</CardTitle>
-                            <CardDescription>{request.description?.slice(0, 100)}...</CardDescription>
-                          </div>
-                          <div className="flex space-x-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRequest(request)
-                                setIsViewModalOpen(true)
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRequest(request)
-                                setIsEditModalOpen(true)
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            <div className="text-sm font-medium text-gray-900">
+                              {request.title}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {request.description.length > 50
+                                ? `${request.description.substring(0, 50)}...`
+                                : request.description}
+                            </div>
+                            <div className="text-xs text-blue-600 font-mono">
+                              {request.request_id}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {getCustomerName(request)}
+                            </div>
                           </div>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Status:</span>
-                            <Badge variant={request.status === 'approved' ? 'default' : 'secondary'}>
-                              <StatusIcon className="w-3 h-3 mr-1" />
-                              {statusStyle.label}
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Priority:</span>
-                            <Badge variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
-                              {request.priority || 'medium'}
-                            </Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Budget:</span>
-                            <span className="text-sm font-medium">
-                              ${getBudgetAmount(request).toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Created:</span>
-                            <span className="text-sm text-gray-500">{formatDate(request.created_at)}</span>
-                          </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-900">
+                          {categoryLabels[request.category] || request.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[request.priority]}`}>
+                          {request.priority}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${urgencyColors[request.urgency]}`}>
+                          {request.urgency}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[request.status]}`}>
+                          {request.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(request.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewRequest(request.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Eye className="h-3 w-3" />
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditRequest(request.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Edit className="h-3 w-3" />
+                            Edit
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Modals */}
-        <WorkRequestForm
-          isOpen={isCreateModalOpen}
-          onClose={() => {
-            setIsCreateModalOpen(false)
-            setSelectedCustomerId('')
-          }}
-          onSave={handleCreateRequest}
-          title="Create New Work Request"
-          userRole={tenantUser?.role}
-          availableTenants={availableTenantsForCustomer}
-          selectedCustomerId={selectedCustomerId}
-          onCustomerChange={setSelectedCustomerId}
-        />
-
-        <WorkRequestForm
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false)
-            setSelectedRequest(null)
-          }}
-          onSave={handleUpdateRequest}
-          request={selectedRequest}
-          title="Edit Work Request"
-          userRole={tenantUser?.role}
-          availableTenants={availableTenantsForCustomer}
-          selectedCustomerId={selectedCustomerId}
-          onCustomerChange={setSelectedCustomerId}
-        />
-
-        {/* View Modal */}
-        {isViewModalOpen && selectedRequest && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">View Work Request</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsViewModalOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Title</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.title}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.description}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <Badge className="mt-1">{selectedRequest.status}</Badge>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Priority</label>
-                    <Badge className="mt-1">{selectedRequest.priority}</Badge>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.category}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Budget</label>
-                    <p className="mt-1 text-sm text-gray-900">${getBudgetAmount(selectedRequest).toLocaleString()}</p>
-                  </div>
-                </div>
-                
-                {selectedRequest.required_completion_date && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Required Completion Date</label>
-                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.required_completion_date)}</p>
-                  </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Created</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.created_at)}</p>
-                </div>
-                
-                {selectedRequest.internal_notes && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Internal Notes</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.internal_notes}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex justify-end mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsViewModalOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

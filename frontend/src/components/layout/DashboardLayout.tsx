@@ -1,16 +1,13 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
-import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import {
-  Building2,
-  Users,
-  FileText,
-  Upload,
-  BarChart3,
-  Settings,
+import { useState, useEffect } from 'react'
+import { 
+  Building2, 
+  Users, 
+  FileText, 
+  Upload, 
+  BarChart3, 
+  Settings, 
   LogOut,
   Menu,
   X,
@@ -20,304 +17,80 @@ import {
   CheckCircle,
   Database,
   TrendingUp,
+  Cog,
   Eye,
   Briefcase,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  DollarSign,
-  Building,
-  Activity,
-  PieChart,
-  Users2,
-  User
+  Calendar
 } from 'lucide-react'
-import { usePermissions } from '@/hooks/usePermissions'
-import { FEATURES, PERMISSIONS } from '@/rbac/constants'
-
-interface NavigationItem {
-  name: string
-  href: string
-  icon: any
-  badge?: string
-  isNew?: boolean
-  requiredPermission?: string // kept, but we gate by feature below
-}
-
-interface NavigationGroup {
-  id: string
-  title: string
-  icon: any
-  color: string
-  bgColor: string
-  hoverColor: string
-  textColor: string
-  defaultExpanded?: boolean
-  items: NavigationItem[]
-  requiredPermission?: string
-}
+import { Button } from '@/components/ui/Button'
+import { supabase } from '@/lib/supabase'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { name: 'Work Requests', href: '/work-requests', icon: Briefcase },
+  { name: 'Project Management', href: '/project-management', icon: Calendar },
+  { name: 'Employees', href: '/employees', icon: Users },
+  { name: 'Payroll', href: '/payroll', icon: FileText },
+  { name: 'Benefits', href: '/benefits', icon: Building2 },
+  { name: 'File Upload', href: '/upload', icon: Upload },
+  { name: 'Job Management', href: '/jobs-enhanced', icon: Cog },
+  { name: 'Data Validation', href: '/validation', icon: CheckCircle },
+  { name: 'Audit Trail', href: '/audit', icon: Eye },
+  { name: 'Access Control', href: '/access-control', icon: Shield },
+  { name: 'Reporting', href: '/reporting', icon: TrendingUp },
+  { name: 'Settings', href: '/settings', icon: Settings },
+]
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([
-    'operations',
-    'talent-management',
-    'etl-cockpit',
-  ])
 
-  const router = useRouter()
-  const pathname = usePathname()
-
-  // usePermissions helpers – we’ll gate by feature access, not by “permission-only” strings
-  const {
-    canAccessFeature,
-    loading: permissionsloading,
-  } = usePermissions()
-
-  // -----------------------------
-  // Navigation config (unchanged)
-  // -----------------------------
-  const navigationGroups: NavigationGroup[] = [
-    {
-      id: 'operations',
-      title: 'Operations',
-      icon: Briefcase,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-600',
-      hoverColor: 'hover:bg-blue-50',
-      textColor: 'text-blue-900',
-      items: [
-        { name: 'Work Requests', href: '/work-requests', icon: FileText, requiredPermission: PERMISSIONS.WORK_REQUEST_READ },
-        { name: 'Project Management', href: '/project-management', icon: Calendar, requiredPermission: PERMISSIONS.PROJECT_READ },
-        { name: 'Reporting', href: '/reporting', icon: TrendingUp, requiredPermission: PERMISSIONS.REPORTING_VIEW },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true, requiredPermission: PERMISSIONS.REPORTING_VIEW },
-      ],
-    },
-    {
-      id: 'talent-management',
-      title: 'Talent Management',
-      icon: Users2,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-600',
-      hoverColor: 'hover:bg-emerald-50',
-      textColor: 'text-emerald-900',
-      requiredPermission: PERMISSIONS.USER_READ,
-      items: [
-        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3, requiredPermission: PERMISSIONS.USER_READ },
-        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
-        { name: 'Candidates', href: '/talent/candidates', icon: Users, requiredPermission: PERMISSIONS.CANDIDATE_READ },
-        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp, requiredPermission: PERMISSIONS.CANDIDATE_READ },
-        { name: 'Interviews', href: '/talent/interviews', icon: Calendar, requiredPermission: PERMISSIONS.INTERVIEW_MANAGE },
-        { name: 'Offers', href: '/talent/offers', icon: FileText, requiredPermission: PERMISSIONS.OFFER_MANAGE },
-      ],
-    },
-    {
-      id: 'etl-cockpit',
-      title: 'ETL Cockpit',
-      icon: Database,
-      color: 'text-green-600',
-      bgColor: 'bg-green-600',
-      hoverColor: 'hover:bg-green-50',
-      textColor: 'text-green-900',
-      requiredPermission: PERMISSIONS.DATA_PROCESS,
-      items: [
-        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3, requiredPermission: PERMISSIONS.DATA_PROCESS },
-        { name: 'Job Management', href: '/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
-        { name: 'Employee Data Processing', href: '/employees', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_PROCESS },
-        { name: 'Data Analytics', href: '/analytics', icon: Database, requiredPermission: PERMISSIONS.DATA_ANALYZE },
-        { name: 'Audit Trail', href: '/audit', icon: Eye, requiredPermission: PERMISSIONS.AUDIT_VIEW },
-      ],
-    },
-    {
-      id: 'data-management',
-      title: 'Data Management',
-      icon: Database,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-600',
-      hoverColor: 'hover:bg-indigo-50',
-      textColor: 'text-indigo-900',
-      requiredPermission: PERMISSIONS.DATA_MANAGE,
-      items: [
-        { name: 'File Upload', href: '/upload', icon: Upload, requiredPermission: PERMISSIONS.FILE_UPLOAD },
-        { name: 'Data Validation', href: '/validation', icon: CheckCircle, requiredPermission: PERMISSIONS.DATA_VALIDATE },
-        { name: 'System Health', href: '/system-health', icon: Activity, requiredPermission: PERMISSIONS.SYSTEM_HEALTH_VIEW },
-      ],
-    },
-    {
-      id: 'configuration',
-      title: 'Configuration',
-      icon: Settings,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-600',
-      hoverColor: 'hover:bg-purple-50',
-      textColor: 'text-purple-900',
-      requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE,
-      items: [
-        { name: 'System Settings', href: '/settings', icon: Settings, requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE },
-        { name: 'API Configuration', href: '/api-config', icon: Settings, requiredPermission: PERMISSIONS.API_CONFIG_MANAGE },
-        { name: 'Integration Settings', href: '/integrations', icon: Settings, requiredPermission: PERMISSIONS.INTEGRATION_MANAGE },
-      ],
-    },
-    {
-      id: 'talent-management',
-      title: 'Talent Management',
-      icon: Users2,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-600',
-      hoverColor: 'hover:bg-emerald-50',
-      textColor: 'text-emerald-900',
-      items: [
-        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3 },
-        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase },
-        { name: 'Candidates', href: '/talent/candidates', icon: Users },
-        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp },
-        { name: 'Interviews', href: '/talent/interviews', icon: Calendar },
-        { name: 'Offers', href: '/talent/offers', icon: FileText }
-      ]
-    },
-
-    {
-      id: 'administration',
-      title: 'Administration',
-      icon: Shield,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-600',
-      hoverColor: 'hover:bg-orange-50',
-      textColor: 'text-orange-900',
-      requiredPermission: PERMISSIONS.ADMIN_ACCESS,
-      items: [
-        { name: 'Access Control', href: '/admin/access-control', icon: Shield, requiredPermission: PERMISSIONS.USER_READ },
-        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building, requiredPermission: PERMISSIONS.TENANT_READ },
-        { name: 'Employee Directory', href: '/employee-directory', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_READ },
-        { name: 'Benefits Management', href: '/benefits', icon: Building, requiredPermission: PERMISSIONS.BENEFITS_MANAGE },
-        { name: 'Payroll Management', href: '/payroll', icon: DollarSign, requiredPermission: PERMISSIONS.PAYROLL_MANAGE },
-      ],
-    },
-  ]
-
-  // -----------------------------
-  // Supabase user (best-effort)
-  // -----------------------------
   useEffect(() => {
+    // Get current user
     const getCurrentUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        setUser(user)
-      } catch {
-        setUser({ email: 'demo@company.com' })
-      }
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
     }
+    
     getCurrentUser()
 
-    const setupAuthListener = async () => {
-      try {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt: any, session: any) => {
-          setUser(session?.user || null)
-        })
-        return () => subscription.unsubscribe()
-      } catch {
-        return () => {}
-      }
-    }
-    setupAuthListener()
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null)
+    })
 
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (!target.closest('.profile-dropdown')) setProfileDropdownOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut()
-      router.push('/login')
-    } catch {
-      router.push('/login')
+      console.log('Signing out...')
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('Sign out error:', error)
+        alert('Error signing out: ' + error.message)
+        return
+      }
+
+      console.log('Sign out successful')
+      
+      // Clear any local storage or session data if needed
+      localStorage.removeItem('supabase.auth.token')
+      
+      // Redirect to login page
+      window.location.href = '/login'
+      
+    } catch (error) {
+      console.error('Sign out exception:', error)
+      alert('Error signing out. Please try again.')
     }
-  }
-
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev =>
-      prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
-    )
-  }
-
-  const isActiveItem = (href: string) => pathname === href
-
-  const getActiveGroup = () => {
-    for (const group of navigationGroups) {
-      if (group.items.some((item) => item.href === pathname)) return group.id
-    }
-    return null
-  }
-
-  // Auto-expand group containing current page
-  useEffect(() => {
-    const activeGroup = getActiveGroup()
-    if (activeGroup && !expandedGroups.includes(activeGroup)) {
-      setExpandedGroups(prev => [...prev, activeGroup])
-    }
-  }, [pathname])
-
-  // -----------------------------
-  // Feature mapper for routes
-  // -----------------------------
-  function featureForHref(href: string) {
-    if (href.startsWith('/work-requests')) return FEATURES.WORK_REQUESTS
-    if (href.startsWith('/project-management')) return FEATURES.PROJECT_MANAGEMENT
-    if (href.startsWith('/reporting') || href.startsWith('/hr-analytics') || href.startsWith('/dashboard'))
-      return FEATURES.DASHBOARDS
-    if (href.startsWith('/talent')) return FEATURES.USER_MANAGEMENT
-    if (href.startsWith('/employees') || href.startsWith('/employee-directory'))
-      return FEATURES.EMPLOYEE_RECORDS
-    if (href.startsWith('/upload')) return FEATURES.FILE_UPLOAD
-    if (href.startsWith('/validation')) return FEATURES.DATA_VALIDATION
-    if (href.startsWith('/analytics')) return FEATURES.ANALYTICS
-    if (href.startsWith('/audit')) return FEATURES.AUDIT
-    if (href.startsWith('/jobs')) return FEATURES.PROJECT_MANAGEMENT
-    if (href.startsWith('/system-health')) return FEATURES.SYSTEM_HEALTH
-    if (href.startsWith('/settings')) return FEATURES.SYSTEM_SETTINGS
-    if (href.startsWith('/api-config')) return FEATURES.API_CONFIG
-    if (href.startsWith('/integrations')) return FEATURES.INTEGRATIONS
-    if (href.startsWith('/admin/access-control')) return FEATURES.ACCESS_CONTROL
-    if (href.startsWith('/admin/tenant-management')) return FEATURES.TENANT_MANAGEMENT
-    if (href.startsWith('/benefits')) return FEATURES.BENEFITS_MANAGEMENT
-    if (href.startsWith('/payroll')) return FEATURES.PAYROLL_PROCESSING
-    // sensible default
-    return FEATURES.WORK_REQUESTS
-  }
-
-  // Filter groups/items by *feature access* to avoid permission-only false negatives
-  const filteredNavigationGroups = useMemo(() => {
-    if (permissionsloading) return []
-
-    return navigationGroups
-      .map((group) => {
-        const items = group.items.filter((item) =>
-          canAccessFeature(featureForHref(item.href))
-        )
-        return { ...group, items }
-      })
-      .filter((g) => g.items.length > 0)
-  }, [permissionsloading, canAccessFeature]) // nav config is static
-
-  if (permissionsloading) {
-    return (
-      <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">loading permissions...</p>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -349,17 +122,54 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <X className="h-6 w-6" />
             </button>
           </div>
-
-          {/* Search */}
-          <div className="p-4 border-b border-gray-200 flex-shrink-0">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search navigation..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+          <nav className="flex-1 px-4 py-4 space-y-1">
+            {navigation.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className="group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900"
+              >
+                <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                {item.name}
+              </a>
+            ))}
+          </nav>
+          
+          {/* Mobile user info and logout */}
+          <div className="flex-shrink-0 border-t border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {user?.email?.charAt(0).toUpperCase() || 'D'}
+                    </span>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {user?.email || 'demo@company.com'}
+                  </p>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+                  >
+                    <LogOut className="h-3 w-3 mr-1" />
+                    Sign out
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex flex-col flex-grow bg-white border-r border-gray-200 shadow-sm">
+          <div className="flex h-16 items-center px-4 border-b border-gray-200">
+            <Building2 className="h-8 w-8 text-blue-600" />
+            <span className="ml-2 text-xl font-semibold text-gray-900">ETLA</span>
           </div>
 
           {/* Navigation */}
@@ -368,86 +178,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
 
-              return (
-                <div key={group.id} className="space-y-1">
-                  {/* Group Header */}
-                  <button
-                    onClick={() => toggleGroup(group.id)}
-                    className={`w-full flex items-center justify-between px-3 py-3 text-sm font-bold rounded-lg transition-all duration-200 ${group.color} ${group.hoverColor} border border-gray-100 shadow-sm`}
-                  >
-                    <div className="flex items-center">
-                      <GroupIcon className="h-5 w-5 mr-3" />
-                      <span className="font-semibold">{group.title}</span>
-                    </div>
-                    <div className="transition-transform duration-200">
-                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </div>
-                  </button>
-
-                  {/* Group Items */}
-                  <div
-                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                      isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                    }`}
-                  >
-                    <div className="ml-4 pl-4 border-l-2 border-gray-100 space-y-1 pt-2">
-                      {group.items.map((item) => {
-                        const ItemIcon = item.icon
-                        const isActive = isActiveItem(item.href)
-
-                        return (
-                          <Link
-                            key={item.name}
-                            href={item.href}
-                            className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 ${
-                              isActive
-                                ? `${group.bgColor} text-white shadow-md`
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
-                            }`}
-                          >
-                            <ItemIcon className="h-4 w-4 mr-3" />
-                            <span className="flex-1">{item.name}</span>
-                            {item.isNew && (
-                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                New
-                              </span>
-                            )}
-                            {item.badge && (
-                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                                {item.badge}
-                              </span>
-                            )}
-                          </Link>
-                        )
-                      })}
-                    </div>
+          {/* Desktop user info and logout */}
+          <div className="flex-shrink-0 border-t border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {user?.email?.charAt(0).toUpperCase() || 'D'}
+                    </span>
                   </div>
                 </div>
-              )
-            })}
-          </nav>
-
-          {/* User Profile */}
-          <div className="border-t border-gray-200 p-4 flex-shrink-0">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </span>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {user?.email || 'demo@company.com'}
+                  </p>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-xs text-gray-500 hover:text-gray-700 flex items-center mt-1"
+                  >
+                    <LogOut className="h-3 w-3 mr-1" />
+                    Sign out
+                  </button>
                 </div>
-              </div>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.email || 'Loading...'}
-                </p>
-                <button
-                  onClick={handleSignOut}
-                  className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
-                >
-                  <LogOut className="h-3 w-3 mr-1" />
-                  Sign out
-                </button>
               </div>
             </div>
           </div>
@@ -470,56 +223,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <button className="p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
                 <Bell className="h-6 w-6" />
               </button>
-              <div className="h-6 w-px bg-gray-300" />
-
-              {/* User Profile Dropdown */}
-              <div className="relative">
+              
+              {/* Top right user menu */}
+              <div className="ml-3 relative">
                 <button
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 hover:border-gray-300"
+                  onClick={handleSignOut}
+                  className="flex items-center text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md hover:bg-gray-100"
                 >
-                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs text-gray-500 uppercase tracking-wide">Profile</span>
-                    <span className="text-sm font-medium text-gray-900 truncate max-w-32">
-                      {user?.email || 'Loading...'}
-                    </span>
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-gray-400 ml-2" />
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
                 </button>
-
-                {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 profile-dropdown">
-                    <div className="py-1">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {user?.email || 'Loading...'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {user?.user_metadata?.full_name || 'User Account'}
-                        </p>
-                      </div>
-
-                      <Link
-                        href="/profile"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <Settings className="h-4 w-4 mr-3 text-gray-400" />
-                        Settings
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <LogOut className="h-4 w-4 mr-3 text-gray-400" />
-                        Sign out
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
