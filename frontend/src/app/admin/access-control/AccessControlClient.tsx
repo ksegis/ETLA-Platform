@@ -68,7 +68,8 @@ type TabKey = 'users' | 'roles' | 'invitations' | 'notifications';
 export default function AccessControlClient() {
   const router = useRouter();
 
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const { checkPermission, currentUserRole, loading: permissionsLoading } = usePermissions();
 
   const [activeTab, setActiveTab] = useState<TabKey>('users');
