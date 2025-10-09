@@ -4,21 +4,7 @@ import { RBACAdminService } from '@/services/rbac_admin_service';
 import { RBACApplyChangesRequest } from '@/types';
 import { FEATURES, PERMISSIONS } from '@/rbac/constants';
 import { logger } from '@/lib/logger';
-
-// Placeholder for a server-side assertPermission function
-// In a real application, this would interact with your authentication/authorization system
-async function assertPermission(actor: any, feature: string, permission: string): Promise<void> {
-  logger.info(`Server-side: Asserting permission for actor ${actor?.id} on feature ${feature} with permission ${permission}`, {
-    userId: actor?.id,
-    feature,
-    permission,
-    action: "assertPermission",
-  });
-  // TODO: Implement actual permission check logic here
-  // For now, we'll assume it passes for demonstration purposes
-  // If permission is denied, throw an error:
-  // throw new Error('Permission Denied');
-}
+import { assertPermission } from '@/server/rbac';
 
 export async function applyRbacChangesAction(request: RBACApplyChangesRequest, actorId: string): Promise<{ success: boolean; error?: string }> {
   try {
