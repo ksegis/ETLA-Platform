@@ -11,6 +11,7 @@ import {
   FacsimileTaxRecordData
 } from '../../services/facsimile/mappers';
 import { generateDocumentHash, generateVerifyUrl } from '../../utils/hash';
+import { useCustomerBranding } from '../../services/brandingService';
 import facsimileThemeData from '../../config/facsimile_theme.json';
 
 interface FacsimileDocumentState {
@@ -31,6 +32,10 @@ export default function FacsimileDocument({
     documentHash: '',
     verifyUrl: ''
   });
+
+  // Get dynamic customer branding
+  const tenantId = (data as any)?.tenant_id;
+  const { branding } = useCustomerBranding(tenantId);
 
   const facsimileTheme: FacsimileTheme = theme || facsimileThemeData as FacsimileTheme;
   const template = facsimileTheme.templates[templateKey];
@@ -114,7 +119,7 @@ export default function FacsimileDocument({
                   color: colors.primary 
                 }}
               >
-                {facsimileTheme.branding.lockup}
+                {branding?.legalName || facsimileTheme.branding.lockup}
               </h1>
               <p style={{ color: colors.mutedInk }}>
                 {template.document_type}
@@ -167,7 +172,7 @@ export default function FacsimileDocument({
         <div className="mt-12 pt-6 border-t text-sm" style={{ borderColor: colors.border, color: colors.mutedInk }}>
           <div className="flex justify-between items-center">
             <div>
-              © {new Date().getFullYear()} HelixBridge. All rights reserved.
+              © {new Date().getFullYear()} {branding?.legalName || 'ETLA Platform'}. All rights reserved.
             </div>
             <div className="text-center">
               {facsimileTheme.branding.footer_disclaimer}

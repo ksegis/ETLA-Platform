@@ -1,15 +1,11 @@
-import React from 'react';
-/**
- * Branding Service for ETLA Platform
- * Handles dynamic customer name resolution and multi-tenant branding
- */
+'use client';
 
 import { supabase } from '@/lib/supabase';
 
 export interface CustomerBranding {
   legalName: string;
   displayName: string;
-  tenantId: string;
+  shortName: string;
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
@@ -26,8 +22,8 @@ interface Tenant {
 }
 
 class BrandingService {
-  private brandingCache: Map<string, CustomerBranding> = new Map();
-  private cacheExpiry: Map<string, number> = new Map();
+  private brandingCache = new Map<string, CustomerBranding>();
+  private cacheExpiry = new Map<string, number>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   /**
@@ -35,13 +31,15 @@ class BrandingService {
    */
   async getCustomerBranding(tenantId: string): Promise<CustomerBranding> {
     // Check cache first
-    const cached = this.getCachedBranding(tenantId);
-    if (cached) {
+    const cached = this.brandingCache.get(tenantId);
+    const expiry = this.cacheExpiry.get(tenantId);
+    
+    if (cached && expiry && Date.now() < expiry) {
       return cached;
     }
 
     try {
-      // Query tenant information from database
+      // Fetch tenant information from Supabase
       const { data: tenant, error } = await supabase
         .from('tenants')
         .select('id, name, legal_name, display_name, logo_url, primary_color, secondary_color')
@@ -49,136 +47,118 @@ class BrandingService {
         .single();
 
       if (error) {
-        console.error('Error fetching tenant branding:', error);
+        console.warn('Could not fetch tenant branding:', error);
         return this.getDefaultBranding(tenantId);
       }
 
       const branding: CustomerBranding = {
         legalName: tenant.legal_name || tenant.name || 'ETLA Platform',
         displayName: tenant.display_name || tenant.name || 'ETLA Platform',
-        tenantId: tenant.id,
+        shortName: tenant.name || 'ETLA',
         logoUrl: tenant.logo_url,
         primaryColor: tenant.primary_color,
-        secondaryColor: tenant.secondary_color,
+        secondaryColor: tenant.secondary_color
       };
 
       // Cache the result
-      this.setCachedBranding(tenantId, branding);
-      return branding;
+      this.brandingCache.set(tenantId, branding);
+      this.cacheExpiry.set(tenantId, Date.now() + this.CACHE_DURATION);
 
+      return branding;
     } catch (error) {
-      console.error('Error in getCustomerBranding:', error);
+      console.error('Error fetching customer branding:', error);
       return this.getDefaultBranding(tenantId);
     }
   }
 
   /**
-   * Get customer legal name for use in reports and documents
+   * Get branding for multiple tenants at once
    */
-  async getCustomerLegalName(tenantId: string): Promise<string> {
-    const branding = await this.getCustomerBranding(tenantId);
-    return branding.legalName;
-  }
-
-  /**
-   * Get customer display name for UI elements
-   */
-  async getCustomerDisplayName(tenantId: string): Promise<string> {
-    const branding = await this.getCustomerBranding(tenantId);
-    return branding.displayName;
-  }
-
-  /**
-   * Replace "HelixBridge" or "ETLA Platform" with customer name in text
-   */
-  async replaceBrandingInText(text: string, tenantId: string): Promise<string> {
-    const branding = await this.getCustomerBranding(tenantId);
-    
-    return text
-      .replace(/HelixBridge/g, branding.legalName)
-      .replace(/ETLA Platform/g, branding.legalName)
-      .replace(/Helix Bridge/g, branding.legalName);
-  }
-
-  /**
-   * Get branding for multiple tenants (batch operation)
-   */
-  async getBrandingForTenants(tenantIds: string[]): Promise<Map<string, CustomerBranding>> {
+  async getBulkCustomerBranding(tenantIds: string[]): Promise<Map<string, CustomerBranding>> {
     const results = new Map<string, CustomerBranding>();
     
-    // Check cache for all tenants
-    const uncachedTenants = tenantIds.filter(id => !this.getCachedBranding(id));
+    // Check which tenants need to be fetched (not in cache or expired)
+    const tenantsToFetch: string[] = [];
     
-    if (uncachedTenants.length === 0) {
-      // All tenants are cached
-      tenantIds.forEach(id => {
-        const cached = this.getCachedBranding(id);
-        if (cached) {
-          results.set(id, cached);
-        }
-      });
-      return results;
-    }
-
-    try {
-      // Fetch uncached tenants
-      const { data: tenants, error } = await supabase
-        .from('tenants')
-        .select('id, name, legal_name, display_name, logo_url, primary_color, secondary_color')
-        .in('id', uncachedTenants);
-
-      if (error) {
-        console.error('Error fetching tenant branding batch:', error);
-        // Return defaults for uncached tenants
-        uncachedTenants.forEach(id => {
-          results.set(id, this.getDefaultBranding(id));
-        });
-        return results;
+    for (const tenantId of tenantIds) {
+      const cached = this.brandingCache.get(tenantId);
+      const expiry = this.cacheExpiry.get(tenantId);
+      
+      if (cached && expiry && Date.now() < expiry) {
+        results.set(tenantId, cached);
+      } else {
+        tenantsToFetch.push(tenantId);
       }
-
-      // Process fetched tenants
-      tenants?.forEach((tenant: Tenant) => {
-        const branding: CustomerBranding = {
-          legalName: tenant.legal_name || tenant.name || 'ETLA Platform',
-          displayName: tenant.display_name || tenant.name || 'ETLA Platform',
-          tenantId: tenant.id,
-          logoUrl: tenant.logo_url,
-          primaryColor: tenant.primary_color,
-          secondaryColor: tenant.secondary_color,
-        };
-
-        this.setCachedBranding(tenant.id, branding);
-        results.set(tenant.id, branding);
-      });
-
-      // Add cached tenants to results
-      tenantIds.forEach(id => {
-        if (!results.has(id)) {
-          const cached = this.getCachedBranding(id);
-          if (cached) {
-            results.set(id, cached);
-          } else {
-            results.set(id, this.getDefaultBranding(id));
-          }
-        }
-      });
-
-      return results;
-
-    } catch (error) {
-      console.error('Error in getBrandingForTenants:', error);
-      // Return defaults for all tenants
-      tenantIds.forEach(id => {
-        results.set(id, this.getDefaultBranding(id));
-      });
-      return results;
     }
+
+    // Fetch missing tenants
+    if (tenantsToFetch.length > 0) {
+      try {
+        const { data: tenants, error } = await supabase
+          .from('tenants')
+          .select('id, name, legal_name, display_name, logo_url, primary_color, secondary_color')
+          .in('id', tenantsToFetch);
+
+        if (error) {
+          console.warn('Could not fetch bulk tenant branding:', error);
+        }
+
+        // Process fetched tenants
+        tenants?.forEach((tenant: Tenant) => {
+          const branding: CustomerBranding = {
+            legalName: tenant.legal_name || tenant.name || 'ETLA Platform',
+            displayName: tenant.display_name || tenant.name || 'ETLA Platform',
+            shortName: tenant.name || 'ETLA',
+            logoUrl: tenant.logo_url,
+            primaryColor: tenant.primary_color,
+            secondaryColor: tenant.secondary_color
+          };
+
+          // Cache and add to results
+          this.brandingCache.set(tenant.id, branding);
+          this.cacheExpiry.set(tenant.id, Date.now() + this.CACHE_DURATION);
+          results.set(tenant.id, branding);
+        });
+
+        // Add default branding for any tenants that weren't found
+        tenantsToFetch.forEach(tenantId => {
+          if (!results.has(tenantId)) {
+            const defaultBranding = this.getDefaultBranding(tenantId);
+            results.set(tenantId, defaultBranding);
+          }
+        });
+
+      } catch (error) {
+        console.error('Error fetching bulk customer branding:', error);
+        
+        // Add default branding for all missing tenants
+        tenantsToFetch.forEach(tenantId => {
+          results.set(tenantId, this.getDefaultBranding(tenantId));
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get default branding when tenant data is not available
+   */
+  public getDefaultBranding(tenantId?: string): CustomerBranding {
+    return {
+      legalName: 'ETLA Platform',
+      displayName: 'ETLA Platform',
+      shortName: 'ETLA',
+      logoUrl: undefined,
+      primaryColor: '#3B82F6',
+      secondaryColor: '#1E40AF'
+    };
   }
 
   /**
    * Clear branding cache for a specific tenant
    */
-  clearBrandingCache(tenantId?: string): void {
+  clearCache(tenantId?: string): void {
     if (tenantId) {
       this.brandingCache.delete(tenantId);
       this.cacheExpiry.delete(tenantId);
@@ -189,56 +169,35 @@ class BrandingService {
   }
 
   /**
-   * Preload branding for a tenant (useful for performance optimization)
+   * Preload branding for multiple tenants (useful for multi-tenant views)
    */
-  async preloadBranding(tenantId: string): Promise<void> {
-    await this.getCustomerBranding(tenantId);
-  }
-
-  // Private helper methods
-
-  private getCachedBranding(tenantId: string): CustomerBranding | null {
-    const expiry = this.cacheExpiry.get(tenantId);
-    if (!expiry || Date.now() > expiry) {
-      this.brandingCache.delete(tenantId);
-      this.cacheExpiry.delete(tenantId);
-      return null;
-    }
-
-    return this.brandingCache.get(tenantId) || null;
-  }
-
-  private setCachedBranding(tenantId: string, branding: CustomerBranding): void {
-    this.brandingCache.set(tenantId, branding);
-    this.cacheExpiry.set(tenantId, Date.now() + this.CACHE_DURATION);
-  }
-
-  public getDefaultBranding(tenantId: string): CustomerBranding {
-    return {
-      legalName: 'ETLA Platform',
-      displayName: 'ETLA Platform',
-      tenantId,
-    };
+  async preloadBranding(tenantIds: string[]): Promise<void> {
+    await this.getBulkCustomerBranding(tenantIds);
   }
 }
 
 // Export singleton instance
 export const brandingService = new BrandingService();
 
-// Export hook for React components
-export function useBranding(tenantId?: string) {
+// React hook for using branding in components
+export function useCustomerBranding(tenantId?: string) {
   const [branding, setBranding] = React.useState<CustomerBranding | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!tenantId) return;
+    if (!tenantId) {
+      setBranding(brandingService.getDefaultBranding());
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     brandingService.getCustomerBranding(tenantId)
-      .then(setBranding)
+      .then(branding => {
+        setBranding(branding);
+      })
       .catch(err => {
         console.error('Error loading branding:', err);
         setError(err.message);
@@ -250,4 +209,5 @@ export function useBranding(tenantId?: string) {
   return { branding, loading, error };
 }
 
-export default brandingService;
+// Add React import for the hook
+import React from 'react';
