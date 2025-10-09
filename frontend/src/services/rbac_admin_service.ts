@@ -8,8 +8,10 @@ import {
   Tenant,
   User
 } from '@/types'
-import { FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
+
 import { logger } from '@/lib/logger'
+import { assertPermission } from '@/server/rbac';
+import { FEATURES, PERMISSIONS } from '@/rbac/constants';
 
 export class RBACAdminService {
   /**
@@ -115,19 +117,22 @@ export class RBACAdminService {
   static async listPermissionCatalog(): Promise<RBACPermissionCatalog[]> {
     // Build permission catalog from FEATURES and PERMISSIONS constants
     const catalog: RBACPermissionCatalog[] = []
-
+    // This catalog is built from constants, so no client-side checks are needed here.
+    // Permissions are asserted in server-side logic where needed.
     Object.values(FEATURES).forEach((feature: any) => {
       Object.values(PERMISSIONS).forEach((permission: any) => {
         catalog.push({
           resource: feature,
           action: permission,
           permissionId: `${feature}:${permission}`,
-          description: `${permission.charAt(0).toUpperCase() + permission.slice(1)} ${feature.replace('-', ' ')}`
+          description: `${permission.charAt(0).toUpperCase() + permission.slice(1)} ${feature.replace(
+'-
+', 
+' '
+)}`
         })
       })
-    })
-
-    return catalog
+    })   return catalog
   }
 
   /**
@@ -251,8 +256,10 @@ export class RBACAdminService {
     }
 
     // Check role-based permission
-    const hasRolePermission = this.checkRolePermission(userDetail.membership.role, resource, action)
-    if (hasRolePermission) {
+        // Replace client-side permission checks with server-side assertion
+    assertPermission({ userId: userDetail.profile.id, tenantId: userDetail.membership.tenant_id, role: userDetail.membership.role }, resource, action);
+    // The assertPermission call above will throw if permission is not granted, so if we reach here, it's allowed.
+    if (true) {
       return {
         permissionId,
         resource,
@@ -277,34 +284,7 @@ export class RBACAdminService {
   /**
    * Check if a role has a specific permission
    */
-  private static checkRolePermission(role: string, resource: string, action: string): boolean {
-    // This would typically come from your role permission configuration
-    // For now, use simplified logic based on role hierarchy
-    
-    if (role === 'host_admin') {
-      return true // Host admin has all permissions
-    }
 
-    if (role === 'client_admin') {
-      // Client admin has most permissions except system-level ones
-      const systemFeatures = ['tenant-management', 'system-settings']
-      return !systemFeatures.includes(resource)
-    }
-
-    if (role === 'program_manager') {
-      // Program manager has project-related permissions
-      const projectFeatures = ['project-management', 'work-requests', 'project-charter', 'risk-management']
-      return projectFeatures.includes(resource) && ['view', 'create', 'update'].includes(action)
-    }
-
-    if (role === 'client_user') {
-      // Client user has limited permissions
-      const userFeatures = ['work-requests', 'reporting']
-      return userFeatures.includes(resource) && ['view', 'create'].includes(action)
-    }
-
-    return false
-  }
 
   /**
    * Apply staged changes to the database
