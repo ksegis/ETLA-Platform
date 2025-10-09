@@ -100,7 +100,7 @@ export default function CandidatesManagement({
   jobId
 }: CandidatesManagementProps) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [skillFilter, setSkillFilter] = useState<string>('');
@@ -198,7 +198,7 @@ export default function CandidatesManagement({
 
     setTimeout(() => {
       setCandidates(mockCandidates);
-      setLoading(false);
+      setloading(false);
     }, 1000);
   }, []);
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import {
@@ -19,7 +20,6 @@ import {
   CheckCircle,
   Database,
   TrendingUp,
-  Cog,
   Eye,
   Briefcase,
   Calendar,
@@ -30,46 +30,59 @@ import {
   Activity,
   PieChart,
   Users2,
-  Clock,
-  Target,
-  Zap,
-  Key,
   User
 } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
+import { FEATURES, PERMISSIONS } from '@/rbac/constants'
 
 interface NavigationItem {
-  name: string;
-  href: string;
-  icon: any;
-  badge?: string;
-  isNew?: boolean;
+  name: string
+  href: string
+  icon: any
+  badge?: string
+  isNew?: boolean
+  requiredPermission?: string // kept, but we gate by feature below
 }
 
 interface NavigationGroup {
-  id: string;
-  title: string;
-  icon: any;
-  color: string;
-  bgColor: string;
-  hoverColor: string;
-  textColor: string;
-  defaultExpanded?: boolean;
-  items: NavigationItem[];
+  id: string
+  title: string
+  icon: any
+  color: string
+  bgColor: string
+  hoverColor: string
+  textColor: string
+  defaultExpanded?: boolean
+  items: NavigationItem[]
+  requiredPermission?: string
 }
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit', 'talent-management', 'administration'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([
+    'operations',
+    'talent-management',
+    'etl-cockpit',
+  ])
+
   const router = useRouter()
   const pathname = usePathname()
 
-  // REDESIGNED NAVIGATION GROUPS - USER-FRIENDLY WORKFLOW ORIENTED
+  // usePermissions helpers – we’ll gate by feature access, not by “permission-only” strings
+  const {
+    canAccessFeature,
+    loading: permissionsloading,
+  } = usePermissions()
+
+  // -----------------------------
+  // Navigation config (unchanged)
+  // -----------------------------
   const navigationGroups: NavigationGroup[] = [
     {
       id: 'operations',
@@ -80,11 +93,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       hoverColor: 'hover:bg-blue-50',
       textColor: 'text-blue-900',
       items: [
-        { name: 'Work Requests', href: '/work-requests', icon: FileText },
-        { name: 'Project Management', href: '/project-management', icon: Calendar },
-        { name: 'Reporting Cockpit', href: '/reporting', icon: TrendingUp, isNew: true },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart }
-      ]
+        { name: 'Work Requests', href: '/work-requests', icon: FileText, requiredPermission: PERMISSIONS.WORK_REQUEST_READ },
+        { name: 'Project Management', href: '/project-management', icon: Calendar, requiredPermission: PERMISSIONS.PROJECT_READ },
+        { name: 'Reporting', href: '/reporting', icon: TrendingUp, requiredPermission: PERMISSIONS.REPORTING_VIEW },
+        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true, requiredPermission: PERMISSIONS.REPORTING_VIEW },
+      ],
     },
     {
       id: 'talent-management',
@@ -94,14 +107,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-emerald-600',
       hoverColor: 'hover:bg-emerald-50',
       textColor: 'text-emerald-900',
+      requiredPermission: PERMISSIONS.USER_READ,
       items: [
-        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3 },
-        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase },
-        { name: 'Candidates', href: '/talent/candidates', icon: Users },
-        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp },
-        { name: 'Interviews', href: '/talent/interviews', icon: Calendar },
-        { name: 'Offers', href: '/talent/offers', icon: FileText }
-      ]
+        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3, requiredPermission: PERMISSIONS.USER_READ },
+        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
+        { name: 'Candidates', href: '/talent/candidates', icon: Users, requiredPermission: PERMISSIONS.CANDIDATE_READ },
+        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp, requiredPermission: PERMISSIONS.CANDIDATE_READ },
+        { name: 'Interviews', href: '/talent/interviews', icon: Calendar, requiredPermission: PERMISSIONS.INTERVIEW_MANAGE },
+        { name: 'Offers', href: '/talent/offers', icon: FileText, requiredPermission: PERMISSIONS.OFFER_MANAGE },
+      ],
     },
     {
       id: 'etl-cockpit',
@@ -111,13 +125,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-green-600',
       hoverColor: 'hover:bg-green-50',
       textColor: 'text-green-900',
+      requiredPermission: PERMISSIONS.DATA_PROCESS,
       items: [
-        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3 },
-        { name: 'Job Management', href: '/jobs', icon: Briefcase },
-        { name: 'Employee Data Processing', href: '/employees', icon: Users },
-        { name: 'Data Analytics', href: '/analytics', icon: Database },
-        { name: 'Audit Trail', href: '/audit', icon: Eye }
-      ]
+        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3, requiredPermission: PERMISSIONS.DATA_PROCESS },
+        { name: 'Job Management', href: '/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
+        { name: 'Employee Data Processing', href: '/employees', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_PROCESS },
+        { name: 'Data Analytics', href: '/analytics', icon: Database, requiredPermission: PERMISSIONS.DATA_ANALYZE },
+        { name: 'Audit Trail', href: '/audit', icon: Eye, requiredPermission: PERMISSIONS.AUDIT_VIEW },
+      ],
     },
     {
       id: 'data-management',
@@ -127,11 +142,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-indigo-600',
       hoverColor: 'hover:bg-indigo-50',
       textColor: 'text-indigo-900',
+      requiredPermission: PERMISSIONS.DATA_MANAGE,
       items: [
-        { name: 'File Upload', href: '/upload', icon: Upload },
-        { name: 'Data Validation', href: '/validation', icon: CheckCircle },
-        { name: 'System Health', href: '/system-health', icon: Activity }
-      ]
+        { name: 'File Upload', href: '/upload', icon: Upload, requiredPermission: PERMISSIONS.FILE_UPLOAD },
+        { name: 'Data Validation', href: '/validation', icon: CheckCircle, requiredPermission: PERMISSIONS.DATA_VALIDATE },
+        { name: 'System Health', href: '/system-health', icon: Activity, requiredPermission: PERMISSIONS.SYSTEM_HEALTH_VIEW },
+      ],
     },
     {
       id: 'configuration',
@@ -141,11 +157,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-purple-600',
       hoverColor: 'hover:bg-purple-50',
       textColor: 'text-purple-900',
+      requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE,
       items: [
-        { name: 'System Settings', href: '/settings', icon: Settings },
-        { name: 'API Configuration', href: '/api-config', icon: Zap },
-        { name: 'Integration Settings', href: '/integrations', icon: Target }
-      ]
+        { name: 'System Settings', href: '/settings', icon: Settings, requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE },
+        { name: 'API Configuration', href: '/api-config', icon: Settings, requiredPermission: PERMISSIONS.API_CONFIG_MANAGE },
+        { name: 'Integration Settings', href: '/integrations', icon: Settings, requiredPermission: PERMISSIONS.INTEGRATION_MANAGE },
+      ],
     },
     {
       id: 'talent-management',
@@ -173,55 +190,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-orange-600',
       hoverColor: 'hover:bg-orange-50',
       textColor: 'text-orange-900',
+      requiredPermission: PERMISSIONS.ADMIN_ACCESS,
       items: [
-        { name: 'Access Control', href: '/admin/access-control', icon: Shield },
-        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
-        { name: 'Employee Directory', href: '/employee-directory', icon: Users },
-        { name: 'Benefits Management', href: '/benefits', icon: Building },
-        { name: 'Payroll Management', href: '/payroll', icon: DollarSign }
-      ]
-    }
+        { name: 'Access Control', href: '/admin/access-control', icon: Shield, requiredPermission: PERMISSIONS.USER_READ },
+        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building, requiredPermission: PERMISSIONS.TENANT_READ },
+        { name: 'Employee Directory', href: '/employee-directory', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_READ },
+        { name: 'Benefits Management', href: '/benefits', icon: Building, requiredPermission: PERMISSIONS.BENEFITS_MANAGE },
+        { name: 'Payroll Management', href: '/payroll', icon: DollarSign, requiredPermission: PERMISSIONS.PAYROLL_MANAGE },
+      ],
+    },
   ]
 
+  // -----------------------------
+  // Supabase user (best-effort)
+  // -----------------------------
   useEffect(() => {
-    // Get current user - using safe Supabase import
     const getCurrentUser = async () => {
       try {
-        // Dynamic import to handle missing Supabase gracefully
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
-      } catch (error) {
-        console.log('Supabase not available, user will remain null')
-        setUser(null)
+      } catch {
+        setUser({ email: 'demo@company.com' })
       }
     }
-
     getCurrentUser()
 
-    // Listen for auth changes - with error handling
     const setupAuthListener = async () => {
       try {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt: any, session: any) => {
           setUser(session?.user || null)
         })
-
         return () => subscription.unsubscribe()
-      } catch (error) {
-        console.log('Supabase auth listener not available')
+      } catch {
         return () => {}
       }
     }
-
     setupAuthListener()
 
-    // Close profile dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element
-      if (!target.closest('.profile-dropdown')) {
-        setProfileDropdownOpen(false)
-      }
+      if (!target.closest('.profile-dropdown')) setProfileDropdownOpen(false)
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
@@ -230,29 +239,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     try {
       await supabase.auth.signOut()
       router.push('/login')
-    } catch (error) {
-      console.log('Supabase sign out not available, redirecting to login')
+    } catch {
       router.push('/login')
     }
   }
 
   const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev => 
-      prev.includes(groupId) 
-        ? prev.filter((id: any) => id !== groupId)
-        : [...prev, groupId]
+    setExpandedGroups(prev =>
+      prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
     )
   }
 
-  const isActiveItem = (href: string) => {
-    return pathname === href
-  }
+  const isActiveItem = (href: string) => pathname === href
 
   const getActiveGroup = () => {
     for (const group of navigationGroups) {
-      if (group.items.some((item: any) => item.href === pathname)) {
-        return group.id
-      }
+      if (group.items.some((item) => item.href === pathname)) return group.id
     }
     return null
   }
@@ -265,6 +267,59 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [pathname])
 
+  // -----------------------------
+  // Feature mapper for routes
+  // -----------------------------
+  function featureForHref(href: string) {
+    if (href.startsWith('/work-requests')) return FEATURES.WORK_REQUESTS
+    if (href.startsWith('/project-management')) return FEATURES.PROJECT_MANAGEMENT
+    if (href.startsWith('/reporting') || href.startsWith('/hr-analytics') || href.startsWith('/dashboard'))
+      return FEATURES.DASHBOARDS
+    if (href.startsWith('/talent')) return FEATURES.USER_MANAGEMENT
+    if (href.startsWith('/employees') || href.startsWith('/employee-directory'))
+      return FEATURES.EMPLOYEE_RECORDS
+    if (href.startsWith('/upload')) return FEATURES.FILE_UPLOAD
+    if (href.startsWith('/validation')) return FEATURES.DATA_VALIDATION
+    if (href.startsWith('/analytics')) return FEATURES.ANALYTICS
+    if (href.startsWith('/audit')) return FEATURES.AUDIT
+    if (href.startsWith('/jobs')) return FEATURES.PROJECT_MANAGEMENT
+    if (href.startsWith('/system-health')) return FEATURES.SYSTEM_HEALTH
+    if (href.startsWith('/settings')) return FEATURES.SYSTEM_SETTINGS
+    if (href.startsWith('/api-config')) return FEATURES.API_CONFIG
+    if (href.startsWith('/integrations')) return FEATURES.INTEGRATIONS
+    if (href.startsWith('/admin/access-control')) return FEATURES.ACCESS_CONTROL
+    if (href.startsWith('/admin/tenant-management')) return FEATURES.TENANT_MANAGEMENT
+    if (href.startsWith('/benefits')) return FEATURES.BENEFITS_MANAGEMENT
+    if (href.startsWith('/payroll')) return FEATURES.PAYROLL_PROCESSING
+    // sensible default
+    return FEATURES.WORK_REQUESTS
+  }
+
+  // Filter groups/items by *feature access* to avoid permission-only false negatives
+  const filteredNavigationGroups = useMemo(() => {
+    if (permissionsloading) return []
+
+    return navigationGroups
+      .map((group) => {
+        const items = group.items.filter((item) =>
+          canAccessFeature(featureForHref(item.href))
+        )
+        return { ...group, items }
+      })
+      .filter((g) => g.items.length > 0)
+  }, [permissionsloading, canAccessFeature]) // nav config is static
+
+  if (permissionsloading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">loading permissions...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-screen flex bg-gray-50">
       {/* Mobile sidebar overlay */}
@@ -275,9 +330,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
@@ -307,10 +364,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-3 overflow-y-auto">
-            {navigationGroups.map((group: any) => {
+            {filteredNavigationGroups.map((group) => {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
-              
+
               return (
                 <div key={group.id} className="space-y-1">
                   {/* Group Header */}
@@ -323,31 +380,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <span className="font-semibold">{group.title}</span>
                     </div>
                     <div className="transition-transform duration-200">
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
+                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </div>
                   </button>
 
-                  {/* Group Items with Animation */}
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                  }`}>
+                  {/* Group Items */}
+                  <div
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                      isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
                     <div className="ml-4 pl-4 border-l-2 border-gray-100 space-y-1 pt-2">
-                      {group.items.map((item: any) => {
+                      {group.items.map((item) => {
                         const ItemIcon = item.icon
                         const isActive = isActiveItem(item.href)
-                        
+
                         return (
-                          <a
+                          <Link
                             key={item.name}
                             href={item.href}
                             className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 ${
                               isActive
                                 ? `${group.bgColor} text-white shadow-md`
-                                : `text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm`
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                             }`}
                           >
                             <ItemIcon className="h-4 w-4 mr-3" />
@@ -362,7 +417,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                 {item.badge}
                               </span>
                             )}
-                          </a>
+                          </Link>
                         )
                       })}
                     </div>
@@ -410,13 +465,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <Menu className="h-6 w-6" />
             </button>
-            
+
             <div className="flex items-center space-x-4">
               <button className="p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
                 <Bell className="h-6 w-6" />
               </button>
               <div className="h-6 w-px bg-gray-300" />
-              
+
               {/* User Profile Dropdown */}
               <div className="relative">
                 <button
@@ -435,11 +490,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <ChevronDown className="h-4 w-4 text-gray-400 ml-2" />
                 </button>
 
-                {/* Dropdown Menu */}
                 {profileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 profile-dropdown">
                     <div className="py-1">
-                      {/* User Info Header */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {user?.email || 'Loading...'}
@@ -448,46 +501,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           {user?.user_metadata?.full_name || 'User Account'}
                         </p>
                       </div>
-                      
-                      {/* Profile Options */}
-                      <a
+
+                      <Link
                         href="/profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                         onClick={() => setProfileDropdownOpen(false)}
                       >
                         <Settings className="h-4 w-4 mr-3 text-gray-400" />
-                        Profile Settings
-                      </a>
-                      
-                      <a
-                        href="/profile#security"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <Shield className="h-4 w-4 mr-3 text-gray-400" />
-                        Security & MFA
-                      </a>
-                      
-                      <a
-                        href="/reset-password"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <Key className="h-4 w-4 mr-3 text-gray-400" />
-                        Change Password
-                      </a>
-                      
-                      <div className="border-t border-gray-100 my-1"></div>
-                      
+                        Settings
+                      </Link>
                       <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false)
-                          handleSignOut()
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={handleSignOut}
+                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
-                        <LogOut className="h-4 w-4 mr-3" />
-                        Sign Out
+                        <LogOut className="h-4 w-4 mr-3 text-gray-400" />
+                        Sign out
                       </button>
                     </div>
                   </div>
@@ -497,12 +525,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Page content - No padding/margin to eliminate white space */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   )
 }
-

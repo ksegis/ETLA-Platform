@@ -20,7 +20,7 @@ export default function MissingCustomerModal({
   onCustomerFixed
 }: MissingCustomerModalProps) {
   const [step, setStep] = useState<'choose' | 'create' | 'link'>('choose')
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [availableCustomers, setAvailableCustomers] = useState<Array<{ id: string; name: string }>>([])
   
   // Create new customer form
@@ -40,13 +40,13 @@ export default function MissingCustomerModal({
 
   const loadAvailableCustomers = async () => {
     try {
-      setLoading(true)
+      setloading(true)
       const customers = await pmbok.getAvailableCustomers()
       setAvailableCustomers(customers)
     } catch (error) {
       console.error('Error loading customers:', error)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -57,7 +57,7 @@ export default function MissingCustomerModal({
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       
       // Create the customer using correct method signature
       const createResult = await pmbok.createMissingCustomer(
@@ -86,7 +86,7 @@ export default function MissingCustomerModal({
       console.error('Error creating customer:', error)
       alert('Failed to create customer')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -97,7 +97,7 @@ export default function MissingCustomerModal({
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       
       const linkResult = await pmbok.linkWorkRequestToCustomer(workRequestId, selectedCustomerId)
       
@@ -114,7 +114,7 @@ export default function MissingCustomerModal({
       console.error('Error linking customer:', error)
       alert('Failed to link customer')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -250,7 +250,7 @@ export default function MissingCustomerModal({
                 {loading ? (
                   <div className="flex items-center justify-center py-4">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Loading customers...
+                    loading customers...
                   </div>
                 ) : (
                   <select

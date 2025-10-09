@@ -23,7 +23,7 @@ export default function WorkRequestApprovalModal({
   const [action, setAction] = useState<'review' | 'approve' | 'decline' | null>(null)
   const [declineReason, setDeclineReason] = useState('')
   const [approverComments, setApproverComments] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
 
   if (!isOpen || !workRequest) return null
 
@@ -31,7 +31,7 @@ export default function WorkRequestApprovalModal({
     if (!action) return
 
     try {
-      setLoading(true)
+      setloading(true)
       let result
 
       switch (action) {
@@ -66,7 +66,7 @@ export default function WorkRequestApprovalModal({
       console.error(`❌ Error during ${action}:`, error)
       alert(`Error during ${action}: ${error}`)
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -74,7 +74,7 @@ export default function WorkRequestApprovalModal({
     setAction(null)
     setDeclineReason('')
     setApproverComments('')
-    setLoading(false)
+    setloading(false)
   }
 
   const handleClose = () => {

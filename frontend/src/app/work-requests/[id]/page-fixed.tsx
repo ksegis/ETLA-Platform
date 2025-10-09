@@ -32,7 +32,7 @@ const priorityColors = {
 export default function WorkRequestDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [request, setRequest] = useState<WorkRequest | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [newComment, setNewComment] = useState('')
   const [isAddingComment, setIsAddingComment] = useState(false)
@@ -43,9 +43,9 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
 
   const loadWorkRequest = async () => {
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
-      console.log('🔍 Loading work request:', params.id)
+      console.log('🔍 loading work request:', params.id)
 
       // Get all work requests and find the specific one
       const workRequests = await pmbok.getWorkRequests()
@@ -64,7 +64,7 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
       console.error('❌ Error loading work request:', error)
       setError('Failed to load work request')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -110,7 +110,7 @@ export default function WorkRequestDetailsPage({ params }: { params: { id: strin
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading work request...</p>
+          <p className="text-gray-600">loading work request...</p>
         </div>
       </div>
     )

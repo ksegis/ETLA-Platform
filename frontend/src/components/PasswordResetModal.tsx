@@ -20,7 +20,7 @@ interface PasswordResetModalProps {
 }
 
 export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }: PasswordResetModalProps) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setloading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [resetMethod, setResetMethod] = useState<'email' | 'direct'>('email')
@@ -36,7 +36,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
   }
 
   const handleEmailReset = async () => {
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -54,7 +54,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     } catch (error: any) {
       setError(error.message || 'Failed to send password reset email')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -64,7 +64,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
       return
     }
 
-    setLoading(true)
+    setloading(true)
     setError('')
 
     try {
@@ -82,7 +82,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     } catch (error: any) {
       setError(error.message || 'Failed to reset password')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 

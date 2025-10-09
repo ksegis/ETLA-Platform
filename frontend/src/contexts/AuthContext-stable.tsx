@@ -47,7 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [tenant, setTenant] = useState<Tenant | null>(null)
   const [tenantUser, setTenantUser] = useState<TenantUser | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [initialized, setInitialized] = useState(false)
 
   // Initialize auth state
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setDemoUser()
       } finally {
         if (mounted) {
-          setLoading(false)
+          setloading(false)
           setInitialized(true)
           console.log('✅ Auth initialization complete')
         }
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Load tenant information for authenticated user
   const loadTenantInfo = async (userId: string) => {
     try {
-      console.log('🏢 Loading tenant info for user:', userId)
+      console.log('🏢 loading tenant info for user:', userId)
       
       // Try to get tenant info from database
       const { data: tenantUsers, error } = await supabase
@@ -256,7 +256,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       console.log('👋 Signing out...')
-      setLoading(true)
+      setloading(true)
       const { error } = await supabase.auth.signOut()
       if (error) {
         console.error('❌ Error signing out:', error)
@@ -269,7 +269,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setDemoUser() // Fallback to demo user even on error
       throw error
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -385,7 +385,7 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">loading...</p>
           </div>
         </div>
       )

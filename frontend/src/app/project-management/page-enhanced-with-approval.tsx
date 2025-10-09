@@ -362,7 +362,7 @@ export default function ProjectManagementPage() {
           {dashboardData.loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">Loading work requests...</p>
+              <p className="mt-2 text-gray-500">loading work requests...</p>
             </div>
           ) : dashboardData.error ? (
             <div className="text-center py-8 text-red-500">
@@ -544,7 +544,7 @@ export default function ProjectManagementPage() {
           {dashboardData.loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">Loading project charters...</p>
+              <p className="mt-2 text-gray-500">loading project charters...</p>
             </div>
           ) : filteredProjectCharters.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -693,7 +693,7 @@ export default function ProjectManagementPage() {
           {dashboardData.loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">Loading risks...</p>
+              <p className="mt-2 text-gray-500">loading risks...</p>
             </div>
           ) : filteredRisks.length === 0 ? (
             <div className="text-center py-8 text-gray-500">

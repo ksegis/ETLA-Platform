@@ -168,7 +168,7 @@ export default function ProjectManagementPage() {
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [departmentFilter, setDepartmentFilter] = useState('all')
   const [projectTypeFilter, setProjectTypeFilter] = useState('all')
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Load data on component mount
@@ -181,7 +181,7 @@ export default function ProjectManagementPage() {
   const loadData = async () => {
     if (!selectedTenant?.id) return
     
-    setLoading(true)
+    setloading(true)
     setError(null)
     
     try {
@@ -246,7 +246,7 @@ export default function ProjectManagementPage() {
       console.error('Error loading data:', error)
       setError('Failed to load project management data. Please try again.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -489,7 +489,7 @@ export default function ProjectManagementPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading project management data...</p>
+            <p className="mt-4 text-gray-600">loading project management data...</p>
           </div>
         </div>
       </DashboardLayout>

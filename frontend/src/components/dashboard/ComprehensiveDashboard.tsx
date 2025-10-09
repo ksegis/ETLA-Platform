@@ -89,16 +89,16 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     availableTenants, 
     isMultiTenant, 
     isDemoMode,
-    isLoading: tenantLoading 
+    Loading: tenantloading 
   } = useTenant();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setloading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('current_year');
 
   const loadDashboardMetrics = async () => {
     // Don't load if tenant context is still loading
-    if (tenantLoading) return;
+    if (tenantloading) return;
 
     // Get tenant IDs with same logic as reporting page
     let tenantIds: string[] = [];
@@ -112,7 +112,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     }
 
     if (!tenantIds || tenantIds.length === 0) {
-      setLoading(false);
+      setloading(false);
       setError("No tenant selected or accessible.");
       return;
     }
@@ -122,11 +122,11 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     const cached = metricsCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       setMetrics(cached.data);
-      setLoading(false);
+      setloading(false);
       return;
     }
 
-    setLoading(true);
+    setloading(true);
     setError(null);
 
     try {
@@ -347,18 +347,18 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
       console.error('Error loading dashboard metrics:', err);
       setError(`Failed to load dashboard metrics: ${err.message}`);
     } finally {
-      setLoading(false);
+      setloading(false);
     }
   };
 
   useEffect(() => {
     loadDashboardMetrics();
-  }, [selectedTenant, selectedTimeframe, tenantLoading, isDemoMode, availableTenants.length]);
+  }, [selectedTenant, selectedTimeframe, tenantloading, isDemoMode, availableTenants.length]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="text-lg">Loading comprehensive dashboard...</div>
+        <div className="text-lg">loading comprehensive dashboard...</div>
       </div>
     );
   }

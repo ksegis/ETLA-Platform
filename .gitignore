@@ -112,3 +112,9 @@ Thumbs.db
 *.tmp
 *.temp
 
+
+
+# Vercel build output
+.next
+frontend/.next
+

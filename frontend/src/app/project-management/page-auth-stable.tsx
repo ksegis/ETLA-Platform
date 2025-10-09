@@ -47,7 +47,7 @@ export default function ProjectManagementPage() {
   })
   
   // UI state
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('work-requests')
   const [searchTerm, setSearchTerm] = useState('')
@@ -68,10 +68,10 @@ export default function ProjectManagementPage() {
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('📊 Loading dashboard data with stable auth:', { userId: auth.currentUserId, tenantId: auth.currentTenantId })
+      console.log('📊 loading dashboard data with stable auth:', { userId: auth.currentUserId, tenantId: auth.currentTenantId })
 
       // Load all data in parallel
       const [workRequests, projectCharters, risks] = await Promise.all([
@@ -97,7 +97,7 @@ export default function ProjectManagementPage() {
       console.error('❌ Error loading dashboard data:', error)
       setError('Failed to load dashboard data')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -243,14 +243,14 @@ export default function ProjectManagementPage() {
     return new Date(dateString).toLocaleDateString()
   }
 
-  // Loading state
+  // loading state
   if (loading) {
     return (
       <DashboardLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-            <p className="text-gray-600">Loading project management data...</p>
+            <p className="text-gray-600">loading project management data...</p>
             <p className="text-sm text-gray-500 mt-2">
               User: {auth.user?.email} | Tenant: {auth.currentTenantId}
             </p>
@@ -267,7 +267,7 @@ export default function ProjectManagementPage() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Data</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Error loading Data</h1>
             <p className="text-gray-600 mb-6">{error}</p>
             <Button onClick={loadDashboardData}>
               Try Again

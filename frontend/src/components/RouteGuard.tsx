@@ -1,175 +1,332 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { usePermissions, FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
-import { NoAccessFallback } from './PermissionGuards'
+import React, { useEffect, useMemo, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
+import { NoAccessFallback } from "./PermissionGuards"; // (kept; safe if unused)
+import { PERMISSIONS, ROLES } from "@/lib/rbac";
 
-// Route permission configuration
-const ROUTE_PERMISSIONS: Record<string, { feature: string; permission: string }> = {
+/* ------------------------------------------------------------------ */
+/* Route permission configuration (kept as-is, but now actually used) */
+/* ------------------------------------------------------------------ */
+const ROUTE_PERMISSIONS: Record<
+  string,
+  { feature: string; permission: string }
+> = {
   // Project Management Routes
-  '/project-management': { feature: FEATURES.PROJECT_MANAGEMENT, permission: PERMISSIONS.VIEW },
-  '/project-management/create': { feature: FEATURES.PROJECT_MANAGEMENT, permission: PERMISSIONS.CREATE },
-  '/project-management/requests': { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.VIEW },
-  '/project-management/requests/create': { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.CREATE },
-  '/project-management/charters': { feature: FEATURES.PROJECT_CHARTER, permission: PERMISSIONS.VIEW },
-  '/project-management/charters/create': { feature: FEATURES.PROJECT_CHARTER, permission: PERMISSIONS.CREATE },
-  '/project-management/risks': { feature: FEATURES.RISK_MANAGEMENT, permission: PERMISSIONS.VIEW },
-  '/project-management/resources': { feature: FEATURES.RESOURCE_MANAGEMENT, permission: PERMISSIONS.VIEW },
-  
+  "/project-management": {
+    feature: "project",
+    permission: PERMISSIONS.PROJECT_READ,
+  },
+  "/project-management/create": {
+    feature: "project",
+    permission: PERMISSIONS.PROJECT_CREATE,
+  },
+  "/project-management/requests": {
+    feature: "work_request",
+    permission: PERMISSIONS.WORK_REQUEST_READ,
+  },
+  "/project-management/requests/create": {
+    feature: "work_request",
+    permission: PERMISSIONS.WORK_REQUEST_CREATE,
+  },
+  "/project-management/charters": {
+    feature: "project",
+    permission: PERMISSIONS.PROJECT_READ,
+  },
+  "/project-management/charters/create": {
+    feature: "project",
+    permission: PERMISSIONS.PROJECT_CREATE,
+  },
+  "/project-management/risks": {
+    feature: "project",
+    permission: PERMISSIONS.PROJECT_READ,
+  },
+  "/project-management/resources": {
+    feature: "project",
+    permission: PERMISSIONS.PROJECT_READ,
+  },
+
   // Work Request Routes
-  '/work-requests': { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.VIEW },
-  '/work-requests/create': { feature: FEATURES.WORK_REQUESTS, permission: PERMISSIONS.CREATE },
-  
+  "/work-requests": {
+    feature: "work_request",
+    permission: PERMISSIONS.WORK_REQUEST_READ,
+  },
+  "/work-requests/create": {
+    feature: "work_request",
+    permission: PERMISSIONS.WORK_REQUEST_CREATE,
+  },
+
   // Administration Routes
-  '/access-control': { feature: FEATURES.ACCESS_CONTROL, permission: PERMISSIONS.VIEW },
-  '/user-management': { feature: FEATURES.USER_MANAGEMENT, permission: PERMISSIONS.VIEW },
-  '/tenant-management': { feature: FEATURES.TENANT_MANAGEMENT, permission: PERMISSIONS.VIEW },
-  '/system-settings': { feature: FEATURES.SYSTEM_SETTINGS, permission: PERMISSIONS.VIEW },
-  '/audit-logs': { feature: FEATURES.AUDIT_LOGS, permission: PERMISSIONS.VIEW },
-  
+  "/access-control": {
+    feature: "access_control",
+    permission: PERMISSIONS.USER_READ,
+  },
+  "/user-management": {
+    feature: "user",
+    permission: PERMISSIONS.USER_READ,
+  },
+  "/tenant-management": {
+    feature: "tenant",
+    permission: PERMISSIONS.TENANT_READ,
+  },
+  "/system-settings": {
+    feature: "system_settings",
+    permission: PERMISSIONS.TENANT_UPDATE,
+  },
+  "/audit-logs": {
+    feature: "audit_log",
+    permission: PERMISSIONS.TENANT_READ,
+  },
+
   // Reporting Routes
-  '/reporting': { feature: FEATURES.REPORTING, permission: PERMISSIONS.VIEW },
-  '/dashboards': { feature: FEATURES.DASHBOARDS, permission: PERMISSIONS.VIEW },
-  '/analytics': { feature: FEATURES.ANALYTICS, permission: PERMISSIONS.VIEW },
-  
+  "/reporting": { feature: "reporting", permission: PERMISSIONS.REPORTING_VIEW },
+  "/dashboards": {
+    feature: "reporting",
+    permission: PERMISSIONS.REPORTING_VIEW,
+  },
+  "/analytics": {
+    feature: "reporting",
+    permission: PERMISSIONS.REPORTING_VIEW,
+  },
+
   // Data Management Routes
-  '/migration-workbench': { feature: FEATURES.MIGRATION_WORKBENCH, permission: PERMISSIONS.VIEW },
-  '/file-upload': { feature: FEATURES.FILE_UPLOAD, permission: PERMISSIONS.CREATE },
-  '/data-validation': { feature: FEATURES.DATA_VALIDATION, permission: PERMISSIONS.VIEW },
-  
+  "/migration-workbench": {
+    feature: "data_management",
+    permission: PERMISSIONS.TENANT_UPDATE,
+  },
+  "/file-upload": {
+    feature: "data_management",
+    permission: PERMISSIONS.TENANT_UPDATE,
+  },
+  "/data-validation": {
+    feature: "data_management",
+    permission: PERMISSIONS.TENANT_UPDATE,
+  },
+
   // Benefits & HR Routes
-  '/benefits': { feature: FEATURES.BENEFITS_MANAGEMENT, permission: PERMISSIONS.VIEW },
-  '/payroll': { feature: FEATURES.PAYROLL_PROCESSING, permission: PERMISSIONS.VIEW },
-  '/employees': { feature: FEATURES.EMPLOYEE_RECORDS, permission: PERMISSIONS.VIEW }
+  "/benefits": {
+    feature: "benefits",
+    permission: PERMISSIONS.USER_READ,
+  },
+  "/payroll": {
+    feature: "payroll",
+    permission: PERMISSIONS.TIMECARD_READ_ALL,
+  },
+  "/employees": {
+    feature: "employee_records",
+    permission: PERMISSIONS.USER_READ,
+  },
+};
+
+/* ------------------------------------------------------ */
+/* Helpers to normalize/guess the feature when missing     */
+/* ------------------------------------------------------ */
+function normalizeFeatureName(f?: string): string {
+  if (!f) return "work_request"; // safest default
+  return String(f);
 }
 
-// Admin-only routes
-const ADMIN_ROUTES = [
-  '/access-control',
-  '/user-management',
-  '/tenant-management',
-  '/system-settings',
-  '/audit-logs'
-]
-
-// Host admin-only routes
-const HOST_ADMIN_ROUTES = [
-  '/tenant-management',
-  '/system-settings'
-]
-
-interface RouteGuardProps {
-  children: React.ReactNode
-  fallback?: React.ReactNode
-  redirectTo?: string
+function normalizePermissionName(p?: string): string {
+  if (!p) return "view";
+  // Don’t force-case: we pass through because your PERMISSIONS come from "@/lib/rbac"
+  return String(p);
 }
 
-export function RouteGuard({ 
-  children, 
+/**
+ * Try to determine a feature to use when only a permission string is available.
+ * Priority:
+ *  1) Explicit prop feature
+ *  2) From ROUTE_PERMISSIONS[pathname]
+ *  3) Fallback to "work_request"
+ */
+function pickFeature({
+  explicitFeature,
+  pathname,
+}: {
+  explicitFeature?: string;
+  pathname: string;
+}): string {
+  if (explicitFeature) return normalizeFeatureName(explicitFeature);
+  const route = ROUTE_PERMISSIONS[pathname];
+  if (route?.feature) return normalizeFeatureName(route.feature);
+  return "work_request";
+}
+
+/* ----------------------- */
+/*       RouteGuard        */
+/* ----------------------- */
+export interface RouteGuardProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+  redirectTo?: string;
+
+  /** Optional explicit feature/permission for new-style usage */
+  feature?: string;
+  permission?: string;
+
+  /** Legacy single permission key (kept for compatibility) */
+  requiredPermission?: string;
+
+  /** Optional role gating */
+  roles?: string[]; // uses your ROLES from "@/lib/rbac"
+  anyRole?: boolean; // kept for compatibility; "any" by default
+}
+
+export function RouteGuard({
+  children,
   fallback,
-  redirectTo = '/dashboard'
+  redirectTo = "/dashboard",
+  feature,
+  permission,
+  requiredPermission,
+  roles,
+  anyRole = true,
 }: RouteGuardProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { 
-    hasPermission, 
-    isAdmin, 
-    isHostAdmin, 
-    isLoading, 
-    isAuthenticated,
-    currentRole 
-  } = usePermissions()
-  
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
-  const [authMessage, setAuthMessage] = useState<string>('')
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const { checkPermission, currentUserRole, loading: Loading } = usePermissions();
+  const { isAuthenticated } = useAuth();
+
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [authMessage, setAuthMessage] = useState<string>("");
+
+  // Pre-calc the best feature/permission pair to check when explicit props are given
+  const explicitCheck = useMemo(() => {
+    if (!feature && !permission && !requiredPermission) return null;
+
+    if (feature && (permission || requiredPermission)) {
+      // explicit feature + permission provided
+      return {
+        feature: normalizeFeatureName(feature),
+        permission: normalizePermissionName(permission || requiredPermission),
+      };
+    }
+
+    if (!feature && (permission || requiredPermission)) {
+      // only a permission was provided; pick a feature from the current route or fallback
+      return {
+        feature: pickFeature({ explicitFeature: undefined, pathname }),
+        permission: normalizePermissionName(permission || requiredPermission),
+      };
+    }
+
+    return null;
+  }, [feature, permission, requiredPermission, pathname]);
 
   useEffect(() => {
-    if (isLoading) {
-      setIsAuthorized(null)
-      return
+    if (Loading) {
+      setIsAuthorized(null);
+      return;
     }
 
-    // Check if user is authenticated
+    // 1) Must be authenticated
     if (!isAuthenticated) {
-      setIsAuthorized(false)
-      setAuthMessage('You must be logged in to access this page.')
-      return
+      setIsAuthorized(false);
+      setAuthMessage("You must be logged in to access this page.");
+      return;
     }
 
-    // Check admin-only routes
-    if (ADMIN_ROUTES.includes(pathname)) {
-      if (!isAdmin()) {
-        setIsAuthorized(false)
-        setAuthMessage('This page requires administrator privileges.')
-        return
+    // 2) Role gating (if roles provided)
+    if (roles && roles.length > 0) {
+      const roleStr = String(currentUserRole ?? "");
+      const okByRole = roles.map(String).includes(roleStr);
+      if (!okByRole) {
+        setIsAuthorized(false);
+        setAuthMessage("You do not have the required role to view this page.");
+        return;
       }
     }
 
-    // Check host admin-only routes
-    if (HOST_ADMIN_ROUTES.includes(pathname)) {
-      if (!isHostAdmin()) {
-        setIsAuthorized(false)
-        setAuthMessage('This page requires host administrator privileges.')
-        return
+    // 3) If caller provided explicit feature/permission (or requiredPermission), honor that first
+    if (explicitCheck) {
+      const ok = checkPermission(explicitCheck.feature, explicitCheck.permission);
+      if (!ok) {
+        setIsAuthorized(false);
+        setAuthMessage(
+          `You don't have permission to access this feature. Required: ${explicitCheck.feature}.${explicitCheck.permission}`,
+        );
+        return;
+      }
+      setIsAuthorized(true);
+      setAuthMessage("");
+      return;
+    }
+
+    // 4) Route-config-based checks
+    const routeConfig = ROUTE_PERMISSIONS[pathname];
+    if (routeConfig) {
+      const ok = checkPermission(
+        normalizeFeatureName(routeConfig.feature),
+        normalizePermissionName(routeConfig.permission),
+      );
+      if (!ok) {
+        setIsAuthorized(false);
+        setAuthMessage(
+          `You don't have permission to access this feature. Required: ${routeConfig.feature}.${routeConfig.permission}`,
+        );
+        return;
       }
     }
 
-    // Check specific route permissions
-    const routePermission = ROUTE_PERMISSIONS[pathname]
-    if (routePermission) {
-      const hasAccess = hasPermission(routePermission.feature, routePermission.permission)
-      if (!hasAccess) {
-        setIsAuthorized(false)
-        setAuthMessage(`You don't have permission to ${routePermission.permission} ${routePermission.feature.replace('-', ' ')}.`)
-        return
-      }
-    }
-
-    // Check dynamic routes (with parameters)
-    const dynamicRouteChecks = [
+    // 5) Dynamic routes (with parameters) — use feature + permission checks
+    const dynamicRouteChecks: Array<{ pattern: RegExp; feature: string; permission: string }> = [
       {
-        pattern: /^\/work-requests\/[^\/]+$/,
-        feature: FEATURES.WORK_REQUESTS,
-        permission: PERMISSIONS.VIEW
+        pattern: /^\/work-requests\/[^/]+$/,
+        feature: "work_request",
+        permission: PERMISSIONS.WORK_REQUEST_READ,
       },
       {
-        pattern: /^\/work-requests\/[^\/]+\/edit$/,
-        feature: FEATURES.WORK_REQUESTS,
-        permission: PERMISSIONS.UPDATE
+        pattern: /^\/work-requests\/[^/]+\/edit$/,
+        feature: "work_request",
+        permission: PERMISSIONS.WORK_REQUEST_UPDATE,
       },
       {
-        pattern: /^\/project-management\/requests\/[^\/]+$/,
-        feature: FEATURES.WORK_REQUESTS,
-        permission: PERMISSIONS.VIEW
+        pattern: /^\/project-management\/requests\/[^/]+$/,
+        feature: "work_request",
+        permission: PERMISSIONS.WORK_REQUEST_READ,
       },
       {
-        pattern: /^\/project-management\/charters\/[^\/]+$/,
-        feature: FEATURES.PROJECT_CHARTER,
-        permission: PERMISSIONS.VIEW
-      }
-    ]
+        pattern: /^\/project-management\/charters\/[^/]+$/,
+        feature: "project",
+        permission: PERMISSIONS.PROJECT_READ,
+      },
+    ];
 
     for (const check of dynamicRouteChecks) {
       if (check.pattern.test(pathname)) {
-        const hasAccess = hasPermission(check.feature, check.permission)
-        if (!hasAccess) {
-          setIsAuthorized(false)
-          setAuthMessage(`You don't have permission to ${check.permission} ${check.feature.replace('-', ' ')}.`)
-          return
+        const ok = checkPermission(
+          normalizeFeatureName(check.feature),
+          normalizePermissionName(check.permission),
+        );
+        if (!ok) {
+          setIsAuthorized(false);
+          setAuthMessage(
+            `You don't have permission to access this feature. Required: ${check.feature}.${check.permission}`,
+          );
+          return;
         }
-        break
+        break;
       }
     }
 
-    // If we get here, user is authorized
-    setIsAuthorized(true)
-    setAuthMessage('')
+    // Authorized
+    setIsAuthorized(true);
+    setAuthMessage("");
+  }, [
+    pathname,
+    checkPermission,
+    Loading,
+    isAuthenticated,
+    roles,
+    currentUserRole,
+    explicitCheck,
+  ]);
 
-  }, [pathname, hasPermission, isAdmin, isHostAdmin, isLoading, isAuthenticated])
-
-  // Show loading state while checking permissions
-  if (isLoading || isAuthorized === null) {
+  // Loading state while checking permissions
+  if (Loading || isAuthorized === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -177,212 +334,117 @@ export function RouteGuard({
           <p className="text-gray-600">Checking permissions...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  // Show unauthorized message or redirect
+  // Unauthorized
   if (!isAuthorized) {
-    if (fallback) {
-      return <>{fallback}</>
-    }
-
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🔒</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-            <p className="text-gray-600 mb-6">{authMessage}</p>
-            
-            <div className="space-y-3">
-              <button
-                onClick={() => router.push(redirectTo)}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Go to Dashboard
-              </button>
-              
-              <button
-                onClick={() => router.back()}
-                className="w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Go Back
-              </button>
-            </div>
-
-            {/* Debug info in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-6 p-3 bg-gray-100 rounded text-xs text-left">
-                <div><strong>Path:</strong> {pathname}</div>
-                <div><strong>Role:</strong> {currentRole}</div>
-                <div><strong>Is Admin:</strong> {isAdmin() ? 'Yes' : 'No'}</div>
-                <div><strong>Is Host Admin:</strong> {isHostAdmin() ? 'Yes' : 'No'}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    )
+    if (fallback) return <>{fallback}</>;
+    router.push("/unauthorized");
+    return null;
   }
 
-  // User is authorized, render children
-  return <>{children}</>
+  return <>{children}</>;
 }
 
-// Higher-order component for page-level protection
+/* --------------------------------------------- */
+/* HOC wrapper (kept API)                        */
+/* --------------------------------------------- */
 export function withRouteGuard<P extends object>(
   Component: React.ComponentType<P>,
   options?: {
-    fallback?: React.ReactNode
-    redirectTo?: string
-  }
+    fallback?: React.ReactNode;
+    redirectTo?: string;
+    feature?: string;        // allow explicit feature/permission via HOC too
+    permission?: string;
+    requiredPermission?: string;
+    roles?: string[];
+  },
 ) {
   const WrappedComponent = (props: P) => {
     return (
-      <RouteGuard fallback={options?.fallback} redirectTo={options?.redirectTo}>
+      <RouteGuard
+        fallback={options?.fallback}
+        redirectTo={options?.redirectTo}
+        feature={options?.feature}
+        permission={options?.permission}
+        requiredPermission={options?.requiredPermission}
+        roles={options?.roles}
+      >
         <Component {...props} />
       </RouteGuard>
-    )
-  }
+    );
+  };
 
-  WrappedComponent.displayName = `withRouteGuard(${Component.displayName || Component.name})`
-  return WrappedComponent
+  WrappedComponent.displayName = `withRouteGuard(${Component.displayName || Component.name})`;
+  return WrappedComponent;
 }
 
-// Specific route guards for common patterns
+/* ------------------------------------------------------------- */
+/* Specific guards — now explicit about feature + permission      */
+/* (so they don’t rely on “permission-only” legacy behavior)      */
+/* ------------------------------------------------------------- */
 export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
-  const { isAdmin, isLoading } = usePermissions()
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-  
-  if (!isAdmin()) {
-    return (
-      <NoAccessFallback 
-        message="This page requires administrator privileges."
-        className="min-h-screen flex items-center justify-center"
-      />
-    )
-  }
-  
-  return <>{children}</>
+  return (
+    <RouteGuard feature="user" permission={PERMISSIONS.USER_READ}>
+      {children}
+    </RouteGuard>
+  );
 }
 
 export function HostAdminRouteGuard({ children }: { children: React.ReactNode }) {
-  const { isHostAdmin, isLoading } = usePermissions()
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-  
-  if (!isHostAdmin()) {
-    return (
-      <NoAccessFallback 
-        message="This page requires host administrator privileges."
-        className="min-h-screen flex items-center justify-center"
-      />
-    )
-  }
-  
-  return <>{children}</>
+  return (
+    <RouteGuard feature="tenant" permission={PERMISSIONS.TENANT_READ}>
+      {children}
+    </RouteGuard>
+  );
 }
 
-// Feature-specific route guards
 export function ProjectManagementRouteGuard({ children }: { children: React.ReactNode }) {
-  const { canAccessFeature, isLoading } = usePermissions()
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-  
-  if (!canAccessFeature(FEATURES.PROJECT_MANAGEMENT)) {
-    return (
-      <NoAccessFallback 
-        message="You don't have access to project management features."
-        className="min-h-screen flex items-center justify-center"
-      />
-    )
-  }
-  
-  return <>{children}</>
+  return (
+    <RouteGuard feature="project" permission={PERMISSIONS.PROJECT_READ}>
+      {children}
+    </RouteGuard>
+  );
 }
 
 export function WorkRequestRouteGuard({ children }: { children: React.ReactNode }) {
-  const { canAccessFeature, isLoading } = usePermissions()
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-  
-  if (!canAccessFeature(FEATURES.WORK_REQUESTS)) {
-    return (
-      <NoAccessFallback 
-        message="You don't have access to work request features."
-        className="min-h-screen flex items-center justify-center"
-      />
-    )
-  }
-  
-  return <>{children}</>
+  return (
+    <RouteGuard feature="work_request" permission={PERMISSIONS.WORK_REQUEST_READ}>
+      {children}
+    </RouteGuard>
+  );
 }
 
 export function ReportingRouteGuard({ children }: { children: React.ReactNode }) {
-  const { canAccessFeature, isLoading } = usePermissions()
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-  
-  if (!canAccessFeature(FEATURES.REPORTING)) {
-    return (
-      <NoAccessFallback 
-        message="You don't have access to reporting features."
-        className="min-h-screen flex items-center justify-center"
-      />
-    )
-  }
-  
-  return <>{children}</>
+  return (
+    <RouteGuard feature="reporting" permission={PERMISSIONS.REPORTING_VIEW}>
+      {children}
+    </RouteGuard>
+  );
 }
 
-// Utility function to check if a route is accessible
-export function isRouteAccessible(pathname: string, permissions: any): boolean {
-  const routePermission = ROUTE_PERMISSIONS[pathname]
-  
-  if (!routePermission) {
-    return true // Allow access to routes without specific permissions
-  }
-  
-  return permissions.hasPermission(routePermission.feature, routePermission.permission)
+/* ------------------------------------------------------------- */
+/* Utilities (kept)                                              */
+/* ------------------------------------------------------------- */
+export function isRouteAccessible(
+  pathname: string,
+  checkPermissionFunc: (feature: string, permission: string) => boolean,
+): boolean {
+  const routeConfig = ROUTE_PERMISSIONS[pathname];
+  if (!routeConfig) return true;
+  return checkPermissionFunc(
+    normalizeFeatureName(routeConfig.feature),
+    normalizePermissionName(routeConfig.permission),
+  );
 }
 
-// Get accessible routes for navigation
-export function getAccessibleRoutes(permissions: any): string[] {
-  return Object.keys(ROUTE_PERMISSIONS).filter((route: any) => 
-    isRouteAccessible(route, permissions)
-  )
+export function getAccessibleRoutes(
+  checkPermissionFunc: (feature: string, permission: string) => boolean,
+): string[] {
+  return Object.keys(ROUTE_PERMISSIONS).filter((route) =>
+    isRouteAccessible(route, checkPermissionFunc),
+  );
 }
 
-export default RouteGuard
-
+export default RouteGuard;

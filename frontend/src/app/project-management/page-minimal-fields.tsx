@@ -86,7 +86,7 @@ export default function MinimalFieldsProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectCharter[]>([])
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [risks, setRisks] = useState<Risk[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -119,19 +119,19 @@ export default function MinimalFieldsProjectManagementPage() {
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
-      setLoading(false)
+      setloading(false)
       return
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('Loading minimal project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('loading minimal project data for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Load projects with minimal fields only
       try {
-        console.log('Loading from project_charters table with minimal fields...')
+        console.log('loading from project_charters table with minimal fields...')
         const { data: projectData, error: projectError } = await supabase
           .from('project_charters')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
@@ -153,7 +153,7 @@ export default function MinimalFieldsProjectManagementPage() {
 
       // Load work requests with minimal fields
       try {
-        console.log('Loading from work_requests table with minimal fields...')
+        console.log('loading from work_requests table with minimal fields...')
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
@@ -174,7 +174,7 @@ export default function MinimalFieldsProjectManagementPage() {
 
       // Load risks with minimal fields
       try {
-        console.log('Loading from risk_register table with minimal fields...')
+        console.log('loading from risk_register table with minimal fields...')
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
@@ -197,7 +197,7 @@ export default function MinimalFieldsProjectManagementPage() {
       console.error('Unexpected error loading data:', err)
       setError('Failed to load project management data. Please check your database connection.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -602,7 +602,7 @@ export default function MinimalFieldsProjectManagementPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">Loading project data...</span>
+          <span className="ml-2 text-gray-600">loading project data...</span>
         </div>
       </DashboardLayout>
     )

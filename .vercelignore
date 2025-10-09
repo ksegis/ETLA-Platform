@@ -1,0 +1,6 @@
+.next
+frontend/.next
+dist
+coverage
+node_modules
+

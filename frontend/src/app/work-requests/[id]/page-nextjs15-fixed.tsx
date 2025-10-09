@@ -138,7 +138,7 @@ const roleColors = {
 export default function WorkRequestDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [request, setRequest] = useState<typeof mockRequest | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [newComment, setNewComment] = useState('')
   const [isAddingComment, setIsAddingComment] = useState(false)
@@ -162,9 +162,9 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
 
   const loadWorkRequest = async () => {
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
-      console.log('🔍 Loading work request:', requestId)
+      console.log('🔍 loading work request:', requestId)
 
       if (useRealData) {
         // TRY TO LOAD REAL DATA FIRST
@@ -210,7 +210,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
       console.error('❌ Error loading work request:', error)
       setError('Failed to load work request')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -304,7 +304,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading work request...</p>
+          <p className="text-gray-600">loading work request...</p>
         </div>
       </div>
     )

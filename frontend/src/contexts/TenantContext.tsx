@@ -13,8 +13,8 @@ interface TenantContextType {
   // Available tenants for current user
   availableTenants: Tenant[]
   
-  // Loading states
-  isLoading: boolean
+  // loading states
+  Loading: boolean
   
   // Functions
   loadAvailableTenants: () => Promise<void>
@@ -38,7 +38,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
   const { user, tenantUser, isAuthenticated, isDemoMode } = useAuth()
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [Loading, setIsloading] = useState(true)
 
   // Demo tenant for demo mode - will be replaced with real tenant data when authenticated
   const demoTenant: Tenant = {
@@ -61,14 +61,14 @@ export function TenantProvider({ children }: TenantProviderProps) {
     if (isDemoMode) {
       setAvailableTenants([demoTenant])
       setSelectedTenant(demoTenant)
-      setIsLoading(false)
+      setIsloading(false)
       return
     }
 
     if (!isAuthenticated || !user) {
       setAvailableTenants([])
       setSelectedTenant(null)
-      setIsLoading(false)
+      setIsloading(false)
       return
     }
 
@@ -125,7 +125,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
       setAvailableTenants([])
       setSelectedTenant(null)
     } finally {
-      setIsLoading(false)
+      setIsloading(false)
     }
   }
 
@@ -157,7 +157,7 @@ export function TenantProvider({ children }: TenantProviderProps) {
     selectedTenant,
     setSelectedTenant,
     availableTenants,
-    isLoading,
+    Loading,
     loadAvailableTenants,
     canSelectTenant,
     getAllAccessibleTenantIds,

@@ -1,5 +1,9 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -48,7 +52,7 @@ export default function QuestionnaireDashboard() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setloading] = useState<boolean>(true);
 
   const handleClone = (id: string) => {
     console.log(`Cloning questionnaire with ID: ${id}`);
@@ -157,7 +161,7 @@ export default function QuestionnaireDashboard() {
 
     setTimeout(() => {
       setQuestionnaires(mockQuestionnaires);
-      setLoading(false);
+      setloading(false);
     }, 1000);
   }, []);
 

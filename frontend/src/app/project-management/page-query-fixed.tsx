@@ -168,7 +168,7 @@ export default function QueryFixedProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectCharter[]>([])
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [risks, setRisks] = useState<Risk[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -220,19 +220,19 @@ export default function QueryFixedProjectManagementPage() {
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
-      setLoading(false)
+      setloading(false)
       return
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('Loading project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Load projects with graceful field handling
       try {
-        console.log('Loading from project_charters table...')
+        console.log('loading from project_charters table...')
         
         // First, try to get basic fields that we know exist
         const { data: projectData, error: projectError } = await supabase
@@ -258,7 +258,7 @@ export default function QueryFixedProjectManagementPage() {
 
       // Load work requests with graceful handling
       try {
-        console.log('Loading from work_requests table...')
+        console.log('loading from work_requests table...')
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('*') // Select all fields
@@ -279,7 +279,7 @@ export default function QueryFixedProjectManagementPage() {
 
       // Load risks with graceful handling
       try {
-        console.log('Loading from risk_register table...')
+        console.log('loading from risk_register table...')
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('*') // Select all fields
@@ -302,7 +302,7 @@ export default function QueryFixedProjectManagementPage() {
       console.error('Unexpected error loading data:', err)
       setError('Failed to load project management data. Please check your database connection.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -928,7 +928,7 @@ export default function QueryFixedProjectManagementPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">Loading project data...</span>
+          <span className="ml-2 text-gray-600">loading project data...</span>
         </div>
       </DashboardLayout>
     )

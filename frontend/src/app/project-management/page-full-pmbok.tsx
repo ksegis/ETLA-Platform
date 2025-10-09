@@ -170,7 +170,7 @@ export default function FullPMBOKProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectCharter[]>([])
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [risks, setRisks] = useState<Risk[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -223,19 +223,19 @@ export default function FullPMBOKProjectManagementPage() {
   const loadData = async () => {
     if (!selectedTenant?.id) {
       console.log('No tenant selected, skipping load')
-      setLoading(false)
+      setloading(false)
       return
     }
 
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('Loading full PMBOK project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('loading full PMBOK project data for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Load projects with all available fields
       try {
-        console.log('Loading from project_charters table with full PMBOK fields...')
+        console.log('loading from project_charters table with full PMBOK fields...')
         const { data: projectData, error: projectError } = await supabase
           .from('project_charters')
           .select(`
@@ -268,7 +268,7 @@ export default function FullPMBOKProjectManagementPage() {
 
       // Load work requests
       try {
-        console.log('Loading from work_requests table...')
+        console.log('loading from work_requests table...')
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('id, name, title, description, status, priority, tenant_id, created_at, updated_at')
@@ -289,7 +289,7 @@ export default function FullPMBOKProjectManagementPage() {
 
       // Load risks
       try {
-        console.log('Loading from risk_register table...')
+        console.log('loading from risk_register table...')
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('id, name, title, description, status, tenant_id, created_at, updated_at')
@@ -312,7 +312,7 @@ export default function FullPMBOKProjectManagementPage() {
       console.error('Unexpected error loading data:', err)
       setError('Failed to load project management data. Please check your database connection.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -944,7 +944,7 @@ export default function FullPMBOKProjectManagementPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">Loading project data...</span>
+          <span className="ml-2 text-gray-600">loading project data...</span>
         </div>
       </DashboardLayout>
     )

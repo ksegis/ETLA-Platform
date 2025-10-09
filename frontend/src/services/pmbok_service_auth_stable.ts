@@ -158,7 +158,7 @@ class PMBOKService {
 
   // Get work requests with stable auth context
   async getWorkRequests(): Promise<WorkRequest[]> {
-    console.log('🔍 Loading work requests with context:', {
+    console.log('🔍 loading work requests with context:', {
       userId: this.currentUserId,
       tenantId: this.currentTenantId,
       hasSupabase: this.isSupabaseAvailable()
@@ -263,7 +263,7 @@ class PMBOKService {
 
   // Get project charters with stable auth context
   async getProjectCharters(): Promise<ProjectCharter[]> {
-    console.log('🔍 Loading project charters with context:', {
+    console.log('🔍 loading project charters with context:', {
       userId: this.currentUserId,
       tenantId: this.currentTenantId
     })
@@ -300,7 +300,7 @@ class PMBOKService {
 
   // Get risks with stable auth context
   async getRisks(): Promise<Risk[]> {
-    console.log('🔍 Loading risks with context:', {
+    console.log('🔍 loading risks with context:', {
       userId: this.currentUserId,
       tenantId: this.currentTenantId
     })

@@ -60,7 +60,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 Loading work requests from database...')
+          console.log('🔍 loading work requests from database...')
           console.log('🏢 Current context:', { 
             userId: this.currentUserId, 
             tenantId: this.currentTenantId,
@@ -168,7 +168,7 @@ class PMBOKServiceRBAC {
   async approveWorkRequest(id: string, approvedBy: string): Promise<boolean> {
     return withPermissionCheck(
       FEATURES.WORK_REQUESTS,
-      PERMISSIONS.APPROVE,
+      PERMISSIONS.UPDATE,
       async () => {
         try {
           console.log('✅ Approving work request:', id)
@@ -203,7 +203,7 @@ class PMBOKServiceRBAC {
   async declineWorkRequest(id: string, reason: string, reviewedBy: string): Promise<boolean> {
     return withPermissionCheck(
       FEATURES.WORK_REQUESTS,
-      PERMISSIONS.APPROVE,
+      PERMISSIONS.UPDATE,
       async () => {
         try {
           console.log('❌ Declining work request:', id)
@@ -243,7 +243,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 Loading project charters from database...')
+          console.log('🔍 loading project charters from database...')
 
           const { data: projects, error } = await this.supabase
             .from('project_charters')
@@ -313,7 +313,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 Loading risks from database...')
+          console.log('🔍 loading risks from database...')
 
           const { data: risks, error } = await this.supabase
             .from('risk_register')
@@ -383,7 +383,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 Loading users from database...')
+          console.log('🔍 loading users from database...')
 
           const { data: users, error } = await this.supabase
             .from('tenant_users')
@@ -421,7 +421,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('📊 Loading dashboard data...')
+          console.log('📊 loading dashboard data...')
 
           const [workRequests, projects, risks] = await Promise.all([
             this.getWorkRequests(),

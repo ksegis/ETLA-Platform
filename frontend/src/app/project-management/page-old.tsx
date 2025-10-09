@@ -46,7 +46,7 @@ export default function ProjectManagementPage() {
     risks: []
   })
   
-  const [loading, setLoading] = useState(true)
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   // UI state
@@ -73,10 +73,10 @@ export default function ProjectManagementPage() {
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true)
+      setloading(true)
       setError(null)
       
-      console.log('📊 Loading dashboard data with stable auth:', {
+      console.log('📊 loading dashboard data with stable auth:', {
         userId: auth.user?.id,
         tenantId: auth.tenant?.id,
         isStable: auth.isStable
@@ -105,7 +105,7 @@ export default function ProjectManagementPage() {
       console.error('❌ Error loading dashboard data:', error)
       setError('Failed to load dashboard data')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
 
@@ -226,7 +226,7 @@ export default function ProjectManagementPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Loading dashboard data...</span>
+          <span className="ml-2">loading dashboard data...</span>
         </div>
       </DashboardLayout>
     )
