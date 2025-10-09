@@ -59,6 +59,50 @@ import {
 import { Tenant, User } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
+import { usePathname } from 'next/navigation';
+
+// Define NavigationGroup and related types if not already defined globally or in a shared types file
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: any; // You might want to replace 'any' with a more specific type for Lucide icons
+  isNew?: boolean;
+}
+
+interface NavigationGroup {
+  id: string;
+  title: string;
+  icon: any; // You might want to replace 'any' with a more specific type for Lucide icons
+  color: string;
+  bgColor: string;
+  hoverColor: string;
+  textColor: string;
+  defaultExpanded?: boolean;
+  items: NavigationItem[];
+}
+
+// Dummy data for navigation groups, replace with actual data or context if available
+const navigationGroups: NavigationGroup[] = [
+  {
+    id: 'admin',
+    title: 'Admin',
+    icon: Users,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-600',
+    hoverColor: 'hover:bg-blue-50',
+    textColor: 'text-blue-900',
+    items: [
+      { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
+      { name: 'User Management', href: '/admin/user-management', icon: Users },
+    ],
+  },
+];
+
+// Dummy functions for filteredNavigationGroups and toggleGroupExpansion
+const filteredNavigationGroups = navigationGroups;
+const toggleGroupExpansion = (groupId: string) => {
+  console.log(`Toggling expansion for group: ${groupId}`);
+};
 
 interface ExtendedTenant extends Tenant {
   code?: string;

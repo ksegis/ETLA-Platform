@@ -18,11 +18,11 @@ interface ForgotPasswordState {
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
+  const [error, setError] = useState("")
+  const [message, setMessage] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+
   const [activeTab, setActiveTab] = useState<'login' | 'forgot'>('login')
   const { signIn } = useAuth()
   const router = useRouter()

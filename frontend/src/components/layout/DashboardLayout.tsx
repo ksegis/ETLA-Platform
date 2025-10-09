@@ -328,11 +328,50 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-3 overflow-y-auto">
-            {filteredNavigationGroups.map((group) => {
+            {navigationGroups.map((group) => {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
 
+              return (
+                <div key={group.id}>
+                  <button
+                    onClick={() => toggleGroupExpansion(group.id)}
+                    className={`flex items-center w-full px-2 py-2 text-sm font-medium rounded-md ${group.textColor} hover:${group.hoverColor}`}
+                  >
+                    <GroupIcon className={`mr-3 h-5 w-5 ${group.color}`} />
+                    {group.title}
+                    {isExpanded ? (
+                      <ChevronDown className="ml-auto h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    )}
+                  </button>
+                  {isExpanded && (
+                    <div className="mt-1 space-y-1 ml-4">
+                      {group.items.map((item) => (
+                        <a
+                          key={item.name}
+                          href={item.href}
+                          className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 hover:text-gray-900 ${pathname === item.href ? 'bg-gray-100 text-gray-900' : ''}`}
+                        >
+                          <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                          {item.name}
+                          {item.isNew && (
+                            <span className="ml-auto inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                              New
+                            </span>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </nav>
+
           {/* Desktop user info and logout */}
+
           <div className="flex-shrink-0 border-t border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
