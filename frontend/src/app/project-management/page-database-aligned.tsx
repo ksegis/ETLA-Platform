@@ -235,6 +235,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
       // Load projects from project_charters table
       try {
+        const supabase = createSupabaseBrowserClient();
         console.log('loading from project_charters table...')
         const { data: projectData, error: projectError } = await supabase
           .from('project_charters')
@@ -257,7 +258,8 @@ export default function DatabaseAlignedProjectManagementPage() {
 
       // Load work requests
       try {
-        console.log('loading from work_requests table...')
+        const supabase = createSupabaseBrowserClient();
+        console.log(\'loading from work_requests table...\')
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('*')
@@ -279,7 +281,8 @@ export default function DatabaseAlignedProjectManagementPage() {
 
       // Load risks from risk_register table
       try {
-        console.log('loading from risk_register table...')
+        const supabase = createSupabaseBrowserClient();
+        console.log(\'loading from risk_register table...\')
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('*')
