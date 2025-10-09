@@ -71,7 +71,7 @@ export default function ProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log(\'📊 loading dashboard data with ready auth:\', auth.isReady);
+      console.log("📊 loading dashboard data with ready auth:", auth.isReady);
       // Load all data in parallel
       const [workRequests, projectCharters, risks] = await Promise.all([
         pmbok.getWorkRequests(),

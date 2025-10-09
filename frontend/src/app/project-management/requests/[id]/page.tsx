@@ -95,8 +95,7 @@ const mockRequest: WorkRequest = {
       id: '2',
       authorName: 'Sarah Johnson',
       authorRole: 'program_manager',
-      content: 'I\'ve reviewed the requirements. This looks feasible within the timeline. I\'ll need to coordinate with our technical team.',
-      createdAt: '2024-08-12T10:15:00Z'
+ content: "I've reviewed the requirements. This looks feasible within the timeline. I'll need to coordinate with our technical team.",      createdAt: '2024-08-12T10:15:00Z'
     }
   ]
 }
