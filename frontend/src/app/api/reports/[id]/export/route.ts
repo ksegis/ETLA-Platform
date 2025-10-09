@@ -1,93 +1,38 @@
-import { NextRequest } from "next/server";
-import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
-import * as XLSX from "xlsx";
-import { REPORTS } from "../../../../reporting/_data";
-import { getMockReport, applyDemoFilters } from "../../_mock";
+import { NextResponse } from "next/server";
+import { getMockRows } from "@/app/reporting/_mock";
 
-// Async Supabase server client
-async function getSupabaseServerClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+export const dynamic = "force-dynamic"; // no caching
 
-  const cookieStore = await cookies();
-  const token =
-    cookieStore.get("sb-access-token")?.value ??
-    cookieStore.get("supabase-auth-token")?.value ??
-    undefined;
+function toCsv(rows: Record<string, any>[]): string {
+  if (!rows.length) return "";
+  const cols = Array.from(
+    rows.reduce<Set<string>>((s, r) => {
+      Object.keys(r).forEach((k) => s.add(k));
+      return s;
+    }, new Set())
+  );
 
-  return createClient(url, anon, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
-  });
+  const esc = (v: any) => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const header = cols.join(",");
+  const body = rows.map((r) => cols.map((c) => esc(r[c])).join(",")).join("\n");
+  return `${header}\n${body}`;
 }
 
-function shouldUseDemo(search: URLSearchParams) {
-  return search.get("demo") === "1" || process.env.NEXT_PUBLIC_REPORTS_DEMO === "1";
-}
+export async function GET(_req: Request, ctx: any) {
+  const id = String(ctx?.params?.id ?? "");
+  const rows = getMockRows(id);
+  const csv = toCsv(rows);
+  const filename = `${id || "report"}.csv`;
 
-// Next 15: params is a Promise
-export async function GET(
-  req: NextRequest,
-  ctx: { params: Promise<{ id: string }> }
-) {
-  const { id } = await ctx.params;
-  const report = REPORTS.find((r) => r.id === id);
-  if (!report) return new Response("Report not found", { status: 404 });
-
-  const search = req.nextUrl.searchParams;
-
-  let rows: any[] = [];
-
-  if (shouldUseDemo(search)) {
-    const mock = getMockReport(id);
-    const filtered = applyDemoFilters(mock?.rows ?? [], {
-      from: search.get("from"),
-      to: search.get("to"),
-      filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-      limit: Number(search.get("limit") ?? 5000),
-      offset: Number(search.get("offset") ?? 0),
-    });
-    rows = filtered.rows;
-  } else {
-    try {
-      const rpcArgs: Record<string, any> = {
-        from: search.get("from") ?? null,
-        to: search.get("to") ?? null,
-        filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-        limit: Number(search.get("limit") ?? 5000),
-        offset: Number(search.get("offset") ?? 0),
-      };
-      const supabase = await getSupabaseServerClient();
-      const sp = report.procedure ?? `sp_${id}`;
-      const { data, error } = await supabase.rpc(sp, rpcArgs);
-      if (error) rows = [];
-      else rows = Array.isArray(data) ? data : (data as any)?.rows ?? [];
-    } catch {
-      const mock = getMockReport(id);
-      const filtered = applyDemoFilters(mock?.rows ?? [], {
-        from: search.get("from"),
-        to: search.get("to"),
-        filters: search.get("filters") ? JSON.parse(search.get("filters") as string) : null,
-        limit: Number(search.get("limit") ?? 5000),
-        offset: Number(search.get("offset") ?? 0),
-      });
-      rows = filtered.rows;
-    }
-  }
-
-  // Build workbook
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Report");
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-
-  const fileName = `${report.title.replace(/\s+/g, "_")}.xlsx`;
-  return new Response(buf, {
+  return new NextResponse(csv, {
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
       "Cache-Control": "no-store",
     },
   });

@@ -1,13 +1,11 @@
-import React from "react";
-import type { GroupKey } from "../_data";
 import ClientGroupPage from "./ClientGroupPage";
+import type { GroupKey } from "../_data";
 
-export default async function GroupReportsPage({
-  params,
-}: {
-  params: Promise<{ group: string }>;
-}) {
+// Next.js 15: `params` is a Promise and there is no exported PageProps type.
+// Type inline and await it.
+export default async function GroupPage(
+  { params }: { params: Promise<{ group: string }> }
+) {
   const { group } = await params;
-  const g = (group as GroupKey) ?? "employee";
-  return <ClientGroupPage group={g} />;
+  return <ClientGroupPage params={{ group: group as GroupKey }} />;
 }

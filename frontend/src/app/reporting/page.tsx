@@ -1,37 +1,48 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { REPORTS, type ReportType } from "./_data";
-import { ReportTable } from "./_components/ReportTable";
-import { PreviewModal } from "./_components/PreviewModal";
+import * as React from "react";
+import BackNav from "./_components/BackNav";
+import ReportTable from "./_components/ReportTable"; // uses your existing table
+import PreviewModal from "./_components/PreviewModal"; // existing modal
+import { getAllReports, type ReportType } from "./_data";
 
 export default function AllReportsPage() {
-  const [selected, setSelected] = useState<ReportType | null>(null);
-  const items = useMemo(() => REPORTS.slice(), []);
+  const items: ReportType[] = getAllReports();
 
-  function exportExcel(r: ReportType) {
-    // Raw export (no modal filters). Use the modal for filtered exports.
-    const url = new URL(`/api/reports/${r.id}/export`, window.location.origin);
-    window.open(url.toString(), "_blank");
-  }
+  const [open, setOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState<ReportType | null>(null);
+
+  const handlePreview = (r: ReportType) => {
+    setSelected(r);
+    setOpen(true);
+  };
+
+  const handleExport = (r: ReportType) => {
+    // keep the same export route you already have
+    window.location.href = `/api/reports/${r.id}/export`;
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">All Reports</h2>
+    <div className="p-6">
+      {/* <- Back button */}
+      <BackNav href="/" label="Back to app" />
+
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-semibold">All Reports</h1>
       </div>
 
-      <ReportTable
-        reports={items}
-        onPreview={(r) => setSelected(r)}
-        onExport={exportExcel}
-      />
+      <ReportTable items={items} onPreview={handlePreview} onExport={handleExport} />
 
-      <PreviewModal
-        report={selected}
-        open={!!selected}
-        onClose={() => setSelected(null)}
-      />
+      {open && selected && (
+        <PreviewModal
+          open={open}
+          report={selected}
+          onClose={() => {
+            setOpen(false);
+            setSelected(null);
+          }}
+        />
+      )}
     </div>
   );
 }

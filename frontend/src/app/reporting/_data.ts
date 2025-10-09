@@ -1,21 +1,6 @@
-// reporting/_data.ts
-
-// --- Types
+// frontend/src/app/reporting/_data.ts
 export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards" | "all";
 
-export type ReportType = {
-  id: string;
-  title: string;
-  description?: string;
-  category: string;         // e.g. Payroll, HR
-  group: GroupKey;
-  fields?: number;          // rough field count (for UI only)
-  estimatedRows?: number;   // rough row count (for UI only)
-  procedure?: string;       // optional stored procedure name for live data
-  docBased?: boolean;       // true => document/PDF style report (e.g. W-2)
-};
-
-// --- Labels for the left nav groups (used by ClientGroupPage)
 export const GROUP_LABELS: Record<Exclude<GroupKey, "all">, string> = {
   employee: "Employee",
   checks: "Checks",
@@ -24,93 +9,181 @@ export const GROUP_LABELS: Record<Exclude<GroupKey, "all">, string> = {
   timecards: "Timecards",
 };
 
-// --- Catalog of reports (UI metadata)
+export type ReportType = {
+  id: string;                 // <= used by /api/reports/[id]
+  title: string;
+  group: Exclude<GroupKey, "all">;
+  category?: string;
+  description?: string;
+  fields?: number;
+  approxRows?: number;
+};
+
 export const REPORTS: ReportType[] = [
-  // ---------------- Checks
+  /** Checks */
   {
-    id: "check_detail_history",
+    id: "check-detail-history",
     title: "Check Detail History",
+    group: "checks",
+    category: "Payroll",
     description:
       "Gross-to-net: earnings, deductions, taxes, memos, pay date/week/number, check number, etc.",
-    category: "Payroll",
-    group: "checks",
     fields: 40,
-    estimatedRows: 5000,
-    procedure: "sp_check_detail_history",
+    approxRows: 5000,
   },
   {
-    id: "pay_period_analysis",
+    id: "benefit-group-analysis",
+    title: "Benefit Group Analysis",
+    group: "checks",
+    category: "Payroll",
+    description: "Benefit groups by cost",
+    fields: 12,
+    approxRows: 150,
+  },
+  {
+    id: "pay-period-analysis",
     title: "Pay Period Analysis",
-    description: "Summary by pay period.",
-    category: "Payroll",
     group: "checks",
+    category: "Payroll",
+    description: "Summary by period",
     fields: 8,
-    estimatedRows: 500,
-    procedure: "sp_pay_period_analysis",
+    approxRows: 500,
   },
   {
-    id: "tax_information",
+    id: "tax-information",
     title: "Tax Information",
-    description: "Jurisdictions & withholdings.",
-    category: "Payroll",
     group: "checks",
+    category: "Payroll",
+    description: "Jurisdictions & withholdings",
     fields: 26,
-    estimatedRows: 1850,
-    procedure: "sp_tax_information",
+    approxRows: 1850,
   },
   {
-    id: "w2_documents",
+    id: "w2-documents",
     title: "W-2 Documents",
-    description: "Client-supplied W-2 PDFs with metadata and download links.",
-    category: "Payroll",
     group: "checks",
+    category: "Payroll",
+    description: "Client-supplied W-2 PDF images with metadata and download links.",
     fields: 6,
-    estimatedRows: 2113,
-    docBased: true,
+    approxRows: 2100,
   },
 
-  // ---------------- Pay / Jobs
+  /** Jobs */
   {
-    id: "department_analysis",
+    id: "department-analysis",
     title: "Department Analysis",
-    description:
-      "Department labor cost by period: headcount/FTE, regular/OT/bonus, employer taxes, benefits, burden, and avg comp.",
-    category: "Payroll",
     group: "jobs",
+    category: "Jobs",
+    description:
+      "Pay composition by department and period: headcount/FTE, regular/OT/bonus, employer taxes, benefits, burden, and avg comp.",
     fields: 20,
-    estimatedRows: 1200,
-    procedure: "sp_department_analysis",
+    approxRows: 1200,
   },
   {
-    id: "job_history",
+    id: "job-history",
     title: "Job History",
-    description:
-      "Effective-dated job changes: job code/title, action & reason, department, supervisor, FLSA, grade, pay type/rate.",
-    category: "HR",
     group: "jobs",
+    category: "Jobs",
+    description: "Effective-dated job changes: job code/title, dept, location, FLSA, pay group.",
     fields: 22,
-    estimatedRows: 3200,
-    procedure: "sp_job_history",
+    approxRows: 3200,
   },
   {
-    id: "position_history",
+    id: "position-history",
     title: "Position History",
-    description:
-      "Effective-dated position changes: position ID/title, status, FTE/standard hours, grade, cost center, supervisor.",
-    category: "HR",
     group: "jobs",
+    category: "Jobs",
+    description: "Effective-dated position changes: position id, manager, cost center, FTE.",
     fields: 24,
-    estimatedRows: 2600,
-    procedure: "sp_position_history",
+    approxRows: 2600,
+  },
+
+  /** Employee */
+  {
+    id: "employee-directory",
+    title: "Employee Directory",
+    group: "employee",
+    category: "Core HR",
+    description: "Directory with work contact, dept, location, manager and employment dates.",
+    fields: 18,
+    approxRows: 1500,
+  },
+  {
+    id: "headcount-summary",
+    title: "Headcount Summary",
+    group: "employee",
+    category: "Core HR",
+    description: "Headcount/FTE by department and location with hires/terms.",
+    fields: 14,
+    approxRows: 240,
+  },
+
+  /** Salary / Comp */
+  {
+    id: "salary-grade-distribution",
+    title: "Salary Grade Distribution",
+    group: "salary",
+    category: "Compensation",
+    description: "Population by grade, min/mid/max, compa-ratio and range penetration.",
+    fields: 16,
+    approxRows: 900,
+  },
+  {
+    id: "compa-ratio",
+    title: "Compa-Ratio by Department",
+    group: "salary",
+    category: "Compensation",
+    description: "Avg compa-ratio and range penetration by department.",
+    fields: 10,
+    approxRows: 120,
+  },
+  {
+    id: "merit-forecast",
+    title: "Merit Increase Forecast",
+    group: "salary",
+    category: "Compensation",
+    description: "Proposed merit/market/lump-sum changes and new compa-ratio.",
+    fields: 22,
+    approxRows: 450,
+  },
+
+  /** Timecards */
+  {
+    id: "timecard-detail",
+    title: "Timecard Detail",
+    group: "timecards",
+    category: "Time",
+    description: "Punches by day with total hours, project/cost center, approvals.",
+    fields: 24,
+    approxRows: 8000,
+  },
+  {
+    id: "overtime-analysis",
+    title: "Overtime Analysis",
+    group: "timecards",
+    category: "Time",
+    description: "OT hours and cost by employee/department, week and rule.",
+    fields: 18,
+    approxRows: 700,
+  },
+  {
+    id: "absence-summary",
+    title: "Absence Summary",
+    group: "timecards",
+    category: "Time",
+    description: "PTO/LOA usage and balances by employee and plan.",
+    fields: 16,
+    approxRows: 650,
   },
 ];
 
-// --- Helpers used across pages
-export function getReportsByGroup(group: GroupKey): ReportType[] {
-  if (group === "all") return REPORTS.slice();
+export function getAllReports(): ReportType[] {
+  return REPORTS;
+}
+export function getReportsByGroup(group: GroupKey | string): ReportType[] {
+  if (!group || group === "all") return REPORTS;
   return REPORTS.filter((r) => r.group === group);
 }
-
 export function getReportById(id: string): ReportType | undefined {
   return REPORTS.find((r) => r.id === id);
 }
