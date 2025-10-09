@@ -2,16 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-// Import the single RBAC source of truth (keeps Feature typing correct)
-import {
-  usePermissions,
-  FEATURES,
-  PERMISSIONS,
-  ROLES,
-  type Feature,
-} from "@/hooks/usePermissions";
-
+import { usePermissions } from "@/hooks/usePermissions";
+import { FEATURES, PERMISSIONS, type Feature } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
 import {
   PermissionGuard,
@@ -51,53 +43,47 @@ export default function ProjectManagementPageRBAC() {
 
   // ---- Permissions (new hook shape) ----
   const {
-    canManage,
-    canView,
-    currentUserRole,
-    loading: permissionsloading,
+    checkPermission,
+    checkAnyPermission,
+    currentUserRole: currentRole,
+    loading: permissionsLoading,
   } = usePermissions();
 
-  // Narrow constants to Feature to satisfy <PermissionGuard feature={...}>
-  const F_DASHBOARDS = FEATURES.DASHBOARDS as Feature;
-  const F_WORK_REQUESTS = FEATURES.WORK_REQUESTS as Feature;
-  const F_PROJECT_MANAGEMENT = FEATURES.PROJECT_MANAGEMENT as Feature;
-  const F_RISK_MANAGEMENT = FEATURES.RISK_MANAGEMENT as Feature;
+  type FeatureKey = keyof typeof FEATURES;
+  type FeatureValue = (typeof FEATURES)[FeatureKey];
+  type FeatureArg = FeatureKey | FeatureValue;
 
-  // Debug snapshot (safe to render)
-  const debugPermissionsSummary = (() => {
-    const featureKeys = FEATURES ? Object.keys(FEATURES) : [];
-    const permissionKeys = PERMISSIONS ? Object.keys(PERMISSIONS) : [];
-    return {
-      features_viewable: featureKeys.filter((k) => {
-        const key = (FEATURES as any)[k] ?? k;
-        try {
-          return canView?.(key) === true;
-        } catch {
-          return false;
-        }
-      }),
-      permissions_manageable: permissionKeys.filter((k) => {
-        const key = (PERMISSIONS as any)[k] ?? k;
-        try {
-          return canManage?.(key) === true;
-        } catch {
-          return false;
-        }
-      }),
-    };
-  })();
+  // runtime type guard for keys
+  const isFeatureKey = (f: FeatureArg): f is FeatureKey =>
+    Object.prototype.hasOwnProperty.call(FEATURES, f as any);
+
+  // always return the slug/value used in permission strings
+  const featureSlug = (f: FeatureArg): FeatureValue =>
+    isFeatureKey(f) ? FEATURES[f] : (f as FeatureValue);
+
+  const canView = (feature: FeatureArg) =>
+    checkPermission(`${featureSlug(feature)}:${PERMISSIONS.VIEW}`);
+
+  const canManage = (feature: FeatureArg) =>
+    checkAnyPermission([
+      `${featureSlug(feature)}:${PERMISSIONS.CREATE}`,
+      `${featureSlug(feature)}:${PERMISSIONS.EDIT}`,
+      `${featureSlug(feature)}:${PERMISSIONS.DELETE}`,
+      `${featureSlug(feature)}:${PERMISSIONS.APPROVE}`,
+    ]);  // ---- Local state ----
+  type DashboardData = {
+    workRequests: any[];
+    projects: any[];
+    risks: any[];
+  };
 
   const [data, setData] = useState<DashboardData>({
     workRequests: [],
     projects: [],
     risks: [],
-    stats: {
-      workRequests: { total: 0, pending: 0, approved: 0, declined: 0 },
-      projects: { total: 0, active: 0, completed: 0 },
-      risks: { total: 0, high: 0, medium: 0, low: 0 },
-    },
   });
 
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedWorkRequest, setSelectedWorkRequest] =
     useState<WorkRequest | null>(null);
@@ -105,20 +91,22 @@ export default function ProjectManagementPageRBAC() {
 
   // Load data based on user permissions
   useEffect(() => {
-    if (permissionsloading) return;
+    if (permissionsLoading) return;
 
     const loadData = async () => {
+      setIsLoading(true);
       try {
         const dashboardData = await pmbokRBAC.getDashboardData();
 
+        // Load detailed data only if user has permissions
         const [workRequests, projects, risks] = await Promise.all([
-          canManage(F_WORK_REQUESTS)
+          canManage(FEATURES.WORK_REQUESTS)
             ? pmbokRBAC.getWorkRequests()
             : Promise.resolve([]),
-          canManage(F_PROJECT_MANAGEMENT)
+          canManage(FEATURES.PROJECT_MANAGEMENT)
             ? pmbokRBAC.getProjects()
             : Promise.resolve([]),
-          canManage(F_RISK_MANAGEMENT)
+          canManage(FEATURES.RISK_MANAGEMENT)
             ? pmbokRBAC.getRisks()
             : Promise.resolve([]),
         ]);
@@ -131,40 +119,41 @@ export default function ProjectManagementPageRBAC() {
         });
       } catch (error) {
         console.error("Error loading dashboard data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadData();
-  }, [
-    permissionsloading,
-    canManage,
-    F_WORK_REQUESTS,
-    F_PROJECT_MANAGEMENT,
-    F_RISK_MANAGEMENT,
-  ]);
+  }, [permissionsLoading, canManage]);
 
   // Permission-based tab configuration
   const tabs = [
-    { id: "overview", label: "Overview", icon: "📊", visible: true },
+    {
+      id: "overview",
+      label: "Overview",
+      icon: "📊",
+      visible: true,
+    },
     {
       id: "work-requests",
       label: "Work Requests",
       icon: "📝",
-      visible: canManage(F_WORK_REQUESTS),
+      visible: canManage(FEATURES.WORK_REQUESTS),
       count: data.workRequests.length,
     },
     {
       id: "projects",
       label: "Projects",
       icon: "📋",
-      visible: canManage(F_PROJECT_MANAGEMENT),
+      visible: canManage(FEATURES.PROJECT_MANAGEMENT),
       count: data.projects.length,
     },
     {
       id: "risks",
       label: "Risks",
       icon: "⚠️",
-      visible: canManage(F_RISK_MANAGEMENT),
+      visible: canManage(FEATURES.RISK_MANAGEMENT),
       count: data.risks.length,
     },
   ].filter((tab: any) => tab.visible);
@@ -173,7 +162,7 @@ export default function ProjectManagementPageRBAC() {
     { label: "Dashboard", href: "/dashboard" },
     {
       label: "Project Management",
-      feature: F_PROJECT_MANAGEMENT,
+      feature: FEATURES.PROJECT_MANAGEMENT,
       permission: PERMISSIONS.VIEW,
     },
   ];
@@ -201,6 +190,8 @@ export default function ProjectManagementPageRBAC() {
               </div>
               <div className="flex items-center space-x-4">
                 <QuickActionsRBAC />
+
+                {/* Permission-based export button */}
                 <ReportExportButton
                   onClick={() => console.log("Exporting report...")}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
@@ -235,8 +226,8 @@ export default function ProjectManagementPageRBAC() {
                   </div>
 
                   {/* Admin-only debug panel toggle */}
-                  {(currentUserRole === ROLES.HOST_ADMIN ||
-                    currentUserRole === ROLES.CLIENT_ADMIN) &&
+                  {(currentRole === "host_admin" ||
+                    currentRole === "tenant_admin") &&
                     process.env.NODE_ENV !== "production" && (
                       <button
                         onClick={() => setSelectedTab("debug")}
@@ -250,7 +241,7 @@ export default function ProjectManagementPageRBAC() {
 
               {/* Permission-based stats overview */}
               <PermissionGuard
-                feature={F_DASHBOARDS}
+                feature={FEATURES.DASHBOARDS}
                 permission={PERMISSIONS.VIEW}
                 fallback={
                   <NoAccessFallback
@@ -327,11 +318,14 @@ export default function ProjectManagementPageRBAC() {
                       <button
                         key={tab.id}
                         onClick={() => setSelectedTab(tab.id)}
-                        className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
-                          selectedTab === tab.id
-                            ? "border-blue-500 text-blue-600"
-                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                        }`}
+                        className={`
+                          flex items-center py-4 px-1 border-b-2 font-medium text-sm
+                          ${
+                            selectedTab === tab.id
+                              ? "border-blue-500 text-blue-600"
+                              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                          }
+                        `}
                       >
                         <span className="mr-2">{tab.icon}</span>
                         {tab.label}
@@ -360,7 +354,7 @@ export default function ProjectManagementPageRBAC() {
                             Work Requests
                           </p>
                           <PermissionStatus
-                            feature={F_WORK_REQUESTS}
+                            feature={FEATURES.WORK_REQUESTS}
                             permission={PERMISSIONS.VIEW}
                           />
                         </div>
@@ -369,7 +363,7 @@ export default function ProjectManagementPageRBAC() {
                             Project Management
                           </p>
                           <PermissionStatus
-                            feature={F_PROJECT_MANAGEMENT}
+                            feature={FEATURES.PROJECT_MANAGEMENT}
                             permission={PERMISSIONS.VIEW}
                           />
                         </div>
@@ -378,7 +372,7 @@ export default function ProjectManagementPageRBAC() {
                             Risk Management
                           </p>
                           <PermissionStatus
-                            feature={F_RISK_MANAGEMENT}
+                            feature={FEATURES.RISK_MANAGEMENT}
                             permission={PERMISSIONS.VIEW}
                           />
                         </div>
@@ -387,7 +381,7 @@ export default function ProjectManagementPageRBAC() {
                             Reporting
                           </p>
                           <PermissionStatus
-                            feature={F_DASHBOARDS}
+                            feature={FEATURES.REPORTING}
                             permission={PERMISSIONS.VIEW}
                           />
                         </div>
@@ -400,33 +394,37 @@ export default function ProjectManagementPageRBAC() {
                         </h4>
                         <div className="space-y-3">
                           <WorkRequestGuard fallback={null}>
-                            {data.workRequests.slice(0, 3).map((request: any) => (
-                              <div
-                                key={request.id}
-                                className="flex items-center justify-between p-3 bg-gray-50 rounded"
-                              >
-                                <div>
-                                  <p className="font-medium">{request.title}</p>
-                                  <p className="text-sm text-gray-600">
-                                    Work Request • {request.status}
-                                  </p>
-                                </div>
-                                <WorkRequestApproveButton
-                                  onClick={() => {
-                                    setSelectedWorkRequest(request);
-                                    setShowApprovalModal(true);
-                                  }}
-                                  className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
-                                  fallback={
-                                    <span className="text-sm text-gray-500">
-                                      View Only
-                                    </span>
-                                  }
+                            {data.workRequests
+                              .slice(0, 3)
+                              .map((request: any) => (
+                                <div
+                                  key={request.id}
+                                  className="flex items-center justify-between p-3 bg-gray-50 rounded"
                                 >
-                                  Review
-                                </WorkRequestApproveButton>
-                              </div>
-                            ))}
+                                  <div>
+                                    <p className="font-medium">
+                                      {request.title}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                      Work Request • {request.status}
+                                    </p>
+                                  </div>
+                                  <WorkRequestApproveButton
+                                    onClick={() => {
+                                      setSelectedWorkRequest(request);
+                                      setShowApprovalModal(true);
+                                    }}
+                                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
+                                    fallback={
+                                      <span className="text-sm text-gray-500">
+                                        View Only
+                                      </span>
+                                    }
+                                  >
+                                    Review
+                                  </WorkRequestApproveButton>
+                                </div>
+                              ))}
                           </WorkRequestGuard>
                         </div>
                       </div>
@@ -488,15 +486,17 @@ export default function ProjectManagementPageRBAC() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                       <span
-                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                          request.status === "approved"
+                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                          request.approval_status === "approved"
                                             ? "bg-green-100 text-green-800"
-                                            : request.status === "pending"
-                                            ? "bg-yellow-100 text-yellow-800"
-                                            : "bg-red-100 text-red-800"
+                                            : request.approval_status ===
+                                                "declined"
+                                              ? "bg-red-100 text-red-800"
+                                              : "bg-yellow-100 text-yellow-800"
                                         }`}
                                       >
-                                        {request.status}
+                                        {request.approval_status ||
+                                          request.status}
                                       </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -506,7 +506,9 @@ export default function ProjectManagementPageRBAC() {
                                       <div className="flex space-x-2">
                                         <button
                                           onClick={() =>
-                                            router.push(`/work-requests/${request.id}`)
+                                            router.push(
+                                              `/work-requests/${request.id}`,
+                                            )
                                           }
                                           className="text-blue-600 hover:text-blue-900"
                                         >
@@ -547,7 +549,9 @@ export default function ProjectManagementPageRBAC() {
                             Projects
                           </h3>
                           <ProjectCreateButton
-                            onClick={() => router.push("/project-management/create")}
+                            onClick={() =>
+                              router.push("/project-management/create")
+                            }
                             className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
                             fallback={null}
                           >
@@ -570,8 +574,8 @@ export default function ProjectManagementPageRBAC() {
                                     project.status === "active"
                                       ? "bg-green-100 text-green-800"
                                       : project.status === "completed"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-gray-100 text-gray-800"
+                                        ? "bg-blue-100 text-blue-800"
+                                        : "bg-gray-100 text-gray-800"
                                   }`}
                                 >
                                   {project.status}
@@ -587,7 +591,7 @@ export default function ProjectManagementPageRBAC() {
                                 <button
                                   onClick={() =>
                                     router.push(
-                                      `/project-management/charters/${project.id}`
+                                      `/project-management/charters/${project.id}`,
                                     )
                                   }
                                   className="text-blue-600 hover:text-blue-900 text-sm"
@@ -632,7 +636,10 @@ export default function ProjectManagementPageRBAC() {
 
                         <div className="space-y-4">
                           {data.risks.map((risk: any) => (
-                            <div key={risk.id} className="border rounded-lg p-4">
+                            <div
+                              key={risk.id}
+                              className="border rounded-lg p-4"
+                            >
                               <div className="flex items-center justify-between mb-2">
                                 <h4 className="font-medium text-gray-900">
                                   {risk.title}
@@ -643,8 +650,8 @@ export default function ProjectManagementPageRBAC() {
                                       (risk.risk_score || 0) >= 15
                                         ? "bg-red-100 text-red-800"
                                         : (risk.risk_score || 0) >= 8
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-green-100 text-green-800"
+                                          ? "bg-yellow-100 text-yellow-800"
+                                          : "bg-green-100 text-green-800"
                                     }`}
                                   >
                                     Score: {risk.risk_score || "N/A"}
@@ -657,7 +664,9 @@ export default function ProjectManagementPageRBAC() {
                               <div className="flex items-center justify-between text-sm text-gray-500">
                                 <span>Probability: {risk.probability}</span>
                                 <span>Impact: {risk.impact}</span>
-                                <span>Owner: {risk.risk_owner || "Unassigned"}</span>
+                                <span>
+                                  Owner: {risk.risk_owner || "Unassigned"}
+                                </span>
                               </div>
                             </div>
                           ))}
@@ -668,13 +677,14 @@ export default function ProjectManagementPageRBAC() {
 
                   {/* Debug Tab (Admin only) */}
                   {selectedTab === "debug" &&
-                    (currentUserRole === ROLES.HOST_ADMIN ||
-                      currentUserRole === ROLES.CLIENT_ADMIN) && (
+                    (currentRole === "host_admin" ||
+                      currentRole === "tenant_admin") && (
                       <div className="space-y-6">
                         <h3 className="text-lg font-medium text-gray-900">
                           RBAC Debug Information
                         </h3>
                         <PermissionDebugPanel />
+
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <h4 className="font-medium mb-2">
                             User Permissions Summary
@@ -691,6 +701,7 @@ export default function ProjectManagementPageRBAC() {
 
             {/* Sidebar with navigation stats */}
             <div className="w-80">
+              {/* Permission-based quick links */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h4 className="font-medium text-gray-900 mb-4">Quick Links</h4>
                 <div className="space-y-2">
@@ -705,7 +716,9 @@ export default function ProjectManagementPageRBAC() {
 
                   <ProjectGuard fallback={null}>
                     <button
-                      onClick={() => router.push("/project-management/charters")}
+                      onClick={() =>
+                        router.push("/project-management/charters")
+                      }
                       className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
                     >
                       📋 Project Charters
@@ -722,7 +735,7 @@ export default function ProjectManagementPageRBAC() {
                   </RiskGuard>
 
                   <PermissionGuard
-                    feature={F_DASHBOARDS}
+                    feature={FEATURES.REPORTING}
                     permission={PERMISSIONS.VIEW}
                     fallback={null}
                   >
@@ -748,7 +761,8 @@ export default function ProjectManagementPageRBAC() {
                   Approve Work Request
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Are you sure you want to approve "{selectedWorkRequest.title}"?
+                  Are you sure you want to approve "{selectedWorkRequest.title}
+                  "?
                 </p>
                 <div className="flex justify-end space-x-3">
                   <button
@@ -765,10 +779,11 @@ export default function ProjectManagementPageRBAC() {
                       if (selectedWorkRequest) {
                         await pmbokRBAC.approveWorkRequest(
                           selectedWorkRequest.id,
-                          "current-user"
+                          "current-user",
                         );
                         setShowApprovalModal(false);
                         setSelectedWorkRequest(null);
+                        // Reload data
                         window.location.reload();
                       }
                     }}
