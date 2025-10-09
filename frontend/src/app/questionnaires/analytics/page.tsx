@@ -35,7 +35,7 @@ export default function QuestionnaireAnalyticsDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [loading, setloading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const mockQuestionnaires: QuestionnaireSummary[] = [
@@ -83,7 +83,7 @@ export default function QuestionnaireAnalyticsDashboard() {
 
     setTimeout(() => {
       setQuestionnaires(mockQuestionnaires);
-      setloading(false);
+      setLoading(false);
     }, 1000);
   }, []);
 

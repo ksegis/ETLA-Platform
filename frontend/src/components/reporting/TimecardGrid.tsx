@@ -70,6 +70,7 @@ export default function TimecardGrid({
 
       days.push({
         workDate: dateStr,
+        date: dateStr,
         clockIn: timecardEntry?.clock_in || '',
         clockOut: timecardEntry?.clock_out || '',
         regularHours: timecardEntry?.regular_hours || 0,
@@ -124,24 +125,14 @@ export default function TimecardGrid({
     setExportLoading(true);
     
     try {
-      const filename = exportUtils.generateFilename(
+      const filename = exportUtils.generateExportFilename(
         `timecard_${employeeName.replace(/\s+/g, '_')}_${payPeriodStart}_${payPeriodEnd}`,
         format
       );
 
       await exportUtils.exportTimecardGrid(
         gridData,
-        {
-          startDate: payPeriodStart,
-          endDate: payPeriodEnd,
-          employeeName,
-          employeeId
-        },
-        {
-          filename: filename.replace(`.${format}`, ''),
-          customerName,
-          includeTimestamp: true
-        }
+        filename.replace(`.${format}`, '')
       );
     } catch (error) {
       console.error('Export failed:', error);

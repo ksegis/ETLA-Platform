@@ -1,5 +1,0 @@
-{
-  "/reset-password/page": "app/reset-password/page.js",
-  "/accept-invite/page": "app/accept-invite/page.js",
-  "/access-control/page": "app/access-control/page.js"
-}
