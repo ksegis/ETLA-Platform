@@ -1,136 +1,42 @@
-// contexts/TenantContext.tsx
-'use client'
+"use client";
+import { createContext, useContext, useState, useEffect } from "react";
+// use your existing TenantUser type if you have one
+// adjust import path as needed:
+import type { TenantUser } from "@/types"; // Assuming TenantUser is in @/types/index.ts or similar
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase, Tenant, User } from '@/lib/supabase'
+export type TenantContextType = {
+  tenantId: string | null;
+  selectedTenant: string | null;
+  tenantUser: TenantUser | null; // <-- ADD
+  // ...existing fields
+};
 
-interface TenantContextType {
-  // Current selected tenant (for filtering)
-  selectedTenant: Tenant | null
-  setSelectedTenant: (tenant: Tenant | null) => void
-  
-  // Current tenant (alias for selectedTenant for compatibility)
-  currentTenant: Tenant | null
-  
-  // Available tenants for current user
-  availableTenants: Tenant[]
-  loading: boolean
-}
+const TenantContext = createContext<TenantContextType>({
+  tenantId: null,
+  selectedTenant: null,
+  tenantUser: null, // <-- ADD default
+  // ...existing defaults
+});
 
-const TenantContext = createContext<TenantContextType | undefined>(undefined)
+export function TenantProvider({ children }: { children: React.ReactNode }) {
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
+  const [tenantUser, setTenantUser] = useState<TenantUser | null>(null); // <-- ADD state
 
-export function TenantProvider({ children }: { children: ReactNode }) {
-  const [currentTenant, setCurrentTenant] = useState<string | null>(null)
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [userProfile, setUserProfile] = useState<User | null>(null)
-  const [availableTenants, setAvailableTenants] = useState<Tenant[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const initializeUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (user) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', user.id)
-            .single()
-          
-          if (profile) {
-            setUserProfile(profile)
-            setUserRole(profile.role)
-            setCurrentTenant(profile.tenant_id)
-            
-            // If host user, get available tenants
-            if (profile.role === 'host_admin' || profile.role === 'program_manager') {
-              const { data: tenants } = await supabase
-                .from('tenants')
-                .select('*')
-                .eq('status', 'active')
-                .order('company_name')
-              
-              setAvailableTenants(tenants || [])
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing user:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    initializeUser()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          setCurrentTenant(null)
-          setUserRole(null)
-          setUserProfile(null)
-          setAvailableTenants([])
-        } else if (event === 'SIGNED_IN' && session?.user) {
-          await initializeUser()
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // Get all accessible tenant IDs for data loading
-  const getAllAccessibleTenantIds = (): string[] => {
-    if (isDemoMode) {
-      return [demoTenant.id]
-    }
-    return availableTenants.map(tenant => tenant.id)
-  }
-
-  // Check if user has access to multiple tenants
-  const isMultiTenant = (): boolean => {
-    return availableTenants.length > 1
-  }
-
-  // Load tenants when auth state changes
-  useEffect(() => {
-    loadAvailableTenants()
-  }, [isAuthenticated, user, tenantUser, isDemoMode])
+  // TODO: wherever you load tenant user today, call setTenantUser(...)
+  // Example:
+  // useEffect(() => { fetchTenantUser().then(setTenantUser); }, [tenantId]);
 
   const value: TenantContextType = {
+    tenantId,
     selectedTenant,
-    setSelectedTenant,
-    currentTenant: selectedTenant, // Alias for compatibility
-    availableTenants,
-    isLoading,
-    loadAvailableTenants,
-    canSelectTenant,
-    getAllAccessibleTenantIds,
-    isMultiTenant,
-    isDemoMode
-  }
+    tenantUser, // <-- INCLUDE in value
+    // ...existing fields
+  };
 
-  return (
-    <TenantContext.Provider value={{
-      currentTenant,
-      userRole,
-      userProfile,
-      switchTenant,
-      availableTenants,
-      loading
-    }}>
-      {children}
-    </TenantContext.Provider>
-  )
+  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 }
 
-export const useTenant = () => {
-  const context = useContext(TenantContext)
-  if (!context) {
-    throw new Error('useTenant must be used within TenantProvider')
-  }
-  return context
-}
+export const useTenant = () => useContext(TenantContext);
+export default TenantContext;
 
