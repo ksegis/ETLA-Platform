@@ -67,8 +67,8 @@ export default function HRAnalyticsDashboard() {
     try {
       // Load employee metrics - try with tenant first, fallback to all data
       let employeesQuery = supabase.from('employees').select('*');
-      if (selectedTenant?.id) {
-        employeesQuery = employeesQuery.eq('customer_id', selectedTenant.id);
+      if (selectedTenant) {
+        employeesQuery = employeesQuery.eq('customer_id', selectedTenant);
       }
       
       const { data: employees, error: empError } = await employeesQuery;
@@ -79,8 +79,8 @@ export default function HRAnalyticsDashboard() {
 
       // Load payroll data - try with tenant first, fallback to all data
       let payrollQuery = supabase.from('pay_statements').select('*');
-      if (selectedTenant?.id) {
-        payrollQuery = payrollQuery.eq('customer_id', selectedTenant.id);
+      if (selectedTenant) {
+        payrollQuery = payrollQuery.eq('customer_id', selectedTenant);
       }
       
       const { data: payroll, error: payError } = await payrollQuery;

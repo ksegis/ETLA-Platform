@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { NoAccessFallback } from "./PermissionGuards"; // (kept; safe if unused)
-import { PERMISSIONS, ROLES } from "@/lib/rbac";
+import { PERMISSIONS, ROLES, FEATURES } from "@/rbac/constants";
 
 /* ------------------------------------------------------------------ */
 /* Route permission configuration (kept as-is, but now actually used) */
@@ -69,15 +69,15 @@ const ROUTE_PERMISSIONS: Record<
   },
   "/tenant-management": {
     feature: "tenant",
-    permission: PERMISSIONS.TENANT_READ,
+    permission: PERMISSIONS.VIEW,
   },
   "/system-settings": {
     feature: "system_settings",
-    permission: PERMISSIONS.TENANT_UPDATE,
+    permission: PERMISSIONS.EDIT,
   },
   "/audit-logs": {
     feature: "audit_log",
-    permission: PERMISSIONS.TENANT_READ,
+    permission: PERMISSIONS.VIEW,
   },
 
   // Reporting Routes
@@ -94,15 +94,15 @@ const ROUTE_PERMISSIONS: Record<
   // Data Management Routes
   "/migration-workbench": {
     feature: "data_management",
-    permission: PERMISSIONS.TENANT_UPDATE,
+    permission: PERMISSIONS.EDIT,
   },
   "/file-upload": {
     feature: "data_management",
-    permission: PERMISSIONS.TENANT_UPDATE,
+    permission: PERMISSIONS.EDIT,
   },
   "/data-validation": {
     feature: "data_management",
-    permission: PERMISSIONS.TENANT_UPDATE,
+    permission: PERMISSIONS.EDIT,
   },
 
   // Benefits & HR Routes
@@ -130,7 +130,7 @@ function normalizeFeatureName(f?: string): string {
 
 function normalizePermissionName(p?: string): string {
   if (!p) return "view";
-  // Don’t force-case: we pass through because your PERMISSIONS come from "@/lib/rbac"
+  // Don’t force-case: we pass through because your PERMISSIONS come from "@/rbac/constants"
   return String(p);
 }
 
@@ -170,7 +170,7 @@ export interface RouteGuardProps {
   requiredPermission?: string;
 
   /** Optional role gating */
-  roles?: string[]; // uses your ROLES from "@/lib/rbac"
+  roles?: string[]; // uses your ROLES from "@/rbac/constants"
   anyRole?: boolean; // kept for compatibility; "any" by default
 }
 
@@ -394,7 +394,7 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
 
 export function HostAdminRouteGuard({ children }: { children: React.ReactNode }) {
   return (
-    <RouteGuard feature="tenant" permission={PERMISSIONS.TENANT_READ}>
+    <RouteGuard feature="tenant" permission={PERMISSIONS.VIEW}>
       {children}
     </RouteGuard>
   );

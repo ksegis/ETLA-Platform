@@ -55,7 +55,7 @@ export default function DashboardPage() {
         .limit(5)
 
       if (!jobsError && jobsData) {
-        const transformedJobs = jobsData.map(job => ({
+        const transformedJobs = jobsData.map((job: { id: string; job_name: string; status: string; created_at: string }) => ({
           id: job.id,
           name: job.job_name,
           status: job.status,
@@ -85,7 +85,7 @@ export default function DashboardPage() {
 
       if (!milestonesError && milestonesData) {
         // FIXED: Safe handling of projects relationship
-        const transformedMilestones = milestonesData.map(m => ({
+        const transformedMilestones = milestonesData.map((m: { id: string; title: string; due_date: string; status: string; completion_percentage: number; projects: { title: string } | { title: string }[] }) => ({
           id: m.id,
           title: m.title,
           due_date: m.due_date,

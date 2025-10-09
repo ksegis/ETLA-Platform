@@ -147,7 +147,7 @@ export default function TenantManagementClient() { // Renamed component
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
   // RBAC v2 API requires (feature, permission)
-  const hasAdminAccess = checkPermission(FEATURES.TENANT_MANAGEMENT, PERMISSIONS.TENANT_READ);
+    const hasAdminAccess = checkPermission(FEATURES.TENANT_MANAGEMENT, PERMISSIONS.VIEW);
 
   useEffect(() => {
     if (isAuthenticated && hasAdminAccess) {
@@ -410,7 +410,7 @@ export default function TenantManagementClient() { // Renamed component
                 You do not have the required permissions to access this page.
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                Required permission: {PERMISSIONS.TENANT_READ}
+                Required permission: {PERMISSIONS.VIEW}
               </p>
             </div>
           </CardContent>
@@ -420,10 +420,7 @@ export default function TenantManagementClient() { // Renamed component
   }
 
   return (
-    <DashboardLayout
-      navigationGroups={filteredNavigationGroups}
-      toggleGroupExpansion={toggleGroupExpansion}
-    >
+    <DashboardLayout>
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>

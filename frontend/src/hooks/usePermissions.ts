@@ -4,6 +4,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
+
+
 // Import the PURE constants (no hooks) and re-export for compatibility
 import {
   FEATURES,
@@ -90,6 +92,8 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
   },
 };
 
+
+
 export function usePermissions() {
   const { user, tenantUser, isAuthenticated, isDemoMode } = useAuth();
   const [userPermissions, setUserPermissions] = useState<RolePermissionEntry[]>([]);
@@ -129,7 +133,7 @@ export function usePermissions() {
       case PERMISSIONS.SYSTEM_HEALTH_VIEW:
       case PERMISSIONS.ADMIN_ACCESS:
       case PERMISSIONS.EMPLOYEE_READ:
-      case PERMISSIONS.TENANT_READ:
+
       case PERMISSIONS.USER_READ:
       case PERMISSIONS.PROJECT_READ:
       case PERMISSIONS.WORK_REQUEST_READ:
@@ -364,3 +368,8 @@ export function usePermissions() {
 }
 
 export default usePermissions;
+
+
+
+
+export { DEFAULT_ROLE_PERMISSIONS };

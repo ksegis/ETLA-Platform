@@ -1,4 +1,4 @@
-import { FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
+import { FEATURES, PERMISSIONS } from '@/rbac/constants'
 
 // Service authorization error types
 export class ServiceAuthError extends Error {

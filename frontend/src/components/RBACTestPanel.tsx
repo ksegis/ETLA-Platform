@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
-import { PERMISSIONS, ROLES, ROLE_PERMISSIONS } from "@/lib/rbac";
+import { PERMISSIONS, ROLES, CORE_PERMISSIONS } from "@/rbac/constants";
+import { DEFAULT_ROLE_PERMISSIONS } from "@/hooks/usePermissions";
 
 interface TestResult {
   permission: string;
@@ -39,7 +40,9 @@ export default function RBACTestPanel() {
     const results: TestResult[] = [];
 
     for (const permission of allPermissions) {
-      const expected = ROLE_PERMISSIONS[role]?.includes(permission) || false;
+      const expected = (DEFAULT_ROLE_PERMISSIONS[role as keyof typeof DEFAULT_ROLE_PERMISSIONS]?.permissions || []).some(
+        (p) => p.permission === permission
+      );
       const actual = checkPermission(permission);
       const passed = actual === expected;
 

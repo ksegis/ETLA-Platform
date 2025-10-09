@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
-import { PERMISSIONS, ROLES } from "@/lib/rbac";
+import { PERMISSIONS, ROLES, FEATURES } from "@/rbac/constants";
 
 // Navigation item interface
 interface NavItem {
@@ -89,25 +89,25 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Data Management",
     href: "/data-management",
     icon: "🗄️",
-    requiredPermission: PERMISSIONS.TENANT_UPDATE, // Assuming data management is a high-level permission
+    requiredPermission: PERMISSIONS.EDIT, // Assuming data management is a high-level permission
     children: [
       {
         id: "migration-workbench",
         label: "Migration Workbench",
         href: "/migration-workbench",
-        requiredPermission: PERMISSIONS.TENANT_UPDATE,
+        requiredPermission: PERMISSIONS.EDIT,
       },
       {
         id: "file-upload",
         label: "File Upload",
         href: "/file-upload",
-        requiredPermission: PERMISSIONS.TENANT_UPDATE,
+        requiredPermission: PERMISSIONS.EDIT,
       },
       {
         id: "data-validation",
         label: "Data Validation",
         href: "/data-validation",
-        requiredPermission: PERMISSIONS.TENANT_UPDATE,
+        requiredPermission: PERMISSIONS.EDIT,
       },
     ],
   },
@@ -155,19 +155,19 @@ const NAVIGATION_ITEMS: NavItem[] = [
         id: "tenant-management",
         label: "Tenant Management",
         href: "/tenant-management",
-        requiredPermission: PERMISSIONS.TENANT_READ,
+        requiredPermission: PERMISSIONS.VIEW,
       },
       {
         id: "system-settings",
         label: "System Settings",
         href: "/system-settings",
-        requiredPermission: PERMISSIONS.TENANT_UPDATE,
+        requiredPermission: PERMISSIONS.EDIT,
       },
       {
         id: "audit-logs",
         label: "Audit Logs",
         href: "/audit-logs",
-        requiredPermission: PERMISSIONS.TENANT_READ,
+        requiredPermission: PERMISSIONS.VIEW,
       },
     ],
   },
@@ -393,7 +393,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "Upload File",
     href: "/file-upload",
     icon: "📁",
-    requiredPermission: PERMISSIONS.TENANT_UPDATE, // Assuming file upload is a high-level permission
+    requiredPermission: PERMISSIONS.EDIT, // Assuming file upload is a high-level permission
     className: "bg-purple-600 hover:bg-purple-700 text-white",
   },
 ];
