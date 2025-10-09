@@ -1,55 +1,65 @@
-'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, ArrowLeft, Mail, User } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+"use client";
+
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import {
+  Eye,
+  EyeOff,
+  UserPlus,
+  AlertCircle,
+  CheckCircle,
+  ArrowLeft,
+  Mail,
+  User,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface InviteAcceptanceState {
-  email: string
-  fullName: string
-  password: string
-  confirmPassword: string
-  isLoading: boolean
-  error: string | null
-  success: boolean
-  isValidInvite: boolean
-  isCheckingInvite: boolean
+  email: string;
+  fullName: string;
+  password: string;
+  confirmPassword: string;
+  isLoading: boolean;
+  error: string | null;
+  success: boolean;
+  isValidInvite: boolean;
+  isCheckingInvite: boolean;
   inviteData: {
-    email: string
-    invited_by_name?: string
-    tenant_name?: string
-    role?: string
-  } | null
+    email: string;
+    invited_by_name?: string;
+    tenant_name?: string;
+    role?: string;
+  } | null;
 }
 
 function AcceptInviteForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [state, setState] = useState<InviteAcceptanceState>({
-    email: '',
-    fullName: '',
-    password: '',
-    confirmPassword: '',
+    email: "",
+    fullName: "",
+    password: "",
+    confirmPassword: "",
     isLoading: false,
     error: null,
     success: false,
     isValidInvite: false,
     isCheckingInvite: true,
-    inviteData: null
-  })
+    inviteData: null,
+  });
 
   // Validate invite session on component mount
   useEffect(() => {
     const validateInviteSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
+        const { data: { session }, error } = await supabase.auth.getSession();
+
         if (error) {
           setState((prev) => ({
             ...prev,
@@ -67,110 +77,111 @@ function AcceptInviteForm() {
             email: session.user.email,
             invited_by_name: session.user.user_metadata.invited_by_name,
             tenant_name: session.user.user_metadata.tenant_name,
-            role: session.user.user_metadata.role
-          }
+            role: session.user.user_metadata.role,
+          };
 
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             isValidInvite: true,
             isCheckingInvite: false,
-            email: session.user.email || '',
-            inviteData
-          }))
+            email: session.user.email || "",
+            inviteData,
+          }));
         } else {
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             isValidInvite: false,
             isCheckingInvite: false,
-            error: 'Invalid or expired invite link. Please contact your administrator for a new invitation.'
-          }))
+            error:
+              "Invalid or expired invite link. Please contact your administrator for a new invitation.",
+          }));
         }
       } catch (err) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isValidInvite: false,
           isCheckingInvite: false,
-          error: 'Failed to validate invite link. Please try again.'
-        }))
+          error: "Failed to validate invite link. Please try again.",
+        }));
       }
-    }
+    };
 
-    validateInviteSession()
-  }, [])
+    validateInviteSession();
+  }, []);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters long'
+      return "Password must be at least 8 characters long";
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      return 'Password must contain at least one lowercase letter'
+      return "Password must contain at least one lowercase letter";
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Password must contain at least one uppercase letter'
+      return "Password must contain at least one uppercase letter";
     }
     if (!/(?=.*\d)/.test(password)) {
-      return 'Password must contain at least one number'
+      return "Password must contain at least one number";
     }
     if (!/(?=.*[!@#$%^&*])/.test(password)) {
-      return 'Password must contain at least one special character (!@#$%^&*)'
+      return "Password must contain at least one special character (!@#$%^&*)";
     }
-    return null
-  }
+    return null;
+  };
 
   const handleFullNameChange = (value: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       fullName: value,
-      error: null
-    }))
-  }
+      error: null,
+    }));
+  };
 
   const handlePasswordChange = (value: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       password: value,
-      error: null
-    }))
-  }
+      error: null,
+    }));
+  };
 
   const handleConfirmPasswordChange = (value: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       confirmPassword: value,
-      error: null
-    }))
-  }
+      error: null,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // Validate passwords
-    const passwordError = validatePassword(state.password)
+    const passwordError = validatePassword(state.password);
     if (passwordError) {
-      setState(prev => ({ ...prev, error: passwordError }))
-      return
+      setState((prev) => ({ ...prev, error: passwordError }));
+      return;
     }
 
     if (state.password !== state.confirmPassword) {
-      setState(prev => ({ ...prev, error: 'Passwords do not match' }))
-      return
+      setState((prev) => ({ ...prev, error: "Passwords do not match" }));
+      return;
     }
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       // Update the user's password
       const { error: passwordError } = await supabase.auth.updateUser({
-        password: state.password
-      })
+        password: state.password,
+      });
 
       if (passwordError) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: passwordError.message
-        }))
-        return
+          error: passwordError.message,
+        }));
+        return;
       }
 
       // Update user metadata if full name is provided
@@ -179,40 +190,43 @@ function AcceptInviteForm() {
           data: {
             full_name: state.fullName.trim(),
             invite_accepted: true,
-            invite_accepted_at: new Date().toISOString()
-          }
-        })
+            invite_accepted_at: new Date().toISOString(),
+          },
+        });
 
         if (metadataError) {
-          console.warn('Failed to update user metadata:', metadataError.message)
+          console.warn("Failed to update user metadata:", metadataError.message);
           // Don't fail the entire process for metadata update issues
         }
       }
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        success: true
-      }))
+        success: true,
+      }));
 
       // Sign out the invite session and redirect after a brief delay
       setTimeout(async () => {
-        await supabase.auth.signOut()
-        router.push('/login?message=Account setup completed successfully. Please sign in with your new password.')
-      }, 2000)
-
+        await supabase.auth.signOut();
+        router.push(
+          "/login?message=Account setup completed successfully. Please sign in with your new password."
+        );
+      }, 2000);
     } catch (err: any) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: err.message || 'Failed to set up your account. Please try again.'
-      }))
+        error: err.message || "Failed to set up your account. Please try again.",
+      }));
     }
-  }
+  };
 
   const handleRequestNewInvite = () => {
-    router.push('/login?message=Please contact your administrator to request a new invitation.')
-  }
+    router.push(
+      "/login?message=Please contact your administrator to request a new invitation."
+    );
+  };
 
   // Loading state while checking invite
   if (state.isCheckingInvite) {
@@ -227,7 +241,7 @@ function AcceptInviteForm() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Invalid invite state
@@ -241,20 +255,17 @@ function AcceptInviteForm() {
             </div>
             <CardTitle className="text-xl text-gray-900">Invalid Invitation</CardTitle>
             <CardDescription className="text-gray-600">
-              {state.error || 'This invitation link is invalid or has expired.'}
+              {state.error || "This invitation link is invalid or has expired."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              onClick={handleRequestNewInvite}
-              className="w-full"
-            >
+            <Button onClick={handleRequestNewInvite} className="w-full">
               <Mail className="h-4 w-4 mr-2" />
               Request New Invitation
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => router.push('/login')}
+            <Button
+              variant="outline"
+              onClick={() => router.push("/login")}
               className="w-full"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -263,7 +274,7 @@ function AcceptInviteForm() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Success state
@@ -277,7 +288,8 @@ function AcceptInviteForm() {
             </div>
             <CardTitle className="text-xl text-gray-900">Welcome to ETLA Platform!</CardTitle>
             <CardDescription className="text-gray-600">
-              Your account has been set up successfully. You will be redirected to sign in shortly.
+              Your account has been set up successfully. You will be redirected to
+              sign in shortly.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -288,7 +300,7 @@ function AcceptInviteForm() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Main invite acceptance form
@@ -301,7 +313,7 @@ function AcceptInviteForm() {
           </div>
           <CardTitle className="text-xl text-gray-900">Welcome to ETLA Platform</CardTitle>
           <CardDescription className="text-gray-600">
-            You'veYou've been invited to join as <strong>{state.inviteData?.role || 'a user'}</strong>ong>}</strong>
+            You've been invited to join as <strong>{state.inviteData?.role || "a user"}</strong>
             {state.inviteData?.tenant_name && (
               <> at <strong>{state.inviteData.tenant_name}</strong></>
             )}
@@ -358,7 +370,7 @@ function AcceptInviteForm() {
               <div className="relative">
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={state.password}
                   onChange={(e) => handlePasswordChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
@@ -388,7 +400,7 @@ function AcceptInviteForm() {
               <div className="relative">
                 <input
                   id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   value={state.confirmPassword}
                   onChange={(e) => handleConfirmPasswordChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
@@ -442,7 +454,7 @@ function AcceptInviteForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/login')}
+              onClick={() => router.push("/login")}
               className="w-full"
               disabled={state.isLoading}
             >
@@ -453,7 +465,7 @@ function AcceptInviteForm() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 function LoadingFallback() {
@@ -463,12 +475,12 @@ function LoadingFallback() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading...</span>
+            <span className="ml-3 text-gray-600">Validating invitation...</span>
           </div>
         </CardContent>
-      </Card>
+        </Card>
     </div>
-  )
+  );
 }
 
 export default function AcceptInvitePage() {
@@ -476,6 +488,6 @@ export default function AcceptInvitePage() {
     <Suspense fallback={<LoadingFallback />}>
       <AcceptInviteForm />
     </Suspense>
-  )
+  );
 }
 

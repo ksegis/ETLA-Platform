@@ -1,22 +1,23 @@
-'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { 
-  Eye, 
-  Download, 
-  ArrowRight, 
-  Database, 
-  FileText, 
+"use client";
+
+import { useAuth } from "@/contexts/AuthContext";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import {
+  Eye,
+  Download,
+  ArrowRight,
+  Database,
+  FileText,
   CheckCircle,
   AlertTriangle,
-  BarChart3
-} from 'lucide-react'
+  BarChart3,
+} from "lucide-react";
 
 export default function JobDetailsPage() {
-  const { tenant } = useAuth()
+  const { tenant } = useAuth();
 
   return (
     <DashboardLayout>
@@ -261,6 +262,6 @@ export default function JobDetailsPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  );
 }
 
