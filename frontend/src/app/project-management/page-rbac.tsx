@@ -543,17 +543,16 @@ export default function ProjectManagementPageRBAC() {
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wr.priority}</td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(wr.created_at).toLocaleDateString()}</td>
                                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <WorkRequestApproveButton
-                                      workRequest={wr}
-                                      onApprove={() => {
-                                        setSelectedWorkRequest(wr);
-                                        setShowApprovalModal(true);
-                                      }}
-                                      className="text-indigo-600 hover:text-indigo-900"
-                                      fallback={<span className="text-gray-400">Review</span>}
-                                    >
-                                      Review & Approve
-                                    </WorkRequestApproveButton>
+                                      <button
+                                        type="button"
+                                        className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium"
+                                        onClick={() => {
+                                          setSelectedWorkRequest(wr);
+                                          setShowApprovalModal(true);
+                                        }}
+                                      >
+                                        Approve
+                                      </button>
                                   </td>
                                 </tr>
                               ))}
