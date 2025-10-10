@@ -132,7 +132,7 @@ export default function EnhancedProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectCharter[]>([]);
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
-  const [loading, setloading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -234,7 +234,7 @@ export default function EnhancedProjectManagementPage() {
     }
 
     try {
-      setloading(true);
+      setLoading(true);
       setError(null);
       
      console.log(\'loading project data for tenant:\', selectedTenant);
