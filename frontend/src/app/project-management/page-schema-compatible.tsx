@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react';
 import { 
   Users, 
   FileText, 
@@ -35,111 +35,111 @@ import {
   Network,
   ThumbsUp,
   ThumbsDown
-} from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
-import { Badge } from '@/components/ui/Badge'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { useAuth } from '@/contexts/AuthContext'
-import { useTenant } from '@/contexts/TenantContext'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+} from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 // Schema-compatible interfaces that work with existing database structure
 interface ProjectCharter {
-  id: string
-  name?: string // Use 'name' if 'title' doesn't exist
-  title?: string // Keep title as optional
-  description?: string
-  status?: string
-  priority?: string
-  start_date?: string
-  end_date?: string
-  budget?: number
-  assigned_team_lead?: string
-  team_lead?: string // Alternative field name
-  tenant_id: string
-  created_at: string
-  updated_at: string
+  id: string;
+  name?: string; // Use 'name' if 'title' doesn't exist
+  title?: string; // Keep title as optional
+  description?: string;
+  status?: string;
+  priority?: string;
+  start_date?: string;
+  end_date?: string;
+  budget?: number;
+  assigned_team_lead?: string;
+  team_lead?: string; // Alternative field name
+  tenant_id: string;
+  created_at: string;
+  updated_at: string;
   // PMBOK Framework fields (all optional for compatibility)
-  project_scope?: string
-  success_criteria?: string
-  stakeholders?: string[]
-  risk_assessment?: string
-  quality_metrics?: string
-  communication_plan?: string
-  resource_requirements?: string
-  milestone_schedule?: any[]
-  deliverables?: string[]
-  constraints?: string
-  assumptions?: string
-  work_request_id?: string
-  project_code?: string
-  business_case?: string
-  charter_status?: string
-  estimated_budget?: number
+  project_scope?: string;
+  success_criteria?: string;
+  stakeholders?: string[];
+  risk_assessment?: string;
+  quality_metrics?: string;
+  communication_plan?: string;
+  resource_requirements?: string;
+  milestone_schedule?: any[];
+  deliverables?: string[];
+  constraints?: string;
+  assumptions?: string;
+  work_request_id?: string;
+  project_code?: string;
+  business_case?: string;
+  charter_status?: string;
+  estimated_budget?: number;
 }
 
 interface WorkRequest {
-  id: string
-  name?: string // Use 'name' if 'title' doesn't exist
-  title?: string
-  description?: string
-  status?: string
-  priority?: string
-  customer_id?: string
-  tenant_id: string
-  created_at: string
-  updated_at: string
-  business_justification?: string
-  estimated_budget?: number
-  requested_completion_date?: string
-  department?: string
-  requestor_name?: string
-  customer_name?: string
-  customer_email?: string
-  category?: string
+  id: string;
+  name?: string; // Use 'name' if 'title' doesn't exist
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  customer_id?: string;
+  tenant_id: string;
+  created_at: string;
+  updated_at: string;
+  business_justification?: string;
+  estimated_budget?: number;
+  requested_completion_date?: string;
+  department?: string;
+  requestor_name?: string;
+  customer_name?: string;
+  customer_email?: string;
+  category?: string;
 }
 
 interface Risk {
-  id: string
-  name?: string // Use 'name' if 'risk_title' doesn't exist
-  risk_title?: string
-  title?: string
-  risk_description?: string
-  description?: string
-  risk_level?: string
-  level?: string
-  status?: string
-  project_id?: string
-  tenant_id: string
-  created_at: string
-  updated_at: string
-  mitigation_plan?: string
-  impact_assessment?: string
-  probability?: string
+  id: string;
+  name?: string; // Use 'name' if 'risk_title' doesn't exist
+  risk_title?: string;
+  title?: string;
+  risk_description?: string;
+  description?: string;
+  risk_level?: string;
+  level?: string;
+  status?: string;
+  project_id?: string;
+  tenant_id: string;
+  created_at: string;
+  updated_at: string;
+  mitigation_plan?: string;
+  impact_assessment?: string;
+  probability?: string;
 }
 
 interface ProjectFilters {
-  searchTerm: string
-  status: string
-  priority: string
-  teamLead: string
-  dateRange: string
+  searchTerm: string;
+  status: string;
+  priority: string;
+  teamLead: string;
+  dateRange: string;
 }
 
 export default function EnhancedProjectManagementPage() {
-  const [projects, setProjects] = useState<ProjectCharter[]>([])
-  const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
-  const [risks, setRisks] = useState<Risk[]>([])
-  const [loading, setloading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedProject, setSelectedProject] = useState<ProjectCharter | null>(null)
-  const [activeTab, setActiveTab] = useState<'projects' | 'work-requests' | 'risks' | 'charter' | 'wbs' | 'schedule' | 'evm' | 'stakeholders' | 'compliance'>('projects')
-  const [availableTables, setAvailableTables] = useState<string[]>([])
+  const [projects, setProjects] = useState<ProjectCharter[]>([]);
+  const [workRequests, setWorkRequests] = useState<WorkRequest[]>([]);
+  const [risks, setRisks] = useState<Risk[]>([]);
+  const [loading, setloading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectCharter | null>(null);
+  const [activeTab, setActiveTab] = useState<'projects' | 'work-requests' | 'risks' | 'charter' | 'wbs' | 'schedule' | 'evm' | 'stakeholders' | 'compliance'>('projects');
+  const [availableTables, setAvailableTables] = useState<string[]>([]);
 
   // Enhanced filters
   const [filters, setFilters] = useState<ProjectFilters>({
@@ -148,7 +148,7 @@ export default function EnhancedProjectManagementPage() {
     priority: 'all',
     teamLead: 'all',
     dateRange: 'all'
-  })
+  });
 
   // New project form state
   const [newProject, setNewProject] = useState<Partial<ProjectCharter>>({
@@ -177,30 +177,33 @@ export default function EnhancedProjectManagementPage() {
     project_code: '',
     business_case: '',
     charter_status: 'draft'
-  })
+  });
 
-  const { user } = useAuth()
-  const { selectedTenant } = useTenant()
+  const { user } = useAuth();
+  const { selectedTenant } = useTenant();
 
   // Helper function to get display title from project
   const getProjectTitle = (project: ProjectCharter): string => {
-    return project.title || project.name || 'Untitled Project'
-  }
+    return project.title || project.name || 'Untitled Project';
+  };
 
   // Helper function to get display name from work request
   const getWorkRequestTitle = (workRequest: WorkRequest): string => {
-    return workRequest.title || workRequest.name || 'Untitled Request'
-  }
+    return workRequest.title || workRequest.name || 'Untitled Request';
+  };
 
   // Helper function to get display name from risk
   const getRiskTitle = (risk: Risk): string => {
-    return risk.risk_title || risk.title || risk.name || 'Untitled Risk'
-  }
+    return risk.risk_title || risk.title || risk.name || 'Untitled Risk';
+  };
 
   // Helper function to get team lead
   const getTeamLead = (project: ProjectCharter): string => {
-    return project.assigned_team_lead || project.team_lead || ''
-  }
+    return project.assigned_team_lead || project.team_lead || '';
+  };
+
+  // Initialize Supabase client
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   // Check available tables in database
   const checkAvailableTables = async () => {
@@ -210,133 +213,133 @@ export default function EnhancedProjectManagementPage() {
         .from('information_schema.tables')
         .select('table_name')
         .eq('table_schema', 'public')
-        .eq('table_type', 'BASE TABLE')
+        .eq('table_type', 'BASE TABLE');
 
       if (!error && data) {
-        const tableNames = data.map((row: any) => row.table_name)
-        setAvailableTables(tableNames)
-        console.log('Available tables:', tableNames)
+        const tableNames = data.map((row: any) => row.table_name);
+        setAvailableTables(tableNames);
+        console.log('Available tables:', tableNames);
       }
     } catch (err) {
-      console.log('Could not check available tables, will try direct queries')
+      console.log('Could not check available tables, will try direct queries');
     }
-  }
+  };
 
   // Enhanced load data function with schema compatibility
   const loadData = async () => {
     if (!selectedTenant?.id) {
-      console.log('No tenant selected, skipping load')
-      setloading(false)
-      return
+      console.log('No tenant selected, skipping load');
+      setloading(false);
+      return;
     }
 
     try {
-      setloading(true)
-      setError(null)
+      setloading(true);
+      setError(null);
       
-      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name);
 
       // Check available tables first
-      await checkAvailableTables()
+      await checkAvailableTables();
 
       // Try multiple table names for projects
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let projectData: any[] = []
+      const projectTableNames = ['project_charters', 'projects', 'project_charter'];
+      let projectData: any[] = [];
       
       for (const tableName of projectTableNames) {
         try {
-          console.log(`Trying to load from table: ${tableName}`)
+          console.log(`Trying to load from table: ${tableName}`);
           const { data, error } = await supabase
             .from(tableName)
             .select('*')
             .eq('tenant_id', selectedTenant.id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false });
 
           if (!error && data) {
-            console.log(`Successfully loaded ${data.length} projects from ${tableName}`)
-            projectData = data
-            break
+            console.log(`Successfully loaded ${data.length} projects from ${tableName}`);
+            projectData = data;
+            break;
           } else if (error) {
-            console.log(`Table ${tableName} query failed:`, error.message)
+            console.log(`Table ${tableName} query failed:`, error.message);
           }
         } catch (err) {
-          console.log(`Error querying ${tableName}:`, err)
+          console.log(`Error querying ${tableName}:`, err);
         }
       }
       
-      setProjects(projectData || [])
+      setProjects(projectData || []);
 
       // Try multiple table names for work requests
-      const workRequestTableNames = ['work_requests', 'workrequests', 'requests']
-      let workRequestData: any[] = []
+      const workRequestTableNames = ['work_requests', 'workrequests', 'requests'];
+      let workRequestData: any[] = [];
       
       for (const tableName of workRequestTableNames) {
         try {
-          console.log(`Trying to load from table: ${tableName}`)
+          console.log(`Trying to load from table: ${tableName}`);
           const { data, error } = await supabase
             .from(tableName)
             .select('*')
             .eq('tenant_id', selectedTenant.id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false });
 
           if (!error && data) {
-            console.log(`Successfully loaded ${data.length} work requests from ${tableName}`)
-            workRequestData = data
-            break
+            console.log(`Successfully loaded ${data.length} work requests from ${tableName}`);
+            workRequestData = data;
+            break;
           } else if (error) {
-            console.log(`Table ${tableName} query failed:`, error.message)
+            console.log(`Table ${tableName} query failed:`, error.message);
           }
         } catch (err) {
-          console.log(`Error querying ${tableName}:`, err)
+          console.log(`Error querying ${tableName}:`, err);
         }
       }
       
-      setWorkRequests(workRequestData || [])
+      setWorkRequests(workRequestData || []);
 
       // Try multiple table names for risks
-      const riskTableNames = ['risks', 'risk', 'project_risks']
-      let riskData: any[] = []
+      const riskTableNames = ['risks', 'risk', 'project_risks'];
+      let riskData: any[] = [];
       
       for (const tableName of riskTableNames) {
         try {
-          console.log(`Trying to load from table: ${tableName}`)
+          console.log(`Trying to load from table: ${tableName}`);
           const { data, error } = await supabase
             .from(tableName)
             .select('*')
             .eq('tenant_id', selectedTenant.id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false });
 
           if (!error && data) {
-            console.log(`Successfully loaded ${data.length} risks from ${tableName}`)
-            riskData = data
-            break
+            console.log(`Successfully loaded ${data.length} risks from ${tableName}`);
+            riskData = data;
+            break;
           } else if (error) {
-            console.log(`Table ${tableName} query failed:`, error.message)
+            console.log(`Table ${tableName} query failed:`, error.message);
           }
         } catch (err) {
-          console.log(`Error querying ${tableName}:`, err)
+          console.log(`Error querying ${tableName}:`, err);
         }
       }
       
-      setRisks(riskData || [])
+      setRisks(riskData || []);
 
       // Show informational message about available data
       if (projectData.length === 0 && workRequestData.length === 0 && riskData.length === 0) {
-        setError('No project management tables found or they contain no data. You may need to set up the database schema.')
+        setError('No project management tables found or they contain no data. You may need to set up the database schema.');
       }
 
     } catch (err) {
-      console.error('Unexpected error loading data:', err)
-      setError('Failed to load project management data. The database schema may need to be set up.')
+      console.error('Unexpected error loading data:', err);
+      setError('Failed to load project management data. The database schema may need to be set up.');
     } finally {
-      setloading(false)
+      setloading(false);
     }
-  }
+  };
 
   // Load data when tenant is selected
   useEffect(() => {
-    loadData()
-  }, [selectedTenant])
+    loadData();
+  }, [selectedTenant]);
 
   // Calculate statistics
   const stats = {
@@ -351,123 +354,123 @@ export default function EnhancedProjectManagementPage() {
     totalRisks: risks.length,
     highRisks: risks.filter((r) => (r.risk_level || r.level) === 'high').length,
     mitigatedRisks: risks.filter((r) => r.status === 'resolved').length
-  }
+  };
 
   // Filter projects with schema compatibility
   const filteredProjects = projects.filter((project: any) => {
-    const title = getProjectTitle(project)
-    const description = project.description || ''
-    const teamLead = getTeamLead(project)
-    const projectCode = project.project_code || ''
+    const title = getProjectTitle(project);
+    const description = project.description || '';
+    const teamLead = getTeamLead(project);
+    const projectCode = project.project_code || '';
     
     const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
                          description.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
                          teamLead.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         projectCode.toLowerCase().includes(filters.searchTerm.toLowerCase())
-    const matchesStatus = filters.status === 'all' || project.status === filters.status
-    const matchesPriority = filters.priority === 'all' || project.priority === filters.priority
-    const matchesTeamLead = filters.teamLead === 'all' || teamLead === filters.teamLead
+                         projectCode.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    const matchesStatus = filters.status === 'all' || project.status === filters.status;
+    const matchesPriority = filters.priority === 'all' || project.priority === filters.priority;
+    const matchesTeamLead = filters.teamLead === 'all' || teamLead === filters.teamLead;
     
-    return matchesSearch && matchesStatus && matchesPriority && matchesTeamLead
-  })
+    return matchesSearch && matchesStatus && matchesPriority && matchesTeamLead;
+  });
 
   // Filter work requests with schema compatibility
   const filteredWorkRequests = workRequests.filter((wr: any) => {
-    const title = getWorkRequestTitle(wr)
-    const description = wr.description || ''
-    const customerName = wr.customer_name || ''
+    const title = getWorkRequestTitle(wr);
+    const description = wr.description || '';
+    const customerName = wr.customer_name || '';
     
     const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
                          description.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         customerName.toLowerCase().includes(filters.searchTerm.toLowerCase())
-    const matchesStatus = filters.status === 'all' || wr.status === filters.status
-    const matchesPriority = filters.priority === 'all' || wr.priority === filters.priority
+                         customerName.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    const matchesStatus = filters.status === 'all' || wr.status === filters.status;
+    const matchesPriority = filters.priority === 'all' || wr.priority === filters.priority;
     
-    return matchesSearch && matchesStatus && matchesPriority
-  })
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   // Filter risks with schema compatibility
   const filteredRisks = risks.filter((risk: any) => {
-    const title = getRiskTitle(risk)
-    const description = risk.risk_description || risk.description || ''
+    const title = getRiskTitle(risk);
+    const description = risk.risk_description || risk.description || '';
     
     const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         description.toLowerCase().includes(filters.searchTerm.toLowerCase())
-    const matchesStatus = filters.status === 'all' || risk.status === filters.status
-    const matchesPriority = filters.priority === 'all' || (risk.risk_level || risk.level) === filters.priority
+                         description.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    const matchesStatus = filters.status === 'all' || risk.status === filters.status;
+    const matchesPriority = filters.priority === 'all' || (risk.risk_level || risk.level) === filters.priority;
     
-    return matchesSearch && matchesStatus && matchesPriority
-  })
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   // Helper functions
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Not set'
-    return new Date(dateString).toLocaleDateString()
-  }
+    if (!dateString) return 'Not set';
+    return new Date(dateString).toLocaleDateString();
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const getStatusColor = (status: string | null | undefined) => {
-    const statusLower = (status || '').toLowerCase()
+    const statusLower = (status || '').toLowerCase();
     switch (statusLower) {
       case 'planning':
       case 'draft':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-purple-100 text-purple-800';
       case 'active':
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 text-blue-800';
       case 'completed':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800';
       case 'on_hold':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800';
       case 'approved':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800';
       case 'submitted':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 text-blue-800';
       case 'under_review':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-100 text-yellow-800';
       case 'rejected':
       case 'declined':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800';
       case 'resolved':
       case 'mitigated':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800';
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
 
   const getPriorityColor = (priority: string | null | undefined) => {
-    const priorityLower = (priority || '').toLowerCase()
+    const priorityLower = (priority || '').toLowerCase();
     switch (priorityLower) {
       case 'high':
       case 'critical':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-100 text-yellow-800';
       case 'low':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800';
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
 
   // Schema-compatible create project function
   const handleCreateProject = async () => {
     if (!selectedTenant?.id || (!newProject.title && !newProject.name)) {
-      setError('Please provide a project title and ensure a tenant is selected.')
-      return
+      setError('Please provide a project title and ensure a tenant is selected.');
+      return;
     }
 
     try {
-      setError(null)
+      setError(null);
       
       // Prepare data with both title and name fields for compatibility
       const projectData = {
@@ -477,42 +480,144 @@ export default function EnhancedProjectManagementPage() {
         tenant_id: selectedTenant.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      }
+      };
 
       // Try different table names
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let success = false
+      const projectTableNames = ['project_charters', 'projects', 'project_charter'];
+      let success = false;
       
       for (const tableName of projectTableNames) {
         try {
           const { data, error } = await supabase
             .from(tableName)
             .insert([projectData])
-            .select()
+            .select();
 
           if (!error && data) {
-            console.log(`Project created in ${tableName}:`, data)
-            setProjects(prev => [data[0], ...prev])
-            setShowCreateModal(false)
-            resetNewProject()
-            success = true
-            break
+            console.log(`Project created in ${tableName}:`, data);
+            setProjects(prev => [data[0], ...prev]);
+            setShowCreateModal(false);
+            resetNewProject();
+            success = true;
+            break;
+          } else if (error) {
+            console.log(`Table ${tableName} query failed:`, error.message);
           }
         } catch (err) {
-          console.log(`Failed to create in ${tableName}:`, err)
+          console.log(`Error querying ${tableName}:`, err);
         }
       }
       
       if (!success) {
-        setError('Could not create project. The database tables may not be set up correctly.')
+        setError('Failed to create project in any known table. Please check your database schema.');
       }
-    } catch (err) {
-      console.error('Unexpected error creating project:', err)
-      setError('Failed to create project due to an unexpected error.')
-    }
-  }
 
-  // Reset new project form
+    } catch (err) {
+      console.error('Unexpected error creating project:', err);
+      setError('Failed to create project. Please try again.');
+    }
+  };
+
+  // Schema-compatible update project function
+  const handleUpdateProject = async () => {
+    if (!selectedProject?.id || !selectedTenant?.id || (!selectedProject.title && !selectedProject.name)) {
+      setError('Please select a project, provide a title, and ensure a tenant is selected.');
+      return;
+    }
+
+    try {
+      setError(null);
+
+      const projectData = {
+        ...selectedProject,
+        title: selectedProject.title || selectedProject.name,
+        name: selectedProject.name || selectedProject.title,
+        updated_at: new Date().toISOString()
+      };
+
+      const projectTableNames = ['project_charters', 'projects', 'project_charter'];
+      let success = false;
+
+      for (const tableName of projectTableNames) {
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .update(projectData)
+            .eq('id', selectedProject.id)
+            .eq('tenant_id', selectedTenant.id)
+            .select();
+
+          if (!error && data) {
+            console.log(`Project updated in ${tableName}:`, data);
+            setProjects(prev => prev.map(p => (p.id === data[0].id ? data[0] : p)));
+            setShowEditModal(false);
+            setSelectedProject(null);
+            success = true;
+            break;
+          } else if (error) {
+            console.log(`Table ${tableName} update failed:`, error.message);
+          }
+        } catch (err) {
+          console.log(`Error updating ${tableName}:`, err);
+        }
+      }
+
+      if (!success) {
+        setError('Failed to update project in any known table. Please check your database schema.');
+      }
+
+    } catch (err) {
+      console.error('Unexpected error updating project:', err);
+      setError('Failed to update project. Please try again.');
+    }
+  };
+
+  // Schema-compatible delete project function
+  const handleDeleteProject = async (projectId: string) => {
+    if (!selectedTenant?.id) {
+      setError('No tenant selected.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this project?')) return;
+
+    try {
+      setError(null);
+
+      const projectTableNames = ['project_charters', 'projects', 'project_charter'];
+      let success = false;
+
+      for (const tableName of projectTableNames) {
+        try {
+          const { error } = await supabase
+            .from(tableName)
+            .delete()
+            .eq('id', projectId)
+            .eq('tenant_id', selectedTenant.id);
+
+          if (!error) {
+            console.log(`Project deleted from ${tableName}:`, projectId);
+            setProjects(prev => prev.filter(p => p.id !== projectId));
+            success = true;
+            break;
+          } else if (error) {
+            console.log(`Table ${tableName} delete failed:`, error.message);
+          }
+        } catch (err) {
+          console.log(`Error deleting from ${tableName}:`, err);
+        }
+      }
+
+      if (!success) {
+        setError('Failed to delete project from any known table. Please check your database schema.');
+      }
+
+    } catch (err) {
+      console.error('Unexpected error deleting project:', err);
+      setError('Failed to delete project. Please try again.');
+    }
+  };
+
   const resetNewProject = () => {
     setNewProject({
       title: '',
@@ -540,1421 +645,701 @@ export default function EnhancedProjectManagementPage() {
       project_code: '',
       business_case: '',
       charter_status: 'draft'
-    })
-  }
+    });
+  };
 
-  // Schema-compatible update project function
-  const handleUpdateProject = async () => {
-    if (!selectedProject?.id) {
-      setError('No project selected for update.')
-      return
+  const getPriorityBadge = (priority: string | null | undefined) => {
+    const priorityLower = (priority || '').toLowerCase();
+    switch (priorityLower) {
+      case 'high':
+      case 'critical':
+        return <Badge variant="destructive">High</Badge>;
+      case 'medium':
+        return <Badge variant="warning">Medium</Badge>;
+      case 'low':
+        return <Badge variant="success">Low</Badge>;
+      default:
+        return <Badge variant="secondary">N/A</Badge>;
     }
+  };
 
-    try {
-      setError(null)
-      
-      // Prepare data with both title and name fields for compatibility
-      const updateData = {
-        ...selectedProject,
-        title: selectedProject.title || selectedProject.name,
-        name: selectedProject.name || selectedProject.title,
-        updated_at: new Date().toISOString()
-      }
-
-      // Try different table names
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let success = false
-      
-      for (const tableName of projectTableNames) {
-        try {
-          const { data, error } = await supabase
-            .from(tableName)
-            .update(updateData)
-            .eq('id', selectedProject.id)
-            .select()
-
-          if (!error && data) {
-            console.log(`Project updated in ${tableName}:`, data)
-            setProjects(prev => prev.map((p: any) => p.id === selectedProject.id ? data[0] : p))
-            setShowEditModal(false)
-            setSelectedProject(null)
-            success = true
-            break
-          }
-        } catch (err) {
-          console.log(`Failed to update in ${tableName}:`, err)
-        }
-      }
-      
-      if (!success) {
-        setError('Could not update project. The database tables may not be set up correctly.')
-      }
-    } catch (err) {
-      console.error('Unexpected error updating project:', err)
-      setError('Failed to update project due to an unexpected error.')
+  const getStatusBadge = (status: string | null | undefined) => {
+    const statusLower = (status || '').toLowerCase();
+    switch (statusLower) {
+      case 'planning':
+      case 'draft':
+        return <Badge variant="outline">Planning</Badge>;
+      case 'active':
+      case 'in_progress':
+        return <Badge variant="default">Active</Badge>;
+      case 'completed':
+        return <Badge variant="success">Completed</Badge>;
+      case 'on_hold':
+        return <Badge variant="warning">On Hold</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>;
+      case 'submitted':
+        return <Badge variant="default">Submitted</Badge>;
+      case 'under_review':
+        return <Badge variant="warning">Under Review</Badge>;
+      case 'approved':
+        return <Badge variant="success">Approved</Badge>;
+      case 'rejected':
+      case 'declined':
+        return <Badge variant="destructive">Rejected</Badge>;
+      case 'resolved':
+      case 'mitigated':
+        return <Badge variant="success">Resolved</Badge>;
+      default:
+        return <Badge variant="secondary">N/A</Badge>;
     }
-  }
-
-  // Schema-compatible delete project function
-  const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project?')) return
-
-    try {
-      setError(null)
-      
-      // Try different table names
-      const projectTableNames = ['project_charters', 'projects', 'project_charter']
-      let success = false
-      
-      for (const tableName of projectTableNames) {
-        try {
-          const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq('id', projectId)
-
-          if (!error) {
-            console.log(`Project deleted from ${tableName}`)
-            setProjects(prev => prev.filter((p: any) => p.id !== projectId))
-            success = true
-            break
-          }
-        } catch (err) {
-          console.log(`Failed to delete from ${tableName}:`, err)
-        }
-      }
-      
-      if (!success) {
-        setError('Could not delete project. The database tables may not be set up correctly.')
-      }
-    } catch (err) {
-      console.error('Unexpected error deleting project:', err)
-      setError('Failed to delete project due to an unexpected error.')
-    }
-  }
-
-  // Create project from work request
-  const createProjectFromWorkRequest = (workRequest: WorkRequest) => {
-    const title = getWorkRequestTitle(workRequest)
-    setNewProject({
-      title: title,
-      name: title,
-      description: workRequest.description,
-      status: 'planning',
-      priority: workRequest.priority,
-      start_date: '',
-      end_date: workRequest.requested_completion_date || '',
-      budget: workRequest.estimated_budget || 0,
-      assigned_team_lead: '',
-      team_lead: '',
-      project_scope: workRequest.description,
-      success_criteria: '',
-      stakeholders: [workRequest.requestor_name || workRequest.customer_name || ''],
-      risk_assessment: '',
-      quality_metrics: '',
-      communication_plan: '',
-      resource_requirements: '',
-      milestone_schedule: [],
-      deliverables: [],
-      constraints: '',
-      assumptions: workRequest.business_justification || '',
-      work_request_id: workRequest.id,
-      project_code: `PRJ-${Date.now()}`,
-      business_case: workRequest.business_justification || '',
-      charter_status: 'draft'
-    })
-    setShowCreateModal(true)
-  }
-
-  // Schema-compatible work request action
-  const handleWorkRequestAction = async (workRequestId: string, action: 'approve' | 'decline', comments?: string) => {
-    try {
-      setError(null)
-      const newStatus = action === 'approve' ? 'approved' : 'declined'
-      
-      // Try different table names
-      const workRequestTableNames = ['work_requests', 'workrequests', 'requests']
-      let success = false
-      
-      for (const tableName of workRequestTableNames) {
-        try {
-          const { data, error } = await supabase
-            .from(tableName)
-            .update({
-              status: newStatus,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', workRequestId)
-            .select()
-
-          if (!error && data) {
-            console.log(`Work request updated in ${tableName}:`, data)
-            setWorkRequests(prev => prev.map((wr: any) => wr.id === workRequestId ? data[0] : wr))
-            success = true
-            break
-          }
-        } catch (err) {
-          console.log(`Failed to update work request in ${tableName}:`, err)
-        }
-      }
-      
-      if (!success) {
-        setError(`Could not ${action} work request. The database tables may not be set up correctly.`)
-      }
-    } catch (err) {
-      console.error(`Unexpected error ${action}ing work request:`, err)
-      setError(`Failed to ${action} work request due to an unexpected error.`)
-    }
-  }
-
-  // Render view mode toggle
-  const renderViewModeToggle = () => (
-    <div className="flex border rounded-md">
-      <Button
-        variant={viewMode === 'list' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => setViewMode('list')}
-        className="rounded-r-none"
-      >
-        <List className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={viewMode === 'grid' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => setViewMode('grid')}
-        className="rounded-l-none"
-      >
-        <Grid className="w-4 h-4" />
-      </Button>
-    </div>
-  )
-
-  // Render project list view with schema compatibility
-  const renderProjectListView = () => (
-    <div className="space-y-4">
-      {filteredProjects.map((project: any) => (
-        <div key={project.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{getProjectTitle(project)}</h3>
-                {project.project_code && (
-                  <Badge variant="outline" className="text-xs">
-                    {project.project_code}
-                  </Badge>
-                )}
-                <Badge className={getStatusColor(project.status)}>
-                  {project.status || 'Unknown'}
-                </Badge>
-                <Badge className={getPriorityColor(project.priority)}>
-                  {project.priority || 'Unknown'}
-                </Badge>
-              </div>
-              <p className="text-gray-600 mb-3">{project.description || 'No description'}</p>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Start: {formatDate(project.start_date || '')}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>End: {formatDate(project.end_date || '')}</span>
-                </div>
-                {project.budget && (
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    <span>Budget: {formatCurrency(project.budget)}</span>
-                  </div>
-                )}
-                {getTeamLead(project) && (
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>Lead: {getTeamLead(project)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-2 ml-4">
-              <Button variant="outline" size="sm" onClick={() => {
-                setSelectedProject(project)
-                setShowEditModal(true)
-              }}>
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                setSelectedProject(project)
-                setShowEditModal(true)
-              }}>
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-red-600 hover:text-red-700"
-                onClick={() => handleDeleteProject(project.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-
-  // Render project grid view with schema compatibility
-  const renderProjectGridView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredProjects.map((project: any) => (
-        <Card key={project.id} className="hover:shadow-lg transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle className="text-lg mb-2">{getProjectTitle(project)}</CardTitle>
-                {project.project_code && (
-                  <p className="text-sm text-gray-500 mb-2">{project.project_code}</p>
-                )}
-                <div className="flex gap-2 mb-2">
-                  <Badge className={getStatusColor(project.status)}>
-                    {project.status || 'Unknown'}
-                  </Badge>
-                  <Badge className={getPriorityColor(project.priority)}>
-                    {project.priority || 'Unknown'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-3">{project.description || 'No description'}</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <span>{formatDate(project.start_date || '')} - {formatDate(project.end_date || '')}</span>
-              </div>
-              {project.budget && (
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-gray-400" />
-                  <span>{formatCurrency(project.budget)}</span>
-                </div>
-              )}
-              {getTeamLead(project) && (
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-gray-400" />
-                  <span>{getTeamLead(project)}</span>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-                setSelectedProject(project)
-                setShowEditModal(true)
-              }}>
-                <Eye className="h-4 w-4 mr-1" />
-                View
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-                setSelectedProject(project)
-                setShowEditModal(true)
-              }}>
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-
-  // Render work requests with schema compatibility
-  const renderWorkRequests = () => (
-    <div className="space-y-4">
-      {filteredWorkRequests.map((workRequest: any) => (
-        <div key={workRequest.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{getWorkRequestTitle(workRequest)}</h3>
-                <Badge className={getStatusColor(workRequest.status)}>
-                  {workRequest.status || 'Unknown'}
-                </Badge>
-                <Badge className={getPriorityColor(workRequest.priority)}>
-                  {workRequest.priority || 'Unknown'}
-                </Badge>
-                {workRequest.category && (
-                  <Badge variant="outline" className="text-xs">
-                    {workRequest.category}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-gray-600 mb-3">{workRequest.description || 'No description'}</p>
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Created: {formatDate(workRequest.created_at)}</span>
-                </div>
-                {workRequest.estimated_budget && (
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    <span>Est. Budget: {formatCurrency(workRequest.estimated_budget)}</span>
-                  </div>
-                )}
-                {workRequest.customer_name && (
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>Customer: {workRequest.customer_name}</span>
-                  </div>
-                )}
-                {workRequest.department && (
-                  <div className="flex items-center gap-1">
-                    <Building className="h-4 w-4" />
-                    <span>Dept: {workRequest.department}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-2 ml-4">
-              {workRequest.status === 'approved' && (
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={() => createProjectFromWorkRequest(workRequest)}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Create Project
-                </Button>
-              )}
-              {workRequest.status === 'submitted' && (
-                <>
-                  <Button 
-                    variant="default" 
-                    size="sm"
-                    onClick={() => handleWorkRequestAction(workRequest.id, 'approve')}
-                  >
-                    <ThumbsUp className="h-4 w-4 mr-1" />
-                    Approve
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleWorkRequestAction(workRequest.id, 'decline')}
-                  >
-                    <ThumbsDown className="h-4 w-4 mr-1" />
-                    Decline
-                  </Button>
-                </>
-              )}
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-
-  // Render risks with schema compatibility
-  const renderRisks = () => (
-    <div className="space-y-4">
-      {filteredRisks.map((risk: any) => (
-        <div key={risk.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{getRiskTitle(risk)}</h3>
-                <Badge className={getStatusColor(risk.status)}>
-                  {risk.status || 'Unknown'}
-                </Badge>
-                <Badge className={getPriorityColor(risk.risk_level || risk.level)}>
-                  {(risk.risk_level || risk.level || 'Unknown')} Risk
-                </Badge>
-              </div>
-              <p className="text-gray-600 mb-3">{risk.risk_description || risk.description || 'No description'}</p>
-              {risk.mitigation_plan && (
-                <div className="mb-3">
-                  <p className="text-sm font-medium text-gray-700">Mitigation Plan:</p>
-                  <p className="text-sm text-gray-600">{risk.mitigation_plan}</p>
-                </div>
-              )}
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Created: {formatDate(risk.created_at)}</span>
-                </div>
-                {risk.probability && (
-                  <div className="flex items-center gap-1">
-                    <BarChart3 className="h-4 w-4" />
-                    <span>Probability: {risk.probability}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-2 ml-4">
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm">
-                <Edit className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-
-  // PMBOK Navigation Tabs
-  const tabs = [
-    { id: 'projects', label: 'Projects', icon: Briefcase, count: filteredProjects.length },
-    { id: 'work-requests', label: 'Work Requests', icon: FileText, count: filteredWorkRequests.length },
-    { id: 'risks', label: 'Risks', icon: Shield, count: filteredRisks.length },
-    { id: 'charter', label: 'Charter', icon: Award, count: 0 },
-    { id: 'wbs', label: 'WBS', icon: Network, count: 0 },
-    { id: 'schedule', label: 'Schedule', icon: Calendar, count: 0 },
-    { id: 'evm', label: 'EVM', icon: BarChart3, count: 0 },
-    { id: 'stakeholders', label: 'Stakeholders', icon: Users, count: 0 },
-    { id: 'compliance', label: 'Compliance', icon: Target, count: 0 },
-  ]
-
-  if (!selectedTenant) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Please select a tenant to view project management.</p>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">loading project data...</span>
-        </div>
-      </DashboardLayout>
-    )
-  }
+  };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Project Management</h1>
-            <p className="text-gray-600">Comprehensive project lifecycle management with PMBOK framework</p>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Project
-            </Button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">Project Management (Schema Compatible)</h1>
 
-        {/* Error Display */}
-        {error && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-yellow-500 mr-2" />
-              <p className="text-yellow-700">{error}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-auto"
-                onClick={() => setError(null)}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <strong className="font-bold">Error:</strong>
+              <span className="block sm:inline"> {error}</span>
+            </div>
+          )}
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+                <Clipboard className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalProjects}</div>
+                <p className="text-xs text-muted-foreground">{stats.activeProjects} active</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Work Requests</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalWorkRequests}</div>
+                <p className="text-xs text-muted-foreground">{stats.pendingWorkRequests} pending</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{formatCurrency(stats.totalBudget)}</div>
+                <p className="text-xs text-muted-foreground">Across all projects</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Risks</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalRisks}</div>
+                <p className="text-xs text-muted-foreground">{stats.highRisks} high priority</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters and Actions */}
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-6">
+            <div className="flex-1 w-full md:w-auto">
+              <Input
+                type="text"
+                placeholder="Search projects, requests, risks..."
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                className="w-full"
+                icon={<Search className="h-4 w-4 text-muted-foreground" />}
+              />
+            </div>
+            <div className="flex space-x-2">
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
               >
-                <X className="h-4 w-4" />
+                <option value="all">All Statuses</option>
+                <option value="planning">Planning</option>
+                <option value="active">Active</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="on_hold">On Hold</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="submitted">Submitted</option>
+                <option value="under_review">Under Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="declined">Declined</option>
+                <option value="resolved">Resolved</option>
+                <option value="mitigated">Mitigated</option>
+                <option value="draft">Draft</option>
+              </select>
+              <select
+                value={filters.priority}
+                onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                className="block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              >
+                <option value="all">All Priorities</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+                <option value="critical">Critical</option>
+              </select>
+              <Button variant="outline" onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}>
+                {viewMode === 'list' ? <Grid className="h-4 w-4" /> : <List className="h-4 w-4" />}
+              </Button>
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus className="h-4 w-4 mr-2" /> New Project
               </Button>
             </div>
           </div>
-        )}
 
-        {/* Database Schema Info */}
-        {availableTables.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <Building className="h-5 w-5 text-blue-500 mr-2" />
-              <p className="text-blue-700">
-                Available database tables: {availableTables.filter((t) => 
-                  t.includes('project') || t.includes('work') || t.includes('risk')
-                ).join(', ') || 'None found'}
-              </p>
+          {/* Tabs for Projects, Work Requests, Risks */}
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('projects')}
+                  className={`
+                    ${activeTab === 'projects'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                  `}
+                >
+                  Projects ({filteredProjects.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('work-requests')}
+                  className={`
+                    ${activeTab === 'work-requests'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                  `}
+                >
+                  Work Requests ({filteredWorkRequests.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('risks')}
+                  className={`
+                    ${activeTab === 'risks'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                  `}
+                >
+                  Risks ({filteredRisks.length})
+                </button>
+              </nav>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'projects' && (
+                <div className="space-y-4">
+                  {filteredProjects.length === 0 ? (
+                    <p className="text-gray-500">No projects found matching your criteria.</p>
+                  ) : viewMode === 'list' ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team Lead</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                            <th scope="col" className="relative px-6 py-3"><span className="sr-only">Edit</span></th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredProjects.map((project) => (
+                            <tr key={project.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{getProjectTitle(project)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(project.status)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getPriorityBadge(project.priority)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTeamLead(project)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(project.start_date || '')}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(project.end_date || '')}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  setSelectedProject(project);
+                                  setShowEditModal(true);
+                                }}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => handleDeleteProject(project.id)} className="text-red-600 hover:text-red-900">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredProjects.map((project) => (
+                        <Card key={project.id}>
+                          <CardHeader>
+                            <CardTitle className="flex justify-between items-center">
+                              {getProjectTitle(project)}
+                              <div className="flex space-x-2">
+                                {getStatusBadge(project.status)}
+                                {getPriorityBadge(project.priority)}
+                              </div>
+                            </CardTitle>
+                            <CardDescription>{project.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="text-sm text-gray-600">
+                            <p className="flex items-center"><Users className="h-4 w-4 mr-2" /> Team Lead: {getTeamLead(project)}</p>
+                            <p className="flex items-center"><Calendar className="h-4 w-4 mr-2" /> Start: {formatDate(project.start_date || '')}</p>
+                            <p className="flex items-center"><Calendar className="h-4 w-4 mr-2" /> End: {formatDate(project.end_date || '')}</p>
+                            <p className="flex items-center"><DollarSign className="h-4 w-4 mr-2" /> Budget: {formatCurrency(project.budget || 0)}</p>
+                            <div className="flex justify-end space-x-2 mt-4">
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                setSelectedProject(project);
+                                setShowEditModal(true);
+                              }}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteProject(project.id)} className="text-red-600 hover:text-red-900">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'work-requests' && (
+                <div className="space-y-4">
+                  {filteredWorkRequests.length === 0 ? (
+                    <p className="text-gray-500">No work requests found matching your criteria.</p>
+                  ) : viewMode === 'list' ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                            <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredWorkRequests.map((wr) => (
+                            <tr key={wr.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{getWorkRequestTitle(wr)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(wr.status)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getPriorityBadge(wr.priority)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wr.customer_name || 'N/A'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(wr.created_at)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium"
+                                  onClick={() => {
+                                    setSelectedWorkRequest(wr);
+                                    setShowApprovalModal(true);
+                                  }}
+                                >
+                                  Approve
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredWorkRequests.map((wr) => (
+                        <Card key={wr.id}>
+                          <CardHeader>
+                            <CardTitle className="flex justify-between items-center">
+                              {getWorkRequestTitle(wr)}
+                              <div className="flex space-x-2">
+                                {getStatusBadge(wr.status)}
+                                {getPriorityBadge(wr.priority)}
+                              </div>
+                            </CardTitle>
+                            <CardDescription>{wr.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="text-sm text-gray-600">
+                            <p className="flex items-center"><Users className="h-4 w-4 mr-2" /> Customer: {wr.customer_name || 'N/A'}</p>
+                            <p className="flex items-center"><Calendar className="h-4 w-4 mr-2" /> Created: {formatDate(wr.created_at)}</p>
+                            <div className="flex justify-end space-x-2 mt-4">
+                              <button
+                                type="button"
+                                className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium"
+                                onClick={() => {
+                                  setSelectedWorkRequest(wr);
+                                  setShowApprovalModal(true);
+                                }}
+                              >
+                                Approve
+                              </button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'risks' && (
+                <div className="space-y-4">
+                  {filteredRisks.length === 0 ? (
+                    <p className="text-gray-500">No risks found matching your criteria.</p>
+                  ) : viewMode === 'list' ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project ID</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                            <th scope="col" className="relative px-6 py-3"><span className="sr-only">Edit</span></th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredRisks.map((risk) => (
+                            <tr key={risk.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{getRiskTitle(risk)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getPriorityBadge(risk.risk_level || risk.level)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(risk.status)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{risk.project_id || 'N/A'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(risk.created_at)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  // Implement risk edit logic
+                                }} className="text-blue-600 hover:text-blue-900">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  // Implement risk delete logic
+                                }} className="text-red-600 hover:text-red-900">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredRisks.map((risk) => (
+                        <Card key={risk.id}>
+                          <CardHeader>
+                            <CardTitle className="flex justify-between items-center">
+                              {getRiskTitle(risk)}
+                              <div className="flex space-x-2">
+                                {getPriorityBadge(risk.risk_level || risk.level)}
+                                {getStatusBadge(risk.status)}
+                              </div>
+                            </CardTitle>
+                            <CardDescription>{risk.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="text-sm text-gray-600">
+                            <p className="flex items-center"><Clipboard className="h-4 w-4 mr-2" /> Project ID: {risk.project_id || 'N/A'}</p>
+                            <p className="flex items-center"><Calendar className="h-4 w-4 mr-2" /> Created: {formatDate(risk.created_at)}</p>
+                            <div className="flex justify-end space-x-2 mt-4">
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                // Implement risk edit logic
+                              }}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                // Implement risk delete logic
+                              }} className="text-red-600 hover:text-red-900">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        )}
-
-        {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-9 gap-4">
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-700">Total Projects</p>
-                  <p className="text-2xl font-bold text-blue-900">{stats.totalProjects}</p>
-                </div>
-                <Building className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700">Active</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.activeProjects}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700">Completed</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.completedProjects}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-yellow-700">On Hold</p>
-                  <p className="text-2xl font-bold text-yellow-900">{stats.onHoldProjects}</p>
-                </div>
-                <Clock className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-purple-200 bg-purple-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-700">Work Requests</p>
-                  <p className="text-2xl font-bold text-purple-900">{stats.totalWorkRequests}</p>
-                </div>
-                <FileText className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-yellow-700">Pending WR</p>
-                  <p className="text-2xl font-bold text-yellow-900">{stats.pendingWorkRequests}</p>
-                </div>
-                <Clock className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700">Approved WR</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.approvedWorkRequests}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-red-700">High Risks</p>
-                  <p className="text-2xl font-bold text-red-900">{stats.highRisks}</p>
-                </div>
-                <Shield className="h-8 w-8 text-red-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-indigo-200 bg-indigo-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-indigo-700">Total Budget</p>
-                  <p className="text-2xl font-bold text-indigo-900">{formatCurrency(stats.totalBudget)}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-indigo-500" />
-              </div>
-            </CardContent>
-          </Card>
         </div>
+      </div>
 
-        {/* PMBOK Tab Navigation */}
-        <div className="flex space-x-1 border-b overflow-x-auto">
-          {tabs.map((tab: any) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 font-medium text-sm rounded-t-lg whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'bg-blue-500 text-white border-b-2 border-blue-500'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              <tab.icon className="w-4 h-4 inline mr-2" />
-              {tab.label} {tab.count > 0 && `(${tab.count})`}
-            </button>
-          ))}
-        </div>
-
-        {/* Enhanced Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder={`Search ${activeTab === 'projects' ? 'projects' : activeTab === 'work-requests' ? 'work requests' : 'risks'}...`}
-                    value={filters.searchTerm}
-                    onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-                    className="pl-10"
-                  />
-                </div>
+      {/* Create Project Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-4">Create New Project</h2>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong className="font-bold">Error:</strong>
+                <span className="block sm:inline"> {error}</span>
               </div>
-              <div className="flex gap-2">
+            )}
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="newProjectTitle" className="block text-sm font-medium text-gray-700">Project Title</label>
+                <Input
+                  type="text"
+                  id="newProjectTitle"
+                  value={newProject.title || ''}
+                  onChange={(e) => setNewProject({ ...newProject, title: e.target.value, name: e.target.value })}
+                  className="mt-1 block w-full"
+                  placeholder="Enter project title"
+                />
+              </div>
+              <div>
+                <label htmlFor="newProjectDescription" className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  id="newProjectDescription"
+                  rows={3}
+                  value={newProject.description || ''}
+                  onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  placeholder="Brief description of the project"
+                ></textarea>
+              </div>
+              <div>
+                <label htmlFor="newProjectStatus" className="block text-sm font-medium text-gray-700">Status</label>
                 <select
-                  value={filters.status}
-                  onChange={(e: any) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  id="newProjectStatus"
+                  value={newProject.status || 'planning'}
+                  onChange={(e) => setNewProject({ ...newProject, status: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 >
-                  <option value="all">All Status</option>
-                  {activeTab === 'projects' ? (
-                    <>
-                      <option value="planning">Planning</option>
-                      <option value="active">Active</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="on_hold">On Hold</option>
-                      <option value="cancelled">Cancelled</option>
-                    </>
-                  ) : activeTab === 'work-requests' ? (
-                    <>
-                      <option value="submitted">Submitted</option>
-                      <option value="under_review">Under Review</option>
-                      <option value="approved">Approved</option>
-                      <option value="rejected">Rejected</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="open">Open</option>
-                      <option value="mitigated">Mitigated</option>
-                      <option value="resolved">Resolved</option>
-                    </>
-                  )}
+                  <option value="planning">Planning</option>
+                  <option value="active">Active</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
+              </div>
+              <div>
+                <label htmlFor="newProjectPriority" className="block text-sm font-medium text-gray-700">Priority</label>
                 <select
-                  value={filters.priority}
-                  onChange={(e: any) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  id="newProjectPriority"
+                  value={newProject.priority || 'medium'}
+                  onChange={(e) => setNewProject({ ...newProject, priority: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 >
-                  <option value="all">All Priority</option>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                   <option value="critical">Critical</option>
                 </select>
-                {activeTab === 'projects' && renderViewModeToggle()}
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Content Area */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-gray-900">
-                  {activeTab === 'projects' ? 'Projects' : 
-                   activeTab === 'work-requests' ? 'Work Requests' : 
-                   activeTab === 'risks' ? 'Risks' : 
-                   activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  {activeTab === 'projects' 
-                    ? `${filteredProjects.length} of ${projects.length} projects`
-                    : activeTab === 'work-requests'
-                    ? `${filteredWorkRequests.length} of ${workRequests.length} work requests`
-                    : activeTab === 'risks'
-                    ? `${filteredRisks.length} of ${risks.length} risks`
-                    : 'Feature coming soon'
-                  }
-                  {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
-                </CardDescription>
+                <label htmlFor="newProjectStartDate" className="block text-sm font-medium text-gray-700">Start Date</label>
+                <Input
+                  type="date"
+                  id="newProjectStartDate"
+                  value={newProject.start_date ? newProject.start_date.split('T')[0] : ''}
+                  onChange={(e) => setNewProject({ ...newProject, start_date: e.target.value })}
+                  className="mt-1 block w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="newProjectEndDate" className="block text-sm font-medium text-gray-700">End Date</label>
+                <Input
+                  type="date"
+                  id="newProjectEndDate"
+                  value={newProject.end_date ? newProject.end_date.split('T')[0] : ''}
+                  onChange={(e) => setNewProject({ ...newProject, end_date: e.target.value })}
+                  className="mt-1 block w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="newProjectBudget" className="block text-sm font-medium text-gray-700">Budget</label>
+                <Input
+                  type="number"
+                  id="newProjectBudget"
+                  value={newProject.budget || 0}
+                  onChange={(e) => setNewProject({ ...newProject, budget: parseFloat(e.target.value) })}
+                  className="mt-1 block w-full"
+                  placeholder="Enter budget amount"
+                />
+              </div>
+              <div>
+                <label htmlFor="newProjectTeamLead" className="block text-sm font-medium text-gray-700">Team Lead</label>
+                <Input
+                  type="text"
+                  id="newProjectTeamLead"
+                  value={newProject.assigned_team_lead || newProject.team_lead || ''}
+                  onChange={(e) => setNewProject({ ...newProject, assigned_team_lead: e.target.value, team_lead: e.target.value })}
+                  className="mt-1 block w-full"
+                  placeholder="Enter team lead name"
+                />
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {activeTab === 'projects' ? (
-              filteredProjects.length === 0 ? (
-                <div className="text-center py-12">
-                  <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">No projects found</p>
-                  <p className="text-sm text-gray-500">
-                    {projects.length === 0 
-                      ? 'Create your first project to get started or set up the database schema.' 
-                      : 'Try adjusting your search or filter criteria.'
-                    }
-                  </p>
-                  <Button 
-                    className="mt-4"
-                    onClick={() => setShowCreateModal(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Project
-                  </Button>
-                </div>
-              ) : (
-                viewMode === 'list' ? renderProjectListView() : renderProjectGridView()
-              )
-            ) : activeTab === 'work-requests' ? (
-              filteredWorkRequests.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">No work requests found</p>
-                  <p className="text-sm text-gray-500">
-                    {workRequests.length === 0 
-                      ? 'No work requests exist yet or the database schema needs to be set up.' 
-                      : 'Try adjusting your search or filter criteria.'
-                    }
-                  </p>
-                </div>
-              ) : (
-                renderWorkRequests()
-              )
-            ) : activeTab === 'risks' ? (
-              filteredRisks.length === 0 ? (
-                <div className="text-center py-12">
-                  <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">No risks found</p>
-                  <p className="text-sm text-gray-500">
-                    {risks.length === 0 
-                      ? 'No risks identified yet or the database schema needs to be set up.' 
-                      : 'Try adjusting your search or filter criteria.'
-                    }
-                  </p>
-                </div>
-              ) : (
-                renderRisks()
-              )
-            ) : (
-              <div className="text-center py-12">
-                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module</p>
-                <p className="text-sm text-gray-500">This PMBOK framework module is coming soon.</p>
+            <div className="mt-6 flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+              <Button onClick={handleCreateProject}>Create Project</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {showEditModal && selectedProject && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-4">Edit Project</h2>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong className="font-bold">Error:</strong>
+                <span className="block sm:inline"> {error}</span>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Create Project Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold">Create New Project</h2>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      resetNewProject()
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Basic Information */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900">Basic Information</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Project Title *
-                      </label>
-                      <Input
-                        value={newProject.title || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ 
-                          ...prev, 
-                          title: e.target.value,
-                          name: e.target.value // Keep both fields in sync
-                        }))}
-                        placeholder="Enter project title"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Project Code
-                      </label>
-                      <Input
-                        value={newProject.project_code || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, project_code: e.target.value }))}
-                        placeholder="Enter project code (e.g., PRJ-2024-001)"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={newProject.description || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Enter project description"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Status
-                        </label>
-                        <select
-                          value={newProject.status || 'planning'}
-                          onChange={(e: any) => setNewProject(prev => ({ ...prev, status: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="planning">Planning</option>
-                          <option value="active">Active</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="on_hold">On Hold</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Priority
-                        </label>
-                        <select
-                          value={newProject.priority || 'medium'}
-                          onChange={(e: any) => setNewProject(prev => ({ ...prev, priority: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
-                          <option value="critical">Critical</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Start Date
-                        </label>
-                        <Input
-                          type="date"
-                          value={newProject.start_date || ''}
-                          onChange={(e: any) => setNewProject(prev => ({ ...prev, start_date: e.target.value }))}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          End Date
-                        </label>
-                        <Input
-                          type="date"
-                          value={newProject.end_date || ''}
-                          onChange={(e: any) => setNewProject(prev => ({ ...prev, end_date: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Budget
-                        </label>
-                        <Input
-                          type="number"
-                          value={newProject.budget || 0}
-                          onChange={(e: any) => setNewProject(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Team Lead
-                        </label>
-                        <Input
-                          value={newProject.assigned_team_lead || ''}
-                          onChange={(e: any) => setNewProject(prev => ({ 
-                            ...prev, 
-                            assigned_team_lead: e.target.value,
-                            team_lead: e.target.value // Keep both fields in sync
-                          }))}
-                          placeholder="Enter team lead name"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Work Request Selection */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Link to Work Request (Optional)
-                      </label>
-                      <select
-                        value={newProject.work_request_id || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, work_request_id: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select a work request</option>
-                        {workRequests.filter((wr: any) => wr.status === 'approved').map((wr) => (
-                          <option key={wr.id} value={wr.id}>{getWorkRequestTitle(wr)}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* PMBOK Framework Fields */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900">Project Framework</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Business Case
-                      </label>
-                      <textarea
-                        value={newProject.business_case || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, business_case: e.target.value }))}
-                        placeholder="Define business justification and expected benefits"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Project Scope
-                      </label>
-                      <textarea
-                        value={newProject.project_scope || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, project_scope: e.target.value }))}
-                        placeholder="Define project scope and boundaries"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Success Criteria
-                      </label>
-                      <textarea
-                        value={newProject.success_criteria || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, success_criteria: e.target.value }))}
-                        placeholder="Define success criteria and acceptance criteria"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Risk Assessment
-                      </label>
-                      <textarea
-                        value={newProject.risk_assessment || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, risk_assessment: e.target.value }))}
-                        placeholder="Identify potential risks and mitigation strategies"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Resource Requirements
-                      </label>
-                      <textarea
-                        value={newProject.resource_requirements || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, resource_requirements: e.target.value }))}
-                        placeholder="Define required resources (human, material, equipment)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Quality Metrics
-                      </label>
-                      <textarea
-                        value={newProject.quality_metrics || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, quality_metrics: e.target.value }))}
-                        placeholder="Define quality standards and metrics"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Constraints
-                      </label>
-                      <textarea
-                        value={newProject.constraints || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, constraints: e.target.value }))}
-                        placeholder="List project constraints (time, budget, scope, etc.)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Assumptions
-                      </label>
-                      <textarea
-                        value={newProject.assumptions || ''}
-                        onChange={(e: any) => setNewProject(prev => ({ ...prev, assumptions: e.target.value }))}
-                        placeholder="List project assumptions"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-6 pt-6 border-t">
-                  <Button onClick={handleCreateProject} disabled={!newProject.title && !newProject.name}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Create Project
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      resetNewProject()
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="editProjectTitle" className="block text-sm font-medium text-gray-700">Project Title</label>
+                <Input
+                  type="text"
+                  id="editProjectTitle"
+                  value={selectedProject.title || selectedProject.name || ''}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, title: e.target.value, name: e.target.value })}
+                  className="mt-1 block w-full"
+                  placeholder="Enter project title"
+                />
+              </div>
+              <div>
+                <label htmlFor="editProjectDescription" className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  id="editProjectDescription"
+                  rows={3}
+                  value={selectedProject.description || ''}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, description: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  placeholder="Brief description of the project"
+                ></textarea>
+              </div>
+              <div>
+                <label htmlFor="editProjectStatus" className="block text-sm font-medium text-gray-700">Status</label>
+                <select
+                  id="editProjectStatus"
+                  value={selectedProject.status || 'planning'}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, status: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                >
+                  <option value="planning">Planning</option>
+                  <option value="active">Active</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="editProjectPriority" className="block text-sm font-medium text-gray-700">Priority</label>
+                <select
+                  id="editProjectPriority"
+                  value={selectedProject.priority || 'medium'}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, priority: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="editProjectStartDate" className="block text-sm font-medium text-gray-700">Start Date</label>
+                <Input
+                  type="date"
+                  id="editProjectStartDate"
+                  value={selectedProject.start_date ? selectedProject.start_date.split('T')[0] : ''}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, start_date: e.target.value })}
+                  className="mt-1 block w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="editProjectEndDate" className="block text-sm font-medium text-gray-700">End Date</label>
+                <Input
+                  type="date"
+                  id="editProjectEndDate"
+                  value={selectedProject.end_date ? selectedProject.end_date.split('T')[0] : ''}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, end_date: e.target.value })}
+                  className="mt-1 block w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="editProjectBudget" className="block text-sm font-medium text-gray-700">Budget</label>
+                <Input
+                  type="number"
+                  id="editProjectBudget"
+                  value={selectedProject.budget || 0}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, budget: parseFloat(e.target.value) })}
+                  className="mt-1 block w-full"
+                  placeholder="Enter budget amount"
+                />
+              </div>
+              <div>
+                <label htmlFor="editProjectTeamLead" className="block text-sm font-medium text-gray-700">Team Lead</label>
+                <Input
+                  type="text"
+                  id="editProjectTeamLead"
+                  value={selectedProject.assigned_team_lead || selectedProject.team_lead || ''}
+                  onChange={(e) => setSelectedProject({ ...selectedProject, assigned_team_lead: e.target.value, team_lead: e.target.value })}
+                  className="mt-1 block w-full"
+                  placeholder="Enter team lead name"
+                />
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Edit Project Modal */}
-        {showEditModal && selectedProject && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold">Edit Project</h2>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowEditModal(false)
-                      setSelectedProject(null)
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Basic Information */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900">Basic Information</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Project Title *
-                      </label>
-                      <Input
-                        value={getProjectTitle(selectedProject)}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ 
-                          ...prev, 
-                          title: e.target.value,
-                          name: e.target.value
-                        }) : null)}
-                        placeholder="Enter project title"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Project Code
-                      </label>
-                      <Input
-                        value={selectedProject.project_code || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, project_code: e.target.value }) : null)}
-                        placeholder="Enter project code"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={selectedProject.description || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
-                        placeholder="Enter project description"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Status
-                        </label>
-                        <select
-                          value={selectedProject.status || 'planning'}
-                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, status: e.target.value }) : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="planning">Planning</option>
-                          <option value="active">Active</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                          <option value="on_hold">On Hold</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Priority
-                        </label>
-                        <select
-                          value={selectedProject.priority || 'medium'}
-                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, priority: e.target.value }) : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
-                          <option value="critical">Critical</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Start Date
-                        </label>
-                        <Input
-                          type="date"
-                          value={selectedProject.start_date || ''}
-                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, start_date: e.target.value }) : null)}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          End Date
-                        </label>
-                        <Input
-                          type="date"
-                          value={selectedProject.end_date || ''}
-                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, end_date: e.target.value }) : null)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Budget
-                        </label>
-                        <Input
-                          type="number"
-                          value={selectedProject.budget || 0}
-                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, budget: parseFloat(e.target.value) || 0 }) : null)}
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Team Lead
-                        </label>
-                        <Input
-                          value={getTeamLead(selectedProject)}
-                          onChange={(e: any) => setSelectedProject(prev => prev ? ({ 
-                            ...prev, 
-                            assigned_team_lead: e.target.value,
-                            team_lead: e.target.value
-                          }) : null)}
-                          placeholder="Enter team lead name"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* PMBOK Framework Fields */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-900">Project Framework</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Business Case
-                      </label>
-                      <textarea
-                        value={selectedProject.business_case || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, business_case: e.target.value }) : null)}
-                        placeholder="Define business justification and expected benefits"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Project Scope
-                      </label>
-                      <textarea
-                        value={selectedProject.project_scope || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, project_scope: e.target.value }) : null)}
-                        placeholder="Define project scope and boundaries"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Success Criteria
-                      </label>
-                      <textarea
-                        value={selectedProject.success_criteria || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, success_criteria: e.target.value }) : null)}
-                        placeholder="Define success criteria and acceptance criteria"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Risk Assessment
-                      </label>
-                      <textarea
-                        value={selectedProject.risk_assessment || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, risk_assessment: e.target.value }) : null)}
-                        placeholder="Identify potential risks and mitigation strategies"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Resource Requirements
-                      </label>
-                      <textarea
-                        value={selectedProject.resource_requirements || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, resource_requirements: e.target.value }) : null)}
-                        placeholder="Define required resources (human, material, equipment)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Quality Metrics
-                      </label>
-                      <textarea
-                        value={selectedProject.quality_metrics || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, quality_metrics: e.target.value }) : null)}
-                        placeholder="Define quality standards and metrics"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Constraints
-                      </label>
-                      <textarea
-                        value={selectedProject.constraints || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, constraints: e.target.value }) : null)}
-                        placeholder="List project constraints (time, budget, scope, etc.)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Assumptions
-                      </label>
-                      <textarea
-                        value={selectedProject.assumptions || ''}
-                        onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, assumptions: e.target.value }) : null)}
-                        placeholder="List project assumptions"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-6 pt-6 border-t">
-                  <Button onClick={handleUpdateProject} disabled={!getProjectTitle(selectedProject)}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Update Project
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowEditModal(false)
-                      setSelectedProject(null)
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowEditModal(false)}>Cancel</Button>
+              <Button onClick={handleUpdateProject}>Save Changes</Button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Work Request Approval Modal */}
+      {showApprovalModal && selectedWorkRequest && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-4">Approve Work Request</h2>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong className="font-bold">Error:</strong>
+                <span className="block sm:inline"> {error}</span>
+              </div>
+            )}
+            <p className="mb-4">Are you sure you want to approve the work request: <strong>{getWorkRequestTitle(selectedWorkRequest)}</strong>?</p>
+            <div className="mt-6 flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowApprovalModal(false)}>Cancel</Button>
+              <Button onClick={() => handleApproveWorkRequest(selectedWorkRequest.id)}>Approve</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
-  )
+  );
 }
 
