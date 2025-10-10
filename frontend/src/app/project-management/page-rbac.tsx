@@ -20,24 +20,7 @@ import {
 } from "@/components/PermissionGuards";
 import { RouteGuard } from "@/components/RouteGuard";
 import { BreadcrumbRBAC, QuickActionsRBAC } from "@/components/NavigationRBAC";
-import type { WorkRequest, ProjectCharter, Risk } from "@/types";
-
-interface DashboardData {
-  workRequests: WorkRequest[];
-  projects: ProjectCharter[];
-  risks: Risk[];
-  stats: {
-    workRequests: {
-      total: number;
-      pending: number;
-      approved: number;
-      declined: number;
-    };
-    projects: { total: number; active: number; completed: number };
-    risks: { total: number; high: number; medium: number; low: number };
-  };
-}
-
+import type
 export default function ProjectManagementPageRBAC() {
   const router = useRouter();
 
@@ -58,29 +41,35 @@ export default function ProjectManagementPageRBAC() {
     Object.prototype.hasOwnProperty.call(FEATURES, f as any);
 
   // always return the slug/value used in permission strings
-  const featureSlug = (f: FeatureArg): FeatureValue =>
-    isFeatureKey(f) ? FEATURES[f] : (f as FeatureValue);
+  const featureSlug = (f: FeatureArg): FeatureValue => {
+    if (isFeatureKey(f)) {
+      // Convert FeatureKey to FeatureValue (e.g., 'MIGRATION_WORKBENCH' to 'migration-workbench')
+      return FEATURES[f];
+    }
+    // If it's already a FeatureValue, return it as is
+    return f as FeatureValue;
+  };
 
   const canView = (feature: FeatureArg) =>
     checkPermission(`${featureSlug(feature)}:${PERMISSIONS.VIEW}`);
 
   const canManage = (feature: FeatureArg) =>
-    checkAnyPermission([
-      `${featureSlug(feature)}:${PERMISSIONS.CREATE}`,
-      `${featureSlug(feature)}:${PERMISSIONS.EDIT}`,
-      `${featureSlug(feature)}:${PERMISSIONS.DELETE}`,
-      `${featureSlug(feature)}:${PERMISSIONS.APPROVE}`,
-    ]);  // ---- Local state ----
-  type DashboardData = {
-    workRequests: any[];
-    projects: any[];
-    risks: any[];
-  };
+    checkAnyPermission(featureSlug(feature), [
+      PERMISSIONS.CREATE,
+      PERMISSIONS.EDIT,
+      PERMISSIONS.DELETE,
+      PERMISSIONS.APPROVE,
+    ]);
 
   const [data, setData] = useState<DashboardData>({
     workRequests: [],
     projects: [],
     risks: [],
+    stats: {
+      workRequests: { total: 0, pending: 0, approved: 0, declined: 0 },
+      projects: { total: 0, active: 0, completed: 0 },
+      risks: { total: 0, high: 0, medium: 0, low: 0 },
+    },
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -111,12 +100,13 @@ export default function ProjectManagementPageRBAC() {
             : Promise.resolve([]),
         ]);
 
-        setData({
+        setData((prevData) => ({
+          ...prevData,
           workRequests,
           projects,
           risks,
-          stats: dashboardData,
-        });
+          stats: dashboardData.stats,
+        }));
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {

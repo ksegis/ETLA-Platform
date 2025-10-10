@@ -1,28 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-// keep the rest of your normal imports here, e.g.
-// import { createClient } from '@/lib/supabase'
-// import { Button } from '@/components/ui/button'
-// ...
-
-import {
-  Users,
-  FileText,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Search,
-  Filter,
-  Plus,
-  Eye,
-  Edit,
+import { 
+  Users, 
+  FileText, 
+  Calendar, 
+  DollarSign, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  Search, 
+  Filter, 
+  Plus, 
+  Eye, 
+  Edit, 
   Trash2,
   Building,
-  AlertCircle as AlertCircleIcon,
+  AlertCircle,
   Loader2,
   List,
   Grid,
@@ -64,11 +59,14 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
+const supabase = createSupabaseBrowserClient()
+
+ 
 // Complete PMBOK interface with all fields
 interface ProjectCharter {
   id: string
   tenant_id: string
-
+  
   // Basic project information
   title?: string
   project_name?: string
@@ -78,19 +76,19 @@ interface ProjectCharter {
   priority?: string
   project_type?: string
   project_category?: string
-
+  
   // Timeline
   start_date?: string
   end_date?: string
   actual_start_date?: string
   actual_end_date?: string
-
+  
   // Budget and financials
   budget?: number
   estimated_budget?: number
   actual_budget?: number
   budget_variance?: number
-
+  
   // Team and resources
   assigned_team_lead?: string
   team_lead?: string
@@ -98,7 +96,7 @@ interface ProjectCharter {
   manager?: string
   sponsor?: string
   resource_requirements?: string
-
+  
   // PMBOK framework fields
   project_scope?: string
   success_criteria?: string
@@ -110,255 +108,398 @@ interface ProjectCharter {
   deliverables?: any[]
   constraints?: string
   assumptions?: string
-
-  // Status and progress
-  status?: string
-  progress?: number
-  health?: string
-  issues?: any[]
-  risks?: any[]
-  change_requests?: any[]
-
-  // Metadata
-  created_at?: string
+  business_case?: string
+  
+  // Status and workflow
+  charter_status?: string
+  completion_percentage?: number
+  schedule_variance?: number
+  
+  // Approval and authorization
+  approved_by?: string
+  approved_at?: string
+  
+  // Organization
+  department?: string
+  division?: string
+  cost_center?: string
+  
+  // External references
+  work_request_id?: string
+  customer_id?: string
+  external_project_id?: string
+  contract_number?: string
+  billing_type?: string
+  
+  // Timestamps
+  created_at: string
   updated_at?: string
-  created_by?: string
-  updated_by?: string
-  version?: number
-  tags?: string[]
-  attachments?: any[]
-
-  // Financials
-  cost_benefit_analysis?: string
-  roi?: number
-  npv?: number
-  irr?: number
-
-  // Stakeholder details
-  stakeholder_register?: any[]
-
-  // Quality management
-  quality_assurance_plan?: string
-  quality_control_plan?: string
-
-  // Procurement
-  procurement_plan?: string
-
-  // Closing
-  project_closure_report?: string
-  lessons_learned?: string
 }
-
-const ProjectManagementPage = () => {
-  const { user } = useAuth()
-  const { tenant } = useTenant()
-  const supabase = createSupabaseBrowserClient()
+ 
+interface WorkRequest {
+  id: string
+  name?: string
+  title?: string
+  description?: string
+  status?: string
+  priority?: string
+  tenant_id: string
+  created_at: string
+  updated_at?: string
+}
+ 
+interface Risk {
+  id: string
+  name?: string
+  title?: string
+  description?: string
+  status?: string
+  tenant_id: string
+  created_at: string
+  updated_at?: string
+}
+ 
+interface ProjectFilters {
+  searchTerm: string
+  status: string
+  priority: string
+  department: string
+  projectType: string
+}
+ 
+export default function QueryFixedProjectManagementPage() {
 
   const [projects, setProjects] = useState<ProjectCharter[]>([])
-  const [loading, setLoading] = useState(true)
+  const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
+  const [risks, setRisks] = useState<Risk[]>([])
+  const [loading, setloading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [view, setView] = useState('list')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filters, setFilters] = useState<any>({})
-
-  useEffect(() => {
-    if (tenant) {
-      fetchProjects()
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<ProjectCharter | null>(null)
+  const [activeTab, setActiveTab] = useState<'projects' | 'work-requests' | 'risks'>('projects')
+ 
+  // Enhanced filters
+  const [filters, setFilters] = useState<ProjectFilters>({
+    searchTerm: '',
+    status: 'all',
+    priority: 'all',
+    department: 'all',
+    projectType: 'all'
+  })
+ 
+  // Complete new project form state
+  const [newProject, setNewProject] = useState<Partial<ProjectCharter>>({
+    title: '',
+    project_name: '',
+    project_code: '',
+    description: '',
+    priority: 'medium',
+    project_type: 'internal',
+    charter_status: 'draft',
+    completion_percentage: 0,
+    budget: 0,
+    estimated_budget: 0,
+    actual_budget: 0,
+    budget_variance: 0,
+    schedule_variance: 0,
+    stakeholders: [],
+    milestone_schedule: [],
+    deliverables: []
+  })
+ 
+  const { user } = useAuth()
+  const { selectedTenant } = useTenant()
+  const getDisplayName = (item: ProjectCharter | WorkRequest | Risk): string => {
+    if ('title' in item && item.title) return item.title
+    if ('project_name' in item && item.project_name) return item.project_name
+    if ('name' in item && item.name) return item.name
+    return 'Untitled'
+  }
+ 
+  // Fixed load data function with graceful field handling
+  const loadData = async () => {
+    if (!selectedTenant) {
+      console.log('No tenant selected, skipping load')
+      setloading(false)
+      return
     }
-  }, [tenant])
-
-  const fetchProjects = async () => {
-    setLoading(true)
-    setError(null)
-
+ 
     try {
-      let query = supabase
-        .from('pmbok')
-        .select('*')
-        .eq('tenant_id', tenant.tenant_id)
-
-      if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`)
-      }
-
-      // Apply filters
-      Object.keys(filters).forEach(key => {
-        if (filters[key]) {
-          query = query.eq(key, filters[key])
+      setloading(true)
+      setError(null)
+      
+      console.log('loading project data for tenant:', selectedTenant);      // Load projects with graceful field handling
+      try {
+        console.log('loading from project_charters table...')
+        
+        // First, try to get basic fields that we know exist
+        const { data: projectData, error: projectError } = await supabase
+          .from('project_charters')
+          .select('*') // Select all fields, let the database return what exists
+          .eq('tenant_id', selectedTenant) 
+          .order('created_at', { ascending: false })
+ 
+        if (projectError) {
+          console.error('Project charters query error:', projectError)
+          setError(`Failed to load projects: ${projectError.message}`);          setProjects([])
+        } else {
+          console.log('Successfully loaded projects:', projectData?.length || 0)
+          console.log('Sample project data:', projectData?.[0])
+          setProjects(projectData || [])
         }
-      })
-
-      const { data, error } = await query
-
-      if (error) {
-        throw error
+      } catch (projectErr) {
+        console.error('Error loading projects:', projectErr)
+        setProjects([])
+        setError('Failed to load projects. Please check database connection.')
       }
-
-      setProjects(data as ProjectCharter[])
-    } catch (err: any) {
-      setError(err.message)
+ 
+      // Load work requests with graceful handling
+      try {
+        console.log('loading from work_requests table...')
+        const { data: workRequestData, error: workRequestError } = await supabase
+          .from('work_requests')
+          .select('*') // Select all fields
+          .eq('tenant_id', selectedTenant) 
+          .order('created_at', { ascending: false })
+ 
+        if (workRequestError) {
+          console.error('Work requests query error:', workRequestError)
+          setWorkRequests([])
+        } else {
+          console.log('Successfully loaded work requests:', workRequestData?.length || 0)
+          setWorkRequests(workRequestData || [])
+        }
+      } catch (workRequestErr) {
+        console.error('Error loading work requests:', workRequestErr)
+        setWorkRequests([])
+      }
+ 
+      // Load risks with graceful handling
+      try {
+        console.log('loading from risk_register table...')
+        const { data: riskData, error: riskError } = await supabase
+          .from('risk_register')
+          .select('*') // Select all fields
+          .eq('tenant_id', selectedTenant) 
+          .order('created_at', { ascending: false })
+ 
+        if (riskError) {
+          console.error('Risk register query error:', riskError)
+          setRisks([])
+        } else {
+          console.log('Successfully loaded risks:', riskData?.length || 0)
+          setRisks(riskData || [])
+        }
+      } catch (riskErr) {
+        console.error('Error loading risks:', riskErr)
+        setRisks([])
+      }
+ 
+    } catch (err) {
+      console.error('Unexpected error loading data:', err)
+      setError('Failed to load project management data. Please check your database connection.')
     } finally {
-      setLoading(false)
+      setloading(false)
     }
   }
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
+ 
+  // Load data when tenant is selected
+  useEffect(() => {
+    loadData()
+  }, [selectedTenant])
+ 
+  // Calculate statistics
+  const stats = {
+    totalProjects: projects.length,
+    activeProjects: projects.filter((p) => 
+      p.charter_status === 'active' || 
+      p.charter_status === 'approved' || 
+      p.charter_status === 'in_progress'
+    ).length,
+    completedProjects: projects.filter((p) => 
+      p.completion_percentage === 100 || 
+      p.charter_status === 'completed'
+    ).length,
+    totalBudget: projects.reduce((sum, p: any) => sum + (p.budget || p.estimated_budget || 0), 0),
+    totalWorkRequests: workRequests.length,
+    totalRisks: risks.length,
+    averageCompletion: projects.length > 0 
+      ? Math.round(projects.reduce((sum: any, p) => sum + (p.completion_percentage || 0), 0) / projects.length)
+      : 0
   }
-
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters((prev: any) => ({ ...prev, [key]: value }))
+ 
+  // Filter projects
+  const filteredProjects = projects.filter((project: any) => {
+    const title = project.title || project.project_name || ''
+    const description = project.description || project.business_case || ''
+    const projectCode = project.project_code || ''
+    const teamLead = project.assigned_team_lead || project.team_lead || project.project_manager || ''
+    
+    const matchesSearch = title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         description.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         projectCode.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         teamLead.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    
+    const matchesStatus = filters.status === 'all' || project.charter_status === filters.status
+    const matchesPriority = filters.priority === 'all' || project.priority === filters.priority
+    const matchesDepartment = filters.department === 'all' || project.department === filters.department
+    const matchesProjectType = filters.projectType === 'all' || project.project_type === filters.projectType
+    
+    return matchesSearch && matchesStatus && matchesPriority && matchesDepartment && matchesProjectType
+  })
+ 
+  // Filter work requests and risks
+  const filteredWorkRequests = workRequests.filter((wr: any) => {
+    const name = wr.name || wr.title || ''
+    const description = wr.description || ''
+    
+    const matchesSearch = name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         description.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    const matchesStatus = filters.status === 'all' || wr.status === filters.status
+    
+    return matchesSearch && matchesStatus
+  })
+ 
+  const filteredRisks = risks.filter((risk: any) => {
+    const name = risk.name || risk.title || ''
+    const description = risk.description || ''
+    
+    const matchesSearch = name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                         description.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    const matchesStatus = filters.status === 'all' || risk.status === filters.status
+    
+    return matchesSearch && matchesStatus
+  })
+ 
+  // Helper functions
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Not set'
+    return new Date(dateString).toLocaleDateString()
   }
-
-  const applyFilters = () => {
-    fetchProjects()
+ 
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (!amount) return '$0'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
   }
-
-  if (loading) {
-    return <DashboardLayout><div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin" /></div></DashboardLayout>
+ 
+  const getStatusColor = (status: string | null | undefined) => {
+    const statusLower = (status || '').toLowerCase()
+    switch (statusLower) {
+      case 'active':
+      case 'approved':
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800'
+      case 'completed':
+        return 'bg-green-100 text-green-800'
+      case 'draft':
+      case 'under_review':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'on_hold':
+        return 'bg-orange-100 text-orange-800'
+      case 'cancelled':
+      case 'rejected':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
   }
-
-  if (error) {
-    return <DashboardLayout><div className="text-red-500 p-4">{error}</div></DashboardLayout>
+ 
+  const getPriorityColor = (priority: string | null | undefined) => {
+    const priorityLower = (priority || '').toLowerCase()
+    switch (priorityLower) {
+      case 'critical':
+        return 'bg-red-100 text-red-800'
+      case 'high':
+        return 'bg-orange-100 text-orange-800'
+      case 'medium':
+        return 'bg-blue-100 text-blue-800'
+      case 'low':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
   }
-
-  return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Project Management</h1>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" onClick={() => setView(view === 'list' ? 'grid' : 'list')}>
-              {view === 'list' ? <Grid className="w-4 h-4" /> : <List className="w-4 h-4" />}
-            </Button>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              New Project
-            </Button>
-          </div>
-        </div>
-
-        {/* Search and Filter Bar */}
-        <div className="mb-6 bg-card p-4 rounded-lg shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <Input
-                placeholder="Search projects by name..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="w-full"
-              />
-            </div>
-            <Button onClick={applyFilters} className="w-full md:w-auto">
-              <Search className="w-4 h-4 mr-2" />
-              Search
-            </Button>
-          </div>
-        </div>
-
-        {/* Project View */}
-        {view === 'list' ? (
-          <ProjectListView projects={projects} />
-        ) : (
-          <ProjectGridView projects={projects} />
-        )}
-      </div>
-    </DashboardLayout>
-  )
+ 
+  // Fixed create project function with graceful field handling
+  const handleCreateProject = async () => {
+    if (!selectedTenant || !newProject.title) {
+      setError('Please provide a project title and ensure a tenant is selected.')
+      return
+    }
+ 
+    try {
+      setError(null)
+      
+      // Only include fields that have values to avoid null constraint issues
+      const projectData: any = {
+                tenant_id: selectedTenant,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+ 
+      // Add fields only if they have values
+      if (newProject.title) projectData.title = newProject.title
+      if (newProject.project_name) projectData.project_name = newProject.project_name
+      if (newProject.project_code) projectData.project_code = newProject.project_code
+      if (newProject.description) projectData.description = newProject.description
+      if (newProject.priority) projectData.priority = newProject.priority
+      if (newProject.project_type) projectData.project_type = newProject.project_type
+      if (newProject.start_date) projectData.start_date = newProject.start_date
+      if (newProject.end_date) projectData.end_date = newProject.end_date
+      if (newProject.budget !== undefined) projectData.budget = newProject.budget
+      if (newProject.estimated_budget !== undefined) projectData.estimated_budget = newProject.estimated_budget
+      if (newProject.assigned_team_lead) projectData.assigned_team_lead = newProject.assigned_team_lead
+      if (newProject.sponsor) projectData.sponsor = newProject.sponsor
+      if (newProject.department) projectData.department = newProject.department
+      if (newProject.charter_status) projectData.charter_status = newProject.charter_status
+      if (newProject.completion_percentage !== undefined) projectData.completion_percentage = newProject.completion_percentage
+      if (newProject.business_case) projectData.business_case = newProject.business_case
+      if (newProject.project_scope) projectData.project_scope = newProject.project_scope
+      if (newProject.success_criteria) projectData.success_criteria = newProject.success_criteria
+ 
+      console.log('Creating project with data:', projectData)
+ 
+      const { data, error } = await supabase
+        .from('project_charters')
+        .insert([projectData])
+        .select()
+ 
+      if (error) {
+        console.error('Error creating project:', error)
+        setError(`Failed to create project: ${error.message}`)
+        return
+      }
+ 
+      console.log('Project created successfully:', data)
+      setNewProject({
+        title: '',
+        project_name: '',
+        project_code: '',
+        description: '',
+        priority: 'medium',
+        project_type: 'internal',
+        charter_status: 'draft',
+        completion_percentage: 0,
+        budget: 0,
+        estimated_budget: 0,
+        actual_budget: 0,
+        budget_variance: 0,
+        schedule_variance: 0,
+        stakeholders: [],
+        milestone_schedule: [],
+        deliverables: []
+      })
+      setShowCreateModal(false)
+      loadData()
+    } catch (err: any) {
+      console.error('Unexpected error creating project:', err)
+      setError(`Failed to create project: ${err.message}`)
+    }
+  }
 }
-
-const ProjectListView = ({ projects }: { projects: ProjectCharter[] }) => (
-  <div className="space-y-4">
-    {projects.map(project => (
-      <Card key={project.id}>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{project.title}</CardTitle>
-            <ProjectActions project={project} />
-          </div>
-          <CardDescription>{project.project_code}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">{project.description}</p>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center space-x-2">
-              <Badge variant={getPriorityBadge(project.priority)}>{project.priority}</Badge>
-              <Badge variant="secondary">{project.project_type}</Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <Calendar className="w-4 h-4" />
-                <span>{project.end_date}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <DollarSign className="w-4 h-4" />
-                <span>{project.budget}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    ))}
-  </div>
-)
-
-const ProjectGridView = ({ projects }: { projects: ProjectCharter[] }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {projects.map(project => (
-      <Card key={project.id} className="flex flex-col">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{project.title}</CardTitle>
-            <ProjectActions project={project} />
-          </div>
-          <CardDescription>{project.project_code}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-grow">
-          <p className="mb-4 text-sm">{project.description}</p>
-        </CardContent>
-        <div className="p-6 pt-0">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center space-x-2">
-              <Badge variant={getPriorityBadge(project.priority)}>{project.priority}</Badge>
-              <Badge variant="secondary">{project.project_type}</Badge>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-4 h-4" />
-              <span>{project.end_date}</span>
-            </div>
-          </div>
-        </div>
-      </Card>
-    ))}
-  </div>
-)
-
-const ProjectActions = ({ project }: { project: ProjectCharter }) => (
-  <div className="flex items-center space-x-2">
-    <Button variant="ghost" size="icon">
-      <Eye className="w-4 h-4" />
-    </Button>
-    <Button variant="ghost" size="icon">
-      <Edit className="w-4 h-4" />
-    </Button>
-    <Button variant="ghost" size="icon" className="text-red-500">
-      <Trash2 className="w-4 h-4" />
-    </Button>
-  </div>
-)
-
-const getPriorityBadge = (priority: string | undefined) => {
-  switch (priority?.toLowerCase()) {
-    case 'high':
-      return 'destructive'
-    case 'medium':
-      return 'warning'
-    case 'low':
-      return 'success'
-    default:
-      return 'secondary'
-  }
-}
-
-export default ProjectManagementPage
 
