@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Search, Filter, RefreshCw, Plus, Eye, Edit, MoreHorizontal, Database, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+const supabase = createSupabaseBrowserClient()
 
 interface WorkRequest {
   id: string
