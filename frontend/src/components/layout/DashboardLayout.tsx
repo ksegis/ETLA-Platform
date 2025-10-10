@@ -42,7 +42,8 @@ import {
   FileCheck
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+const supabase = createSupabaseBrowserClient()
 
 interface DashboardLayoutProps {
   children: React.ReactNode
