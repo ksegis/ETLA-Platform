@@ -620,8 +620,8 @@ export default function ProjectManagementPageRBAC() {
 
                   {/* Debug Tab (for admins) */}
                   {selectedTab === "debug" && (
-                    <PermissionGuard
-                      role={[ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN]}
+                    <RoleGuard
+                      allow={[ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN]}
                       fallback={<NoAccessFallback message="Debug panel is for admins only." />}
                     >
                       <PermissionDebugPanel />
