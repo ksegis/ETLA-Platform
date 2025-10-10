@@ -330,7 +330,7 @@ export default function EnhancedProjectManagementPage() {
       console.error('Unexpected error loading data:', err);
       setError('Failed to load project management data. The database schema may need to be set up.');
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
