@@ -95,7 +95,7 @@ export default function PipelineKanban({
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
 
   // Mock data for demonstration
-  const mockCandidates: Candidate[] = [
+  const mockCandidates: Candidate[] = useMemo(() => [
     {
       id: '1',
       name: 'Alice Johnson',
@@ -194,7 +194,7 @@ export default function PipelineKanban({
       skills: ['Ruby', 'Rails', 'PostgreSQL', 'Heroku'],
       status: 'active'
     }
-  ];
+  ], []);
 
   // Initialize stages with candidates
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function PipelineKanban({
     
     setStages(stagesWithCandidates);
     setLoading(false);
-  }, []);
+  }, [mockCandidates]);
 
   // Filter candidates based on search and filters
   const filteredStages = useMemo(() => {

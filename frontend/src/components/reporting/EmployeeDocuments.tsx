@@ -114,9 +114,9 @@ export default function EmployeeDocuments({
     }
 
     loadDocuments();
-  }, [employeeId, tenantId, canViewDocuments]);
+  }, [employeeId, tenantId, canViewDocuments, loadDocuments]);
 
-  const loadDocuments = async () => {
+  const loadDocuments = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -154,7 +154,7 @@ export default function EmployeeDocuments({
     } finally {
       setLoading(false);
     }
-  };
+  }, [employeeId, tenantId, canViewConfidential]);
 
   // Filter documents
   const filteredDocuments = useMemo(() => {

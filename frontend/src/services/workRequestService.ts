@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export interface WorkRequest {
   id: string
@@ -62,7 +62,7 @@ export interface UpdateWorkRequestData {
 }
 
 class WorkRequestService {
-  private supabaseClient = supabase
+  private supabaseClient = createSupabaseServerClient()
 
   // Get all work requests for a tenant
   async getWorkRequests(tenantId: string): Promise<WorkRequest[]> {

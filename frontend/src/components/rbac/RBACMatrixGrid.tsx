@@ -210,7 +210,7 @@ export default function RBACMatrixGrid({
     })
 
     return cols
-  }, [permissionGroups, expandedGroups, users, draftChanges, onCellClick, onUserClick])
+  }, [permissionGroups, expandedGroups, users, draftChanges, onCellClick, onUserClick, toggleGroup])
 
   const table = useReactTable({
     data: users,

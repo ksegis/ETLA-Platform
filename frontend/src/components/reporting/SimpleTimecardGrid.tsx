@@ -61,16 +61,16 @@ export default function SimpleTimecardGrid({ tenantId }: SimpleTimecardGridProps
     if (tenantId) {
       loadEmployees();
     }
-  }, [tenantId]);
+  };
 
   // Load data when filters change
   useEffect(() => {
     if (tenantId && startDate && endDate) {
       loadTimecards();
     }
-  }, [tenantId, startDate, endDate, selectedEmployee]);
+  }, [tenantId, startDate, endDate, selectedEmployee, loadTimecards]);
 
-  const loadEmployees = async () => {
+  const loadEmployees = useCallback(async () => {
     try {
       const employeesData = await timecardService.getEmployees(tenantId);
       setEmployees(employeesData);
@@ -78,9 +78,9 @@ export default function SimpleTimecardGrid({ tenantId }: SimpleTimecardGridProps
       console.error('Error loading employees:', error);
       setError('Failed to load employees');
     }
-  };
+  }, [tenantId]);
 
-  const loadTimecards = async () => {
+  const loadTimecards = useCallback(async () => {
     if (!tenantId || !startDate || !endDate) return;
 
     setLoading(true);
@@ -105,7 +105,7 @@ export default function SimpleTimecardGrid({ tenantId }: SimpleTimecardGridProps
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId, startDate, endDate, selectedEmployee]);
 
   // Filter timecards based on search term
   const filteredTimecards = timecards.filter(timecard => 
@@ -206,6 +206,149 @@ export default function SimpleTimecardGrid({ tenantId }: SimpleTimecardGridProps
     } catch (error) {
       console.error('Error exporting Excel:', error);
       setError('Failed to export Excel');
+    }
+  };
+  }, [tenantId, startDate, endDate, selectedEmployee, loadTimecards]);
+
+  const loadEmployees = useCallback(async () => {
+    try {
+      const employeesData = await timecardService.getEmployees(tenantId);
+      setEmployees(employeesData);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      setError('Failed to load employees');
+    }
+    }
+  };
+
+  const loadTimecards = useCallback(async () => {
+    if (!tenantId || !startDate || !endDate) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const filters: TimecardFilters = {
+        tenant_id: tenantId,
+        start_date: startDate,
+        end_date: endDate
+      };
+
+      if (selectedEmployee) {
+        filters.employee_ref = selectedEmployee;
+      }
+
+      const data = await timecardService.getDailySummaries(filters);
+      setTimecards(data);
+    } catch (error) {
+      console.error('Error loading timecards:', error);
+      setError('Failed to load timecard data');
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId, startDate, endDate, selectedEmployee, loadTimecards]);
+
+  // Filter timecards based on search term
+  const filteredTimecards = timecards.filter(timecard => 
+    !searchTerm || 
+    timecard.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    timecard.employee_ref?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Group by employee for grid display
+  const groupedTimecards = filteredTimecards.reduce((acc, timecard) => {
+    const key = timecard.employee_ref;
+    if (!acc[key]) {
+      acc[key] = {
+        employee_name: timecard.employee_name,
+        employee_ref: timecard.employee_ref,
+        entries: [],
+        totals: { regular_hours: 0, ot_hours: 0, dt_hours: 0, total_hours: 0 }
+      };
+    }
+    acc[key].entries.push(timecard);
+    acc[key].totals.regular_hours += timecard.regular_hours || 0;
+    acc[key].totals.ot_hours += timecard.ot_hours || 0;
+    acc[key].totals.dt_hours += timecard.dt_hours || 0;
+    acc[key].totals.total_hours += timecard.total_hours || 0;
+    return acc;
+  }, {} as any);
+
+  // Format time for display
+  const formatTime = (time: string | null): string => {
+    if (!time) return '--';
+    // Handle both HH:MM and HH:MM:SS formats
+    return time.substring(0, 5);
+  };
+
+  // Export functions
+  const handleExportCSV = async () => {
+    try {
+      const filters: TimecardFilters = {
+        tenant_id: tenantId,
+        start_date: startDate,
+        end_date: endDate
+      };
+
+      if (selectedEmployee) {
+        filters.employee_ref = selectedEmployee;
+      }
+
+      const csvData = await timecardService.exportToCSV(filters);
+      
+      // Create and download file
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${branding?.legalName || 'Company'}_timecards_${startDate}_to_${endDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      setError('Failed to export CSV');
+    }
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const filters: TimecardFilters = {
+        tenant_id: tenantId,
+        start_date: startDate,
+        end_date: endDate
+      };
+
+      if (selectedEmployee) {
+        filters.employee_ref = selectedEmployee;
+      }
+
+      const data = await timecardService.exportToExcel(filters);
+      
+      const exportData = data.map(timecard => ({
+        'Employee Name': timecard.employee_name,
+        'Employee Ref': timecard.employee_ref,
+        'Work Date': timecard.work_date,
+        'First Clock In': formatTime(timecard.first_clock_in),
+        'Mid Clock Out': formatTime(timecard.mid_clock_out),
+        'Mid Clock In': formatTime(timecard.mid_clock_in),
+        'Last Clock Out': formatTime(timecard.last_clock_out),
+        'Regular Hours': timecard.regular_hours?.toFixed(2) || '0.00',
+        'OT Hours': timecard.ot_hours?.toFixed(2) || '0.00',
+        'DT Hours': timecard.dt_hours?.toFixed(2) || '0.00',
+        'Total Hours': timecard.total_hours?.toFixed(2) || '0.00',
+        'Is Corrected': timecard.is_corrected ? 'Yes' : 'No',
+        'Corrected By': timecard.corrected_by || '',
+        'Correction Reason': timecard.correction_reason || ''
+      }));
+
+      exportToExcel(exportData, `${branding?.legalName || 'Company'}_timecards_${startDate}_to_${endDate}.xlsx`);
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      setError('Failed to export Excel');
+    }
     }
   };
 

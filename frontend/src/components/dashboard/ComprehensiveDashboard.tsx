@@ -96,7 +96,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('current_year');
 
-  const loadDashboardMetrics = async () => {
+  const loadDashboardMetrics = useCallback(async () => {
     // Don't load if tenant context is still loading
     if (tenantloading) return;
 
@@ -349,7 +349,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     } finally {
       setloading(false);
     }
-  };
+  }, [tenantloading, isDemoMode, availableTenants, selectedTenant, selectedTimeframe, isMultiTenant]);
 
   useEffect(() => {
     loadDashboardMetrics();

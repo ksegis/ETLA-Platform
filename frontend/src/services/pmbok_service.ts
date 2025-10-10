@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 // Enhanced WorkRequest interface with approval workflow fields
 export interface WorkRequest {
@@ -109,8 +109,8 @@ class PMBOKService {
 
   constructor() {
     // Use singleton Supabase client
-    this.supabase = supabase
-    console.log('🔧 PMBOK Service: Created with default demo context')
+    this.supabase = createSupabaseBrowserClient()
+    console.log("🔧 PMBOK Service: Created with default demo context")
   }
 
   // Get current user ID from auth context

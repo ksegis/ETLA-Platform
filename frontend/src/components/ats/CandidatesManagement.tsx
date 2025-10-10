@@ -115,7 +115,7 @@ export default function CandidatesManagement({
   const [showFilters, setShowFilters] = useState(false);
 
   // Mock data for demonstration
-  const mockCandidates: Candidate[] = [
+  const mockCandidates: Candidate[] = useMemo(() => [
     {
       id: '1',
       name: 'Alice Johnson',
@@ -256,7 +256,7 @@ export default function CandidatesManagement({
       ],
       interviews: []
     }
-  ];
+  ], []);
 
   // Initialize data
   useEffect(() => {
@@ -266,7 +266,7 @@ export default function CandidatesManagement({
       setCandidates(mockCandidates);
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [mockCandidates]);
 
   // Get unique values for filters
   const filterOptions = useMemo(() => {
@@ -276,8 +276,6 @@ export default function CandidatesManagement({
     
     return { sources, skills, companies };
   }, [candidates]);
-
-  // Filter and sort candidates
   const filteredAndSortedCandidates = useMemo(() => {
     let filtered = candidates.filter(candidate => {
       // Job filter

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export interface Project {
   id: string
@@ -89,7 +89,7 @@ export interface ProjectDeliverable {
 }
 
 class ProjectService {
-  private supabaseClient = supabase
+  private supabaseClient = createSupabaseServerClient()
 
   // Get all projects for a tenant
   async getProjects(tenantId: string): Promise<Project[]> {

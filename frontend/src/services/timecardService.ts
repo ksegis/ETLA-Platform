@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 // Interface for the v2 view data structure
 export interface TimecardDailySummaryV2 {
@@ -50,8 +50,9 @@ class TimecardService {
   // Get daily summaries from v_timecard_daily_effective_v2
   async getDailySummaries(filters: TimecardFilters): Promise<TimecardDailySummaryV2[]> {
     try {
+      const supabase = createSupabaseBrowserClient();
       let query = supabase
-        .from('v_timecard_daily_effective_v2')
+        .from("v_timecard_daily_effective_v2")
         .select('*')
         .eq('tenant_id', filters.tenant_id)
         .gte('work_date', filters.start_date)
@@ -98,8 +99,9 @@ class TimecardService {
         updated_at: new Date().toISOString()
       }
 
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase
-        .from('timecard_daily')
+        .from("timecard_daily")
         .update(updateData)
         .eq('tenant_id', tenant_id)
         .eq('employee_ref', employee_ref)
@@ -123,7 +125,8 @@ class TimecardService {
   ): Promise<void> {
     try {
       // Call the stored procedure or function to recalculate
-      const { error } = await supabase.rpc('recalculate_timecard_daily_range', {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.rpc("recalculate_timecard_daily_range", {
         p_tenant_id: tenant_id,
         p_start_date: start_date,
         p_end_date: end_date
@@ -142,8 +145,9 @@ class TimecardService {
   // Get tenants for host admin dropdown
   async getTenants(): Promise<Array<{ id: string; name: string; legal_name: string }>> {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
-        .from('tenants')
+        .from("tenants")
         .select('id, name, legal_name')
         .eq('is_active', true)
         .order('legal_name')

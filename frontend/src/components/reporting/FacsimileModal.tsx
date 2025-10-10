@@ -749,7 +749,7 @@ export default function FacsimileModal({
                       <div className="text-lg font-semibold text-gray-900 mt-1">${(record.state_tax_withheld || 0).toFixed(2)}</div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. State/Payer's state no.</label>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. State/Payer&apos;s state no.</label>
                       <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_payer_no || 'N/A'}</div>
                     </div>
                   </div>

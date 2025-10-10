@@ -235,14 +235,14 @@ export default function DatabaseAlignedProjectManagementPage() {
       console.log('loading project data for tenant:', selectedTenant)
       // Load projects from project_charters table
       try {
-        console.log(\'loading from project_charters table...\');
+        console.log('loading from project_charters table...');
         const { data: projectData, error: projectError } = await supabase
-          .from(\'project_charters\')
-          .select(\'*\')
-          .eq(\'tenant_id\', selectedTenant)
-          .order(\'created_at\', { ascending: false });
+          .from('project_charters')
+        .select('*')
+          .eq('tenant_id', selectedTenant)
+          .order('created_at', { ascending: false });
 
-        if (projectError) {{
+        if (projectError) {
           console.error('Project charters query error:', projectError)
           setError(`Failed to load projects: ${projectError.message}`)
         } else {
@@ -435,6 +435,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
   // Database-aligned create project function
   const handleCreateProject = async () => {
+    const supabase = createSupabaseBrowserClient();
   if (!selectedTenant || (!newProject.title && !newProject.name)) {
       setError('Please provide a project title and ensure a tenant is selected.')
       return
@@ -459,7 +460,7 @@ export default function DatabaseAlignedProjectManagementPage() {
         budget: newProject.budget,
         
         // Include multiple team lead field variations
-        assigned_team_lead: newProject.assigned_team_lead,
+ssigned_team_lead: newProject.assigned_team_lead,
         team_lead: newProject.assigned_team_lead,
         project_manager: newProject.assigned_team_lead,
         manager: newProject.assigned_team_lead,
@@ -508,6 +509,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
   // Database-aligned update project function
   const handleUpdateProject = async () => {
+    const supabase = createSupabaseBrowserClient();
     if (!selectedProject?.id) return
 
     try {
@@ -536,6 +538,7 @@ export default function DatabaseAlignedProjectManagementPage() {
 
   // Database-aligned delete project function
   const handleDeleteProject = async (projectId: string) => {
+    const supabase = createSupabaseBrowserClient();
     if (!confirm('Are you sure you want to delete this project?')) return
 
     try {

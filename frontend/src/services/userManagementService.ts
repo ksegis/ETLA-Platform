@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 // User creation data interface
 export interface UserCreationData {
@@ -56,6 +56,7 @@ export const userManagement = {
   createUser: async (userData: UserCreationData) => {
     try {
       // First, create the auth user
+      const supabase = createSupabaseServerClient();
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: userData.email,
         password: userData.password,
@@ -138,6 +139,7 @@ export const userManagement = {
       
       for (const email of invitationData.emails) {
         // Create invitation record
+        const supabase = createSupabaseServerClient();
         const { data: invitation, error: inviteError } = await supabase
           .from('user_invitations')
           .insert({

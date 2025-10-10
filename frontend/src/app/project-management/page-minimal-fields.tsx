@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -117,7 +118,7 @@ export default function MinimalFieldsProjectManagementPage() {
 
   // Minimal load data function using only basic fields
   const loadData = async () => {
-    if (!selectedTenant?.id) {
+    if (!selectedTenant) {
       console.log('No tenant selected, skipping load')
       setloading(false)
       return
@@ -127,7 +128,7 @@ export default function MinimalFieldsProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log('loading minimal project data for tenant:', selectedTenant.id, selectedTenant.name)
+      console.log("loading minimal project data for tenant:", selectedTenant?.id, selectedTenant?.name);
 
       // Load projects with minimal fields only
       try {
@@ -135,7 +136,7 @@ export default function MinimalFieldsProjectManagementPage() {
         const { data: projectData, error: projectError } = await supabase
           .from('project_charters')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant?.id as string) 
           .order('created_at', { ascending: false })
 
         if (projectError) {
@@ -157,7 +158,7 @@ export default function MinimalFieldsProjectManagementPage() {
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant?.id as string) 
           .order('created_at', { ascending: false })
 
         if (workRequestError) {
@@ -178,7 +179,7 @@ export default function MinimalFieldsProjectManagementPage() {
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant?.id as string) 
           .order('created_at', { ascending: false })
 
         if (riskError) {
@@ -288,7 +289,7 @@ export default function MinimalFieldsProjectManagementPage() {
         name: newProject.name,
         description: newProject.description,
         status: newProject.status,
-        tenant_id: selectedTenant.id,
+        tenant_id: selectedTenant?.id as string,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -348,7 +349,7 @@ export default function MinimalFieldsProjectManagementPage() {
       const { data, error } = await supabase
         .from('project_charters')
         .update(updateData)
-        .eq('id', selectedProject.id)
+        .eq('id', selectedProject.id as string)
         .select()
 
       if (error) {
@@ -377,7 +378,7 @@ export default function MinimalFieldsProjectManagementPage() {
       const { error } = await supabase
         .from('project_charters')
         .delete()
-        .eq('id', projectId)
+        .eq('id', projectId as string)
 
       if (error) {
         console.error('Error deleting project:', error)
@@ -499,15 +500,21 @@ export default function MinimalFieldsProjectManagementPage() {
                 setSelectedProject(project)
                 setShowEditModal(true)
               }}>
-                <Eye className="h-4 w-4 mr-1" />
-                View
+                <Eye className="h-4 w-4 mr-2" /> View
               </Button>
               <Button variant="outline" size="sm" className="flex-1" onClick={() => {
                 setSelectedProject(project)
                 setShowEditModal(true)
               }}>
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
+                <Edit className="h-4 w-4 mr-2" /> Edit
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => handleDeleteProject(project.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete
               </Button>
             </div>
           </CardContent>
@@ -516,31 +523,26 @@ export default function MinimalFieldsProjectManagementPage() {
     </div>
   )
 
-  // Render work requests
-  const renderWorkRequests = () => (
+  // Render work request list view
+  const renderWorkRequestListView = () => (
     <div className="space-y-4">
-      {filteredWorkRequests.map((workRequest: any) => (
-        <div key={workRequest.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+      {filteredWorkRequests.map((wr: any) => (
+        <div key={wr.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{getDisplayName(workRequest)}</h3>
-                <Badge className={getStatusColor(workRequest.status)}>
-                  {workRequest.status || 'Unknown'}
+                <h3 className="text-lg font-semibold text-gray-900">{getDisplayName(wr)}</h3>
+                <Badge className={getStatusColor(wr.status)}>
+                  {wr.status || 'Unknown'}
                 </Badge>
               </div>
-              <p className="text-gray-600 mb-3">{workRequest.description || 'No description'}</p>
+              <p className="text-gray-600 mb-3">{wr.description || 'No description'}</p>
               <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>Created: {formatDate(workRequest.created_at)}</span>
+                  <span>Created: {formatDate(wr.created_at)}</span>
                 </div>
               </div>
-            </div>
-            <div className="flex gap-2 ml-4">
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </div>
@@ -548,8 +550,8 @@ export default function MinimalFieldsProjectManagementPage() {
     </div>
   )
 
-  // Render risks
-  const renderRisks = () => (
+  // Render risk list view
+  const renderRiskListView = () => (
     <div className="space-y-4">
       {filteredRisks.map((risk: any) => (
         <div key={risk.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
@@ -569,413 +571,275 @@ export default function MinimalFieldsProjectManagementPage() {
                 </div>
               </div>
             </div>
-            <div className="flex gap-2 ml-4">
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
       ))}
     </div>
   )
 
-  // Navigation Tabs
-  const tabs = [
-    { id: 'projects', label: 'Projects', icon: Briefcase, count: filteredProjects.length },
-    { id: 'work-requests', label: 'Work Requests', icon: FileText, count: filteredWorkRequests.length },
-    { id: 'risks', label: 'Risks', icon: Shield, count: filteredRisks.length }
-  ]
-
-  if (!selectedTenant) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Please select a tenant to view project management.</p>
+  // Render create project modal
+  const renderCreateModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <CardTitle>Create New Project</CardTitle>
+          <CardDescription>Fill in the details for your new project.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Project Name</label>
+            <Input 
+              id="name" 
+              value={newProject.name || ''} 
+              onChange={(e) => setNewProject({ ...newProject, name: e.target.value })} 
+              placeholder="e.g., Q4 Marketing Campaign"
+            />
+          </div>
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+            <Input 
+              id="description" 
+              value={newProject.description || ''} 
+              onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} 
+              placeholder="A brief summary of the project's goals"
+            />
+          </div>
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
+            <select 
+              id="status" 
+              value={newProject.status || 'active'} 
+              onChange={(e) => setNewProject({ ...newProject, status: e.target.value })} 
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="active">Active</option>
+              <option value="on_hold">On Hold</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </CardContent>
+        <div className="flex justify-end gap-2 p-4 border-t">
+          <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+          <Button onClick={handleCreateProject}>Create Project</Button>
         </div>
-      </DashboardLayout>
-    )
-  }
+      </Card>
+    </div>
+  )
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="ml-2 text-gray-600">loading project data...</span>
+  // Render edit project modal
+  const renderEditModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <CardTitle>Edit Project: {selectedProject?.name}</CardTitle>
+          <CardDescription>Update the details of your project.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">Project Name</label>
+            <Input 
+              id="edit-name" 
+              value={selectedProject?.name || ''} 
+              onChange={(e) => setSelectedProject(prev => prev ? { ...prev, name: e.target.value } : null)} 
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700">Description</label>
+            <Input 
+              id="edit-description" 
+              value={selectedProject?.description || ''} 
+              onChange={(e) => setSelectedProject(prev => prev ? { ...prev, description: e.target.value } : null)} 
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700">Status</label>
+            <select 
+              id="edit-status" 
+              value={selectedProject?.status || 'active'} 
+              onChange={(e) => setSelectedProject(prev => prev ? { ...prev, status: e.target.value } : null)} 
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="active">Active</option>
+              <option value="in_progress">In Progress</option>
+              <option value="on_hold">On Hold</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </CardContent>
+        <div className="flex justify-end gap-2 p-4 border-t">
+          <Button variant="outline" onClick={() => {
+            setShowEditModal(false)
+            setSelectedProject(null)
+          }}>Cancel</Button>
+          <Button onClick={handleUpdateProject}>Save Changes</Button>
         </div>
-      </DashboardLayout>
-    )
-  }
+      </Card>
+    </div>
+  )
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Project Management</h1>
-            <p className="text-gray-600">Comprehensive project lifecycle management</p>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Project
-            </Button>
-          </div>
-        </div>
+      <div className="p-6">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
+          <p className="text-gray-600">Minimal fields view for maximum compatibility.</p>
+        </header>
 
-        {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-red-700">{error}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-auto"
-                onClick={() => setError(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+            <p className="font-bold">Error</p>
+            <p>{error}</p>
           </div>
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-700">Total Projects</p>
-                  <p className="text-2xl font-bold text-blue-900">{stats.totalProjects}</p>
-                </div>
-                <Building className="h-8 w-8 text-blue-500" />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalProjects}</div>
             </CardContent>
           </Card>
-
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700">Active Projects</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.activeProjects}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-500" />
-              </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeProjects}</div>
             </CardContent>
           </Card>
-
-          <Card className="border-purple-200 bg-purple-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-700">Work Requests</p>
-                  <p className="text-2xl font-bold text-purple-900">{stats.totalWorkRequests}</p>
-                </div>
-                <FileText className="h-8 w-8 text-purple-500" />
-              </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Work Requests</CardTitle>
+              <Clipboard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalWorkRequests}</div>
             </CardContent>
           </Card>
-
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-red-700">Total Risks</p>
-                  <p className="text-2xl font-bold text-red-900">{stats.totalRisks}</p>
-                </div>
-                <Shield className="h-8 w-8 text-red-500" />
-              </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Risks</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalRisks}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 border-b overflow-x-auto">
-          {tabs.map((tab: any) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 font-medium text-sm rounded-t-lg whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'bg-blue-500 text-white border-b-2 border-blue-500'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              <tab.icon className="w-4 h-4 inline mr-2" />
-              {tab.label} {tab.count > 0 && `(${tab.count})`}
-            </button>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder={`Search ${activeTab}...`}
-                    value={filters.searchTerm}
-                    onChange={(e: any) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <select
-                  value={filters.status}
-                  onChange={(e: any) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                  <option value="on_hold">On Hold</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                {activeTab === 'projects' && renderViewModeToggle()}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Content Area */}
+        {/* Main Content Area */}
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-gray-900">
-                  {activeTab === 'projects' ? 'Projects' : 
-                   activeTab === 'work-requests' ? 'Work Requests' : 
-                   'Risks'}
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  {activeTab === 'projects' 
-                    ? `${filteredProjects.length} of ${projects.length} projects`
-                    : activeTab === 'work-requests'
-                    ? `${filteredWorkRequests.length} of ${workRequests.length} work requests`
-                    : `${filteredRisks.length} of ${risks.length} risks`
-                  }
-                  {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
-                </CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex border rounded-md">
+                  <Button
+                    variant={activeTab === 'projects' ? 'default' : 'outline'}
+                    onClick={() => setActiveTab('projects')}
+                    className="rounded-r-none"
+                  >
+                    Projects
+                  </Button>
+                  <Button
+                    variant={activeTab === 'work-requests' ? 'default' : 'outline'}
+                    onClick={() => setActiveTab('work-requests')}
+                    className="rounded-none"
+                  >
+                    Work Requests
+                  </Button>
+                  <Button
+                    variant={activeTab === 'risks' ? 'default' : 'outline'}
+                    onClick={() => setActiveTab('risks')}
+                    className="rounded-l-none"
+                  >
+                    Risks
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    placeholder="Search..." 
+                    className="pl-10" 
+                    value={filters.searchTerm}
+                    onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                  />
+                </div>
+                <select 
+                  className="p-2 border rounded-md"
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                {renderViewModeToggle()}
+                <Button onClick={() => setShowCreateModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Project
+                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {activeTab === 'projects' ? (
-              filteredProjects.length === 0 ? (
-                <div className="text-center py-12">
-                  <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">No projects found</p>
-                  <p className="text-sm text-gray-500">
-                    {projects.length === 0 
-                      ? 'Create your first project to get started.' 
-                      : 'Try adjusting your search or filter criteria.'
-                    }
-                  </p>
-                  <Button 
-                    className="mt-4"
-                    onClick={() => setShowCreateModal(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Project
-                  </Button>
-                </div>
-              ) : (
-                viewMode === 'list' ? renderProjectListView() : renderProjectGridView()
-              )
-            ) : activeTab === 'work-requests' ? (
-              filteredWorkRequests.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">No work requests found</p>
-                </div>
-              ) : (
-                renderWorkRequests()
-              )
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+                <p className="ml-4 text-gray-600">Loading data...</p>
+              </div>
             ) : (
-              filteredRisks.length === 0 ? (
-                <div className="text-center py-12">
-                  <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">No risks found</p>
-                </div>
-              ) : (
-                renderRisks()
-              )
+              <>
+                {activeTab === 'projects' && (
+                  <>
+                    {filteredProjects.length > 0 ? (
+                      viewMode === 'list' ? renderProjectListView() : renderProjectGridView()
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No projects found.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+                {activeTab === 'work-requests' && (
+                  <>
+                    {filteredWorkRequests.length > 0 ? (
+                      renderWorkRequestListView()
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No work requests found.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+                {activeTab === 'risks' && (
+                  <>
+                    {filteredRisks.length > 0 ? (
+                      renderRiskListView()
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No risks found.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
 
-        {/* Create Project Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold">Create New Project</h2>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      resetNewProject()
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Project Name *
-                    </label>
-                    <Input
-                      value={newProject.name || ''}
-                      onChange={(e: any) => setNewProject(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Enter project name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      value={newProject.description || ''}
-                      onChange={(e: any) => setNewProject(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Enter project description"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      value={newProject.status || 'active'}
-                      onChange={(e: any) => setNewProject(prev => ({ ...prev, status: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="active">Active</option>
-                      <option value="completed">Completed</option>
-                      <option value="on_hold">On Hold</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-6 pt-6 border-t">
-                  <Button onClick={handleCreateProject} disabled={!newProject.name}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Create Project
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      resetNewProject()
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Project Modal */}
-        {showEditModal && selectedProject && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold">Edit Project</h2>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowEditModal(false)
-                      setSelectedProject(null)
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Project Name *
-                    </label>
-                    <Input
-                      value={selectedProject.name || ''}
-                      onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
-                      placeholder="Enter project name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      value={selectedProject.description || ''}
-                      onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
-                      placeholder="Enter project description"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      value={selectedProject.status || 'active'}
-                      onChange={(e: any) => setSelectedProject(prev => prev ? ({ ...prev, status: e.target.value }) : null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="active">Active</option>
-                      <option value="completed">Completed</option>
-                      <option value="on_hold">On Hold</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-6 pt-6 border-t">
-                  <Button onClick={handleUpdateProject} disabled={!selectedProject.name}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Update Project
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowEditModal(false)
-                      setSelectedProject(null)
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {showCreateModal && renderCreateModal()}
+        {showEditModal && renderEditModal()}
       </div>
     </DashboardLayout>
   )

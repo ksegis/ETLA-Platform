@@ -230,6 +230,7 @@ export default function FullPMBOKProjectManagementPage() {
     try {
       setloading(true)
       setError(null)
+      const supabase = createSupabaseBrowserClient();
       
       console.log("loading full PMBOK project data for tenant:", selectedTenant);
 
@@ -442,6 +443,7 @@ export default function FullPMBOKProjectManagementPage() {
 
     try {
       setError(null)
+      const supabase = createSupabaseBrowserClient();
       
       // Use all available fields from the enhanced form
       const projectData = {
@@ -542,6 +544,7 @@ export default function FullPMBOKProjectManagementPage() {
 
     try {
       setError(null)
+      const supabase = createSupabaseBrowserClient();
       
       // Use all available fields for update
       const updateData = {
@@ -617,6 +620,7 @@ export default function FullPMBOKProjectManagementPage() {
 
     try {
       setError(null)
+      const supabase = createSupabaseBrowserClient();
       
       const { error } = await supabase
         .from('project_charters')

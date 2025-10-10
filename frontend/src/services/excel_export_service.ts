@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 interface ExportConfig {
   reportType: string
@@ -189,6 +189,7 @@ export class ExcelExportService {
   private static async fetchReportData(config: ExportConfig): Promise<any[]> {
     const tableName = this.getTableName(config.reportType)
     
+    const supabase = createSupabaseBrowserClient();
     let query = supabase
       .from(tableName)
       .select('*')
@@ -377,8 +378,10 @@ export class ExcelExportService {
 
   static async logExportActivity(config: ExportConfig, success: boolean, error?: string): Promise<void> {
     try {
+      const supabase = createSupabaseBrowserClient();
       await supabase
-        .from('data_import_audit')
+        .from("data_import_audit")
+
         .insert({
           customer_id: config.customerId,
           import_type: `export_${config.reportType}`,

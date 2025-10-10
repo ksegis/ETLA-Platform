@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 interface Tenant {
   id: string
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('🔐 Initializing authentication...')
         
         // Get initial session
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession()
+        const { data: { session: initialSession }, error } = await createSupabaseBrowserClient().auth.getSession()
         
         if (error) {
           console.error('❌ Error getting initial session:', error)
@@ -137,8 +137,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('🏢 loading tenant info for user:', userId)
       
       // Try to get tenant info from database
-      const { data: tenantUsers, error } = await supabase
-        .from('tenant_users')
+      const { data: tenantUsers, error } = await createSupabaseBrowserClient()
+        .from("tenant_users")
         .select(`
           *,
           tenant:tenants(*)
@@ -191,7 +191,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     console.log('🔐 Setting up auth state listener...')
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = createSupabaseBrowserClient().auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
         console.log('🔐 Auth state change:', {
           event,
@@ -257,7 +257,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('👋 Signing out...')
       setloading(true)
-      const { error } = await supabase.auth.signOut()
+      const { error } = await createSupabaseBrowserClient().auth.signOut()
       if (error) {
         console.error('❌ Error signing out:', error)
         throw error
@@ -277,7 +277,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshSession = async (): Promise<void> => {
     try {
       console.log('🔄 Refreshing session...')
-      const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession()
+      const { data: { session: refreshedSession }, error } = await createSupabaseBrowserClient().auth.refreshSession()
       if (error) {
         console.error('❌ Error refreshing session:', error)
         throw error
@@ -307,10 +307,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   // Get tenant ID safely
-  const getTenantId = (): string | null => {
+  const getTenantId = useCallback((): string | null => {
     const tenantId = tenant?.id || '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Always fallback to demo tenant
     return tenantId
-  }
+  }, [tenant]);
 
   // Computed values
   const isAuthenticated = !!user && (!!session || user.email === 'demo@company.com')
@@ -343,7 +343,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isDemo: user?.email === 'demo@company.com'
       })
     }
-  }, [user, session, tenant, loading, initialized, isAuthenticated])
+  }, [user, session, tenant, loading, initialized, isAuthenticated, getTenantId])
 
   return (
     <AuthContext.Provider value={value}>

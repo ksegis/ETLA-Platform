@@ -470,7 +470,7 @@ export default function EnhancedEmployeeDocuments({
       <Card className="p-6">
         <div className="text-center">
           <Shield className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500">You don't have permission to view employee documents.</p>
+          <p className="text-gray-500">You don&apos;t have permission to view employee documents.</p>
         </div>
       </Card>
     );

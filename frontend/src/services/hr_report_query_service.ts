@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 /**
  * HR Report Query Service (Final Fix for TypeScript/ES5)
@@ -138,7 +138,8 @@ export class HRReportQueryService {
       }
 
       // Use the stored procedure for better performance and type safety
-      const { data, error } = await supabase.rpc('get_current_demographics', {
+      const supabase = createSupabaseServerClient();
+      const { data, error } = await supabase.rpc("get_current_demographics", {
         p_customer_id: params.customer_id,
         p_date_from: params.date_from || null,
         p_date_to: params.date_to || null,
@@ -214,7 +215,8 @@ export class HRReportQueryService {
         }
       }
 
-      const { data, error } = await supabase.rpc('get_custom_fields_validated', {
+      const supabase = createSupabaseServerClient();
+      const { data, error } = await supabase.rpc("get_custom_fields_validated", {
         p_customer_id: params.customer_id,
         p_date_from: params.date_from || null,
         p_date_to: params.date_to || null,
@@ -284,7 +286,8 @@ export class HRReportQueryService {
         }
       }
 
-      const { data, error } = await supabase.rpc('get_status_history_with_duration', {
+      const supabase = createSupabaseServerClient();
+      const { data, error } = await supabase.rpc("get_status_history_with_duration", {
         p_customer_id: params.customer_id,
         p_date_from: params.date_from || null,
         p_date_to: params.date_to || null,
@@ -354,7 +357,8 @@ export class HRReportQueryService {
         }
       }
 
-      const { data, error } = await supabase.rpc('get_pay_history_with_calculations', {
+      const supabase = createSupabaseServerClient();
+      const { data, error } = await supabase.rpc("get_pay_history_with_calculations", {
         p_customer_id: params.customer_id,
         p_date_from: params.date_from || null,
         p_date_to: params.date_to || null,
@@ -424,7 +428,8 @@ export class HRReportQueryService {
         }
       }
 
-      const { data, error } = await supabase.rpc('get_position_history_with_supervisors', {
+      const supabase = createSupabaseServerClient();
+      const { data, error } = await supabase.rpc("get_position_history_with_supervisors", {
         p_customer_id: params.customer_id,
         p_date_from: params.date_from || null,
         p_date_to: params.date_to || null,
@@ -706,8 +711,9 @@ export class HRReportQueryService {
     result: QueryResult
   ): Promise<void> {
     try {
+      const supabase = createSupabaseServerClient();
       await supabase
-        .from('data_import_audit')
+        .from("data_import_audit")
         .insert({
           customer_id: customerId,
           import_type: `query_${reportType}`,

@@ -1,6 +1,6 @@
 'use client';
 
-import { supabase } from '@/lib/supabase';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 export interface CustomerBranding {
   legalName: string;
@@ -40,6 +40,7 @@ class BrandingService {
 
     try {
       // Fetch tenant information from Supabase
+      const supabase = createSupabaseBrowserClient();
       const { data: tenant, error } = await supabase
         .from('tenants')
         .select('id, name, legal_name, display_name, logo_url, primary_color, secondary_color')
@@ -94,8 +95,9 @@ class BrandingService {
     // Fetch missing tenants
     if (tenantsToFetch.length > 0) {
       try {
+        const supabase = createSupabaseBrowserClient();
         const { data: tenants, error } = await supabase
-          .from('tenants')
+          .from("tenants")
           .select('id, name, legal_name, display_name, logo_url, primary_color, secondary_color')
           .in('id', tenantsToFetch);
 

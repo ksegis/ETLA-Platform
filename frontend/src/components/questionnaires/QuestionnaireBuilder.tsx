@@ -212,7 +212,7 @@ export default function QuestionnaireBuilder({
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [questionnaire, unsavedChanges]);
+  }, [questionnaire, unsavedChanges, handleSave]);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -327,12 +327,12 @@ export default function QuestionnaireBuilder({
     setUnsavedChanges(true);
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (onSave) {
       onSave(questionnaire);
     }
     setUnsavedChanges(false);
-  };
+  }, [onSave, questionnaire]);
 
   const handlePreview = () => {
     if (onPreview) {
@@ -350,7 +350,7 @@ export default function QuestionnaireBuilder({
       setQuestionnaire(publishedQuestionnaire);
     }
     setUnsavedChanges(false);
-  };
+  }, [onSave, questionnaire]);
 
   const handleLoadTemplate = (template: any) => {
     // In a real implementation, this would load the full template
