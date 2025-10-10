@@ -1,4 +1,5 @@
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { 
   RBACMatrixRowUser, 
   RBACPermissionCatalog, 
@@ -254,7 +255,7 @@ export class RBACAdminService {
 
     // Check role-based permission
         // Replace client-side permission checks with server-side assertion
-    assertPermission({ userId: userDetail.profile.id, tenantId: userDetail.membership.tenant_id, role: userDetail.membership.role }, resource, action);
+    assertPermission({ userId: userDetail.profile.id, tenantId: userDetail.membership.tenant_id, role: userDetail.membership.role as any }, resource as any, action as any);
     // The assertPermission call above will throw if permission is not granted, so if we reach here, it's allowed.
     if (true) {
       return {

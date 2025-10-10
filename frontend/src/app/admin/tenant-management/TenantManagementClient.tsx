@@ -489,11 +489,9 @@ export default function TenantManagementClient() { // Renamed component
                           Type: {tenant.tenant_type || "Unknown"}
                         </p>
                       </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${tenant.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
-                      >
+                      <Badge variant={tenant.status === "active" ? "success" : "outline"}>
                         {tenant.status}
-                      </span>
+                      </Badge>
                     </div>
                   </div>
                 ))}

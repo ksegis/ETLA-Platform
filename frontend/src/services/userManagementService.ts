@@ -196,6 +196,7 @@ export const userManagement = {
 
   // Update user information
   updateUser: async (userId: string, updateData: UserUpdateData) => {
+    const supabase = createSupabaseServerClient();
     try {
       const { error } = await supabase
         .from('profiles')
@@ -217,6 +218,7 @@ export const userManagement = {
 
   // Deactivate user
   deactivateUser: async (userId: string) => {
+    const supabase = createSupabaseServerClient();
     try {
       const { error } = await supabase
         .from('profiles')
@@ -238,6 +240,7 @@ export const userManagement = {
 
   // Activate user
   activateUser: async (userId: string) => {
+    const supabase = createSupabaseServerClient();
     try {
       const { error } = await supabase
         .from('profiles')
@@ -259,13 +262,24 @@ export const userManagement = {
 
   // Reset user password
   resetUserPassword: async (email: string, newPassword?: string) => {
+    const supabase = createSupabaseServerClient();
     try {
       if (newPassword) {
         // Direct password reset (admin function)
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .single();
+
+        if (userError || !userData) {
+          return { success: false, error: userError?.message || 'User not found' };
+        }
+
         const { error } = await supabase.auth.admin.updateUserById(
-          email, // This should be user ID, but we'll need to get it first
+          userData.id,
           { password: newPassword }
-        )
+        );
 
         if (error) {
           return { success: false, error: error.message }
@@ -291,6 +305,7 @@ export const userManagement = {
 
   // Preview cleanup operations
   previewUserCleanup: async (options: CleanupOptions) => {
+    const supabase = createSupabaseServerClient();
     try {
       let inactiveUsers = 0
       let unconfirmedUsers = 0
@@ -344,6 +359,7 @@ export const userManagement = {
 
   // Execute cleanup operations
   executeUserCleanup: async (options: CleanupOptions) => {
+    const supabase = createSupabaseServerClient();
     try {
       let deletedInactiveUsers = 0
       let deletedUnconfirmedUsers = 0

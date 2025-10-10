@@ -413,51 +413,29 @@ export default function EnhancedProjectManagementPage() {
     }).format(amount);
   };
 
-  const getStatusColor = (status: string | null | undefined) => {
-    const statusLower = (status || '').toLowerCase();
-    switch (statusLower) {
-      case 'planning':
-      case 'draft':
-        return 'bg-purple-100 text-purple-800';
-      case 'active':
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'on_hold':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'submitted':
-        return 'bg-blue-100 text-blue-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'rejected':
-      case 'declined':
-        return 'bg-red-100 text-red-800';
-      case 'resolved':
-      case 'mitigated':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  type StatusVariant = React.ComponentProps<typeof Badge>["variant"];
+  const statusToVariant: Record<string, StatusVariant> = {
+    planning: "secondary",
+    draft: "secondary",
+    active: "default",
+    in_progress: "default",
+    completed: "success",
+    on_hold: "warning",
+    cancelled: "destructive",
+    approved: "success",
+    submitted: "default",
+    under_review: "warning",
+    rejected: "destructive",
+    declined: "destructive",
+    resolved: "success",
+    mitigated: "success",
   };
 
-  const getPriorityColor = (priority: string | null | undefined) => {
-    const priorityLower = (priority || '').toLowerCase();
-    switch (priorityLower) {
-      case 'high':
-      case 'critical':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  type BadgeVariant = React.ComponentProps<typeof Badge>["variant"];
+  const severityToVariant: Record<"high" | "medium" | "low", BadgeVariant> = {
+    high: "destructive",
+    medium: "secondary",
+    low: "outline",
   };
 
   // Schema-compatible create project function
@@ -649,53 +627,7 @@ export default function EnhancedProjectManagementPage() {
   };
 
   const getPriorityBadge = (priority: string | null | undefined) => {
-    const priorityLower = (priority || '').toLowerCase();
-    switch (priorityLower) {
-      case 'high':
-      case 'critical':
-        return <Badge variant="destructive">High</Badge>;
-      case 'medium':
-        return <Badge variant="warning">Medium</Badge>;
-      case 'low':
-        return <Badge variant="success">Low</Badge>;
-      default:
-        return <Badge variant="secondary">N/A</Badge>;
-    }
-  };
-
-  const getStatusBadge = (status: string | null | undefined) => {
-    const statusLower = (status || '').toLowerCase();
-    switch (statusLower) {
-      case 'planning':
-      case 'draft':
-        return <Badge variant="outline">Planning</Badge>;
-      case 'active':
-      case 'in_progress':
-        return <Badge variant="default">Active</Badge>;
-      case 'completed':
-        return <Badge variant="success">Completed</Badge>;
-      case 'on_hold':
-        return <Badge variant="warning">On Hold</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Cancelled</Badge>;
-      case 'submitted':
-        return <Badge variant="default">Submitted</Badge>;
-      case 'under_review':
-        return <Badge variant="warning">Under Review</Badge>;
-      case 'approved':
-        return <Badge variant="success">Approved</Badge>;
-      case 'rejected':
-      case 'declined':
-        return <Badge variant="destructive">Rejected</Badge>;
-      case 'resolved':
-      case 'mitigated':
-        return <Badge variant="success">Resolved</Badge>;
-      default:
-        return <Badge variant="secondary">N/A</Badge>;
-    }
-  };
-
-  return (
+   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -869,8 +801,8 @@ export default function EnhancedProjectManagementPage() {
                           {filteredProjects.map((project) => (
                             <tr key={project.id}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{getProjectTitle(project)}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(project.status)}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getPriorityBadge(project.priority)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><Badge variant={getStatusBadge(risk.status)}>{risk.status}</Badge></td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><Badge variant={getPriorityBadge(project.priority)}>{project.priority}</Badge></td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTeamLead(project)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(project.start_date || '')}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(project.end_date || '')}</td>
@@ -898,7 +830,7 @@ export default function EnhancedProjectManagementPage() {
                             <CardTitle className="flex justify-between items-center">
                               {getProjectTitle(project)}
                               <div className="flex space-x-2">
-                                {getStatusBadge(project.status)}
+                                <Badge variant={statusToVariant[project.status?.toLowerCase() || 'default']}>{project.status}</Badge>
                                 {getPriorityBadge(project.priority)}
                               </div>
                             </CardTitle>
@@ -949,8 +881,8 @@ export default function EnhancedProjectManagementPage() {
                           {filteredWorkRequests.map((wr) => (
                             <tr key={wr.id}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{getWorkRequestTitle(wr)}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(wr.status)}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getPriorityBadge(wr.priority)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><Badge variant={getStatusBadge(wr.status)}>{wr.status}</Badge></td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><Badge variant={getPriorityBadge(wr.priority)}>{wr.priority}</Badge></td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wr.customer_name || 'N/A'}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(wr.created_at)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1028,8 +960,8 @@ export default function EnhancedProjectManagementPage() {
                           {filteredRisks.map((risk) => (
                             <tr key={risk.id}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{getRiskTitle(risk)}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getPriorityBadge(risk.risk_level || risk.level)}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(risk.status)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><Badge variant={getPriorityBadge(risk.risk_level || risk.level)}>{risk.risk_level || risk.level}</Badge></td>
+                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><Badge variant={getStatusBadge(risk.status)}>{risk.status}</Badge></td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{risk.project_id || 'N/A'}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(risk.created_at)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

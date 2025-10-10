@@ -101,12 +101,12 @@ export default function QuestionnaireAnalyticsDashboard() {
 
   const categories = Array.from(new Set(questionnaires.map(q => q.category)));
 
-  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' | 'success' => {
     switch (status) {
-      case 'active': return 'default';
-      case 'completed': return 'secondary';
-      case 'paused': return 'outline';
-      case 'draft': return 'destructive';
+      case 'active': return 'success';
+      case 'completed': return 'success';
+      case 'paused': return 'warning';
+      case 'draft': return 'outline';
       default: return 'outline';
     }
   };

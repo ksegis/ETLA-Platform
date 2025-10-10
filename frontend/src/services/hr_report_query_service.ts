@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 /**
- * HR Report Query Service (Final Fix for TypeScript/ES5)
+ * HR Report Query Service
  * 
  * Provides centralized database query functionality for all HR report types
  * with comprehensive customer isolation, parameter binding, error handling,
@@ -10,7 +10,6 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
  * @author Manus AI
  * @version 1.0.2
  * @created 2025-08-18
- * @fixed ES5 compatibility and Set iteration issues
  */
 
 export interface QueryParameters {
@@ -94,7 +93,6 @@ export class HRReportQueryService {
     if (params.departments && params.departments.length === 0) {
       warnings.push('departments array is empty, consider removing filter')
     }
-
     if (params.positions && params.positions.length === 0) {
       warnings.push('positions array is empty, consider removing filter')
     }
@@ -184,8 +182,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
     }
   }
@@ -238,8 +236,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
 
     } catch (err) {
@@ -255,8 +253,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
     }
   }
@@ -309,8 +307,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
 
     } catch (err) {
@@ -326,8 +324,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
     }
   }
@@ -380,8 +378,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
 
     } catch (err) {
@@ -397,8 +395,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
     }
   }
@@ -452,8 +450,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
 
     } catch (err) {
@@ -469,8 +467,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
     }
   }
@@ -500,6 +498,7 @@ export class HRReportQueryService {
         }
       }
 
+      const supabase = createSupabaseServerClient();
       const { data, error } = await supabase.rpc('get_tax_information_validated', {
         p_customer_id: params.customer_id,
         p_date_from: params.date_from || null,
@@ -522,8 +521,8 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
 
     } catch (err) {
@@ -539,29 +538,30 @@ export class HRReportQueryService {
           timestamp: new Date().toISOString()
         }
       }
-
       await this.logQueryExecution(reportType, params.customer_id, params, result)
+
       return result
     }
   }
 
   /**
-   * Execute report query based on report type
+   * Centralized function to execute any report type.
+   * This function acts as a dispatcher to the specific report query functions.
    */
   static async executeReport(reportType: string, params: QueryParameters): Promise<QueryResult> {
     switch (reportType) {
       case 'demographics':
-        return this.getCurrentDemographics(params)
+        return this.getCurrentDemographics(params);
       case 'custom_fields':
-        return this.getCustomFields(params)
+        return this.getCustomFields(params);
       case 'status_history':
-        return this.getStatusHistory(params)
+        return this.getStatusHistory(params);
       case 'pay_history':
-        return this.getPayHistory(params)
+        return this.getPayHistory(params);
       case 'position_history':
-        return this.getPositionHistory(params)
+        return this.getPositionHistory(params);
       case 'tax_information':
-        return this.getTaxInformation(params)
+        return this.getTaxInformation(params);
       default:
         return {
           data: [],
@@ -574,135 +574,78 @@ export class HRReportQueryService {
             parameters_used: params,
             timestamp: new Date().toISOString()
           }
-        }
+        };
     }
   }
 
   /**
-   * Helper function to get unique values from array (ES5 compatible)
+   * Helper to get unique values from an array, case-insensitive for strings.
+   * @param values Array of values to process.
+   * @returns Array of unique string values.
    */
   private static getUniqueValues(values: any[]): string[] {
-    const unique: string[] = []
-    const seen: { [key: string]: boolean } = {}
-    
-    for (let i = 0; i < values.length; i++) {
-      const value = values[i]
-      if (value && typeof value === 'string' && !seen[value]) {
-        seen[value] = true
-        unique.push(value)
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const value of values) {
+      if (value && typeof value === 'string') {
+        const lowerCaseValue = value.toLowerCase();
+        if (!seen.has(lowerCaseValue)) {
+          seen.add(lowerCaseValue);
+          unique.push(value);
+        }
+      } else if (value !== null && value !== undefined) {
+        // Handle non-string values by converting to string and checking uniqueness
+        const stringValue = String(value);
+        if (!seen.has(stringValue)) {
+          seen.add(stringValue);
+          unique.push(stringValue);
+        }
       }
     }
-    
-    return unique.sort()
+    return unique.sort();
   }
 
   /**
-   * Get available filter options for a specific customer
+   * Get filter options for a given customer.
+   * This fetches all possible values for departments, positions, etc.,
+   * that are present in the customer's data.
    */
   static async getFilterOptions(customerId: string): Promise<FilterOptions> {
-    try {
-      const [departments, positions, statuses, payTypes, states, employees, customFields] = await Promise.all([
-        // Get unique departments
-        supabase
-          .from('employee_demographics')
-          .select('home_department')
-          .eq('customer_id', customerId)
-          .not('home_department', 'is', null)
-          .then(({ data }) => {
-            const depts = data?.map(d => d.home_department).filter(Boolean) || []
-            return this.getUniqueValues(depts)
-          }),
+    const supabase = createSupabaseServerClient();
+    const [departmentsRes, positionsRes, statusesRes, payTypesRes, statesRes, employeesRes, customFieldsRes] = await Promise.all([
+      supabase.rpc('get_unique_departments', { p_customer_id: customerId }),
+      supabase.rpc('get_unique_positions', { p_customer_id: customerId }),
+      supabase.rpc('get_unique_statuses', { p_customer_id: customerId }),
+      supabase.rpc('get_unique_pay_types', { p_customer_id: customerId }),
+      supabase.rpc('get_unique_states', { p_customer_id: customerId }),
+      supabase.rpc('get_unique_employees', { p_customer_id: customerId }),
+      supabase.rpc('get_unique_custom_field_names', { p_customer_id: customerId }),
+    ]);
 
-        // Get unique positions
-        supabase
-          .from('employee_demographics')
-          .select('position')
-          .eq('customer_id', customerId)
-          .not('position', 'is', null)
-          .then(({ data }) => {
-            const positions = data?.map(d => d.position).filter(Boolean) || []
-            return this.getUniqueValues(positions)
-          }),
+    const departments = departmentsRes.data ? this.getUniqueValues(departmentsRes.data.map((d: { department: string }) => d.department)) : [];
+    const positions = positionsRes.data ? this.getUniqueValues(positionsRes.data.map((d: { position: string }) => d.position)) : [];
+    const statuses = statusesRes.data ? this.getUniqueValues(statusesRes.data.map((d: { status: string }) => d.status)) : [];
+    const payTypes = payTypesRes.data ? this.getUniqueValues(payTypesRes.data.map((d: { pay_type: string }) => d.pay_type)) : [];
+    const states = statesRes.data ? this.getUniqueValues(statesRes.data.map((d: { state: string }) => d.state)) : [];
+    const employees = employeesRes.data ? employeesRes.data.map((d: { employee_code: string; first_name: string; last_name: string }) => ({
+      code: d.employee_code,
+      name: `${d.first_name} ${d.last_name}`,
+    })).sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name)) : [];
+    const customFields = customFieldsRes.data ? this.getUniqueValues(customFieldsRes.data.map((d: { field_name: string }) => d.field_name)) : [];
 
-        // Get unique statuses
-        supabase
-          .from('employee_status_history')
-          .select('status')
-          .eq('customer_id', customerId)
-          .then(({ data }) => {
-            const statuses = data?.map(d => d.status).filter(Boolean) || []
-            return this.getUniqueValues(statuses)
-          }),
-
-        // Get unique pay types
-        supabase
-          .from('employee_pay_history')
-          .select('pay_type')
-          .eq('customer_id', customerId)
-          .then(({ data }) => {
-            const payTypes = data?.map(d => d.pay_type).filter(Boolean) || []
-            return this.getUniqueValues(payTypes)
-          }),
-
-        // Get unique states
-        supabase
-          .from('employee_tax_information')
-          .select('works_in_state')
-          .eq('customer_id', customerId)
-          .not('works_in_state', 'is', null)
-          .then(({ data }) => {
-            const states = data?.map(d => d.works_in_state).filter(Boolean) || []
-            return this.getUniqueValues(states)
-          }),
-
-        // Get employee list
-        supabase
-          .from('employee_demographics')
-          .select('employee_code, first_name, last_name')
-          .eq('customer_id', customerId)
-          .eq('employee_status', 'Active')
-          .order('last_name')
-          .then(({ data }) => (data || []).map(d => ({
-            code: d.employee_code,
-            name: `${d.first_name} ${d.last_name}`
-          }))),
-
-        // Get custom field names
-        supabase
-          .from('employee_custom_fields')
-          .select('field_name')
-          .eq('customer_id', customerId)
-          .then(({ data }) => {
-            const fieldNames = data?.map(d => d.field_name).filter(Boolean) || []
-            return this.getUniqueValues(fieldNames)
-          })
-      ])
-
-      return {
-        departments,
-        positions,
-        statuses,
-        payTypes,
-        states,
-        employees,
-        customFields
-      }
-    } catch (error) {
-      console.error('Error fetching filter options:', error)
-      return {
-        departments: [],
-        positions: [],
-        statuses: [],
-        payTypes: [],
-        states: [],
-        employees: [],
-        customFields: []
-      }
-    }
+    return {
+      departments,
+      positions,
+      statuses,
+      payTypes,
+      states,
+      employees,
+      customFields,
+    };
   }
 
   /**
-   * Log query execution for audit trail
+   * Log query execution details for auditing and performance monitoring.
    */
   static async logQueryExecution(
     reportType: string,
@@ -710,104 +653,20 @@ export class HRReportQueryService {
     params: QueryParameters,
     result: QueryResult
   ): Promise<void> {
-    try {
-      const supabase = createSupabaseServerClient();
-      await supabase
-        .from("data_import_audit")
-        .insert({
-          customer_id: customerId,
-          import_type: `query_${reportType}`,
-          records_processed: result.count,
-          records_successful: result.error ? 0 : result.count,
-          records_failed: result.error ? result.count : 0,
-          error_summary: result.error,
-          import_status: result.error ? 'failed' : 'completed',
-          notes: JSON.stringify({
-            execution_time_ms: result.execution_time,
-            parameters: params,
-            query_metadata: result.query_metadata
-          })
-        })
-    } catch (error) {
-      console.error('Error logging query execution:', error)
-      // Don't throw error here as it would interfere with the main query result
-    }
-  }
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.from('query_log').insert({
+      report_type: reportType,
+      customer_id: customerId,
+      parameters_used: params,
+      execution_time: result.execution_time,
+      record_count: result.count,
+      error_message: result.error,
+      executed_at: new Date().toISOString(),
+      user_id: result.query_metadata.user_id, // Assuming user_id is passed in query_metadata
+    });
 
-  /**
-   * Get query execution statistics for a customer
-   */
-  static async getQueryStatistics(customerId: string, days: number = 30): Promise<{
-    totalQueries: number
-    successfulQueries: number
-    failedQueries: number
-    averageExecutionTime: number
-    reportTypeBreakdown: Record<string, number>
-  }> {
-    try {
-      const cutoffDate = new Date()
-      cutoffDate.setDate(cutoffDate.getDate() - days)
-
-      const { data, error } = await supabase
-        .from('data_import_audit')
-        .select('import_type, import_status, notes')
-        .eq('customer_id', customerId)
-        .like('import_type', 'query_%')
-        .gte('import_date', cutoffDate.toISOString())
-
-      if (error || !data) {
-        return {
-          totalQueries: 0,
-          successfulQueries: 0,
-          failedQueries: 0,
-          averageExecutionTime: 0,
-          reportTypeBreakdown: {}
-        }
-      }
-
-      const totalQueries = data.length
-      const successfulQueries = data.filter(d => d.import_status === 'completed').length
-      const failedQueries = totalQueries - successfulQueries
-
-      // Calculate average execution time
-      const executionTimes = data
-        .map(d => {
-          try {
-            const notes = JSON.parse(d.notes || '{}')
-            return notes.execution_time_ms || 0
-          } catch {
-            return 0
-          }
-        })
-        .filter(time => time > 0)
-
-      const averageExecutionTime = executionTimes.length > 0
-        ? executionTimes.reduce((sum, time) => sum + time, 0) / executionTimes.length
-        : 0
-
-      // Report type breakdown
-      const reportTypeBreakdown: Record<string, number> = {}
-      data.forEach(d => {
-        const reportType = d.import_type.replace('query_', '')
-        reportTypeBreakdown[reportType] = (reportTypeBreakdown[reportType] || 0) + 1
-      })
-
-      return {
-        totalQueries,
-        successfulQueries,
-        failedQueries,
-        averageExecutionTime,
-        reportTypeBreakdown
-      }
-    } catch (error) {
-      console.error('Error fetching query statistics:', error)
-      return {
-        totalQueries: 0,
-        successfulQueries: 0,
-        failedQueries: 0,
-        averageExecutionTime: 0,
-        reportTypeBreakdown: {}
-      }
+    if (error) {
+      console.error('Failed to log query execution:', error.message);
     }
   }
 }

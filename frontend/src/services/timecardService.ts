@@ -171,6 +171,7 @@ class TimecardService {
     employee_id?: string
     employee_code?: string
   }>> {
+    const supabase = createSupabaseBrowserClient();
     try {
       const { data, error } = await supabase
         .from('v_timecard_daily_effective_v2')
@@ -208,6 +209,7 @@ class TimecardService {
     correction_reason: string | null
     changes: Record<string, any>
   }>> {
+    const supabase = createSupabaseBrowserClient();
     try {
       // This would typically query an audit log table
       // For now, we'll return the current correction info from the view

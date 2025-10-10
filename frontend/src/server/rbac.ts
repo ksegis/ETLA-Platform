@@ -8,7 +8,7 @@ export function assertPermission(
   feature: (typeof FEATURES)[keyof typeof FEATURES],
   permission: (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
 ) {
-  const rolePerms = ROLE_MATRIX[actor.role]?.[feature] ?? new Set<string>();
+  const rolePerms = new Set(ROLE_MATRIX[actor.role]?.[feature as keyof typeof ROLE_MATRIX[typeof ROLES[keyof typeof ROLES]]] ?? []);
   if (!rolePerms.has(permission)) {
     throw new Error("Forbidden: missing permission");
   }

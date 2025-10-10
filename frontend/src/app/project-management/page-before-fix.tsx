@@ -306,50 +306,50 @@ export default function EnhancedProjectManagementPage() {
     }).format(amount)
   }
 
-  const getStatusColor = (status: string | null | undefined) => {
-    const statusLower = (status || '').toLowerCase()
+  const getStatusVariant = (status: string | null | undefined): \'default\' | \'secondary\' | \'destructive\' | \'outline\' | \'warning\' | \'success\' => {
+    const statusLower = (status || \'\').toLowerCase()
     switch (statusLower) {
-      case 'planning':
-      case 'draft':
-        return 'bg-purple-100 text-purple-800'
-      case 'active':
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800'
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'on_hold':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'submitted':
-        return 'bg-blue-100 text-blue-800'
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'rejected':
-      case 'declined':
-        return 'bg-red-100 text-red-800'
-      case 'resolved':
-      case 'mitigated':
-        return 'bg-green-100 text-green-800'
+      case \'planning\':
+      case \'draft\':
+        return \'outline\'
+      case \'active\':
+      case \'in_progress\':
+        return \'default\'
+      case \'completed\':
+        return \'success\'
+      case \'on_hold\':
+        return \'warning\'
+      case \'cancelled\':
+        return \'destructive\'
+      case \'approved\':
+        return \'success\'
+      case \'submitted\':
+        return \'default\'
+      case \'under_review\':
+        return \'warning\'
+      case \'rejected\':
+      case \'declined\':
+        return \'destructive\'
+      case \'resolved\':
+      case \'mitigated\':
+        return \'success\'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return \'outline\'
     }
   }
 
-  const getPriorityColor = (priority: string | null | undefined) => {
-    const priorityLower = (priority || '').toLowerCase()
+  const getPriorityVariant = (priority: string | null | undefined): \'default\' | \'secondary\' | \'destructive\' | \'outline\' | \'warning\' | \'success\' => {
+    const priorityLower = (priority || \'\').toLowerCase()
     switch (priorityLower) {
-      case 'high':
-      case 'critical':
-        return 'bg-red-100 text-red-800'
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'low':
-        return 'bg-green-100 text-green-800'
+      case \'high\':
+      case \'critical\':
+        return \'destructive\'
+      case \'medium\':
+        return \'warning\'
+      case \'low\':
+        return \'success\'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return \'outline\'
     }
   }
 

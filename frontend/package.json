@@ -6,7 +6,8 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify": "npm run lint && npm run typecheck",
-    "build:ci": "next build"
+    "build:ci": "next build",
+    "prepare": "husky"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -19,6 +20,7 @@
     "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.0.0",
+    "husky": "^9.1.7",
     "lucide-react": "^0.263.1",
     "next": "15.3.3",
     "react": "^18.0.0",
