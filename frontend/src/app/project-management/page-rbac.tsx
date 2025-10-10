@@ -1,10 +1,13 @@
-"use client";
+
+'use client'
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FEATURES, PERMISSIONS, ROLES, type Feature } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
+import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import {
   PermissionGuard,
   WorkRequestGuard,
@@ -110,6 +113,13 @@ interface DashboardData {
 
 export default function ProjectManagementPageRBAC() {
   const router = useRouter();
+
+  const { user } = useAuth();
+  const { selectedTenant, tenantUser } = useTenant();
+  const { currentUserRole: effectiveUserRole } = usePermissions();
+
+  // Safely derive a role the UI can display:
+  const currentUserRole = effectiveUserRole ?? tenantUser?.role ?? 'GUEST';
 
   // ---- Permissions (new hook shape) ----
   const {
@@ -469,40 +479,29 @@ export default function ProjectManagementPageRBAC() {
                         <h4 className="text-md font-medium text-gray-900 mb-4">
                           Recent Activity
                         </h4>
-                        <div className="space-y-3">
-                          <WorkRequestGuard fallback={null}>
-                            {data.workRequests
-                              .slice(0, 3)
-                              .map((request: any) => (
-                                <div
-                                  key={request.id}
-                                  className="flex items-center justify-between p-3 bg-gray-50 rounded"
-                                >
-                                  <div>
-                                    <p className="font-medium">
-                                      {request.title}
-                                    </p>
-                                    <p className="text-sm text-gray-600">
-                                      Work Request • {request.status}
-                                    </p>
-                                  </div>
-                                  <WorkRequestApproveButton
-                                    onClick={() => {
-                                      setSelectedWorkRequest(request);
-                                      setShowApprovalModal(true);
-                                    }}
-                                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
-                                    fallback={
-                                      <span className="text-sm text-gray-500">
-                                        View Only
-                                      </span>
-                                    }
-                                  >
-                                    Review
-                                  </WorkRequestApproveButton>
+                        <div className="space-y-4">
+                          {data.workRequests.slice(0, 2).map((wr) => (
+                            <WorkRequestGuard key={wr.id} fallback={null}>
+                              <div className="p-4 bg-gray-50 rounded-lg flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-gray-800_BAD_CHAR_">{wr.title}</p>
+                                  <p className="text-sm text-gray-500_BAD_CHAR_">New work request submitted</p>
                                 </div>
-                              ))}
-                          </WorkRequestGuard>
+                                <span className="text-xs text-gray-400_BAD_CHAR_">{new Date(wr.created_at).toLocaleDateString()}</span>
+                              </div>
+                            </WorkRequestGuard>
+                          ))}
+                          {data.projects.slice(0, 2).map((p) => (
+                            <ProjectGuard key={p.id} fallback={null}>
+                              <div className="p-4 bg-gray-50 rounded-lg flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-gray-800_BAD_CHAR_">{p.project_title}</p>
+                                  <p className="text-sm text-gray-500_BAD_CHAR_">Project status updated</p>
+                                </div>
+                                <span className="text-xs text-gray-400_BAD_CHAR_">{new Date(p.updated_at).toLocaleDateString()}</span>
+                              </div>
+                            </ProjectGuard>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -511,37 +510,55 @@ export default function ProjectManagementPageRBAC() {
                   {/* Work Requests Tab */}
                   {selectedTab === "work-requests" && (
                     <WorkRequestGuard
-                      fallback={<NoAccessFallback message="You do not have permission to view work requests." />}
+                      fallback={<NoAccessFallback message="You do not have permission to manage work requests." />}
                     >
                       <div>
                         <div className="flex justify-between items-center mb-4">
-                          <h3 className="text-lg font-medium text-gray-900">Work Requests</h3>
+                          <h3 className="text-lg font-medium text-gray-900">
+                            Work Requests
+                          </h3>
                           <WorkRequestCreateButton
                             onClick={() => console.log("Create new work request")}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                           >
-                            New Request
+                            + New Request
                           </WorkRequestCreateButton>
                         </div>
-                        <div className="space-y-4">
-                          {data.workRequests.map((request: any) => (
-                            <div key={request.id} className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-                              <div>
-                                <p className="font-semibold">{request.title}</p>
-                                <p className="text-sm text-gray-500">{request.status}</p>
-                              </div>
-                              <WorkRequestApproveButton
-                                onClick={() => {
-                                  setSelectedWorkRequest(request);
-                                  setShowApprovalModal(true);
-                                }}
-                                className="text-sm bg-green-600 text-white px-3 py-1 rounded"
-                                fallback={null}
-                              >
-                                Approve
-                              </WorkRequestApproveButton>
-                            </div>
-                          ))}
+                        <div className="bg-white border rounded-lg overflow-hidden">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {data.workRequests.map((wr) => (
+                                <tr key={wr.id}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{wr.title}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wr.status}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wr.priority}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(wr.created_at).toLocaleDateString()}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <WorkRequestApproveButton
+                                      workRequest={wr}
+                                      onApprove={() => {
+                                        setSelectedWorkRequest(wr);
+                                        setShowApprovalModal(true);
+                                      }}
+                                      className="text-indigo-600 hover:text-indigo-900"
+                                      fallback={<span className="text-gray-400">Review</span>}
+                                    >
+                                      Review & Approve
+                                    </WorkRequestApproveButton>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     </WorkRequestGuard>
@@ -550,7 +567,7 @@ export default function ProjectManagementPageRBAC() {
                   {/* Projects Tab */}
                   {selectedTab === "projects" && (
                     <ProjectGuard
-                      fallback={<NoAccessFallback message="You do not have permission to view projects." />}
+                      fallback={<NoAccessFallback message="You do not have permission to manage projects." />}
                     >
                       <div>
                         <div className="flex justify-between items-center mb-4">
@@ -559,14 +576,20 @@ export default function ProjectManagementPageRBAC() {
                             onClick={() => console.log("Create new project")}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                           >
-                            New Project
+                            + New Project
                           </ProjectCreateButton>
                         </div>
-                        <div className="space-y-4">
-                          {data.projects.map((project: any) => (
-                            <div key={project.id} className="bg-white p-4 rounded-lg shadow">
-                              <p className="font-semibold">{project.title}</p>
-                              <p className="text-sm text-gray-500">{project.status}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {data.projects.map((p) => (
+                            <div key={p.id} className="bg-white border rounded-lg shadow-sm p-6">
+                              <h4 className="font-bold text-lg text-gray-800">{p.project_title}</h4>
+                              <p className="text-sm text-gray-600 mt-2">{p.description}</p>
+                              <div className="mt-4 flex justify-between items-center">
+                                <span className={`px-2 py-1 text-xs rounded-full ${p.charter_status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                  {p.charter_status}
+                                </span>
+                                <span className="text-sm text-gray-500">{p.completion_percentage}% complete</span>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -577,18 +600,21 @@ export default function ProjectManagementPageRBAC() {
                   {/* Risks Tab */}
                   {selectedTab === "risks" && (
                     <RiskGuard
-                      fallback={<NoAccessFallback message="You do not have permission to view risks." />}
+                      fallback={<NoAccessFallback message="You do not have permission to manage risks." />}
                     >
                       <div>
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Risks</h3>
-                        <div className="space-y-4">
-                          {data.risks.map((risk: any) => (
-                            <div key={risk.id} className="bg-white p-4 rounded-lg shadow">
-                              <p className="font-semibold">{risk.title}</p>
-                              <p className="text-sm text-gray-500">{risk.status}</p>
-                            </div>
+                        <ul className="space-y-4">
+                          {data.risks.map((r) => (
+                            <li key={r.id} className="p-4 bg-white border rounded-lg flex justify-between items-center">
+                              <div>
+                                <p className="font-medium text-gray-800">{r.title}</p>
+                                <p className="text-sm text-gray-600">{r.description}</p>
+                              </div>
+                              <span className="text-sm font-semibold text-red-600">{r.status}</span>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       </div>
                     </RiskGuard>
                   )}
@@ -597,7 +623,7 @@ export default function ProjectManagementPageRBAC() {
                   {selectedTab === "debug" && (
                     <PermissionGuard
                       role={[ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN]}
-                      fallback={<NoAccessFallback message="Access denied." />}
+                      fallback={<NoAccessFallback message="Debug panel is for admins only." />}
                     >
                       <PermissionDebugPanel />
                     </PermissionGuard>
@@ -611,41 +637,25 @@ export default function ProjectManagementPageRBAC() {
         {/* Approval Modal */}
         {showApprovalModal && selectedWorkRequest && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-              <h2 className="text-2xl font-bold mb-4">Review Work Request</h2>
+            <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
+              <h3 className="text-xl font-bold mb-4">Approve Work Request</h3>
               <p className="mb-2"><span className="font-semibold">Title:</span> {selectedWorkRequest.title}</p>
               <p className="mb-4"><span className="font-semibold">Description:</span> {selectedWorkRequest.description}</p>
-              
               <div className="flex justify-end space-x-4">
-                <WorkRequestApproveButton
-                  action="approve"
-                  workRequest={selectedWorkRequest}
-                  onApproved={() => {
-                    console.log("Approved");
-                    setShowApprovalModal(false);
-                    // Optionally reload data
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
-                >
-                  Approve
-                </WorkRequestApproveButton>
-                <WorkRequestApproveButton
-                  action="decline"
-                  workRequest={selectedWorkRequest}
-                  onDeclined={() => {
-                    console.log("Declined");
-                    setShowApprovalModal(false);
-                    // Optionally reload data
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
-                >
-                  Decline
-                </WorkRequestApproveButton>
-                <button 
+                <button
                   onClick={() => setShowApprovalModal(false)}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
                 >
                   Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    console.log(`Approving ${selectedWorkRequest.id}`);
+                    setShowApprovalModal(false);
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Approve
                 </button>
               </div>
             </div>
@@ -655,4 +665,4 @@ export default function ProjectManagementPageRBAC() {
     </RouteGuard>
   );
 }
-'''
+
