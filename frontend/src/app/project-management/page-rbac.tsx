@@ -20,7 +20,7 @@ import {
 } from "@/components/PermissionGuards";
 import { RouteGuard } from "@/components/RouteGuard";
 import { BreadcrumbRBAC, QuickActionsRBAC } from "@/components/NavigationRBAC";
-import type
+
 export default function ProjectManagementPageRBAC() {
   const router = useRouter();
 
