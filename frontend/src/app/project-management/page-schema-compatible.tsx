@@ -234,13 +234,9 @@ export default function EnhancedProjectManagementPage() {
     }
 
     try {
-      setLoading(true);
+     setLoading(true);
       setError(null);
-      
-     console.log(\'loading project data for tenant:\', selectedTenant);
-      // Check available tables first
-      await checkAvailableTables();
-
+     console.log('loading project data for tenant:', selectedTenant);     // Check available tables first      await checkAvailableTables();
       // Try multiple table names for projects
       const projectTableNames = ['project_charters', 'projects', 'project_charter'];
       let projectData: any[] = [];
