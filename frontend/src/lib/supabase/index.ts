@@ -1,1 +1,3 @@
-throw new Error('Import from "@/lib/supabase/browser" (client) or "@/lib/supabase/server" (server).');
+export { createSupabaseBrowserClient } from './browser';
+export { createSupabaseServerClient } from './server';
+
