@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Upload, X, Plus, AlertCircle, CheckCircle, Database, LogIn, Copy, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+const supabase = createSupabaseBrowserClient()
 
 interface FileUpload {
   id: string
