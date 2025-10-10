@@ -46,6 +46,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
+const supabase = createSupabaseBrowserClient();
+
 // Minimal interfaces using only confirmed existing fields
 interface ProjectCharter {
   id: string
