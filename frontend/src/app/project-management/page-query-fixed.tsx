@@ -206,7 +206,7 @@ export default function QueryFixedProjectManagementPage() {
   })
 
   const { user } = useAuth()
-  const { selectedTenant } = useTenant()
+  const { selectedTenant } = useTenant() as { selectedTenant: string | null }
 
   // Helper function to get display name with fallbacks
   const getDisplayName = (item: ProjectCharter | WorkRequest | Risk): string => {
@@ -218,7 +218,7 @@ export default function QueryFixedProjectManagementPage() {
 
   // Fixed load data function with graceful field handling
   const loadData = async () => {
-    if (!selectedTenant?.id) {
+    if (!selectedTenant) {
       console.log('No tenant selected, skipping load')
       setloading(false)
       return
@@ -228,9 +228,7 @@ export default function QueryFixedProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
-
-      // Load projects with graceful field handling
+      console.log(\'loading project data for tenant:\', selectedTenant);      // Load projects with graceful field handling
       try {
         console.log('loading from project_charters table...')
         
@@ -238,7 +236,7 @@ export default function QueryFixedProjectManagementPage() {
         const { data: projectData, error: projectError } = await supabase
           .from('project_charters')
           .select('*') // Select all fields, let the database return what exists
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant) 
           .order('created_at', { ascending: false })
 
         if (projectError) {
@@ -262,7 +260,7 @@ export default function QueryFixedProjectManagementPage() {
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('*') // Select all fields
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant) 
           .order('created_at', { ascending: false })
 
         if (workRequestError) {
@@ -283,7 +281,7 @@ export default function QueryFixedProjectManagementPage() {
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('*') // Select all fields
-          .eq('tenant_id', selectedTenant.id)
+          .eq('tenant_id', selectedTenant) 
           .order('created_at', { ascending: false })
 
         if (riskError) {
@@ -428,7 +426,7 @@ export default function QueryFixedProjectManagementPage() {
 
   // Fixed create project function with graceful field handling
   const handleCreateProject = async () => {
-    if (!selectedTenant?.id || !newProject.title) {
+    if (!selectedTenant || !newProject.title) {
       setError('Please provide a project title and ensure a tenant is selected.')
       return
     }
@@ -438,7 +436,7 @@ export default function QueryFixedProjectManagementPage() {
       
       // Only include fields that have values to avoid null constraint issues
       const projectData: any = {
-        tenant_id: selectedTenant.id,
+                tenant_id: selectedTenant,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
