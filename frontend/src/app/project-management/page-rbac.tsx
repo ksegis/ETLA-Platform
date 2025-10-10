@@ -21,6 +21,17 @@ import {
 import { RouteGuard } from "@/components/RouteGuard";
 import { BreadcrumbRBAC, QuickActionsRBAC } from "@/components/NavigationRBAC";
 
+interface DashboardData {
+  workRequests: any[];
+  projects: any[];
+  risks: any[];
+  stats: {
+    workRequests: { total: number; pending: number; approved: number; declined: number };
+    projects: { total: number; active: number; completed: number };
+    risks: { total: number; high: number; medium: number; low: number };
+  };
+}
+
 export default function ProjectManagementPageRBAC() {
   const router = useRouter();
 
