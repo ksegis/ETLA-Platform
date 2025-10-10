@@ -109,7 +109,7 @@ export default function MinimalFieldsProjectManagementPage() {
   })
 
   const { user } = useAuth()
-  const { selectedTenant } = useTenant()
+  const { selectedTenant } = useTenant() as { selectedTenant: string | null }
 
   // Helper function to get display name
   const getDisplayName = (item: ProjectCharter | WorkRequest | Risk): string => {
@@ -128,7 +128,7 @@ export default function MinimalFieldsProjectManagementPage() {
       setloading(true)
       setError(null)
       
-            console.log("loading minimal project data for tenant:", selectedTenant, selectedTenant?.name);
+            console.log("loading minimal project data for tenant:", selectedTenant);
 
       // Load projects with minimal fields only
       try {
@@ -136,7 +136,7 @@ export default function MinimalFieldsProjectManagementPage() {
         const { data: projectData, error: projectError } = await supabase
           .from('project_charters')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant?.id as string) 
+          .eq('tenant_id', selectedTenant)  
           .order('created_at', { ascending: false })
 
         if (projectError) {
@@ -158,7 +158,7 @@ export default function MinimalFieldsProjectManagementPage() {
         const { data: workRequestData, error: workRequestError } = await supabase
           .from('work_requests')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant?.id as string) 
+          .eq('tenant_id', selectedTenant)  
           .order('created_at', { ascending: false })
 
         if (workRequestError) {
@@ -179,7 +179,7 @@ export default function MinimalFieldsProjectManagementPage() {
         const { data: riskData, error: riskError } = await supabase
           .from('risk_register')
           .select('id, name, description, status, tenant_id, created_at, updated_at')
-          .eq('tenant_id', selectedTenant?.id as string) 
+          .eq('tenant_id', selectedTenant)  
           .order('created_at', { ascending: false })
 
         if (riskError) {
@@ -275,9 +275,8 @@ export default function MinimalFieldsProjectManagementPage() {
   }
 
   // Minimal create project function using only confirmed fields
-  const handleCreateProject = async () => {
-    if (!selectedTenant?.id || !newProject.name) {
-      setError('Please provide a project name and ensure a tenant is selected.')
+  const handleCreateProject = async () => {     if (!selectedTenant || !newProject.name) {
+      setError(\'Please provide a project name and ensure a tenant is selected.\')
       return
     }
 
@@ -289,7 +288,7 @@ export default function MinimalFieldsProjectManagementPage() {
         name: newProject.name,
         description: newProject.description,
         status: newProject.status,
-        tenant_id: selectedTenant?.id as string,
+        tenant_id: selectedTenant as string,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
