@@ -22,6 +22,7 @@ import {
   PermissionDebugPanel,
 } from "@/components/PermissionGuards";
 import { RouteGuard } from "@/components/RouteGuard";
+import RoleGuard from "@/components/auth/RoleGuard";
 import { BreadcrumbRBAC, QuickActionsRBAC } from "@/components/NavigationRBAC";
 
 interface ProjectCharter {
