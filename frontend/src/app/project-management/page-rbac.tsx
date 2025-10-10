@@ -1,4 +1,4 @@
-"use client";
+'''"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,82 @@ import {
 } from "@/components/PermissionGuards";
 import { RouteGuard } from "@/components/RouteGuard";
 import { BreadcrumbRBAC, QuickActionsRBAC } from "@/components/NavigationRBAC";
+
+interface ProjectCharter {
+  id: string;
+  tenant_id: string;
+  title?: string;
+  project_name?: string;
+  project_title?: string;
+  project_code?: string;
+  description?: string;
+  priority?: string;
+  project_type?: string;
+  project_category?: string;
+  start_date?: string;
+  end_date?: string;
+  actual_start_date?: string;
+  actual_end_date?: string;
+  budget?: number;
+  estimated_budget?: number;
+  actual_budget?: number;
+  budget_variance?: number;
+  assigned_team_lead?: string;
+  team_lead?: string;
+  project_manager?: string;
+  manager?: string;
+  sponsor?: string;
+  resource_requirements?: string;
+  project_scope?: string;
+  success_criteria?: string;
+  stakeholders?: any[];
+  risk_assessment?: string;
+  quality_metrics?: string;
+  communication_plan?: string;
+  milestone_schedule?: any[];
+  deliverables?: any[];
+  constraints?: string;
+  assumptions?: string;
+  business_case?: string;
+  charter_status?: string;
+  completion_percentage?: number;
+  schedule_variance?: number;
+  approved_by?: string;
+  approved_at?: string;
+  department?: string;
+  division?: string;
+  cost_center?: string;
+  work_request_id?: string;
+  customer_id?: string;
+  external_project_id?: string;
+  contract_number?: string;
+  billing_type?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+interface WorkRequest {
+  id: string;
+  name?: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  tenant_id: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+interface Risk {
+  id: string;
+  name?: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  tenant_id: string;
+  created_at: string;
+  updated_at?: string;
+}
 
 interface DashboardData {
   workRequests: any[];
@@ -168,7 +244,7 @@ export default function ProjectManagementPageRBAC() {
     },
   ];
 
-  if (permissionsloading) {
+  if (permissionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -435,104 +511,38 @@ export default function ProjectManagementPageRBAC() {
                   {/* Work Requests Tab */}
                   {selectedTab === "work-requests" && (
                     <WorkRequestGuard
-                      fallback={
-                        <NoAccessFallback message="You don't have permission to view work requests." />
-                      }
+                      fallback={<NoAccessFallback message="You do not have permission to view work requests." />}
                     >
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Work Requests
-                          </h3>
+                      <div>
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-medium text-gray-900">Work Requests</h3>
                           <WorkRequestCreateButton
-                            onClick={() => router.push("/work-requests/create")}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                            fallback={null}
+                            onClick={() => console.log("Create new work request")}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                           >
-                            + New Work Request
+                            New Request
                           </WorkRequestCreateButton>
                         </div>
-
-                        {data.workRequests.length === 0 ? (
-                          <p className="text-gray-600">No work requests found.</p>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Title
-                                  </th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                  </th>
-                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Priority
-                                  </th>
-                                  <th className="relative px-6 py-3">
-                                    <span className="sr-only">Actions</span>
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
-                                {data.workRequests.map((request: any) => (
-                                  <tr key={request.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <div className="text-sm font-medium text-gray-900">
-                                        {request.title}
-                                      </div>
-                                      <div className="text-sm text-gray-500">
-                                        {request.description}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <span
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                          request.approval_status === "approved"
-                                            ? "bg-green-100 text-green-800"
-                                            : request.approval_status ===
-                                                "declined"
-                                              ? "bg-red-100 text-red-800"
-                                              : "bg-yellow-100 text-yellow-800"
-                                        }`}
-                                      >
-                                        {request.approval_status ||
-                                          request.status}
-                                      </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                      {request.priority}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex space-x-2">
-                                        <button
-                                          onClick={() =>
-                                            router.push(
-                                              `/work-requests/${request.id}`,
-                                            )
-                                          }
-                                          className="text-blue-600 hover:text-blue-900"
-                                        >
-                                          View
-                                        </button>
-                                        <WorkRequestApproveButton
-                                          onClick={() => {
-                                            setSelectedWorkRequest(request);
-                                            setShowApprovalModal(true);
-                                          }}
-                                          className="text-green-600 hover:text-green-900"
-                                          fallback={null}
-                                        >
-                                          Approve
-                                        </WorkRequestApproveButton>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                        <div className="space-y-4">
+                          {data.workRequests.map((request: any) => (
+                            <div key={request.id} className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+                              <div>
+                                <p className="font-semibold">{request.title}</p>
+                                <p className="text-sm text-gray-500">{request.status}</p>
+                              </div>
+                              <WorkRequestApproveButton
+                                onClick={() => {
+                                  setSelectedWorkRequest(request);
+                                  setShowApprovalModal(true);
+                                }}
+                                className="text-sm bg-green-600 text-white px-3 py-1 rounded"
+                                fallback={null}
+                              >
+                                Approve
+                              </WorkRequestApproveButton>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </WorkRequestGuard>
                   )}
@@ -540,66 +550,23 @@ export default function ProjectManagementPageRBAC() {
                   {/* Projects Tab */}
                   {selectedTab === "projects" && (
                     <ProjectGuard
-                      fallback={
-                        <NoAccessFallback message="You don't have permission to view projects." />
-                      }
+                      fallback={<NoAccessFallback message="You do not have permission to view projects." />}
                     >
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Projects
-                          </h3>
+                      <div>
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-medium text-gray-900">Projects</h3>
                           <ProjectCreateButton
-                            onClick={() =>
-                              router.push("/project-management/create")
-                            }
-                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                            fallback={null}
+                            onClick={() => console.log("Create new project")}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                           >
-                            + New Project
+                            New Project
                           </ProjectCreateButton>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="space-y-4">
                           {data.projects.map((project: any) => (
-                            <div
-                              key={project.id}
-                              className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow"
-                            >
-                              <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-lg font-medium text-gray-900">
-                                  {project.title}
-                                </h4>
-                                <span
-                                  className={`px-2 py-1 text-xs rounded-full ${
-                                    project.status === "active"
-                                      ? "bg-green-100 text-green-800"
-                                      : project.status === "completed"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-gray-100 text-gray-800"
-                                  }`}
-                                >
-                                  {project.status}
-                                </span>
-                              </div>
-                              <p className="text-gray-600 text-sm mb-4">
-                                {project.description}
-                              </p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-500">
-                                  {project.assigned_to}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    router.push(
-                                      `/project-management/charters/${project.id}`,
-                                    )
-                                  }
-                                  className="text-blue-600 hover:text-blue-900 text-sm"
-                                >
-                                  View Details
-                                </button>
-                              </div>
+                            <div key={project.id} className="bg-white p-4 rounded-lg shadow">
+                              <p className="font-semibold">{project.title}</p>
+                              <p className="text-sm text-gray-500">{project.status}</p>
                             </div>
                           ))}
                         </div>
@@ -610,65 +577,15 @@ export default function ProjectManagementPageRBAC() {
                   {/* Risks Tab */}
                   {selectedTab === "risks" && (
                     <RiskGuard
-                      fallback={
-                        <NoAccessFallback message="You don't have permission to view risks." />
-                      }
+                      fallback={<NoAccessFallback message="You do not have permission to view risks." />}
                     >
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-gray-900">
-                            Risk Register
-                          </h3>
-                          <PermissionGuard
-                            feature={F_RISK_MANAGEMENT}
-                            permission={PERMISSIONS.CREATE}
-                            fallback={null}
-                          >
-                            <button
-                              onClick={() =>
-                                router.push("/project-management/risks/create")
-                              }
-                              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-                            >
-                              + New Risk
-                            </button>
-                          </PermissionGuard>
-                        </div>
-
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Risks</h3>
                         <div className="space-y-4">
                           {data.risks.map((risk: any) => (
-                            <div
-                              key={risk.id}
-                              className="border rounded-lg p-4"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-gray-900">
-                                  {risk.title}
-                                </h4>
-                                <div className="flex items-center space-x-2">
-                                  <span
-                                    className={`px-2 py-1 text-xs rounded-full ${
-                                      (risk.risk_score || 0) >= 15
-                                        ? "bg-red-100 text-red-800"
-                                        : (risk.risk_score || 0) >= 8
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : "bg-green-100 text-green-800"
-                                    }`}
-                                  >
-                                    Score: {risk.risk_score || "N/A"}
-                                  </span>
-                                </div>
-                              </div>
-                              <p className="text-gray-600 text-sm mb-3">
-                                {risk.description}
-                              </p>
-                              <div className="flex items-center justify-between text-sm text-gray-500">
-                                <span>Probability: {risk.probability}</span>
-                                <span>Impact: {risk.impact}</span>
-                                <span>
-                                  Owner: {risk.risk_owner || "Unassigned"}
-                                </span>
-                              </div>
+                            <div key={risk.id} className="bg-white p-4 rounded-lg shadow">
+                              <p className="font-semibold">{risk.title}</p>
+                              <p className="text-sm text-gray-500">{risk.status}</p>
                             </div>
                           ))}
                         </div>
@@ -676,128 +593,66 @@ export default function ProjectManagementPageRBAC() {
                     </RiskGuard>
                   )}
 
-                  {/* Debug Tab (Admin only) */}
-                  {selectedTab === "debug" &&
-                    (currentRole === "host_admin" ||
-                      currentRole === "tenant_admin") && (
-                      <div className="space-y-6">
-                        <h3 className="text-lg font-medium text-gray-900">
-                          RBAC Debug Information
-                        </h3>
-                        <PermissionDebugPanel />
-
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-medium mb-2">
-                            User Permissions Summary
-                          </h4>
-                          <pre className="text-xs text-gray-600 overflow-auto">
-                            {JSON.stringify(debugPermissionsSummary, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar with navigation stats */}
-            <div className="w-80">
-              {/* Permission-based quick links */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h4 className="font-medium text-gray-900 mb-4">Quick Links</h4>
-                <div className="space-y-2">
-                  <WorkRequestGuard fallback={null}>
-                    <button
-                      onClick={() => router.push("/work-requests")}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                  {/* Debug Tab (for admins) */}
+                  {selectedTab === "debug" && (
+                    <PermissionGuard
+                      role={[ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN]}
+                      fallback={<NoAccessFallback message="Access denied." />}
                     >
-                      📝 All Work Requests
-                    </button>
-                  </WorkRequestGuard>
-
-                  <ProjectGuard fallback={null}>
-                    <button
-                      onClick={() =>
-                        router.push("/project-management/charters")
-                      }
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    >
-                      📋 Project Charters
-                    </button>
-                  </ProjectGuard>
-
-                  <RiskGuard fallback={null}>
-                    <button
-                      onClick={() => router.push("/project-management/risks")}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    >
-                      ⚠️ Risk Register
-                    </button>
-                  </RiskGuard>
-
-                  <PermissionGuard
-                    feature={FEATURES.REPORTING}
-                    permission={PERMISSIONS.VIEW}
-                    fallback={null}
-                  >
-                    <button
-                      onClick={() => router.push("/reporting")}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                    >
-                      📊 Reports
-                    </button>
-                  </PermissionGuard>
+                      <PermissionDebugPanel />
+                    </PermissionGuard>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Approval Modal (permission-gated) */}
+        {/* Approval Modal */}
         {showApprovalModal && selectedWorkRequest && (
-          <WorkRequestApproveButton onClick={() => {}} fallback={null}>
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Approve Work Request
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Are you sure you want to approve "{selectedWorkRequest.title}
-                  "?
-                </p>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => {
-                      setShowApprovalModal(false);
-                      setSelectedWorkRequest(null);
-                    }}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (selectedWorkRequest) {
-                        await pmbokRBAC.approveWorkRequest(
-                          selectedWorkRequest.id,
-                          "current-user",
-                        );
-                        setShowApprovalModal(false);
-                        setSelectedWorkRequest(null);
-                        // Reload data
-                        window.location.reload();
-                      }
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                  >
-                    Approve
-                  </button>
-                </div>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+              <h2 className="text-2xl font-bold mb-4">Review Work Request</h2>
+              <p className="mb-2"><span className="font-semibold">Title:</span> {selectedWorkRequest.title}</p>
+              <p className="mb-4"><span className="font-semibold">Description:</span> {selectedWorkRequest.description}</p>
+              
+              <div className="flex justify-end space-x-4">
+                <WorkRequestApproveButton
+                  action="approve"
+                  workRequest={selectedWorkRequest}
+                  onApproved={() => {
+                    console.log("Approved");
+                    setShowApprovalModal(false);
+                    // Optionally reload data
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                >
+                  Approve
+                </WorkRequestApproveButton>
+                <WorkRequestApproveButton
+                  action="decline"
+                  workRequest={selectedWorkRequest}
+                  onDeclined={() => {
+                    console.log("Declined");
+                    setShowApprovalModal(false);
+                    // Optionally reload data
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                >
+                  Decline
+                </WorkRequestApproveButton>
+                <button 
+                  onClick={() => setShowApprovalModal(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
-          </WorkRequestApproveButton>
+          </div>
         )}
       </div>
     </RouteGuard>
   );
 }
+'''
