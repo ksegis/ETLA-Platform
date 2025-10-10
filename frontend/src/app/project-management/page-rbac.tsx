@@ -626,7 +626,7 @@ export default function ProjectManagementPageRBAC() {
                       fallback={<NoAccessFallback message="Debug panel is for admins only." />}
                     >
                       <PermissionDebugPanel />
-                    </PermissionGuard>
+                    </RoleGuard>
                   )}
                 </div>
               </div>
