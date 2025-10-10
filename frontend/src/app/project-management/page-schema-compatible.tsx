@@ -227,9 +227,9 @@ export default function EnhancedProjectManagementPage() {
 
   // Enhanced load data function with schema compatibility
   const loadData = async () => {
-    if (!selectedTenant?.id) {
+    if (!selectedTenant) {
       console.log('No tenant selected, skipping load');
-      setloading(false);
+      setLoading(false);
       return;
     }
 
@@ -237,8 +237,7 @@ export default function EnhancedProjectManagementPage() {
       setloading(true);
       setError(null);
       
-      console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name);
-
+     console.log(\'loading project data for tenant:\', selectedTenant);
       // Check available tables first
       await checkAvailableTables();
 
@@ -252,7 +251,8 @@ export default function EnhancedProjectManagementPage() {
           const { data, error } = await supabase
             .from(tableName)
             .select('*')
-            .eq('tenant_id', selectedTenant.id)
+            .eq('tenant_id', selectedTenant)
+
             .order('created_at', { ascending: false });
 
           if (!error && data) {
@@ -279,7 +279,8 @@ export default function EnhancedProjectManagementPage() {
           const { data, error } = await supabase
             .from(tableName)
             .select('*')
-            .eq('tenant_id', selectedTenant.id)
+            .eq('tenant_id', selectedTenant)
+
             .order('created_at', { ascending: false });
 
           if (!error && data) {
@@ -306,7 +307,8 @@ export default function EnhancedProjectManagementPage() {
           const { data, error } = await supabase
             .from(tableName)
             .select('*')
-            .eq('tenant_id', selectedTenant.id)
+            .eq('tenant_id', selectedTenant)
+
             .order('created_at', { ascending: false });
 
           if (!error && data) {
@@ -464,7 +466,7 @@ export default function EnhancedProjectManagementPage() {
 
   // Schema-compatible create project function
   const handleCreateProject = async () => {
-    if (!selectedTenant?.id || (!newProject.title && !newProject.name)) {
+    if (!selectedTenant || (!newProject.title && !newProject.name)) {
       setError('Please provide a project title and ensure a tenant is selected.');
       return;
     }
@@ -477,7 +479,7 @@ export default function EnhancedProjectManagementPage() {
         ...newProject,
         title: newProject.title || newProject.name,
         name: newProject.name || newProject.title,
-        tenant_id: selectedTenant.id,
+        tenant_id: selectedTenant,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -520,7 +522,7 @@ export default function EnhancedProjectManagementPage() {
 
   // Schema-compatible update project function
   const handleUpdateProject = async () => {
-    if (!selectedProject?.id || !selectedTenant?.id || (!selectedProject.title && !selectedProject.name)) {
+    if (!selectedProject?.id || !selectedTenant || (!selectedProject.title && !selectedProject.name)) {
       setError('Please select a project, provide a title, and ensure a tenant is selected.');
       return;
     }
@@ -544,7 +546,8 @@ export default function EnhancedProjectManagementPage() {
             .from(tableName)
             .update(projectData)
             .eq('id', selectedProject.id)
-            .eq('tenant_id', selectedTenant.id)
+            .eq('tenant_id', selectedTenant)
+
             .select();
 
           if (!error && data) {
@@ -574,7 +577,7 @@ export default function EnhancedProjectManagementPage() {
 
   // Schema-compatible delete project function
   const handleDeleteProject = async (projectId: string) => {
-    if (!selectedTenant?.id) {
+    if (!selectedTenant) {
       setError('No tenant selected.');
       return;
     }
@@ -593,7 +596,8 @@ export default function EnhancedProjectManagementPage() {
             .from(tableName)
             .delete()
             .eq('id', projectId)
-            .eq('tenant_id', selectedTenant.id);
+            .eq('tenant_id', selectedTenant)
+;
 
           if (!error) {
             console.log(`Project deleted from ${tableName}:`, projectId);
