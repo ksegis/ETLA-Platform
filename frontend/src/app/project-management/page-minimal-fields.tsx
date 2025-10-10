@@ -128,7 +128,7 @@ export default function MinimalFieldsProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log("loading minimal project data for tenant:", selectedTenant?.id, selectedTenant?.name);
+            console.log("loading minimal project data for tenant:", selectedTenant, selectedTenant?.name);
 
       // Load projects with minimal fields only
       try {
