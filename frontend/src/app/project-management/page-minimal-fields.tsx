@@ -277,8 +277,9 @@ export default function MinimalFieldsProjectManagementPage() {
   }
 
   // Minimal create project function using only confirmed fields
-  const handleCreateProject = async () => {     if (!selectedTenant || !newProject.name) {
-      setError(\'Please provide a project name and ensure a tenant is selected.\')
+    const handleCreateProject = async () => {
+    if (!selectedTenant || !newProject.name) {
+      setError('Please provide a project name and ensure a tenant is selected.')
       return
     }
 
