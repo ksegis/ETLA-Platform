@@ -43,7 +43,7 @@ import { Badge } from '@/components/ui/Badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 // Database-aligned interfaces based on discovered table structure
 interface ProjectCharter {
@@ -385,35 +385,35 @@ export default function DatabaseAlignedProjectManagementPage() {
     }).format(amount)
   }
 
-  const getStatusColor = (status: string | null | undefined) => {
-    const statusLower = (status || '').toLowerCase()
+  const getStatusVariant = (status: string | null | undefined): \'default\' | \'secondary\' | \'destructive\' | \'outline\' | \'warning\' | \'success\' => {
+    const statusLower = (status || \'\').toLowerCase()
     switch (statusLower) {
-      case 'planning':
-      case 'draft':
-        return 'bg-purple-100 text-purple-800'
-      case 'active':
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800'
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'on_hold':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'submitted':
-        return 'bg-blue-100 text-blue-800'
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'rejected':
-      case 'declined':
-        return 'bg-red-100 text-red-800'
-      case 'resolved':
-      case 'mitigated':
-        return 'bg-green-100 text-green-800'
+      case \'planning\':
+      case \'draft\':
+        return \'outline\'
+      case \'active\':
+      case \'in_progress\':
+        return \'default\'
+      case \'completed\':
+        return \'success\'
+      case \'on_hold\':
+        return \'warning\'
+      case \'cancelled\':
+        return \'destructive\'
+      case \'approved\':
+        return \'success\'
+      case \'submitted\':
+        return \'default\'
+      case \'under_review\':
+        return \'warning\'
+      case \'rejected\':
+      case \'declined\':
+        return \'destructive\'
+      case \'resolved\':
+      case \'mitigated\':
+        return \'success\'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return \'outline\'
     }
   }
 

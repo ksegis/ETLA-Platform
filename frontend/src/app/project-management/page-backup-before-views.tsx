@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/Badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 // Types for our data
 interface ProjectCharter {
@@ -158,35 +158,35 @@ export default function ProjectManagementPage() {
     }).format(amount)
   }
 
-  const getStatusColor = (status: string | null | undefined) => {
+  const getStatusVariant = (status: string | null | undefined): 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' | 'success' => {
     const statusLower = (status || '').toLowerCase()
     switch (statusLower) {
       case 'active':
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800'
+        return 'default'
       case 'completed':
-        return 'bg-green-100 text-green-800'
+        return 'success'
       case 'on_hold':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'warning'
       case 'cancelled':
-        return 'bg-red-100 text-red-800'
+        return 'destructive'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'outline'
     }
   }
 
-  const getPriorityColor = (priority: string | null | undefined) => {
-    const priorityLower = (priority || '').toLowerCase()
+  const getPriorityVariant = (priority: string | null | undefined): 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' | 'success' => {
+    const priorityLower = (priority || "").toLowerCase()
     switch (priorityLower) {
       case 'high':
       case 'critical':
-        return 'bg-red-100 text-red-800'
+        return 'destructive'
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'warning'
       case 'low':
-        return 'bg-green-100 text-green-800'
+        return 'success'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'outline'
     }
   }
 

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useTenant } from '@/contexts/TenantContext';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 // HR Analytics specific interfaces
 interface HRMetrics {
@@ -254,7 +254,7 @@ export default function HRAnalyticsDashboard() {
               <span className="font-semibold">{Math.floor(hrMetrics.activeEmployees * 0.6)}</span>
             </div>
             <div className="mt-4">
-              <Badge className="bg-green-100 text-green-800">FLSA Compliant</Badge>
+              <Badge variant="success">FLSA Compliant</Badge>
             </div>
           </div>
         </Card>

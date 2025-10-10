@@ -15,8 +15,7 @@ import {
   Mail,
   User,
 } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 interface InviteAcceptanceState {
   email: string;
   fullName: string;
