@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from "react";
 import { X } from "lucide-react";
@@ -333,3 +333,7 @@ export default function PaystubModal({ row, allRows, open, onClose }: Props) {
     </div>
   );
 }
+
+
+
+

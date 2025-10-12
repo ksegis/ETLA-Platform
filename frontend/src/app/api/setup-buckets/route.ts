@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Setup Buckets API Route
  * Handles Supabase storage bucket initialization
  */
@@ -35,3 +35,7 @@ export async function GET() {
     status: 'available'
   });
 }
+
+
+
+

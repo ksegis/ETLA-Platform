@@ -1,4 +1,4 @@
-
+﻿
 import React from 'react';
 import { X, Printer, Download } from 'lucide-react';
 
@@ -906,4 +906,8 @@ export default function FacsimileModal({
     </div>
   );
 }
+
+
+
+
 

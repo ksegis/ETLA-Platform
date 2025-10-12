@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { type Role } from "@/rbac/constants";
 
@@ -14,3 +14,7 @@ export default function RoleGuard({ allow, fallback = null, children }: RoleGuar
   if (!allowed) return <>{fallback}</>;
   return <>{children}</>;
 }
+
+
+
+

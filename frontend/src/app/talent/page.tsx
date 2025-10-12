@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Talent Dashboard - Main ATS Dashboard
  * Provides overview of recruitment activities and key metrics
  */
@@ -317,7 +317,7 @@ export default function TalentDashboard() {
                     </p>
                     {activity.candidateName && activity.jobTitle && (
                       <p className="text-sm text-gray-600">
-                        {activity.candidateName} • {activity.jobTitle}
+                        {activity.candidateName} â€¢ {activity.jobTitle}
                       </p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
@@ -401,3 +401,7 @@ export default function TalentDashboard() {
     </DashboardLayout>
   );
 }
+
+
+
+

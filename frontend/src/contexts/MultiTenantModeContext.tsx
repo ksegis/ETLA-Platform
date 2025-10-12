@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createContext, useContext } from "react";
 
@@ -11,4 +11,8 @@ export const useMultiTenantMode = () => useContext(MultiTenantModeContext);
 export const MultiTenantModeProvider = MultiTenantModeContext.Provider;
 
 export default MultiTenantModeContext;
+
+
+
+
 

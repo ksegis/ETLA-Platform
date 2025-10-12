@@ -1,4 +1,4 @@
-// frontend/src/app/reporting/_data.ts
+﻿// frontend/src/app/reporting/_data.ts
 export type GroupKey = "employee" | "checks" | "jobs" | "salary" | "timecards" | "all";
 
 export const GROUP_LABELS: Record<Exclude<GroupKey, "all">, string> = {
@@ -187,3 +187,7 @@ export function getReportsByGroup(group: GroupKey | string): ReportType[] {
 export function getReportById(id: string): ReportType | undefined {
   return REPORTS.find((r) => r.id === id);
 }
+
+
+
+

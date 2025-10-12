@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ROM Questionnaire Builder Component
  * Features: Drag-and-drop question builder, templates, conditional logic, and preview
  */
@@ -6,10 +6,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { 
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
   Plus,
   Save,
   Eye,
@@ -42,12 +42,27 @@ import {
   CheckCircle,
   Edit,
   Download,
-  Upload
+  Upload,
 } from 'lucide-react';
 
 interface Question {
   id: string;
-  type: 'text' | 'textarea' | 'multiple_choice' | 'checkbox' | 'rating' | 'date' | 'number' | 'email' | 'phone' | 'file' | 'image' | 'video' | 'url' | 'matrix' | 'ranking';
+  type:
+    | 'text'
+    | 'textarea'
+    | 'multiple_choice'
+    | 'checkbox'
+    | 'rating'
+    | 'date'
+    | 'number'
+    | 'email'
+    | 'phone'
+    | 'file'
+    | 'image'
+    | 'video'
+    | 'url'
+    | 'matrix'
+    | 'ranking';
   title: string;
   description?: string;
   required: boolean;
@@ -130,7 +145,7 @@ const QUESTION_TYPES = [
   { type: 'video', label: 'Video Upload', icon: Video, description: 'Video file upload' },
   { type: 'url', label: 'Website URL', icon: Link, description: 'URL validation' },
   { type: 'matrix', label: 'Matrix/Grid', icon: Layout, description: 'Grid of questions' },
-  { type: 'ranking', label: 'Ranking', icon: List, description: 'Drag to rank items' }
+  { type: 'ranking', label: 'Ranking', icon: List, description: 'Drag to rank items' },
 ] as const;
 
 const QUESTIONNAIRE_TEMPLATES: QuestionnaireTemplate[] = [
@@ -138,32 +153,32 @@ const QUESTIONNAIRE_TEMPLATES: QuestionnaireTemplate[] = [
     name: 'Employee Satisfaction Survey',
     category: 'HR',
     description: 'Comprehensive employee satisfaction and engagement survey',
-    questions: 15
+    questions: 15,
   },
   {
     name: 'Customer Feedback Form',
     category: 'Customer Service',
     description: 'Collect customer feedback and satisfaction ratings',
-    questions: 10
+    questions: 10,
   },
   {
     name: 'Training Evaluation',
     category: 'Training',
     description: 'Evaluate training program effectiveness',
-    questions: 12
+    questions: 12,
   },
   {
     name: 'Exit Interview',
     category: 'HR',
     description: 'Structured exit interview questionnaire',
-    questions: 18
+    questions: 18,
   },
   {
     name: 'Performance Review',
     category: 'Performance',
     description: 'Employee performance evaluation form',
-    questions: 20
-  }
+    questions: 20,
+  },
 ];
 
 export default function QuestionnaireBuilder({
@@ -171,7 +186,7 @@ export default function QuestionnaireBuilder({
   onSave,
   onPreview,
   onPublish,
-  templates = QUESTIONNAIRE_TEMPLATES
+  templates = QUESTIONNAIRE_TEMPLATES,
 }: QuestionnaireBuilderProps) {
   const [questionnaire, setQuestionnaire] = useState<Questionnaire>({
     title: 'New Questionnaire',
@@ -187,8 +202,8 @@ export default function QuestionnaireBuilder({
       randomizeQuestions: false,
       autoSave: true,
       theme: 'default',
-      language: 'en'
-    }
+      language: 'en',
+    },
   });
 
   const [activeTab, setActiveTab] = useState<'build' | 'settings' | 'preview'>('build');
@@ -204,20 +219,10 @@ export default function QuestionnaireBuilder({
     }
   }, [initialQuestionnaire]);
 
-  // Auto-save functionality
-  useEffect(() => {
-    if (questionnaire.settings.autoSave && unsavedChanges) {
-      const timer = setTimeout(() => {
-        handleSave();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [questionnaire, unsavedChanges, handleSave]);
-
-  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const generateId = () => Math.random().toString(36).slice(2, 11);
 
   const handleQuestionnaireChange = (updates: Partial<Questionnaire>) => {
-    setQuestionnaire(prev => ({ ...prev, ...updates }));
+    setQuestionnaire((prev) => ({ ...prev, ...updates }));
     setUnsavedChanges(true);
   };
 
@@ -225,146 +230,123 @@ export default function QuestionnaireBuilder({
     const newQuestion: Question = {
       id: generateId(),
       type,
-      title: `New ${QUESTION_TYPES.find(qt => qt.type === type)?.label || 'Question'}`,
+      title: `New ${QUESTION_TYPES.find((qt) => qt.type === type)?.label || 'Question'}`,
       required: false,
-      options: ['multiple_choice', 'checkbox', 'matrix', 'ranking'].includes(type) 
-        ? ['Option 1', 'Option 2', 'Option 3'] 
-        : undefined,
-      settings: type === 'rating' 
-        ? { scale: { min: 1, max: 5, labels: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'] } }
-        : {}
+      options:
+        ['multiple_choice', 'checkbox', 'matrix', 'ranking'].includes(type) ? ['Option 1', 'Option 2', 'Option 3'] : undefined,
+      settings:
+        type === 'rating'
+          ? { scale: { min: 1, max: 5, labels: ['Poor', 'Fair', 'Good', 'Very Good,', 'Excellent'] } }
+          : {},
     };
 
-    setQuestionnaire(prev => ({
+    setQuestionnaire((prev) => ({
       ...prev,
-      questions: [...prev.questions, newQuestion]
+      questions: [...prev.questions, newQuestion],
     }));
     setSelectedQuestion(newQuestion.id);
     setUnsavedChanges(true);
   };
 
   const handleUpdateQuestion = (questionId: string, updates: Partial<Question>) => {
-    setQuestionnaire(prev => ({
+    setQuestionnaire((prev) => ({
       ...prev,
-      questions: prev.questions.map(q => 
-        q.id === questionId ? { ...q, ...updates } : q
-      )
+      questions: prev.questions.map((q) => (q.id === questionId ? { ...q, ...updates } : q)),
     }));
     setUnsavedChanges(true);
   };
 
   const handleDeleteQuestion = (questionId: string) => {
-    setQuestionnaire(prev => ({
+    setQuestionnaire((prev) => ({
       ...prev,
-      questions: prev.questions.filter(q => q.id !== questionId)
+      questions: prev.questions.filter((q) => q.id !== questionId),
     }));
-    if (selectedQuestion === questionId) {
-      setSelectedQuestion(null);
-    }
+    if (selectedQuestion === questionId) setSelectedQuestion(null);
     setUnsavedChanges(true);
   };
 
   const handleDuplicateQuestion = (questionId: string) => {
-    const question = questionnaire.questions.find(q => q.id === questionId);
-    if (question) {
-      const duplicatedQuestion = {
-        ...question,
-        id: generateId(),
-        title: `${question.title} (Copy)`
-      };
-      
-      const questionIndex = questionnaire.questions.findIndex(q => q.id === questionId);
-      const newQuestions = [...questionnaire.questions];
-      newQuestions.splice(questionIndex + 1, 0, duplicatedQuestion);
-      
-      setQuestionnaire(prev => ({
-        ...prev,
-        questions: newQuestions
-      }));
-      setUnsavedChanges(true);
-    }
-  };
+    const question = questionnaire.questions.find((q) => q.id === questionId);
+    if (!question) return;
 
-  const handleMoveQuestion = (questionId: string, direction: 'up' | 'down') => {
-    const questions = [...questionnaire.questions];
-    const currentIndex = questions.findIndex(q => q.id === questionId);
-    
-    if (direction === 'up' && currentIndex > 0) {
-      [questions[currentIndex], questions[currentIndex - 1]] = [questions[currentIndex - 1], questions[currentIndex]];
-    } else if (direction === 'down' && currentIndex < questions.length - 1) {
-      [questions[currentIndex], questions[currentIndex + 1]] = [questions[currentIndex + 1], questions[currentIndex]];
-    }
-    
-    setQuestionnaire(prev => ({ ...prev, questions }));
+    const duplicated: Question = { ...question, id: generateId(), title: `${question.title} (Copy)` };
+    const idx = questionnaire.questions.findIndex((q) => q.id === questionId);
+    const qs = [...questionnaire.questions];
+    qs.splice(idx + 1, 0, duplicated);
+
+    setQuestionnaire((prev) => ({ ...prev, questions: qs }));
     setUnsavedChanges(true);
   };
 
-  const handleDragStart = (questionId: string) => {
-    setDraggedQuestion(questionId);
+  const handleMoveQuestion = (questionId: string, direction: 'up' | 'down') => {
+    const qs = [...questionnaire.questions];
+    const i = qs.findIndex((q) => q.id === questionId);
+    if (i === -1) return;
+
+    if (direction === 'up' && i > 0) {
+      [qs[i - 1], qs[i]] = [qs[i], qs[i - 1]];
+    } else if (direction === 'down' && i < qs.length - 1) {
+      [qs[i], qs[i + 1]] = [qs[i + 1], qs[i]];
+    }
+    setQuestionnaire((prev) => ({ ...prev, questions: qs }));
+    setUnsavedChanges(true);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
+  const handleDragStart = (questionId: string) => setDraggedQuestion(questionId);
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
 
-  const handleDrop = (e: React.DragEvent, targetQuestionId: string) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetQuestionId: string) => {
     e.preventDefault();
-    
     if (!draggedQuestion || draggedQuestion === targetQuestionId) {
       setDraggedQuestion(null);
       return;
     }
-
-    const questions = [...questionnaire.questions];
-    const draggedIndex = questions.findIndex(q => q.id === draggedQuestion);
-    const targetIndex = questions.findIndex(q => q.id === targetQuestionId);
-    
-    const [draggedItem] = questions.splice(draggedIndex, 1);
-    questions.splice(targetIndex, 0, draggedItem);
-    
-    setQuestionnaire(prev => ({ ...prev, questions }));
+    const qs = [...questionnaire.questions];
+    const from = qs.findIndex((q) => q.id === draggedQuestion);
+    const to = qs.findIndex((q) => q.id === targetQuestionId);
+    const [item] = qs.splice(from, 1);
+    qs.splice(to, 0, item);
+    setQuestionnaire((prev) => ({ ...prev, questions: qs }));
     setDraggedQuestion(null);
     setUnsavedChanges(true);
   };
 
   const handleSave = useCallback(() => {
-    if (onSave) {
-      onSave(questionnaire);
-    }
+    onSave?.(questionnaire);
     setUnsavedChanges(false);
   }, [onSave, questionnaire]);
 
-  const handlePreview = () => {
-    if (onPreview) {
-      onPreview(questionnaire);
+  // Auto-save functionality
+  useEffect(() => {
+    if (questionnaire.settings.autoSave && unsavedChanges) {
+      const t = setTimeout(() => {
+        handleSave();
+      }, 2000);
+      return () => clearTimeout(t);
     }
-  };
+  }, [questionnaire, unsavedChanges, handleSave]);
+
+  const handlePreview = () => onPreview?.(questionnaire);
 
   const handlePublish = () => {
-    if (onPublish) {
-      const publishedQuestionnaire = {
-        ...questionnaire,
-        status: 'published' as const
-      };
-      onPublish(publishedQuestionnaire);
-      setQuestionnaire(publishedQuestionnaire);
-    }
+    const published = { ...questionnaire, status: 'published' as const };
+    onPublish?.(published);
+    setQuestionnaire(published);
     setUnsavedChanges(false);
-  }, [onSave, questionnaire]);
+  };
 
-  const handleLoadTemplate = (template: any) => {
-    // In a real implementation, this would load the full template
-    setQuestionnaire(prev => ({
+  const handleLoadTemplate = (template: QuestionnaireTemplate) => {
+    setQuestionnaire((prev) => ({
       ...prev,
       title: template.name,
       description: template.description,
-      category: template.category
+      category: template.category,
     }));
     setShowTemplates(false);
     setUnsavedChanges(true);
   };
 
-  const selectedQuestionData = questionnaire.questions.find(q => q.id === selectedQuestion);
+  const selectedQuestionData = questionnaire.questions.find((q) => q.id === selectedQuestion);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -374,32 +356,33 @@ export default function QuestionnaireBuilder({
           <h2 className="text-lg font-semibold text-gray-900">Question Types</h2>
           <p className="text-sm text-gray-600 mt-1">Drag or click to add questions</p>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-2">
-            {QUESTION_TYPES.map((questionType) => (
+            {QUESTION_TYPES.map((qt) => (
               <Card
-                key={questionType.type}
+                key={qt.type}
                 className="p-4 cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-blue-500"
-                onClick={() => handleAddQuestion(questionType.type)}
+                onClick={() => handleAddQuestion(qt.type)}
+                draggable
+                onDragStart={(e) => {
+                  e.preventDefault();
+                  handleAddQuestion(qt.type);
+                }}
               >
                 <div className="flex items-center gap-3">
-                  <questionType.icon className="h-5 w-5 text-blue-600" />
+                  <qt.icon className="h-5 w-5 text-blue-600" />
                   <div>
-                    <div className="font-medium text-gray-900">{questionType.label}</div>
-                    <div className="text-xs text-gray-500">{questionType.description}</div>
+                    <div className="font-medium text-gray-900">{qt.label}</div>
+                    <div className="text-xs text-gray-500">{qt.description}</div>
                   </div>
                 </div>
               </Card>
             ))}
           </div>
-          
+
           <div className="mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setShowTemplates(true)}
-              className="w-full flex items-center gap-2"
-            >
+            <Button variant="outline" onClick={() => setShowTemplates(true)} className="w-full flex items-center gap-2">
               <Layout className="h-4 w-4" />
               Load Template
             </Button>
@@ -428,7 +411,7 @@ export default function QuestionnaireBuilder({
                 placeholder="Add a description..."
               />
             </div>
-            
+
             <div className="flex items-center gap-3">
               <Badge variant={questionnaire.status === 'published' ? 'default' : 'secondary'}>
                 {questionnaire.status}
@@ -452,15 +435,13 @@ export default function QuestionnaireBuilder({
               </Button>
             </div>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex items-center gap-6 mt-6">
             <button
               onClick={() => setActiveTab('build')}
               className={`pb-2 border-b-2 font-medium text-sm ${
-                activeTab === 'build'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === 'build' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               Build
@@ -512,9 +493,7 @@ export default function QuestionnaireBuilder({
                       <Card
                         key={question.id}
                         className={`p-6 cursor-pointer transition-all ${
-                          selectedQuestion === question.id
-                            ? 'ring-2 ring-blue-500 shadow-md'
-                            : 'hover:shadow-md'
+                          selectedQuestion === question.id ? 'ring-2 ring-blue-500 shadow-md' : 'hover:shadow-md'
                         }`}
                         draggable
                         onDragStart={() => handleDragStart(question.id)}
@@ -525,11 +504,9 @@ export default function QuestionnaireBuilder({
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <span className="text-sm font-medium text-gray-500">
-                                Q{index + 1}
-                              </span>
+                              <span className="text-sm font-medium text-gray-500">Q{index + 1}</span>
                               <Badge variant="outline" className="text-xs">
-                                {QUESTION_TYPES.find(qt => qt.type === question.type)?.label}
+                                {QUESTION_TYPES.find((qt) => qt.type === question.type)?.label}
                               </Badge>
                               {question.required && (
                                 <Badge variant="outline" className="text-xs text-red-600 border-red-600">
@@ -538,10 +515,8 @@ export default function QuestionnaireBuilder({
                               )}
                             </div>
                             <h4 className="font-medium text-gray-900 mb-1">{question.title}</h4>
-                            {question.description && (
-                              <p className="text-sm text-gray-600 mb-2">{question.description}</p>
-                            )}
-                            
+                            {question.description && <p className="text-sm text-gray-600 mb-2">{question.description}</p>}
+
                             {/* Question Preview */}
                             <div className="mt-3">
                               {question.type === 'multiple_choice' && question.options && (
@@ -554,7 +529,7 @@ export default function QuestionnaireBuilder({
                                   ))}
                                 </div>
                               )}
-                              
+
                               {question.type === 'checkbox' && question.options && (
                                 <div className="space-y-1">
                                   {question.options.map((option, optIndex) => (
@@ -565,15 +540,18 @@ export default function QuestionnaireBuilder({
                                   ))}
                                 </div>
                               )}
-                              
+
                               {question.type === 'rating' && question.settings?.scale && (
                                 <div className="flex items-center gap-1">
-                                  {Array.from({ length: question.settings.scale.max - question.settings.scale.min + 1 }, (_, i) => (
-                                    <Star key={i} className="h-4 w-4 text-gray-300" />
-                                  ))}
+                                  {Array.from(
+                                    { length: question.settings.scale.max - (question.settings.scale.min ?? 1) + 1 },
+                                    (_, i) => (
+                                      <Star key={i} className="h-4 w-4 text-gray-300" />
+                                    ),
+                                  )}
                                 </div>
                               )}
-                              
+
                               {['text', 'textarea', 'email', 'phone', 'number', 'url'].includes(question.type) && (
                                 <div className="text-sm text-gray-400 italic">
                                   {question.settings?.placeholder || `${question.type} input field`}
@@ -581,7 +559,7 @@ export default function QuestionnaireBuilder({
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-2 ml-4">
                             <Button
                               variant="ghost"
@@ -638,21 +616,15 @@ export default function QuestionnaireBuilder({
                 <div className="w-96 bg-white border-l border-gray-200 p-6 overflow-y-auto">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-gray-900">Edit Question</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedQuestion(null)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedQuestion(null)}>
                       <ChevronUp className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="space-y-6">
                     {/* Question Title */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Question Title
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Question Title</label>
                       <input
                         type="text"
                         value={selectedQuestionData.title}
@@ -660,12 +632,10 @@ export default function QuestionnaireBuilder({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     {/* Question Description */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description (Optional)
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
                       <textarea
                         value={selectedQuestionData.description || ''}
                         onChange={(e) => handleUpdateQuestion(selectedQuestionData.id, { description: e.target.value })}
@@ -673,27 +643,27 @@ export default function QuestionnaireBuilder({
                         rows={3}
                       />
                     </div>
-                    
+
                     {/* Required Toggle */}
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         id="required"
                         checked={selectedQuestionData.required}
-                        onChange={(e) => handleUpdateQuestion(selectedQuestionData.id, { required: e.target.checked })}
+                        onChange={(e) =>
+                          handleUpdateQuestion(selectedQuestionData.id, { required: e.target.checked })
+                        }
                         className="rounded border-gray-300"
                       />
                       <label htmlFor="required" className="text-sm font-medium text-gray-700">
                         Required Question
                       </label>
                     </div>
-                    
-                    {/* Options for Multiple Choice/Checkbox */}
+
+                    {/* Options for Multiple Choice/Checkbox/Ranking */}
                     {['multiple_choice', 'checkbox', 'ranking'].includes(selectedQuestionData.type) && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Options
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
                         <div className="space-y-2">
                           {selectedQuestionData.options?.map((option, index) => (
                             <div key={index} className="flex items-center gap-2">
@@ -723,7 +693,10 @@ export default function QuestionnaireBuilder({
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const newOptions = [...(selectedQuestionData.options || []), `Option ${(selectedQuestionData.options?.length || 0) + 1}`];
+                              const newOptions = [
+                                ...(selectedQuestionData.options || []),
+                                `Option ${(selectedQuestionData.options?.length || 0) + 1}`,
+                              ];
                               handleUpdateQuestion(selectedQuestionData.id, { options: newOptions });
                             }}
                           >
@@ -733,27 +706,25 @@ export default function QuestionnaireBuilder({
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Rating Scale Settings */}
                     {selectedQuestionData.type === 'rating' && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Rating Scale
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Rating Scale</label>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs text-gray-600 mb-1">Min</label>
                             <input
                               type="number"
-                              value={selectedQuestionData.settings?.scale?.min || 1}
+                              value={selectedQuestionData.settings?.scale?.min ?? 1}
                               onChange={(e) => {
-                                const scale = { 
-                                  min: parseInt(e.target.value),
-                                  max: selectedQuestionData.settings?.scale?.max || 5,
-                                  labels: selectedQuestionData.settings?.scale?.labels
+                                const scale = {
+                                  min: parseInt(e.target.value, 10),
+                                  max: selectedQuestionData.settings?.scale?.max ?? 5,
+                                  labels: selectedQuestionData.settings?.scale?.labels,
                                 };
-                                handleUpdateQuestion(selectedQuestionData.id, { 
-                                  settings: { ...selectedQuestionData.settings, scale } 
+                                handleUpdateQuestion(selectedQuestionData.id, {
+                                  settings: { ...selectedQuestionData.settings, scale },
                                 });
                               }}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -763,15 +734,15 @@ export default function QuestionnaireBuilder({
                             <label className="block text-xs text-gray-600 mb-1">Max</label>
                             <input
                               type="number"
-                              value={selectedQuestionData.settings?.scale?.max || 5}
+                              value={selectedQuestionData.settings?.scale?.max ?? 5}
                               onChange={(e) => {
-                                const scale = { 
-                                  min: selectedQuestionData.settings?.scale?.min || 1,
-                                  max: parseInt(e.target.value),
-                                  labels: selectedQuestionData.settings?.scale?.labels
+                                const scale = {
+                                  min: selectedQuestionData.settings?.scale?.min ?? 1,
+                                  max: parseInt(e.target.value, 10),
+                                  labels: selectedQuestionData.settings?.scale?.labels,
                                 };
-                                handleUpdateQuestion(selectedQuestionData.id, { 
-                                  settings: { ...selectedQuestionData.settings, scale } 
+                                handleUpdateQuestion(selectedQuestionData.id, {
+                                  settings: { ...selectedQuestionData.settings, scale },
                                 });
                               }}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -780,19 +751,19 @@ export default function QuestionnaireBuilder({
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Placeholder for Text Inputs */}
                     {['text', 'textarea', 'email', 'phone', 'number', 'url'].includes(selectedQuestionData.type) && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Placeholder Text
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Placeholder Text</label>
                         <input
                           type="text"
                           value={selectedQuestionData.settings?.placeholder || ''}
-                          onChange={(e) => handleUpdateQuestion(selectedQuestionData.id, { 
-                            settings: { ...selectedQuestionData.settings, placeholder: e.target.value } 
-                          })}
+                          onChange={(e) =>
+                            handleUpdateQuestion(selectedQuestionData.id, {
+                              settings: { ...selectedQuestionData.settings, placeholder: e.target.value },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -811,9 +782,7 @@ export default function QuestionnaireBuilder({
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">General Settings</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Category
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                       <select
                         value={questionnaire.category}
                         onChange={(e) => handleQuestionnaireChange({ category: e.target.value })}
@@ -827,16 +796,16 @@ export default function QuestionnaireBuilder({
                         <option value="Feedback">Feedback</option>
                       </select>
                     </div>
-                    
+
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Language
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
                       <select
                         value={questionnaire.settings.language}
-                        onChange={(e) => handleQuestionnaireChange({ 
-                          settings: { ...questionnaire.settings, language: e.target.value } 
-                        })}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: { ...questionnaire.settings, language: e.target.value },
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="en">English</option>
@@ -858,39 +827,45 @@ export default function QuestionnaireBuilder({
                         type="checkbox"
                         id="allowAnonymous"
                         checked={questionnaire.settings.allowAnonymous}
-                        onChange={(e) => handleQuestionnaireChange({
-                          settings: { ...questionnaire.settings, allowAnonymous: e.target.checked }
-                        })}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: { ...questionnaire.settings, allowAnonymous: e.target.checked },
+                          })
+                        }
                         className="rounded border-gray-300"
                       />
                       <label htmlFor="allowAnonymous" className="text-sm font-medium text-gray-700">
                         Allow anonymous responses
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         id="requireLogin"
                         checked={questionnaire.settings.requireLogin}
-                        onChange={(e) => handleQuestionnaireChange({
-                          settings: { ...questionnaire.settings, requireLogin: e.target.checked }
-                        })}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: { ...questionnaire.settings, requireLogin: e.target.checked },
+                          })
+                        }
                         className="rounded border-gray-300"
                       />
                       <label htmlFor="requireLogin" className="text-sm font-medium text-gray-700">
                         Require login to respond
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         id="multipleSubmissions"
                         checked={questionnaire.settings.multipleSubmissions}
-                        onChange={(e) => handleQuestionnaireChange({
-                          settings: { ...questionnaire.settings, multipleSubmissions: e.target.checked }
-                        })}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: { ...questionnaire.settings, multipleSubmissions: e.target.checked },
+                          })
+                        }
                         className="rounded border-gray-300"
                       />
                       <label htmlFor="multipleSubmissions" className="text-sm font-medium text-gray-700">
@@ -909,39 +884,45 @@ export default function QuestionnaireBuilder({
                         type="checkbox"
                         id="showProgressBar"
                         checked={questionnaire.settings.showProgressBar}
-                        onChange={(e) => handleQuestionnaireChange({
-                          settings: { ...questionnaire.settings, showProgressBar: e.target.checked }
-                        })}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: { ...questionnaire.settings, showProgressBar: e.target.checked },
+                          })
+                        }
                         className="rounded border-gray-300"
                       />
                       <label htmlFor="showProgressBar" className="text-sm font-medium text-gray-700">
                         Show progress bar
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         id="randomizeQuestions"
                         checked={questionnaire.settings.randomizeQuestions}
-                        onChange={(e) => handleQuestionnaireChange({
-                          settings: { ...questionnaire.settings, randomizeQuestions: e.target.checked }
-                        })}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: { ...questionnaire.settings, randomizeQuestions: e.target.checked },
+                          })
+                        }
                         className="rounded border-gray-300"
                       />
                       <label htmlFor="randomizeQuestions" className="text-sm font-medium text-gray-700">
                         Randomize question order
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         id="autoSave"
                         checked={questionnaire.settings.autoSave}
-                        onChange={(e) => handleQuestionnaireChange({
-                          settings: { ...questionnaire.settings, autoSave: e.target.checked }
-                        })}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: { ...questionnaire.settings, autoSave: e.target.checked },
+                          })
+                        }
                         className="rounded border-gray-300"
                       />
                       <label htmlFor="autoSave" className="text-sm font-medium text-gray-700">
@@ -961,43 +942,45 @@ export default function QuestionnaireBuilder({
                       </label>
                       <input
                         type="number"
-                        value={questionnaire.settings.timeLimit || ''}
-                        onChange={(e) => handleQuestionnaireChange({
-                          settings: { 
-                            ...questionnaire.settings, 
-                            timeLimit: e.target.value ? parseInt(e.target.value) : undefined 
-                          }
-                        })}
+                        value={questionnaire.settings.timeLimit ?? ''}
+                        onChange={(e) =>
+                          handleQuestionnaireChange({
+                            settings: {
+                              ...questionnaire.settings,
+                              timeLimit: e.target.value ? parseInt(e.target.value, 10) : undefined,
+                            },
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="No time limit"
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Start Date (optional)
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date (optional)</label>
                         <input
                           type="datetime-local"
-                          value={questionnaire.settings.startDate || ''}
-                          onChange={(e) => handleQuestionnaireChange({
-                            settings: { ...questionnaire.settings, startDate: e.target.value }
-                          })}
+                          value={questionnaire.settings.startDate ?? ''}
+                          onChange={(e) =>
+                            handleQuestionnaireChange({
+                              settings: { ...questionnaire.settings, startDate: e.target.value },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
-                      
+
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          End Date (optional)
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">End Date (optional)</label>
                         <input
                           type="datetime-local"
-                          value={questionnaire.settings.endDate || ''}
-                          onChange={(e) => handleQuestionnaireChange({
-                            settings: { ...questionnaire.settings, endDate: e.target.value }
-                          })}
+                          value={questionnaire.settings.endDate ?? ''}
+                          onChange={(e) =>
+                            handleQuestionnaireChange({
+                              settings: { ...questionnaire.settings, endDate: e.target.value },
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -1013,14 +996,10 @@ export default function QuestionnaireBuilder({
               <div className="max-w-2xl mx-auto">
                 <Card className="p-8">
                   <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                      {questionnaire.title}
-                    </h1>
-                    {questionnaire.description && (
-                      <p className="text-gray-600">{questionnaire.description}</p>
-                    )}
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{questionnaire.title}</h1>
+                    {questionnaire.description && <p className="text-gray-600">{questionnaire.description}</p>}
                   </div>
-                  
+
                   {questionnaire.settings.showProgressBar && (
                     <div className="mb-8">
                       <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
@@ -1028,31 +1007,27 @@ export default function QuestionnaireBuilder({
                         <span>0 of {questionnaire.questions.length}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '0%' }}></div>
+                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '0%' }} />
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="space-y-8">
                     {questionnaire.questions.map((question, index) => (
                       <div key={question.id} className="space-y-3">
                         <div className="flex items-start gap-2">
-                          <span className="text-sm font-medium text-gray-500 mt-1">
-                            {index + 1}.
-                          </span>
+                          <span className="text-sm font-medium text-gray-500 mt-1">{index + 1}.</span>
                           <div className="flex-1">
                             <h3 className="font-medium text-gray-900">
                               {question.title}
-                              {question.required && (
-                                <span className="text-red-500 ml-1">*</span>
-                              )}
+                              {question.required && <span className="text-red-500 ml-1">*</span>}
                             </h3>
                             {question.description && (
                               <p className="text-sm text-gray-600 mt-1">{question.description}</p>
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="ml-6">
                           {/* Render different question types */}
                           {question.type === 'text' && (
@@ -1063,7 +1038,7 @@ export default function QuestionnaireBuilder({
                               disabled
                             />
                           )}
-                          
+
                           {question.type === 'textarea' && (
                             <textarea
                               placeholder={question.settings?.placeholder}
@@ -1072,7 +1047,7 @@ export default function QuestionnaireBuilder({
                               disabled
                             />
                           )}
-                          
+
                           {question.type === 'multiple_choice' && question.options && (
                             <div className="space-y-2">
                               {question.options.map((option, optIndex) => (
@@ -1083,7 +1058,7 @@ export default function QuestionnaireBuilder({
                               ))}
                             </div>
                           )}
-                          
+
                           {question.type === 'checkbox' && question.options && (
                             <div className="space-y-2">
                               {question.options.map((option, optIndex) => (
@@ -1094,27 +1069,24 @@ export default function QuestionnaireBuilder({
                               ))}
                             </div>
                           )}
-                          
+
                           {question.type === 'rating' && question.settings?.scale && (
                             <div className="flex items-center gap-2">
-                              {Array.from({ 
-                                length: question.settings.scale.max - question.settings.scale.min + 1 
-                              }, (_, i) => (
-                                <button key={i} className="p-1" disabled>
-                                  <Star className="h-6 w-6 text-gray-300 hover:text-yellow-400" />
-                                </button>
-                              ))}
+                              {Array.from(
+                                { length: question.settings.scale.max - (question.settings.scale.min ?? 1) + 1 },
+                                (_, i) => (
+                                  <button key={i} className="p-1" disabled>
+                                    <Star className="h-6 w-6 text-gray-300" />
+                                  </button>
+                                ),
+                              )}
                             </div>
                           )}
-                          
+
                           {question.type === 'date' && (
-                            <input
-                              type="date"
-                              className="px-3 py-2 border border-gray-300 rounded-md"
-                              disabled
-                            />
+                            <input type="date" className="px-3 py-2 border border-gray-300 rounded-md" disabled />
                           )}
-                          
+
                           {question.type === 'number' && (
                             <input
                               type="number"
@@ -1127,7 +1099,7 @@ export default function QuestionnaireBuilder({
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="mt-8 pt-6 border-t border-gray-200">
                     <Button className="w-full" disabled>
                       Submit Response
@@ -1147,15 +1119,12 @@ export default function QuestionnaireBuilder({
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">Choose a Template</h2>
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowTemplates(false)}
-                >
+                <Button variant="ghost" onClick={() => setShowTemplates(false)}>
                   <ChevronUp className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            
+
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {templates.map((template) => (
@@ -1185,3 +1154,7 @@ export default function QuestionnaireBuilder({
     </div>
   );
 }
+
+
+
+

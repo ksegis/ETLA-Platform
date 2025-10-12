@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
@@ -53,17 +53,17 @@ export default function WorkRequestApprovalModal({
       }
 
       if (result.success) {
-        console.log(`✅ Work request ${action} successful`)
+        console.log(`âœ… Work request ${action} successful`)
         onApprovalComplete()
         onClose()
         resetForm()
       } else {
-        console.error(`❌ Work request ${action} failed:`, result.error)
+        console.error(`âŒ Work request ${action} failed:`, result.error)
         alert(`Failed to ${action} work request: ${result.error}`)
       }
 
     } catch (error) {
-      console.error(`❌ Error during ${action}:`, error)
+      console.error(`âŒ Error during ${action}:`, error)
       alert(`Error during ${action}: ${error}`)
     } finally {
       setloading(false)
@@ -273,4 +273,8 @@ export default function WorkRequestApprovalModal({
     </div>
   )
 }
+
+
+
+
 

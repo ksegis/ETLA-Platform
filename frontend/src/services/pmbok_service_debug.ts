@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+﻿import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // =====================================================
 // TYPESCRIPT INTERFACES (Same as before)
@@ -127,10 +127,10 @@ export class PMBOKService {
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Supabase URL and Key are required. No mock data allowed.')
     }
-    console.log('🔧 Initializing PMBOK Service with:', { supabaseUrl, tenantId })
+    console.log('ðŸ”§ Initializing PMBOK Service with:', { supabaseUrl, tenantId })
     this.supabase = createClient(supabaseUrl, supabaseKey)
     this.currentTenantId = tenantId || '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
-    console.log('✅ PMBOK Service initialized with tenant:', this.currentTenantId)
+    console.log('âœ… PMBOK Service initialized with tenant:', this.currentTenantId)
   }
 
   // =====================================================
@@ -138,30 +138,30 @@ export class PMBOKService {
   // =====================================================
 
   async getWorkRequests(): Promise<WorkRequest[]> {
-    console.log('🔍 Starting getWorkRequests...')
-    console.log('🏢 Using tenant ID:', this.currentTenantId)
+    console.log('ðŸ” Starting getWorkRequests...')
+    console.log('ðŸ¢ Using tenant ID:', this.currentTenantId)
     
     if (!this.supabase) {
-      console.error('❌ Supabase client not initialized')
+      console.error('âŒ Supabase client not initialized')
       throw new Error('Supabase client not initialized')
     }
 
     try {
       // Step 1: Test basic connection
-      console.log('🔌 Testing Supabase connection...')
+      console.log('ðŸ”Œ Testing Supabase connection...')
       const { data: testData, error: testError } = await Promise.race([
         this.supabase.from('work_requests').select('count', { count: 'exact', head: true }),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 5000))
       ]) as any
       
       if (testError) {
-        console.error('❌ Connection test failed:', testError)
+        console.error('âŒ Connection test failed:', testError)
         throw testError
       }
-      console.log('✅ Connection test passed, total rows:', testData)
+      console.log('âœ… Connection test passed, total rows:', testData)
 
       // Step 2: Test simple query without joins
-      console.log('📊 Fetching work requests (simple query)...')
+      console.log('ðŸ“Š Fetching work requests (simple query)...')
       const { data: simpleData, error: simpleError } = await Promise.race([
         this.supabase
           .from('work_requests')
@@ -173,16 +173,16 @@ export class PMBOKService {
       ]) as any
 
       if (simpleError) {
-        console.error('❌ Simple query failed:', simpleError)
+        console.error('âŒ Simple query failed:', simpleError)
         throw simpleError
       }
 
-      console.log('✅ Simple query succeeded, found', simpleData?.length || 0, 'work requests')
-      console.log('📋 Sample data:', simpleData?.[0])
+      console.log('âœ… Simple query succeeded, found', simpleData?.length || 0, 'work requests')
+      console.log('ðŸ“‹ Sample data:', simpleData?.[0])
 
       // Step 3: Try to get customer names (if simple query worked)
       if (simpleData && simpleData.length > 0) {
-        console.log('👥 Attempting to fetch customer information...')
+        console.log('ðŸ‘¥ Attempting to fetch customer information...')
         
         try {
           const { data: profileData, error: profileError } = await Promise.race([
@@ -195,9 +195,9 @@ export class PMBOKService {
           ]) as any
 
           if (profileError) {
-            console.warn('⚠️ Profile query failed, using fallback:', profileError)
+            console.warn('âš ï¸ Profile query failed, using fallback:', profileError)
           } else {
-            console.log('✅ Profile query succeeded, found', profileData?.length || 0, 'profiles')
+            console.log('âœ… Profile query succeeded, found', profileData?.length || 0, 'profiles')
             
             // Create a map for quick lookup
             const profileMap = new Map(profileData?.map((p: any) => [p.id, p.full_name]) || [])
@@ -210,11 +210,11 @@ export class PMBOKService {
               submitted_at: request.created_at
             }))
 
-            console.log('✅ Data transformation completed successfully')
+            console.log('âœ… Data transformation completed successfully')
             return transformedData
           }
         } catch (profileErr) {
-          console.warn('⚠️ Profile lookup failed, using fallback names:', profileErr)
+          console.warn('âš ï¸ Profile lookup failed, using fallback names:', profileErr)
         }
       }
 
@@ -226,12 +226,12 @@ export class PMBOKService {
         submitted_at: request.created_at
       }))
 
-      console.log('✅ Returning fallback data with', fallbackData.length, 'records')
+      console.log('âœ… Returning fallback data with', fallbackData.length, 'records')
       return fallbackData
 
     } catch (error) {
-      console.error('❌ getWorkRequests failed:', error)
-      console.error('🔍 Error details:', {
+      console.error('âŒ getWorkRequests failed:', error)
+      console.error('ðŸ” Error details:', {
         message: (error as any).message,
         stack: (error as any).stack,
         tenantId: this.currentTenantId
@@ -245,7 +245,7 @@ export class PMBOKService {
   // =====================================================
 
   async getProjectCharters(): Promise<ProjectCharter[]> {
-    console.log('📊 Fetching project charters...')
+    console.log('ðŸ“Š Fetching project charters...')
     
     if (!this.supabase) {
       throw new Error('Supabase client not initialized')
@@ -262,20 +262,20 @@ export class PMBOKService {
       ]) as any
 
       if (error) {
-        console.error('❌ Project charters query failed:', error)
+        console.error('âŒ Project charters query failed:', error)
         throw error
       }
 
-      console.log('✅ Project charters fetched:', data?.length || 0)
+      console.log('âœ… Project charters fetched:', data?.length || 0)
       return data || []
     } catch (error) {
-      console.error('❌ getProjectCharters failed:', error)
+      console.error('âŒ getProjectCharters failed:', error)
       throw error
     }
   }
 
   async getRisksByProject(projectId?: string): Promise<RiskRegister[]> {
-    console.log('🛡️ Fetching risks...')
+    console.log('ðŸ›¡ï¸ Fetching risks...')
     
     if (!this.supabase) {
       throw new Error('Supabase client not initialized')
@@ -297,14 +297,14 @@ export class PMBOKService {
       ]) as any
 
       if (error) {
-        console.error('❌ Risks query failed:', error)
+        console.error('âŒ Risks query failed:', error)
         throw error
       }
 
-      console.log('✅ Risks fetched:', data?.length || 0)
+      console.log('âœ… Risks fetched:', data?.length || 0)
       return data || []
     } catch (error) {
-      console.error('❌ getRisksByProject failed:', error)
+      console.error('âŒ getRisksByProject failed:', error)
       throw error
     }
   }
@@ -374,17 +374,17 @@ export class PMBOKService {
   // =====================================================
 
   async approveWorkRequest(workRequestId: string, approvedByUserId: string, projectName?: string, projectDescription?: string): Promise<string> {
-    console.log('⏳ approveWorkRequest called - placeholder implementation')
+    console.log('â³ approveWorkRequest called - placeholder implementation')
     throw new Error('Approval workflow not implemented in debug version')
   }
 
   async declineWorkRequest(workRequestId: string, declinedByUserId: string, declineReason: string): Promise<boolean> {
-    console.log('⏳ declineWorkRequest called - placeholder implementation')
+    console.log('â³ declineWorkRequest called - placeholder implementation')
     throw new Error('Approval workflow not implemented in debug version')
   }
 
   async setWorkRequestUnderReview(workRequestId: string, reviewedByUserId: string): Promise<boolean> {
-    console.log('⏳ setWorkRequestUnderReview called - placeholder implementation')
+    console.log('â³ setWorkRequestUnderReview called - placeholder implementation')
     throw new Error('Approval workflow not implemented in debug version')
   }
 }
@@ -396,16 +396,20 @@ export class PMBOKService {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN
 
-console.log('🔧 Environment check:', {
+console.log('ðŸ”§ Environment check:', {
   hasUrl: !!supabaseUrl,
   hasKey: !!supabaseKey,
   urlPreview: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'missing'
 })
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Missing environment variables')
+  console.error('âŒ Missing environment variables')
   throw new Error('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_TOKEN environment variables are required')
 }
 
 export const pmbok = new PMBOKService(supabaseUrl, supabaseKey, '54afbd1d-e72a-41e1-9d39-2c8a08a257ff')
+
+
+
+
 

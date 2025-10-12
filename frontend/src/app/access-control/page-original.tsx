@@ -1,4 +1,4 @@
-
+﻿
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -123,7 +123,7 @@ export default function AccessControlPage() {
   const canManageUsers = isHostAdmin || isClientAdmin || isDemoUser
   
   // Debug logging
-  console.log('🔍 Access Control Permission Debug:', {
+  console.log('ðŸ” Access Control Permission Debug:', {
     user: user?.email,
     userRole,
     tenantUserRole: tenantUser?.role,
@@ -138,10 +138,10 @@ export default function AccessControlPage() {
   useEffect(() => {
     // Allow access in demo mode or when authenticated with proper permissions
     if ((isAuthenticated || isDemoMode) && canManageUsers) {
-      console.log('✅ loading Access Control data')
+      console.log('âœ… loading Access Control data')
       loadData()
     } else {
-      console.log('❌ Access denied - not loading data')
+      console.log('âŒ Access denied - not loading data')
     }
   }, [isAuthenticated, isDemoMode, canManageUsers, selectedTenant])
 
@@ -187,7 +187,7 @@ export default function AccessControlPage() {
 
       // Filter by tenant if not host admin
       // Host admin should see ALL users regardless of selectedTenant
-      console.log('🔍 Access Control Debug:', {
+      console.log('ðŸ” Access Control Debug:', {
         isHostAdmin,
         isClientAdmin,
         isDemoUser,
@@ -200,15 +200,15 @@ export default function AccessControlPage() {
       })
       
       if (!isHostAdmin && selectedTenant) {
-        console.log('🚫 Applying tenant filter for tenant:', selectedTenant.name)
+        console.log('ðŸš« Applying tenant filter for tenant:', selectedTenant.name)
         query = query.eq('tenant_users.tenant_id', selectedTenant.id)
       } else {
-        console.log('✅ No tenant filtering - showing all users')
+        console.log('âœ… No tenant filtering - showing all users')
       }
 
       const { data: users, error } = await query
 
-      console.log('📊 Query Results:', {
+      console.log('ðŸ“Š Query Results:', {
         userCount: users?.length || 0,
         users: users?.map((u: any) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
       })
@@ -358,7 +358,7 @@ export default function AccessControlPage() {
   }, {} as Record<string, number>)
 
   // Debug logging before access check
-  console.log('🔍 Final Access Check:', {
+  console.log('ðŸ” Final Access Check:', {
     canManageUsers,
     isHostAdmin,
     isClientAdmin,
@@ -371,7 +371,7 @@ export default function AccessControlPage() {
   })
 
   if (!canManageUsers) {
-    console.log('❌ Access denied - canManageUsers is false')
+    console.log('âŒ Access denied - canManageUsers is false')
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -385,7 +385,7 @@ export default function AccessControlPage() {
     )
   }
 
-  console.log('✅ Access granted - rendering Access Control page')
+  console.log('âœ… Access granted - rendering Access Control page')
 
   return (
     <DashboardLayout>
@@ -911,4 +911,8 @@ export default function AccessControlPage() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

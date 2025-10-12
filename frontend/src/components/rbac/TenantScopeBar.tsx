@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React from 'react'
 import { Building, ChevronDown, Search } from 'lucide-react'
@@ -111,4 +111,8 @@ export default function TenantScopeBar({
     </div>
   )
 }
+
+
+
+
 

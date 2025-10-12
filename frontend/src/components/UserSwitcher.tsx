@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
@@ -23,7 +23,7 @@ const TEST_USERS: TestUser[] = [
     name: 'System Administrator',
     role: 'admin',
     roleLevel: 'host',
-    company: '🏢 ETLA Platform (Host)',
+    company: 'ðŸ¢ ETLA Platform (Host)',
     description: 'Full system access across all tenants'
   },
   {
@@ -32,7 +32,7 @@ const TEST_USERS: TestUser[] = [
     name: 'Platform Manager',
     role: 'manager',
     roleLevel: 'host',
-    company: '🏢 ETLA Platform (Host)',
+    company: 'ðŸ¢ ETLA Platform (Host)',
     description: 'Host-level management functions'
   },
   {
@@ -41,7 +41,7 @@ const TEST_USERS: TestUser[] = [
     name: 'Michael Chen',
     role: 'admin',
     roleLevel: 'primary_client',
-    company: '🏢 ACME Corporation (Primary)',
+    company: 'ðŸ¢ ACME Corporation (Primary)',
     description: 'ACME admin + subsidiary management'
   },
   {
@@ -50,7 +50,7 @@ const TEST_USERS: TestUser[] = [
     name: 'Sarah Johnson',
     role: 'manager',
     roleLevel: 'primary_client',
-    company: '🏢 ACME Corporation (Primary)',
+    company: 'ðŸ¢ ACME Corporation (Primary)',
     description: 'ACME project management functions'
   },
   {
@@ -59,7 +59,7 @@ const TEST_USERS: TestUser[] = [
     name: 'Alex Thompson',
     role: 'admin',
     roleLevel: 'sub_client',
-    company: '🏢 ACME Subsidiary (Sub)',
+    company: 'ðŸ¢ ACME Subsidiary (Sub)',
     description: 'Subsidiary administration only'
   },
   {
@@ -68,7 +68,7 @@ const TEST_USERS: TestUser[] = [
     name: 'Emma Davis',
     role: 'user',
     roleLevel: 'sub_client',
-    company: '🏢 ACME Subsidiary (Sub)',
+    company: 'ðŸ¢ ACME Subsidiary (Sub)',
     description: 'Basic user operations'
   },
   {
@@ -77,7 +77,7 @@ const TEST_USERS: TestUser[] = [
     name: 'Jordan Smith',
     role: 'viewer',
     roleLevel: 'sub_client',
-    company: '🏢 ACME Subsidiary (Sub)',
+    company: 'ðŸ¢ ACME Subsidiary (Sub)',
     description: 'Read-only access'
   }
 ]
@@ -184,7 +184,7 @@ export default function UserSwitcher() {
                   <span className="font-medium">{currentUser.name}</span> ({currentUser.email})
                 </p>
                 <p className="text-xs text-blue-600">
-                  {currentUser.company} • {currentUser.role} • {currentUser.roleLevel}
+                  {currentUser.company} â€¢ {currentUser.role} â€¢ {currentUser.roleLevel}
                 </p>
               </div>
               <Button
@@ -276,15 +276,19 @@ export default function UserSwitcher() {
         <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <h3 className="font-medium text-yellow-800 mb-2">Testing Instructions</h3>
           <ul className="text-sm text-yellow-700 space-y-1">
-            <li>• Click "Switch to User" to login as different test users</li>
-            <li>• The page will refresh automatically after switching users</li>
-            <li>• Run RBAC tests after each user switch to compare permissions</li>
-            <li>• Check that navigation menus and features change based on role</li>
-            <li>• Verify cross-tenant data isolation between different companies</li>
+            <li>â€¢ Click "Switch to User" to login as different test users</li>
+            <li>â€¢ The page will refresh automatically after switching users</li>
+            <li>â€¢ Run RBAC tests after each user switch to compare permissions</li>
+            <li>â€¢ Check that navigation menus and features change based on role</li>
+            <li>â€¢ Verify cross-tenant data isolation between different companies</li>
           </ul>
         </div>
       </CardContent>
     </Card>
   )
 }
+
+
+
+
 

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { TenantProvider } from '@/contexts/TenantContext'
@@ -28,3 +28,7 @@ export default function RootLayout({
     </html>
   )
 }
+
+
+
+

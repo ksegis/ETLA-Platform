@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 type Props = {
-  href?: string;        // where “Back” should go
+  href?: string;        // where â€œBackâ€ should go
   label?: string;       // text next to the arrow
   className?: string;
 };
@@ -26,3 +26,7 @@ export default function BackNav({
     </div>
   );
 }
+
+
+
+

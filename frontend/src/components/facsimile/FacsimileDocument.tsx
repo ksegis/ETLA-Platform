@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FacsimileDocumentProps, FacsimileTheme } from '../../types/facsimile';
@@ -172,13 +172,13 @@ export default function FacsimileDocument({
         <div className="mt-12 pt-6 border-t text-sm" style={{ borderColor: colors.border, color: colors.mutedInk }}>
           <div className="flex justify-between items-center">
             <div>
-              © {new Date().getFullYear()} {branding?.legalName || 'ETLA Platform'}. All rights reserved.
+              Â© {new Date().getFullYear()} {branding?.legalName || 'ETLA Platform'}. All rights reserved.
             </div>
             <div className="text-center">
               {facsimileTheme.branding.footer_disclaimer}
             </div>
             <div>
-              Facsimile • {template.document_type}
+              Facsimile â€¢ {template.document_type}
             </div>
           </div>
           
@@ -214,7 +214,7 @@ function PayStatementContent({ data, theme }: { data: FacsimilePayStatementData;
         <div>
           <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Pay Period</h3>
           <div className="space-y-2 text-sm">
-            <div><strong>Period:</strong> {data.period_start} – {data.period_end}</div>
+            <div><strong>Period:</strong> {data.period_start} â€“ {data.period_end}</div>
             <div><strong>Pay Date:</strong> {data.pay_date}</div>
             <div><strong>Check Number:</strong> {data.check_number}</div>
             <div><strong>Status:</strong> {data.check_status}</div>
@@ -396,4 +396,8 @@ function TaxRecordContent({ data, theme }: { data: FacsimileTaxRecordData; theme
     </div>
   );
 }
+
+
+
+
 

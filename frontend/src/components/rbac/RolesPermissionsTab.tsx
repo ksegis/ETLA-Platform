@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Plus,
   Search,
@@ -451,3 +451,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
 };
 
 export default RolesPermissionsTab;
+
+
+
+

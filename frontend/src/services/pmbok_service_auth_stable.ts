@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+﻿import { createClient } from '@supabase/supabase-js'
 
 // Environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -9,12 +9,12 @@ let supabase: any = null
 if (typeof window !== 'undefined' && supabaseUrl && supabaseAnonKey) {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey)
-    console.log('✅ Supabase client initialized')
+    console.log('âœ… Supabase client initialized')
   } catch (error) {
-    console.warn('⚠️ Failed to initialize Supabase client:', error)
+    console.warn('âš ï¸ Failed to initialize Supabase client:', error)
   }
 } else {
-  console.warn('⚠️ Supabase environment variables not available')
+  console.warn('âš ï¸ Supabase environment variables not available')
 }
 
 // Enhanced interfaces with approval workflow
@@ -85,7 +85,7 @@ class PMBOKService {
     this.currentUserId = '1'
     this.currentTenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
     
-    console.log('🔧 PMBOK Service initialized with demo fallback:', {
+    console.log('ðŸ”§ PMBOK Service initialized with demo fallback:', {
       userId: this.currentUserId,
       tenantId: this.currentTenantId
     })
@@ -101,7 +101,7 @@ class PMBOKService {
     this.currentTenantId = tenantId || '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
     
     if (previousUserId !== this.currentUserId || previousTenantId !== this.currentTenantId) {
-      console.log('🔄 PMBOK Service user context updated:', {
+      console.log('ðŸ”„ PMBOK Service user context updated:', {
         from: { userId: previousUserId, tenantId: previousTenantId },
         to: { userId: this.currentUserId, tenantId: this.currentTenantId }
       })
@@ -111,7 +111,7 @@ class PMBOKService {
         try {
           callback(this.currentUserId, this.currentTenantId)
         } catch (error) {
-          console.error('❌ Error in auth callback:', error)
+          console.error('âŒ Error in auth callback:', error)
         }
       })
     }
@@ -158,20 +158,20 @@ class PMBOKService {
 
   // Get work requests with stable auth context
   async getWorkRequests(): Promise<WorkRequest[]> {
-    console.log('🔍 loading work requests with context:', {
+    console.log('ðŸ” loading work requests with context:', {
       userId: this.currentUserId,
       tenantId: this.currentTenantId,
       hasSupabase: this.isSupabaseAvailable()
     })
 
     if (!this.isSupabaseAvailable()) {
-      console.warn('⚠️ Supabase not available, returning empty array')
+      console.warn('âš ï¸ Supabase not available, returning empty array')
       return []
     }
 
     try {
       // Step 1: Get work requests for current tenant
-      console.log('📊 Fetching work requests for tenant:', this.currentTenantId)
+      console.log('ðŸ“Š Fetching work requests for tenant:', this.currentTenantId)
       
       const workRequestsQuery = supabase
         .from('work_requests')
@@ -186,20 +186,20 @@ class PMBOKService {
       ) as any
 
       if (workRequestsError) {
-        console.error('❌ Error fetching work requests:', workRequestsError)
+        console.error('âŒ Error fetching work requests:', workRequestsError)
         return []
       }
 
       if (!workRequestsData || workRequestsData.length === 0) {
-        console.log('ℹ️ No work requests found for tenant:', this.currentTenantId)
+        console.log('â„¹ï¸ No work requests found for tenant:', this.currentTenantId)
         return []
       }
 
-      console.log('✅ Work requests fetched:', workRequestsData.length)
+      console.log('âœ… Work requests fetched:', workRequestsData.length)
 
       // Step 2: Get customer information
       const customerIds = Array.from(new Set(workRequestsData.map((wr: any) => wr.customer_id).filter(Boolean)))
-      console.log('👥 Fetching customer info for IDs:', customerIds)
+      console.log('ðŸ‘¥ Fetching customer info for IDs:', customerIds)
 
       let customerMap = new Map()
       if (customerIds.length > 0) {
@@ -214,15 +214,15 @@ class PMBOKService {
           ) as any
 
           if (customersError) {
-            console.warn('⚠️ Error fetching customers:', customersError)
+            console.warn('âš ï¸ Error fetching customers:', customersError)
           } else if (customersData) {
             customersData.forEach((customer: any) => {
               customerMap.set(customer.id, customer)
             })
-            console.log('✅ Customer data loaded:', customersData.length)
+            console.log('âœ… Customer data loaded:', customersData.length)
           }
         } catch (customerError) {
-          console.warn('⚠️ Customer query failed:', customerError)
+          console.warn('âš ï¸ Customer query failed:', customerError)
         }
       }
 
@@ -232,7 +232,7 @@ class PMBOKService {
         const customerMissing = !customer && !!request.customer_id
 
         if (customerMissing) {
-          console.warn('⚠️ Missing customer for work request:', {
+          console.warn('âš ï¸ Missing customer for work request:', {
             requestId: request.id,
             customerId: request.customer_id
           })
@@ -247,7 +247,7 @@ class PMBOKService {
         }
       })
 
-      console.log('✅ Work requests processed successfully:', {
+      console.log('âœ… Work requests processed successfully:', {
         total: workRequests.length,
         withCustomers: workRequests.filter((wr) => !wr.customer_missing).length,
         missingCustomers: workRequests.filter((wr) => wr.customer_missing).length
@@ -256,20 +256,20 @@ class PMBOKService {
       return workRequests
 
     } catch (error) {
-      console.error('❌ Error in getWorkRequests:', error)
+      console.error('âŒ Error in getWorkRequests:', error)
       return []
     }
   }
 
   // Get project charters with stable auth context
   async getProjectCharters(): Promise<ProjectCharter[]> {
-    console.log('🔍 loading project charters with context:', {
+    console.log('ðŸ” loading project charters with context:', {
       userId: this.currentUserId,
       tenantId: this.currentTenantId
     })
 
     if (!this.isSupabaseAvailable()) {
-      console.warn('⚠️ Supabase not available, returning empty array')
+      console.warn('âš ï¸ Supabase not available, returning empty array')
       return []
     }
 
@@ -285,28 +285,28 @@ class PMBOKService {
       ) as any
 
       if (error) {
-        console.error('❌ Error fetching project charters:', error)
+        console.error('âŒ Error fetching project charters:', error)
         return []
       }
 
-      console.log('✅ Project charters loaded:', data?.length || 0)
+      console.log('âœ… Project charters loaded:', data?.length || 0)
       return data || []
 
     } catch (error) {
-      console.error('❌ Error in getProjectCharters:', error)
+      console.error('âŒ Error in getProjectCharters:', error)
       return []
     }
   }
 
   // Get risks with stable auth context
   async getRisks(): Promise<Risk[]> {
-    console.log('🔍 loading risks with context:', {
+    console.log('ðŸ” loading risks with context:', {
       userId: this.currentUserId,
       tenantId: this.currentTenantId
     })
 
     if (!this.isSupabaseAvailable()) {
-      console.warn('⚠️ Supabase not available, returning empty array')
+      console.warn('âš ï¸ Supabase not available, returning empty array')
       return []
     }
 
@@ -322,22 +322,22 @@ class PMBOKService {
       ) as any
 
       if (error) {
-        console.error('❌ Error fetching risks:', error)
+        console.error('âŒ Error fetching risks:', error)
         return []
       }
 
-      console.log('✅ Risks loaded:', data?.length || 0)
+      console.log('âœ… Risks loaded:', data?.length || 0)
       return data || []
 
     } catch (error) {
-      console.error('❌ Error in getRisks:', error)
+      console.error('âŒ Error in getRisks:', error)
       return []
     }
   }
 
   // Approval workflow methods with stable auth context
   async approveWorkRequest(workRequestId: string, createProject: boolean = true): Promise<void> {
-    console.log('✅ Approving work request:', {
+    console.log('âœ… Approving work request:', {
       workRequestId,
       createProject,
       userId: this.currentUserId,
@@ -381,16 +381,16 @@ class PMBOKService {
         }
       }
 
-      console.log('✅ Work request approved successfully')
+      console.log('âœ… Work request approved successfully')
 
     } catch (error) {
-      console.error('❌ Error approving work request:', error)
+      console.error('âŒ Error approving work request:', error)
       throw error
     }
   }
 
   async declineWorkRequest(workRequestId: string, reason: string): Promise<void> {
-    console.log('❌ Declining work request:', {
+    console.log('âŒ Declining work request:', {
       workRequestId,
       reason,
       userId: this.currentUserId,
@@ -418,16 +418,16 @@ class PMBOKService {
         throw error
       }
 
-      console.log('✅ Work request declined successfully')
+      console.log('âœ… Work request declined successfully')
 
     } catch (error) {
-      console.error('❌ Error declining work request:', error)
+      console.error('âŒ Error declining work request:', error)
       throw error
     }
   }
 
   async setWorkRequestUnderReview(workRequestId: string): Promise<void> {
-    console.log('🔄 Setting work request under review:', {
+    console.log('ðŸ”„ Setting work request under review:', {
       workRequestId,
       userId: this.currentUserId,
       tenantId: this.currentTenantId
@@ -453,10 +453,10 @@ class PMBOKService {
         throw error
       }
 
-      console.log('✅ Work request set under review successfully')
+      console.log('âœ… Work request set under review successfully')
 
     } catch (error) {
-      console.error('❌ Error setting work request under review:', error)
+      console.error('âŒ Error setting work request under review:', error)
       throw error
     }
   }
@@ -476,13 +476,13 @@ class PMBOKService {
         .single()
 
       if (error) {
-        console.error('❌ Error fetching work request by ID:', error)
+        console.error('âŒ Error fetching work request by ID:', error)
         return null
       }
 
       return data
     } catch (error) {
-      console.error('❌ Error in getWorkRequestById:', error)
+      console.error('âŒ Error in getWorkRequestById:', error)
       return null
     }
   }
@@ -505,14 +505,14 @@ class PMBOKService {
         .single()
 
       if (error) {
-        console.error('❌ Error creating project charter:', error)
+        console.error('âŒ Error creating project charter:', error)
         return null
       }
 
-      console.log('✅ Project charter created:', data)
+      console.log('âœ… Project charter created:', data)
       return data
     } catch (error) {
-      console.error('❌ Error in createProjectCharter:', error)
+      console.error('âŒ Error in createProjectCharter:', error)
       return null
     }
   }
@@ -539,10 +539,10 @@ class PMBOKService {
         throw error
       }
 
-      console.log('✅ Customer created:', data)
+      console.log('âœ… Customer created:', data)
       return data
     } catch (error) {
-      console.error('❌ Error creating customer:', error)
+      console.error('âŒ Error creating customer:', error)
       throw error
     }
   }
@@ -566,9 +566,9 @@ class PMBOKService {
         throw error
       }
 
-      console.log('✅ Work request linked to customer successfully')
+      console.log('âœ… Work request linked to customer successfully')
     } catch (error) {
-      console.error('❌ Error linking work request to customer:', error)
+      console.error('âŒ Error linking work request to customer:', error)
       throw error
     }
   }
@@ -586,13 +586,13 @@ class PMBOKService {
         .order('company_name', { ascending: true })
 
       if (error) {
-        console.error('❌ Error fetching customers:', error)
+        console.error('âŒ Error fetching customers:', error)
         return []
       }
 
       return data || []
     } catch (error) {
-      console.error('❌ Error in getCustomers:', error)
+      console.error('âŒ Error in getCustomers:', error)
       return []
     }
   }
@@ -603,4 +603,8 @@ export const pmbok = new PMBOKService()
 
 // Export for use in auth context
 export default pmbok
+
+
+
+
 

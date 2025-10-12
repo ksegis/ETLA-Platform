@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Employee Documents Component
  * Displays employee documents with filtering, preview, and RBAC enforcement
  */
@@ -8,8 +8,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { exportUtils } from '@/utils/exportUtils';
 import { 
@@ -500,3 +500,7 @@ export default function EmployeeDocuments({
     </div>
   );
 }
+
+
+
+

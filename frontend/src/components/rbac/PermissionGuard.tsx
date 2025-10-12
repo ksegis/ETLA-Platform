@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 import type { Feature, Permission } from "@/rbac/constants";
@@ -15,4 +15,8 @@ export function PermissionGuard({ feature, permission, fallback, children }: Per
   if (loading) return null;
   return checkPermission(feature, permission) ? <>{children}</> : <>{fallback ?? null}</>;
 }
+
+
+
+
 

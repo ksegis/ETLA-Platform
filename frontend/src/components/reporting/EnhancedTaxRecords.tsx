@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Enhanced Tax Records Component
  * Displays tax records with local tax information and customer branding
  */
@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { brandingService } from '@/services/brandingService';
 import { FileText, Download, MapPin, DollarSign, Calendar, Building } from 'lucide-react';
 
@@ -361,3 +361,7 @@ export default function EnhancedTaxRecords({
     </div>
   );
 }
+
+
+
+

@@ -1,4 +1,4 @@
-// src/rbac/constants/index.ts
+﻿// src/rbac/constants/index.ts
 
 /**
  * Central RBAC constants (no imports to avoid cycles).
@@ -312,4 +312,8 @@ export const PERMISSIONS_LEGACY = {
   WORK_REQUESTS_UPDATE: PERMISSIONS.WORK_REQUESTS_UPDATE,
   WORK_REQUESTS_DELETE: PERMISSIONS.WORK_REQUESTS_DELETE,
 } as const;
+
+
+
+
 

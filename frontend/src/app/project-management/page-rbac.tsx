@@ -1,4 +1,4 @@
-
+﻿
 'use client'
 
 import React, { useState, useEffect } from "react";
@@ -220,27 +220,27 @@ export default function ProjectManagementPageRBAC() {
     {
       id: "overview",
       label: "Overview",
-      icon: "📊",
+      icon: "ðŸ“Š",
       visible: true,
     },
     {
       id: "work-requests",
       label: "Work Requests",
-      icon: "📝",
+      icon: "ðŸ“",
       visible: canManage(FEATURES.WORK_REQUESTS),
       count: data.workRequests.length,
     },
     {
       id: "projects",
       label: "Projects",
-      icon: "📋",
+      icon: "ðŸ“‹",
       visible: canManage(FEATURES.PROJECT_MANAGEMENT),
       count: data.projects.length,
     },
     {
       id: "risks",
       label: "Risks",
-      icon: "⚠️",
+      icon: "âš ï¸",
       visible: canManage(FEATURES.RISK_MANAGEMENT),
       count: data.risks.length,
     },
@@ -285,7 +285,7 @@ export default function ProjectManagementPageRBAC() {
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
                   fallback={null}
                 >
-                  📊 Export Report
+                  ðŸ“Š Export Report
                 </ReportExportButton>
               </div>
             </div>
@@ -321,7 +321,7 @@ export default function ProjectManagementPageRBAC() {
                         onClick={() => setSelectedTab("debug")}
                         className="text-xs text-gray-500 hover:text-gray-700"
                       >
-                        🔧 Debug
+                        ðŸ”§ Debug
                       </button>
                     )}
                 </div>
@@ -342,7 +342,7 @@ export default function ProjectManagementPageRBAC() {
                   <WorkRequestGuard fallback={null}>
                     <div className="bg-white p-6 rounded-lg shadow">
                       <div className="flex items-center">
-                        <div className="text-3xl mr-4">📝</div>
+                        <div className="text-3xl mr-4">ðŸ“</div>
                         <div>
                           <p className="text-sm font-medium text-gray-600">
                             Work Requests
@@ -361,7 +361,7 @@ export default function ProjectManagementPageRBAC() {
                   <ProjectGuard fallback={null}>
                     <div className="bg-white p-6 rounded-lg shadow">
                       <div className="flex items-center">
-                        <div className="text-3xl mr-4">📋</div>
+                        <div className="text-3xl mr-4">ðŸ“‹</div>
                         <div>
                           <p className="text-sm font-medium text-gray-600">
                             Projects
@@ -380,7 +380,7 @@ export default function ProjectManagementPageRBAC() {
                   <RiskGuard fallback={null}>
                     <div className="bg-white p-6 rounded-lg shadow">
                       <div className="flex items-center">
-                        <div className="text-3xl mr-4">⚠️</div>
+                        <div className="text-3xl mr-4">âš ï¸</div>
                         <div>
                           <p className="text-sm font-medium text-gray-600">
                             Risks
@@ -665,4 +665,8 @@ export default function ProjectManagementPageRBAC() {
     </RouteGuard>
   );
 }
+
+
+
+
 

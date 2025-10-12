@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
@@ -56,15 +56,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeAuth = async () => {
       try {
-        console.log('🔐 Initializing authentication...')
+        console.log('ðŸ” Initializing authentication...')
         
         // Get initial session
         const { data: { session: initialSession }, error } = await createSupabaseBrowserClient().auth.getSession()
         
         if (error) {
-          console.error('❌ Error getting initial session:', error)
+          console.error('âŒ Error getting initial session:', error)
         } else if (initialSession && mounted) {
-          console.log('✅ Initial session found:', {
+          console.log('âœ… Initial session found:', {
             userId: initialSession.user?.id,
             email: initialSession.user?.email
           })
@@ -74,19 +74,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Load tenant information
           await loadTenantInfo(initialSession.user.id)
         } else {
-          console.log('ℹ️ No initial session found - using demo fallback')
+          console.log('â„¹ï¸ No initial session found - using demo fallback')
           // Fallback to demo user if no session
           setDemoUser()
         }
       } catch (error) {
-        console.error('❌ Error initializing auth:', error)
+        console.error('âŒ Error initializing auth:', error)
         // Fallback to demo user on error
         setDemoUser()
       } finally {
         if (mounted) {
           setloading(false)
           setInitialized(true)
-          console.log('✅ Auth initialization complete')
+          console.log('âœ… Auth initialization complete')
         }
       }
     }
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Set demo user as fallback
   const setDemoUser = () => {
-    console.log('🔄 Setting demo user as fallback')
+    console.log('ðŸ”„ Setting demo user as fallback')
     setUser({
       id: '1',
       email: 'demo@company.com',
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Load tenant information for authenticated user
   const loadTenantInfo = async (userId: string) => {
     try {
-      console.log('🏢 loading tenant info for user:', userId)
+      console.log('ðŸ¢ loading tenant info for user:', userId)
       
       // Try to get tenant info from database
       const { data: tenantUsers, error } = await createSupabaseBrowserClient()
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         .single()
 
       if (error) {
-        console.warn('⚠️ Could not load tenant info:', error.message)
+        console.warn('âš ï¸ Could not load tenant info:', error.message)
         // Use demo tenant as fallback
         setTenant({
           id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
@@ -168,12 +168,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           updated_at: new Date().toISOString()
         })
       } else {
-        console.log('✅ Tenant info loaded:', tenantUsers)
+        console.log('âœ… Tenant info loaded:', tenantUsers)
         setTenant(tenantUsers.tenant)
         setTenantUser(tenantUsers)
       }
     } catch (error) {
-      console.error('❌ Error loading tenant info:', error)
+      console.error('âŒ Error loading tenant info:', error)
       // Use demo tenant as fallback
       setTenant({
         id: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff',
@@ -189,11 +189,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (!initialized) return
 
-    console.log('🔐 Setting up auth state listener...')
+    console.log('ðŸ” Setting up auth state listener...')
 
     const { data: { subscription } } = createSupabaseBrowserClient().auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
-        console.log('🔐 Auth state change:', {
+        console.log('ðŸ” Auth state change:', {
           event,
           userId: newSession?.user?.id,
           email: newSession?.user?.email,
@@ -208,7 +208,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Update state based on auth event
         switch (event) {
           case 'SIGNED_IN':
-            console.log('✅ User signed in')
+            console.log('âœ… User signed in')
             setSession(newSession)
             setUser(newSession?.user || null)
             if (newSession?.user?.id) {
@@ -217,25 +217,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
             break
             
           case 'SIGNED_OUT':
-            console.log('👋 User signed out - reverting to demo')
+            console.log('ðŸ‘‹ User signed out - reverting to demo')
             setSession(null)
             setDemoUser() // Revert to demo user instead of null
             break
             
           case 'TOKEN_REFRESHED':
-            console.log('🔄 Token refreshed')
+            console.log('ðŸ”„ Token refreshed')
             setSession(newSession)
             setUser(newSession?.user || null)
             break
             
           case 'USER_UPDATED':
-            console.log('👤 User updated')
+            console.log('ðŸ‘¤ User updated')
             setSession(newSession)
             setUser(newSession?.user || null)
             break
             
           default:
-            console.log('🔐 Other auth event:', event)
+            console.log('ðŸ” Other auth event:', event)
             if (newSession) {
               setSession(newSession)
               setUser(newSession.user)
@@ -247,7 +247,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     )
 
     return () => {
-      console.log('🔐 Cleaning up auth listener')
+      console.log('ðŸ” Cleaning up auth listener')
       subscription.unsubscribe()
     }
   }, [initialized])
@@ -255,17 +255,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign out function
   const signOut = async () => {
     try {
-      console.log('👋 Signing out...')
+      console.log('ðŸ‘‹ Signing out...')
       setloading(true)
       const { error } = await createSupabaseBrowserClient().auth.signOut()
       if (error) {
-        console.error('❌ Error signing out:', error)
+        console.error('âŒ Error signing out:', error)
         throw error
       }
-      console.log('✅ Signed out successfully - reverting to demo user')
+      console.log('âœ… Signed out successfully - reverting to demo user')
       setDemoUser() // Always revert to demo user
     } catch (error) {
-      console.error('❌ Sign out failed:', error)
+      console.error('âŒ Sign out failed:', error)
       setDemoUser() // Fallback to demo user even on error
       throw error
     } finally {
@@ -276,16 +276,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Refresh session function
   const refreshSession = async (): Promise<void> => {
     try {
-      console.log('🔄 Refreshing session...')
+      console.log('ðŸ”„ Refreshing session...')
       const { data: { session: refreshedSession }, error } = await createSupabaseBrowserClient().auth.refreshSession()
       if (error) {
-        console.error('❌ Error refreshing session:', error)
+        console.error('âŒ Error refreshing session:', error)
         throw error
       }
-      console.log('✅ Session refreshed successfully')
+      console.log('âœ… Session refreshed successfully')
       // Don't return the session, just refresh it
     } catch (error) {
-      console.error('❌ Session refresh failed:', error)
+      console.error('âŒ Session refresh failed:', error)
       throw error
     }
   }
@@ -301,7 +301,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const getUserId = (): string | null => {
     const userId = user?.id || null
     if (!userId) {
-      console.warn('⚠️ No user ID available - using demo user')
+      console.warn('âš ï¸ No user ID available - using demo user')
     }
     return userId
   }
@@ -333,7 +333,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Debug logging
   useEffect(() => {
     if (!loading && initialized) {
-      console.log('🔐 Auth state:', {
+      console.log('ðŸ” Auth state:', {
         isAuthenticated,
         userId: user?.id,
         email: user?.email,
@@ -367,7 +367,7 @@ export function useRequireAuth() {
   
   useEffect(() => {
     if (!auth.loading && !auth.isAuthenticated) {
-      console.warn('⚠️ User not authenticated - using demo fallback')
+      console.warn('âš ï¸ User not authenticated - using demo fallback')
       // Don't redirect, just use demo user
     }
   }, [auth.loading, auth.isAuthenticated])
@@ -395,4 +395,8 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
     return <Component {...props} />
   }
 }
+
+
+
+
 

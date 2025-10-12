@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -21,13 +21,13 @@ const NAVIGATION_ITEMS: NavItem[] = [
     id: "dashboard",
     label: "Dashboard",
     href: "/dashboard",
-    icon: "📊",
+    icon: "ðŸ“Š",
   },
   {
     id: "project-management",
     label: "Project Management",
     href: "/project-management",
-    icon: "📋",
+    icon: "ðŸ“‹",
     requiredPermission: PERMISSIONS.PROJECT_READ,
     children: [
       {
@@ -60,14 +60,14 @@ const NAVIGATION_ITEMS: NavItem[] = [
     id: "work-requests-standalone",
     label: "Work Requests",
     href: "/work-requests",
-    icon: "📝",
+    icon: "ðŸ“",
     requiredPermission: PERMISSIONS.WORK_REQUEST_READ,
   },
   {
     id: "reporting",
     label: "Reporting",
     href: "/reporting",
-    icon: "📈",
+    icon: "ðŸ“ˆ",
     requiredPermission: PERMISSIONS.REPORTING_VIEW,
     children: [
       {
@@ -88,7 +88,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
     id: "data-management",
     label: "Data Management",
     href: "/data-management",
-    icon: "🗄️",
+    icon: "ðŸ—„ï¸",
     requiredPermission: PERMISSIONS.EDIT, // Assuming data management is a high-level permission
     children: [
       {
@@ -115,7 +115,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
     id: "benefits",
     label: "Benefits & HR",
     href: "/benefits",
-    icon: "👥",
+    icon: "ðŸ‘¥",
     requiredPermission: PERMISSIONS.USER_READ, // Assuming benefits viewing requires user read
     children: [
       {
@@ -136,7 +136,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
     id: "administration",
     label: "Administration",
     href: "/admin",
-    icon: "⚙️",
+    icon: "âš™ï¸",
     requiredPermission: PERMISSIONS.USER_READ, // General admin access requires user read
     children: [
       {
@@ -234,7 +234,7 @@ function NavigationItem({
           <>
             <span className="flex-1">{item.label}</span>
             {hasChildren && visibleChildren.length > 0 && (
-              <span className="ml-2">{isActive ? "▼" : "▶"}</span>
+              <span className="ml-2">{isActive ? "â–¼" : "â–¶"}</span>
             )}
           </>
         )}
@@ -376,7 +376,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     id: "create-work-request",
     label: "New Work Request",
     href: "/work-requests/create",
-    icon: "📝",
+    icon: "ðŸ“",
     requiredPermission: PERMISSIONS.WORK_REQUEST_CREATE,
     className: "bg-blue-600 hover:bg-blue-700 text-white",
   },
@@ -384,7 +384,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     id: "create-project",
     label: "New Project",
     href: "/project-management/create",
-    icon: "📋",
+    icon: "ðŸ“‹",
     requiredPermission: PERMISSIONS.PROJECT_CREATE,
     className: "bg-green-600 hover:bg-green-700 text-white",
   },
@@ -392,7 +392,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     id: "upload-file",
     label: "Upload File",
     href: "/file-upload",
-    icon: "📁",
+    icon: "ðŸ“",
     requiredPermission: PERMISSIONS.EDIT, // Assuming file upload is a high-level permission
     className: "bg-purple-600 hover:bg-purple-700 text-white",
   },
@@ -432,4 +432,8 @@ export function QuickActionsRBAC({ className = "" }: { className?: string }) {
 }
 
 export default NavigationRBAC;
+
+
+
+
 

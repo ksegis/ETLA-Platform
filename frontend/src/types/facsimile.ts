@@ -1,4 +1,4 @@
-// Facsimile system types based on actual database schema
+﻿// Facsimile system types based on actual database schema
 
 export interface PayStatement {
   id: string;
@@ -221,4 +221,8 @@ export interface FacsimileDocumentProps {
   locale?: string;
   employee?: Employee;
 }
+
+
+
+
 

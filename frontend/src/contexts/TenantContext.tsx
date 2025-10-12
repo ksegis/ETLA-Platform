@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { createContext, useContext, useState, useEffect } from "react";
 // use your existing TenantUser type if you have one
 // adjust import path as needed:
@@ -39,4 +39,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
 export const useTenant = () => useContext(TenantContext);
 export default TenantContext;
+
+
+
+
 

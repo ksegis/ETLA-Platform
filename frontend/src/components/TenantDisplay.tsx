@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React from 'react'
 import { useTenant } from '@/contexts/TenantContext'
@@ -88,4 +88,8 @@ export function useFriendlyTenantName(tenantId?: string): string {
   
   return 'Unknown Tenant'
 }
+
+
+
+
 

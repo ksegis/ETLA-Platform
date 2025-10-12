@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { AlertCircle, User, Mail, Link, Plus, Loader2 } from 'lucide-react'
@@ -78,7 +78,7 @@ export default function MissingCustomerModal({
         return
       }
 
-      console.log('✅ Customer created and linked successfully')
+      console.log('âœ… Customer created and linked successfully')
       onCustomerFixed()
       onClose()
       
@@ -106,7 +106,7 @@ export default function MissingCustomerModal({
         return
       }
 
-      console.log('✅ Work request linked to existing customer successfully')
+      console.log('âœ… Work request linked to existing customer successfully')
       onCustomerFixed()
       onClose()
       
@@ -287,4 +287,8 @@ export default function MissingCustomerModal({
     </div>
   )
 }
+
+
+
+
 

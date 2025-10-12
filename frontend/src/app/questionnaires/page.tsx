@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   Plus, 
@@ -470,3 +470,7 @@ export default function QuestionnaireDashboard() {
     </DashboardLayout>
   );
 }
+
+
+
+

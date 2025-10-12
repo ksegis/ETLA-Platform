@@ -1,4 +1,4 @@
-// server-safe RBAC
+﻿// server-safe RBAC
 import { ROLES, FEATURES, PERMISSIONS, ROLE_MATRIX } from "@/rbac/constants";
 
 type ActorCtx = { userId: string; tenantId: string; role: (typeof ROLES)[keyof typeof ROLES] };
@@ -13,3 +13,7 @@ export function assertPermission(
     throw new Error("Forbidden: missing permission");
   }
 }
+
+
+
+

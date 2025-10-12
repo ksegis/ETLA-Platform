@@ -1,4 +1,4 @@
-export type MockPayload = {
+﻿export type MockPayload = {
   columns: string[];
   rows: any[];
   docs?: Array<{ id: string; name: string; url?: string; size?: number }>;
@@ -32,7 +32,7 @@ export function applyDemoFilters(
   const { from, to, filters, limit = 50, offset = 0 } = opts || {};
   let out = rows.slice();
 
-  // Date range – try these common columns
+  // Date range â€“ try these common columns
   const dateKeys = ["PayDate", "EffectiveDate", "PeriodStart", "date", "paydate"];
   function pickDate(r: any) {
     for (const k of dateKeys) if (r[k]) return r[k];
@@ -487,3 +487,7 @@ export function getMockReport(id: string): MockPayload | null {
       };
   }
 }
+
+
+
+

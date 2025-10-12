@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -83,9 +83,9 @@ export default function SplashPage() {
               Helix<span className="text-blue-400">Bridge</span>
             </h1>
 
-            {/* Stylized H∴B */}
+            {/* Stylized Hâˆ´B */}
             <div className="text-4xl md:text-6xl font-light text-blue-300 mb-8 tracking-widest">
-              H∴B
+              Hâˆ´B
             </div>
 
             {/* Tagline */}
@@ -172,7 +172,7 @@ export default function SplashPage() {
               <span className="ml-3 text-xl font-semibold text-white">HelixBridge</span>
             </div>
             <p className="text-blue-200">
-              © 2024 HelixBridge. Enterprise Workforce Management Solutions.
+              Â© 2024 HelixBridge. Enterprise Workforce Management Solutions.
             </p>
           </div>
         </footer>
@@ -190,4 +190,8 @@ export default function SplashPage() {
     </div>
   )
 }
+
+
+
+
 

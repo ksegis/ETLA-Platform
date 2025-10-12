@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -71,7 +71,7 @@ export default function ProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log('📊 loading dashboard data with stable auth:', { userId: auth.currentUserId, tenantId: auth.currentTenantId })
+      console.log('ðŸ“Š loading dashboard data with stable auth:', { userId: auth.currentUserId, tenantId: auth.currentTenantId })
 
       // Load all data in parallel
       const [workRequests, projectCharters, risks] = await Promise.all([
@@ -86,7 +86,7 @@ export default function ProjectManagementPage() {
         risks
       })
 
-      console.log('✅ Dashboard data loaded:', {
+      console.log('âœ… Dashboard data loaded:', {
         workRequests: workRequests.length,
         projectCharters: projectCharters.length,
         risks: risks.length,
@@ -94,7 +94,7 @@ export default function ProjectManagementPage() {
       })
 
     } catch (error) {
-      console.error('❌ Error loading dashboard data:', error)
+      console.error('âŒ Error loading dashboard data:', error)
       setError('Failed to load dashboard data')
     } finally {
       setloading(false)
@@ -172,25 +172,25 @@ export default function ProjectManagementPage() {
 
   // Action handlers
   const handleViewRequest = (id: string) => {
-    console.log('👁️ Viewing work request:', id)
+    console.log('ðŸ‘ï¸ Viewing work request:', id)
     router.push(`/work-requests/${id}`)
   }
 
   const handleEditRequest = (id: string) => {
-    console.log('✏️ Editing work request:', id)
+    console.log('âœï¸ Editing work request:', id)
     router.push('/work-requests')
   }
 
   const handleDeleteRequest = async (id: string) => {
     if (confirm('Are you sure you want to delete this work request?')) {
-      console.log('🗑️ Deleting work request:', id)
+      console.log('ðŸ—‘ï¸ Deleting work request:', id)
       // TODO: Implement delete functionality
       alert('Delete functionality not yet implemented')
     }
   }
 
   const handleApproveRequest = (request: WorkRequest) => {
-    console.log('✅ Opening approval modal for:', request.id)
+    console.log('âœ… Opening approval modal for:', request.id)
     setSelectedWorkRequest(request)
     setShowApprovalModal(true)
   }
@@ -634,4 +634,8 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

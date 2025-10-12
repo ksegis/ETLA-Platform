@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Enhanced Employee Documents Component
  * Features: Advanced RBAC, document preview, bulk operations, and audit trail
  */
@@ -8,8 +8,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { exportUtils } from '@/utils/exportUtils';
 import { 
@@ -894,3 +894,7 @@ export default function EnhancedEmployeeDocuments({
     </div>
   );
 }
+
+
+
+

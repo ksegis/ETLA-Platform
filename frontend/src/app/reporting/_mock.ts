@@ -1,4 +1,4 @@
-// frontend/src/app/reporting/_mock.ts
+﻿// frontend/src/app/reporting/_mock.ts
 import { getReportById } from "./_data";
 
 const EMPLOYEES = [
@@ -336,3 +336,7 @@ export function getMockRows(id: string): Record<string, any>[] {
   if (r) return [{ info: `No specific mock implemented for ${r.title}`, id }];
   return [];
 }
+
+
+
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -153,4 +153,8 @@ export default function JobsPage() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

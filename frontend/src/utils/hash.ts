@@ -1,4 +1,4 @@
-// Document hash utility for verification
+﻿// Document hash utility for verification
 
 export async function generateDocumentHash(data: Record<string, any>, fields: string[]): Promise<string> {
   // Extract only the specified fields for hashing
@@ -28,4 +28,8 @@ export async function generateDocumentHash(data: Record<string, any>, fields: st
 export function generateVerifyUrl(baseUrl: string, documentId: string, hash: string): string {
   return `${baseUrl}?id=${encodeURIComponent(documentId)}&h=${encodeURIComponent(hash)}`;
 }
+
+
+
+
 

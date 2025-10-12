@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -124,7 +124,7 @@ export default function ProfilePage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">ℹ</span>
+                    <span className="text-white text-sm font-medium">â„¹</span>
                   </div>
                 </div>
                 <div className="ml-3">
@@ -141,4 +141,8 @@ export default function ProfilePage() {
     </div>
   )
 }
+
+
+
+
 

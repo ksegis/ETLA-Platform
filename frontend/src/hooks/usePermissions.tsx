@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // src/hooks/usePermissions.tsx
 import { useEffect, useState, ReactNode } from 'react'
@@ -317,4 +317,8 @@ export function RoleGuard({
   const allowed = (Array.isArray(allow) ? allow : [allow]).map(String)
   return allowed.includes(String(currentUserRole)) ? <>{children}</> : <>{fallback}</>
 }
+
+
+
+
 

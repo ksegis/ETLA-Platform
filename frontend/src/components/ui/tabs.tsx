@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
@@ -30,4 +30,8 @@ export const TabsContent = React.forwardRef<
   <TabsPrimitive.Content ref={ref} className={className} {...props} />
 ));
 TabsContent.displayName = "TabsContent";
+
+
+
+
 

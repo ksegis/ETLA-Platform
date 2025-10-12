@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { 
@@ -346,7 +346,7 @@ export default function ClientDashboard() {
                     key={star} 
                     className={`text-lg ${star <= Math.floor(clientKPIs.quality.satisfactionScore) ? 'text-yellow-400' : 'text-gray-300'}`}
                   >
-                    ★
+                    â˜…
                   </span>
                 ))}
               </div>
@@ -541,4 +541,8 @@ export default function ClientDashboard() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

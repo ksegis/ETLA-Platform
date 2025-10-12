@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -145,11 +145,11 @@ export default function JobDetailsPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Validation Errors</h4>
                     <div className="bg-white border rounded p-3 text-xs">
-                      <div className="text-red-600 mb-1">❌ SSN format invalid (too many digits)</div>
-                      <div className="text-red-600 mb-1">❌ Pay group is required</div>
-                      <div className="text-gray-600">✅ Employee ID valid</div>
-                      <div className="text-gray-600">✅ Hire date valid</div>
-                      <div className="text-gray-600">✅ Salary valid</div>
+                      <div className="text-red-600 mb-1">âŒ SSN format invalid (too many digits)</div>
+                      <div className="text-red-600 mb-1">âŒ Pay group is required</div>
+                      <div className="text-gray-600">âœ… Employee ID valid</div>
+                      <div className="text-gray-600">âœ… Hire date valid</div>
+                      <div className="text-gray-600">âœ… Salary valid</div>
                     </div>
                   </div>
                 </div>
@@ -183,8 +183,8 @@ export default function JobDetailsPage() {
                     <div className="bg-white border rounded p-3 text-xs">
                       <div className="text-gray-600">employee_id: "EMP001250"</div>
                       <div className="text-gray-600">social_security_number: "987-65-4321"</div>
-                      <div className="text-orange-600">⚠️ hire_dt: "12/31/2023"1" (weekend)</div>
-                      <div className="text-orange-600">⚠️ annual_salary: "$125,000.00" (above avg)</div>
+                      <div className="text-orange-600">âš ï¸ hire_dt: "12/31/2023"1" (weekend)</div>
+                      <div className="text-orange-600">âš ï¸ annual_salary: "$125,000.00" (above avg)</div>
                       <div className="text-gray-600">pay_group: "EXECUTIVE"</div>
                     </div>
                   </div>
@@ -252,10 +252,10 @@ export default function JobDetailsPage() {
             <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
               <div className="text-sm font-medium text-blue-800 mb-1">Processing Details</div>
               <div className="text-xs text-blue-700">
-                <div>• Started: "2024-01-15 14:45:10"</div>
-                <div>• Validation completed: "2024-01-15 14:47:22" (2m 12s) </div>
-                <div>• Transformation completed: "2024-01-15 14:58:45" (11m 23s) </div>
-                <div>• Load failed: "2024-01-15 15:02:33" (3m 48s) - 47 records rejected</div>
+                <div>â€¢ Started: "2024-01-15 14:45:10"</div>
+                <div>â€¢ Validation completed: "2024-01-15 14:47:22" (2m 12s) </div>
+                <div>â€¢ Transformation completed: "2024-01-15 14:58:45" (11m 23s) </div>
+                <div>â€¢ Load failed: "2024-01-15 15:02:33" (3m 48s) - 47 records rejected</div>
               </div>
             </div>
           </CardContent>
@@ -264,4 +264,8 @@ export default function JobDetailsPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
 

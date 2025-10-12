@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Jobs Management Page
  * Handles job posting, editing, and management for the ATS
  */
@@ -8,8 +8,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/dialog';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -382,7 +382,7 @@ export default function JobsPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MapPin className="h-4 w-4" />
-                          {job.location} • {WORK_MODE_LABELS[job.work_mode]}
+                          {job.location} â€¢ {WORK_MODE_LABELS[job.work_mode]}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <DollarSign className="h-4 w-4" />
@@ -396,9 +396,9 @@ export default function JobsPage() {
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>Posted: {job.posted_date ? formatDate(job.posted_date) : 'Not posted'}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>Hiring Manager: {job.hiring_manager_name}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>Updated: {formatDate(job.updated_at)}</span>
                       </div>
                     </div>
@@ -534,3 +534,7 @@ export default function JobsPage() {
     </DashboardLayout>
   );
 }
+
+
+
+

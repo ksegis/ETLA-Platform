@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { 
@@ -38,8 +38,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
-import { Badge } from '@/components/ui/Badge'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
@@ -1926,4 +1926,8 @@ export default function DatabaseAlignedProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

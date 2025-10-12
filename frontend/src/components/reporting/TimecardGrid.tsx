@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Enhanced Timecard Grid Component
  * Displays daily timecard data in a grid format with totals and export functionality
  */
@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { exportUtils, TimecardGridRow } from '@/utils/exportUtils';
 import { brandingService } from '@/services/brandingService';
 import { Download, Calendar, Clock, AlertCircle } from 'lucide-react';
@@ -332,3 +332,7 @@ export default function TimecardGrid({
     </div>
   );
 }
+
+
+
+

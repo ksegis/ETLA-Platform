@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { GROUP_LABELS, ReportType } from "../_data";
@@ -74,3 +74,7 @@ export default function ReportTable({ items, onPreview, onExport }: Props) {
     </div>
   );
 }
+
+
+
+

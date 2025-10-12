@@ -1,4 +1,4 @@
-interface LogContext {
+﻿interface LogContext {
   tenantId?: string;
   userId?: string;
   action?: string;
@@ -21,4 +21,8 @@ export const logger = {
   error: (message: string, context?: LogContext) => log("error", message, context),
   debug: (message: string, context?: LogContext) => log("debug", message, context),
 };
+
+
+
+
 

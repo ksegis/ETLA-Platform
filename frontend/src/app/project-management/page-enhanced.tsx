@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -780,7 +780,7 @@ export default function ProjectManagementPage() {
 
   const renderPlaceholderTab = (tabName: string) => (
     <div className="bg-white rounded-lg shadow p-8 text-center">
-      <div className="text-gray-400 text-6xl mb-4">🚧</div>
+      <div className="text-gray-400 text-6xl mb-4">ðŸš§</div>
       <h3 className="text-lg font-medium text-gray-900 mb-2">
         {tabName} - Coming Soon
       </h3>
@@ -865,4 +865,8 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

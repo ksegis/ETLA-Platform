@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -66,7 +66,7 @@ export default function RBACTestPanel() {
   };
 
   const getResultIcon = (passed: boolean) => {
-    return passed ? "✅" : "❌";
+    return passed ? "âœ…" : "âŒ";
   };
 
   const passedTests = testResults.filter((r) => r.passed).length;
@@ -79,7 +79,7 @@ export default function RBACTestPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            🔒 RBAC Testing Panel
+            ðŸ”’ RBAC Testing Panel
           </CardTitle>
           <CardDescription>
             Test Role-Based Access Control permissions for the current user
@@ -120,7 +120,7 @@ export default function RBACTestPanel() {
                   Running Tests...
                 </>
               ) : (
-                <>🧪 Run RBAC Tests</>
+                <>ðŸ§ª Run RBAC Tests</>
               )}
             </Button>
 
@@ -159,10 +159,10 @@ export default function RBACTestPanel() {
                           {result.permission}
                         </td>
                         <td className="p-2 text-center">
-                          {result.expected ? "✅" : "❌"}
+                          {result.expected ? "âœ…" : "âŒ"}
                         </td>
                         <td className="p-2 text-center">
-                          {result.actual ? "✅" : "❌"}
+                          {result.actual ? "âœ…" : "âŒ"}
                         </td>
                         <td
                           className={`p-2 text-center font-semibold ${getResultColor(result.passed)}`}
@@ -244,4 +244,8 @@ export default function RBACTestPanel() {
     </div>
   );
 }
+
+
+
+
 

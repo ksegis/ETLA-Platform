@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect } from 'react'
 import { pmbok } from '@/services/pmbok_service'
@@ -109,7 +109,7 @@ export default function ProjectManagementPage() {
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center">
-              <div className="text-red-600 text-xl mr-3">⚠️</div>
+              <div className="text-red-600 text-xl mr-3">âš ï¸</div>
               <div>
                 <h3 className="text-red-800 font-semibold">Error loading Data</h3>
                 <p className="text-red-700 mt-1">{error}</p>
@@ -269,7 +269,7 @@ export default function ProjectManagementPage() {
             <div className="overflow-x-auto">
               {dashboardData.workRequests.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 text-6xl mb-4">📋</div>
+                  <div className="text-gray-400 text-6xl mb-4">ðŸ“‹</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No work requests found</h3>
                   <p className="text-gray-600">Work requests will appear here once they are submitted.</p>
                 </div>
@@ -385,7 +385,7 @@ export default function ProjectManagementPage() {
             <div className="overflow-x-auto">
               {dashboardData.projectCharters.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 text-6xl mb-4">📊</div>
+                  <div className="text-gray-400 text-6xl mb-4">ðŸ“Š</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
                   <p className="text-gray-600">Projects will appear here when work requests are approved.</p>
                 </div>
@@ -470,7 +470,7 @@ export default function ProjectManagementPage() {
         {/* Other tab content placeholders */}
         {activeTab !== 'work-requests' && activeTab !== 'projects' && (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="text-gray-400 text-6xl mb-4">🚧</div>
+            <div className="text-gray-400 text-6xl mb-4">ðŸš§</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {tabs.find((tab: any) => tab.id === activeTab)?.label} - Coming Soon
             </h3>
@@ -489,4 +489,8 @@ export default function ProjectManagementPage() {
     </div>
   )
 }
+
+
+
+
 

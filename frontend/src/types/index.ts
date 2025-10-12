@@ -1,4 +1,4 @@
-// ETLA Platform - Complete Centralized Type Definitions
+﻿// ETLA Platform - Complete Centralized Type Definitions
 // Version: 2.0 - ALL Properties Based on Actual Usage Analysis
 // This file includes ALL properties actually used in the codebase
 
@@ -519,6 +519,10 @@ export interface SearchParams {
   page?: number;
   limit?: number;
 }
+
+
+
+
 
 
 

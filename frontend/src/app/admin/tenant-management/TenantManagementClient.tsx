@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -31,7 +31,7 @@ type TriggerProps = ComponentProps<typeof BaseSelectTrigger> &
 const SelectTrigger = BaseSelectTrigger as unknown as
   ForwardRefExoticComponent<TriggerProps>;
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -720,4 +720,8 @@ function CreateTenantForm({ onCreateTenant }: any) {
     </form>
   );
 }
+
+
+
+
 

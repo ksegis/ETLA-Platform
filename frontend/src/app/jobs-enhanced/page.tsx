@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -248,7 +248,7 @@ export default function EnhancedJobsPage() {
                 <div className="border border-gray-200 rounded p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Source: emp_ssn</span>
-                    <span className="text-sm text-gray-500">→</span>
+                    <span className="text-sm text-gray-500">â†’</span>
                     <span className="text-sm font-medium">Target: social_security_number</span>
                   </div>
                   <div className="text-xs text-gray-600">
@@ -257,7 +257,7 @@ export default function EnhancedJobsPage() {
                   <div className="mt-2 text-xs">
                     <span className="text-gray-500">Example: </span>
                     <span className="bg-red-50 px-1">123456789</span>
-                    <span className="mx-1">→</span>
+                    <span className="mx-1">â†’</span>
                     <span className="bg-green-50 px-1">123-45-6789</span>
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export default function EnhancedJobsPage() {
                 <div className="border border-gray-200 rounded p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Source: hire_dt</span>
-                    <span className="text-sm text-gray-500">→</span>
+                    <span className="text-sm text-gray-500">â†’</span>
                     <span className="text-sm font-medium">Target: hire_date</span>
                   </div>
                   <div className="text-xs text-gray-600">
@@ -274,7 +274,7 @@ export default function EnhancedJobsPage() {
                   <div className="mt-2 text-xs">
                     <span className="text-gray-500">Example: </span>
                     <span className="bg-red-50 px-1">01/15/2024</span>
-                    <span className="mx-1">→</span>
+                    <span className="mx-1">â†’</span>
                     <span className="bg-green-50 px-1">2024-01-15</span>
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export default function EnhancedJobsPage() {
                 <div className="border border-gray-200 rounded p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Source: salary</span>
-                    <span className="text-sm text-gray-500">→</span>
+                    <span className="text-sm text-gray-500">â†’</span>
                     <span className="text-sm font-medium">Target: annual_salary</span>
                   </div>
                   <div className="text-xs text-gray-600">
@@ -291,7 +291,7 @@ export default function EnhancedJobsPage() {
                   <div className="mt-2 text-xs">
                     <span className="text-gray-500">Example: </span>
                     <span className="bg-red-50 px-1">75000</span>
-                    <span className="mx-1">→</span>
+                    <span className="mx-1">â†’</span>
                     <span className="bg-green-50 px-1">$75,000.00</span>
                   </div>
                 </div>
@@ -309,4 +309,8 @@ export default function EnhancedJobsPage() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

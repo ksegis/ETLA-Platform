@@ -1,4 +1,4 @@
-// Data mappers for facsimile documents
+﻿// Data mappers for facsimile documents
 
 import { PayStatement, Timecard, TaxRecord, Employee } from '../../types/facsimile';
 import { formatCurrency, formatDate, formatTime, maskSSN } from '../../utils/privacy';
@@ -126,4 +126,8 @@ export function mapToFacsimileTaxRecord(
     document_status: taxRecord.document_status || 'draft'
   };
 }
+
+
+
+
 

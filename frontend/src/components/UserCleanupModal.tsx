@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -393,13 +393,13 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
                     <h4 className="text-sm font-medium text-gray-900 mb-3">Summary of actions:</h4>
                     <ul className="space-y-2 text-sm text-gray-600">
                       {cleanupOptions.deleteInactiveUsers && (
-                        <li>• Delete {preview.inactiveUsers} users inactive for more than {cleanupOptions.inactiveDays} days</li>
+                        <li>â€¢ Delete {preview.inactiveUsers} users inactive for more than {cleanupOptions.inactiveDays} days</li>
                       )}
                       {cleanupOptions.deleteUnconfirmedUsers && (
-                        <li>• Delete {preview.unconfirmedUsers} unconfirmed users created more than {cleanupOptions.unconfirmedDays} days ago</li>
+                        <li>â€¢ Delete {preview.unconfirmedUsers} unconfirmed users created more than {cleanupOptions.unconfirmedDays} days ago</li>
                       )}
                       {cleanupOptions.deleteExpiredInvites && (
-                        <li>• Delete {preview.expiredInvites} expired invitation records</li>
+                        <li>â€¢ Delete {preview.expiredInvites} expired invitation records</li>
                       )}
                     </ul>
                   </div>
@@ -425,4 +425,8 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
     </div>
   )
 }
+
+
+
+
 

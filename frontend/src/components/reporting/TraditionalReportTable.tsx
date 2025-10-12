@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 type Col = { key: string; label: string };
 type Props = { columns: Col[]; rows: Record<string, any>[] };
 
@@ -18,4 +18,8 @@ export default function TraditionalReportTable({ columns, rows }: Props) {
     </table>
   );
 }
+
+
+
+
 

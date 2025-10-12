@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <span key={i} className={`text-sm ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}`}>
-        ★
+        â˜…
       </span>
     ))
   }
@@ -493,4 +493,8 @@ export default function AdminDashboard() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { 
@@ -22,8 +22,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
-import { Badge } from '@/components/ui/Badge'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
@@ -233,7 +233,7 @@ export default function ProjectManagementPage() {
             </div>
             <div className="ml-3">
               <p className="text-sm text-green-700">
-                <strong>✅ REAL DATABASE DATA</strong> - This page now shows actual projects from your Supabase database, not mock data.
+                <strong>âœ… REAL DATABASE DATA</strong> - This page now shows actual projects from your Supabase database, not mock data.
                 {projects.length > 0 && (
                   <span className="ml-2">Found {projects.length} real projects in tenant: {selectedTenant?.name}</span>
                 )}
@@ -245,7 +245,7 @@ export default function ProjectManagementPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-green-900">🔥 REAL Project Management (Database Connected)</h1>
+            <h1 className="text-2xl font-bold text-green-900">ðŸ”¥ REAL Project Management (Database Connected)</h1>
             <p className="text-green-700">Manage and track your projects - NOW WITH REAL DATA!</p>
           </div>
           <Button onClick={() => console.log('Create new project')} className="bg-green-600 hover:bg-green-700">
@@ -365,7 +365,7 @@ export default function ProjectManagementPage() {
         {/* Projects List - REAL DATABASE DATA */}
         <Card className="border-green-200">
           <CardHeader className="bg-green-50">
-            <CardTitle className="text-green-900">🔥 REAL Projects from Database</CardTitle>
+            <CardTitle className="text-green-900">ðŸ”¥ REAL Projects from Database</CardTitle>
             <CardDescription className="text-green-700">
               {filteredProjects.length} of {projects.length} projects from Supabase database
               {selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
@@ -444,4 +444,8 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
+
+
+
 

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface UserDetailPanelProps {
   userId: string;
@@ -19,4 +19,8 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({ onClose }) => 
     </div>
   );
 };
+
+
+
+
 

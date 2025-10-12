@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+﻿import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // =====================================================
 // TYPESCRIPT INTERFACES
@@ -501,4 +501,8 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const pmbok = new PMBOKService(supabaseUrl, supabaseKey, '54afbd1d-e72a-41e1-9d39-2c8a08a257ff')
+
+
+
+
 
