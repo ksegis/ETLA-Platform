@@ -7,8 +7,8 @@ import dynamic from 'next/dynamic';
 
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { FEATURES, PERMISSIONS, ROLES } from '@/rbac/constants';
-import { RBACAdminService } from '@/services/rbac_admin_service';
+import { FEATURES, PERMISSIONS, ROLES } from '../../../rbac/constants';
+import { RBACAdminService } from '../../../services/rbac_admin_service';
 import { applyRbacChangesAction } from './actions';
 
 import type {
@@ -19,9 +19,9 @@ import type {
   RBACApplyChangesRequest,
 } from '@/types';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -29,18 +29,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '../../../components/ui/select';
 
 /* ---------- dynamic imports (typed) ---------- */
 const RBACMatrixGrid = dynamic(
-  () => import('@/components/rbac/RBACMatrixGrid'),
+  () => import('../../../components/rbac/RBACMatrixGrid'),
   { ssr: false }
 );
 
 type RolesPermissionsTabProps = { selectedTenantId?: string };
 const RolesPermissionsTab = dynamic<RolesPermissionsTabProps>(
   () =>
-    import('@/components/rbac/RolesPermissionsTab').then(
+    import('../../../components/rbac/RolesPermissionsTab').then(
       (m) => (m.default || m.RolesPermissionsTab) as React.ComponentType<RolesPermissionsTabProps>
     ),
   { ssr: false }
@@ -57,7 +57,7 @@ type UserDetailPanelProps = {
 };
 const UserDetailPanel = dynamic<UserDetailPanelProps>(
   () =>
-    import('@/components/rbac/UserDetailPanel').then(
+    import('../../../components/rbac/UserDetailPanel').then(
       (m) => (m.UserDetailPanel as React.ComponentType<UserDetailPanelProps>)
     ),
   { ssr: false }
@@ -374,6 +374,7 @@ export default function AccessControlClient() {
     </div>
   );
 }
+
 
 
 
