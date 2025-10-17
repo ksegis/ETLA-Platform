@@ -9,17 +9,17 @@ export const fetchCache = 'force-no-store';
 import { useState, useEffect } from "react";
 import { createSupabaseBrowserClient } from '../../../lib/supabase/browser';
 import { useAuth } from "../../../contexts/AuthContext";
-import { useTenant } from "@/contexts/TenantContext";
-import { usePermissions } from "@/hooks/usePermissions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useTenant } from "../../../contexts/TenantContext";
+import { usePermissions } from "../../../hooks/usePermissions";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
-import { SelectTrigger as BaseSelectTrigger } from "@/components/ui/select";
+} from "../../../components/ui/select";
+import { SelectTrigger as BaseSelectTrigger } from "../../../components/ui/select";
 import type {
   ComponentProps,
   ForwardRefExoticComponent,
@@ -722,6 +722,7 @@ function CreateTenantForm({ onCreateTenant }: any) {
     </form>
   );
 }
+
 
 
 
