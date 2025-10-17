@@ -7,8 +7,8 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 import { useState, useEffect } from "react";
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
-import { useAuth } from "@/contexts/AuthContext";
+import { createSupabaseBrowserClient } from '../../../lib/supabase/browser';
+import { useAuth } from "../../../contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
@@ -722,6 +722,7 @@ function CreateTenantForm({ onCreateTenant }: any) {
     </form>
   );
 }
+
 
 
 

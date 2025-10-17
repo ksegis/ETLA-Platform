@@ -22,7 +22,7 @@ import type {
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import { Input } from '@/components/ui/input';
+import { Input } from '../../../components/ui/input';
 import {
   Select,
   SelectContent,
@@ -374,6 +374,7 @@ export default function AccessControlClient() {
     </div>
   );
 }
+
 
 
 
