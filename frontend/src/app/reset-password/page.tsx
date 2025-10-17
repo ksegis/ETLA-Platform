@@ -1,9 +1,11 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Eye, EyeOff, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 const supabase = createSupabaseBrowserClient()
@@ -394,6 +396,8 @@ export default function ResetPasswordPage() {
     </Suspense>
   )
 }
+
+
 
 
 

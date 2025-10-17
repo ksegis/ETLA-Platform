@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { 
   Settings, 
   Plus, 
@@ -127,7 +127,7 @@ export default function ValidationRulesPage() {
                       </Button>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600">Hire date â‰¤ Today</p>
+                  <p className="text-xs text-gray-600">Hire date ≤ Today</p>
                   <div className="mt-2 flex items-center">
                     <CheckCircle className="h-3 w-3 text-green-600 mr-1" />
                     <span className="text-xs text-green-600">Active</span>
@@ -321,6 +321,8 @@ export default function ValidationRulesPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

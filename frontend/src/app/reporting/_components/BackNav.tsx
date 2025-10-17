@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 type Props = {
-  href?: string;        // where â€œBackâ€ should go
+  href?: string;        // where “Back” should go
   label?: string;       // text next to the arrow
   className?: string;
 };

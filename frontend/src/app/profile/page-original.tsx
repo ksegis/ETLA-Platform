@@ -1,9 +1,11 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { 
   User, 
   Lock, 
@@ -157,7 +159,7 @@ export default function ProfilePage() {
           ...prev,
           profile: {
             id: user.id,
-            email: user.email || '',
+            email: user?.email || '',
             full_name: profileData?.full_name || user.user_metadata?.full_name || '',
             phone: profileData?.phone || user.user_metadata?.phone || '',
             department: profileData?.department || '',
@@ -1091,6 +1093,8 @@ export default function ProfilePage() {
     </div>
   )
 }
+
+
 
 
 

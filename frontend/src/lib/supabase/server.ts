@@ -1,8 +1,12 @@
-﻿import { cookies } from "next/headers";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+﻿// src/lib/supabase/server.ts
+import 'server-only';
+import { cookies } from 'next/headers';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+// If you want an explicit return type:
+// import type { SupabaseClient } from '@supabase/supabase-js';
 
-export function createSupabaseServerClient() {
-  const store = cookies();
+export function createSupabaseServerClient(/* : SupabaseClient */) {
+  const cookieStore = cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,20 +14,19 @@ export function createSupabaseServerClient() {
     {
       cookies: {
         get(name: string) {
-          return store.get(name)?.value;
+          return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          // Next.js App Router API
-          store.set(name, value, options);
+          // App Router API: mutate the request-scoped cookie store
+          cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          // Remove by setting maxAge=0
-          store.set(name, "", { ...options, maxAge: 0 });
+          // Remove by setting an empty value with maxAge=0
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
         },
       },
     }
   );
 }
-
 
 

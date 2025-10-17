@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase, Save } from 'lucide-react'
 import { userManagement, type UserUpdateData } from "@/services/userManagementService"
 
@@ -75,7 +75,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
         phone: user.phone || '',
         department: user.department || '',
         job_title: user.job_title || '',
-        role: user.role,
+        role: user?.role ?? currentUserRole,
         role_level: user.role_level,
         tenant_id: user.tenant_id,
         is_active: user.is_active,
@@ -222,7 +222,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-sm font-medium text-gray-900">Account Status</h4>
-                  <p className="text-sm text-gray-600">{user.email}</p>
+                  <p className="text-sm text-gray-600">{user?.email}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -441,6 +441,8 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
     </div>
   )
 }
+
+
 
 
 

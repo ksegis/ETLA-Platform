@@ -1,7 +1,10 @@
-﻿// frontend/src/app/reporting/_components/PreviewModal.tsx
+﻿'use client';
+
+// frontend/src/app/reporting/_components/PreviewModal.tsx
 "use client";
 
 import * as React from "react";
+import { useEffect, useMemo, useState } from 'react';
 import type { ReportType } from "../_data";
 import { X, Download } from "lucide-react";
 
@@ -78,7 +81,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
     };
   }, [open, report.id]);
 
-  // Generic date accessor â€” try common date-like fields
+  // Generic date accessor — try common date-like fields
   function rowDate(r: any): Date | null {
     const candidates = [
       "pay_date",
@@ -206,7 +209,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search name, memo, amountâ€¦"
+                placeholder="Search name, memo, amount…"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -235,7 +238,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
         <div className="max-h-[70vh] overflow-auto px-4 py-3 sm:px-6">
           {loading ? (
             <div className="py-12 text-center text-sm text-gray-600">
-              Loadingâ€¦
+              Loading…
             </div>
           ) : error ? (
             <div className="py-12 text-center text-sm text-red-600">

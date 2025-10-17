@@ -1,12 +1,14 @@
-﻿
+﻿'use client';
+
+
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Users,
   UserPlus,
@@ -123,7 +125,7 @@ export default function AccessControlPage() {
   const canManageUsers = isHostAdmin || isClientAdmin || isDemoUser
   
   // Debug logging
-  console.log('ðŸ” Access Control Permission Debug:', {
+  console.log('🔍 Access Control Permission Debug:', {
     user: user?.email,
     userRole,
     tenantUserRole: tenantUser?.role,
@@ -138,10 +140,10 @@ export default function AccessControlPage() {
   useEffect(() => {
     // Allow access in demo mode or when authenticated with proper permissions
     if ((isAuthenticated || isDemoMode) && canManageUsers) {
-      console.log('âœ… loading Access Control data')
+      console.log('✅ loading Access Control data')
       loadData()
     } else {
-      console.log('âŒ Access denied - not loading data')
+      console.log('❌ Access denied - not loading data')
     }
   }, [isAuthenticated, isDemoMode, canManageUsers, selectedTenant])
 
@@ -187,7 +189,7 @@ export default function AccessControlPage() {
 
       // Filter by tenant if not host admin
       // Host admin should see ALL users regardless of selectedTenant
-      console.log('ðŸ” Access Control Debug:', {
+      console.log('🔍 Access Control Debug:', {
         isHostAdmin,
         isClientAdmin,
         isDemoUser,
@@ -200,15 +202,15 @@ export default function AccessControlPage() {
       })
       
       if (!isHostAdmin && selectedTenant) {
-        console.log('ðŸš« Applying tenant filter for tenant:', selectedTenant.name)
+        console.log('🚫 Applying tenant filter for tenant:', selectedTenant.name)
         query = query.eq('tenant_users.tenant_id', selectedTenant.id)
       } else {
-        console.log('âœ… No tenant filtering - showing all users')
+        console.log('✅ No tenant filtering - showing all users')
       }
 
       const { data: users, error } = await query
 
-      console.log('ðŸ“Š Query Results:', {
+      console.log('📊 Query Results:', {
         userCount: users?.length || 0,
         users: users?.map((u: any) => ({ email: u.email, role: u.tenant_users?.[0]?.role })) || []
       })
@@ -224,7 +226,7 @@ export default function AccessControlPage() {
         
         return {
           id: user.id,
-          email: user.email || 'N/A',
+          email: user?.email || 'N/A',
           full_name: user.full_name || 'Unknown',
           phone: user.phone,
           department: user.department,
@@ -336,8 +338,8 @@ export default function AccessControlPage() {
   // Filter users based on search and filters
   const filteredUsers = users.filter((user: any) => {
     const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = filterRole === 'all' || user.role === filterRole
+                         user?.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesRole = filterRole === 'all' || user?.role ?? currentUserRole === filterRole
     const matchesStatus = filterStatus === 'all' || user.status === filterStatus
     
     return matchesSearch && matchesRole && matchesStatus
@@ -353,12 +355,12 @@ export default function AccessControlPage() {
   }
 
   const roleDistribution = users.reduce((acc: any, user) => {
-    acc[user.role as keyof typeof acc] = (acc[user.role as keyof typeof acc] || 0) + 1
+    acc[user?.role ?? currentUserRole as keyof typeof acc] = (acc[user?.role ?? currentUserRole as keyof typeof acc] || 0) + 1
     return acc
   }, {} as Record<string, number>)
 
   // Debug logging before access check
-  console.log('ðŸ” Final Access Check:', {
+  console.log('🔍 Final Access Check:', {
     canManageUsers,
     isHostAdmin,
     isClientAdmin,
@@ -371,7 +373,7 @@ export default function AccessControlPage() {
   })
 
   if (!canManageUsers) {
-    console.log('âŒ Access denied - canManageUsers is false')
+    console.log('❌ Access denied - canManageUsers is false')
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -385,7 +387,7 @@ export default function AccessControlPage() {
     )
   }
 
-  console.log('âœ… Access granted - rendering Access Control page')
+  console.log('✅ Access granted - rendering Access Control page')
 
   return (
     <DashboardLayout>
@@ -634,12 +636,12 @@ export default function AccessControlPage() {
                               <div className="flex items-center">
                                 <div className="ml-4">
                                   <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
-                                  <div className="text-sm text-gray-500">{user.email}</div>
+                                  <div className="text-sm text-gray-500">{user?.email}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <Badge variant="secondary" className="capitalize">{user.role.replace('_', ' ')}</Badge>
+                              <Badge variant="secondary" className="capitalize">{user?.role ?? currentUserRole.replace('_', ' ')}</Badge>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-gray-900">{user.tenant_name}</div>
@@ -911,6 +913,8 @@ export default function AccessControlPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

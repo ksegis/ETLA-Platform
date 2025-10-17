@@ -199,7 +199,7 @@ class BrandingService {
       { pattern: /HelixBridge Team/gi, replacement: `${branding.displayName} Team` },
       
       // Copyright and legal references
-      { pattern: /Â© HelixBridge/gi, replacement: `Â© ${branding.legalName}` },
+      { pattern: /© HelixBridge/gi, replacement: `© ${branding.legalName}` },
       { pattern: /Copyright HelixBridge/gi, replacement: `Copyright ${branding.legalName}` },
       { pattern: /Powered by HelixBridge/gi, replacement: `Powered by ${branding.displayName}` },
       { pattern: /Built by HelixBridge/gi, replacement: `Built by ${branding.displayName}` }
@@ -422,6 +422,7 @@ export function useCustomerBranding(tenantId?: string) {
 }
 
 // Add React import for the hook
+import { useEffect, useState } from 'react';
 import React from 'react';
 
 

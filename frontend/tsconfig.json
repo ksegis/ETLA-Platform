@@ -14,16 +14,22 @@
     "jsx": "preserve",
     "incremental": true,
     "plugins": [
-      {
-        "name": "next"
-      }
+      { "name": "next" }
     ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/**/*"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/**/*",
+    "src/types/**/*.d.ts"
+  ],
   "exclude": [
     "node_modules",
     ".next",
@@ -42,4 +48,3 @@
     "src/**/page-backup*.tsx"
   ]
 }
-

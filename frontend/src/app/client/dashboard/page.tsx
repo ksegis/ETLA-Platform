@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState } from 'react'
 import { 
@@ -18,7 +20,7 @@ import {
   ArrowUp,
   ArrowDown
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface ClientKPIs {
@@ -346,7 +348,7 @@ export default function ClientDashboard() {
                     key={star} 
                     className={`text-lg ${star <= Math.floor(clientKPIs.quality.satisfactionScore) ? 'text-yellow-400' : 'text-gray-300'}`}
                   >
-                    â˜…
+                    ★
                   </span>
                 ))}
               </div>
@@ -541,6 +543,8 @@ export default function ClientDashboard() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

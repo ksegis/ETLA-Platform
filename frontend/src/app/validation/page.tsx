@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { 
   Shield, 
   CheckCircle, 
@@ -113,8 +113,8 @@ export default function ValidationEnginePage() {
                   </div>
                   <p className="text-xs text-gray-600 mb-2">Pattern: XXX-XX-XXXX | Required: Yes</p>
                   <div className="text-xs">
-                    <span className="text-green-600">âœ… 2,089 passed</span>
-                    <span className="text-red-600 ml-3">âŒ 24 failed</span>
+                    <span className="text-green-600">✅ 2,089 passed</span>
+                    <span className="text-red-600 ml-3">❌ 24 failed</span>
                   </div>
                 </div>
                 
@@ -125,10 +125,10 @@ export default function ValidationEnginePage() {
                       Active
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 mb-2">Hire date â‰¤ Today | Termination â‰¥ Hire</p>
+                  <p className="text-xs text-gray-600 mb-2">Hire date ≤ Today | Termination ≥ Hire</p>
                   <div className="text-xs">
-                    <span className="text-green-600">âœ… 2,105 passed</span>
-                    <span className="text-red-600 ml-3">âŒ 8 failed</span>
+                    <span className="text-green-600">✅ 2,105 passed</span>
+                    <span className="text-red-600 ml-3">❌ 8 failed</span>
                   </div>
                 </div>
                 
@@ -141,8 +141,8 @@ export default function ValidationEnginePage() {
                   </div>
                   <p className="text-xs text-gray-600 mb-2">Range: $15,000 - $500,000 | Required: Yes</p>
                   <div className="text-xs">
-                    <span className="text-green-600">âœ… 2,098 passed</span>
-                    <span className="text-orange-600 ml-3">âš ï¸ 15 warnings</span>
+                    <span className="text-green-600">✅ 2,098 passed</span>
+                    <span className="text-orange-600 ml-3">⚠️ 15 warnings</span>
                   </div>
                 </div>
                 
@@ -155,8 +155,8 @@ export default function ValidationEnginePage() {
                   </div>
                   <p className="text-xs text-gray-600 mb-2">Employee ID, Name, Department required</p>
                   <div className="text-xs">
-                    <span className="text-green-600">âœ… 2,078 passed</span>
-                    <span className="text-red-600 ml-3">âŒ 35 failed</span>
+                    <span className="text-green-600">✅ 2,078 passed</span>
+                    <span className="text-red-600 ml-3">❌ 35 failed</span>
                   </div>
                 </div>
               </div>
@@ -305,6 +305,8 @@ export default function ValidationEnginePage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

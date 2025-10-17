@@ -1,20 +1,22 @@
-﻿/**
+﻿'use client';
+
+/**
  * Jobs Management Page
  * Handles job posting, editing, and management for the ATS
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/dialog';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useTenant } from '@/contexts/TenantContext';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/browser';
 import {
   Plus,
   Search,
@@ -382,7 +384,7 @@ export default function JobsPage() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MapPin className="h-4 w-4" />
-                          {job.location} â€¢ {WORK_MODE_LABELS[job.work_mode]}
+                          {job.location} • {WORK_MODE_LABELS[job.work_mode]}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <DollarSign className="h-4 w-4" />
@@ -396,9 +398,9 @@ export default function JobsPage() {
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>Posted: {job.posted_date ? formatDate(job.posted_date) : 'Not posted'}</span>
-                        <span>â€¢</span>
+                        <span>•</span>
                         <span>Hiring Manager: {job.hiring_manager_name}</span>
-                        <span>â€¢</span>
+                        <span>•</span>
                         <span>Updated: {formatDate(job.updated_at)}</span>
                       </div>
                     </div>
@@ -534,6 +536,8 @@ export default function JobsPage() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

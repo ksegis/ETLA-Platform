@@ -1,4 +1,6 @@
-﻿/**
+﻿'use client';
+
+/**
  * Talent Dashboard - Main ATS Dashboard
  * Provides overview of recruitment activities and key metrics
  */
@@ -6,11 +8,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useTenant } from '@/contexts/TenantContext';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/browser';
 import {
   Users,
   Briefcase,
@@ -317,7 +319,7 @@ export default function TalentDashboard() {
                     </p>
                     {activity.candidateName && activity.jobTitle && (
                       <p className="text-sm text-gray-600">
-                        {activity.candidateName} â€¢ {activity.jobTitle}
+                        {activity.candidateName} • {activity.jobTitle}
                       </p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
@@ -401,6 +403,8 @@ export default function TalentDashboard() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

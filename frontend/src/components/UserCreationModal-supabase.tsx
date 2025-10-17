@@ -1,10 +1,10 @@
 ﻿'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { X, User, Mail, Phone, Building, Shield, Key } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/browser'
 
 interface Tenant {
   id: string
@@ -425,6 +425,8 @@ export default function UserCreationModal({ isOpen, onClose, onSuccess, tenants 
     </div>
   )
 }
+
+
 
 
 

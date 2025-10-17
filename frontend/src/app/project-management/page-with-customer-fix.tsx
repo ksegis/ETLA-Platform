@@ -1,10 +1,12 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
 import MissingCustomerModal from '@/components/MissingCustomerModal'
 import {
@@ -82,7 +84,7 @@ export default function ProjectManagementPage() {
 
   const loadDashboardData = async () => {
     try {
-      console.log('ðŸ”„ loading dashboard data (graceful mode)...')
+      console.log('🔄 loading dashboard data (graceful mode)...')
       setDashboardData(prev => ({ ...prev, loading: true, error: null }))
       
       // Fetch ONLY real data from PMBOK service - graceful handling of missing customers
@@ -92,7 +94,7 @@ export default function ProjectManagementPage() {
         pmbok.getRisks()
       ])
 
-      console.log('âœ… Dashboard data loaded:', {
+      console.log('✅ Dashboard data loaded:', {
         workRequests: workRequests.length,
         projectCharters: projectCharters.length,
         risks: risks.length
@@ -103,7 +105,7 @@ export default function ProjectManagementPage() {
       setMissingCustomersCount(missingCount)
 
       if (missingCount > 0) {
-        console.log('âš ï¸ Found', missingCount, 'work requests with missing customers')
+        console.log('⚠️ Found', missingCount, 'work requests with missing customers')
       }
 
       setDashboardData({
@@ -114,7 +116,7 @@ export default function ProjectManagementPage() {
         error: null
       })
     } catch (error) {
-      console.error('âŒ Error loading dashboard data:', error)
+      console.error('❌ Error loading dashboard data:', error)
       setDashboardData(prev => ({
         ...prev,
         loading: false,
@@ -142,22 +144,22 @@ export default function ProjectManagementPage() {
     try {
       await pmbok.declineWorkRequest(id, 'Deleted by user')
       loadDashboardData() // Refresh data
-      console.log('âœ… Work request deleted successfully')
+      console.log('✅ Work request deleted successfully')
     } catch (error) {
-      console.error('âŒ Error deleting work request:', error)
+      console.error('❌ Error deleting work request:', error)
       alert('Failed to delete work request. Please try again.')
     }
   }
 
   // Approval workflow handlers
   const handleApproveRequest = (request: WorkRequest) => {
-    console.log('ðŸŽ¯ Opening approval modal for request:', request.id)
+    console.log('🎯 Opening approval modal for request:', request.id)
     setSelectedWorkRequest(request)
     setShowApprovalModal(true)
   }
 
   const handleApprovalComplete = () => {
-    console.log('âœ… Approval completed, refreshing data...')
+    console.log('✅ Approval completed, refreshing data...')
     setShowApprovalModal(false)
     setSelectedWorkRequest(null)
     loadDashboardData() // Refresh data after approval action
@@ -169,7 +171,7 @@ export default function ProjectManagementPage() {
   }
 
   const handleCustomersFixed = () => {
-    console.log('âœ… Customers fixed, refreshing data...')
+    console.log('✅ Customers fixed, refreshing data...')
     loadDashboardData() // Refresh data after fixing customers
   }
 
@@ -214,9 +216,9 @@ export default function ProjectManagementPage() {
       // await pmbok.updateRisk(id, { status: 'resolved' }) // Method not available
       console.log('Risk resolution not implemented yet')
       loadDashboardData() // Refresh data
-      console.log('âœ… Risk resolved successfully')
+      console.log('✅ Risk resolved successfully')
     } catch (error) {
-      console.error('âŒ Error resolving risk:', error)
+      console.error('❌ Error resolving risk:', error)
       alert('Failed to resolve risk. Please try again.')
     }
   }
@@ -227,7 +229,7 @@ export default function ProjectManagementPage() {
     const result = status === 'submitted' || status === 'under_review'
     
     // DEBUG: Always log approval checks
-    console.log(`ðŸ” Approval check for "${request.title}":`, {
+    console.log(`🔍 Approval check for "${request.title}":`, {
       id: request.id,
       status: request.status,
       approval_status: request.approval_status,
@@ -331,7 +333,7 @@ export default function ProjectManagementPage() {
   }
 
   const renderWorkRequestsTab = () => {
-    console.log('ðŸ” Rendering Work Requests tab with', filteredWorkRequests.length, 'requests')
+    console.log('🔍 Rendering Work Requests tab with', filteredWorkRequests.length, 'requests')
     
     return (
       <div className="space-y-6">
@@ -523,10 +525,10 @@ export default function ProjectManagementPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredWorkRequests.map((request: any) => {
                       // DEBUG: Log each request being rendered
-                      console.log('ðŸ” Rendering request row:', request.id, request.title)
+                      console.log('🔍 Rendering request row:', request.id, request.title)
                       
                       const canApprove = canApproveRequest(request)
-                      console.log('ðŸŽ¯ Can approve this request:', canApprove)
+                      console.log('🎯 Can approve this request:', canApprove)
                       
                       return (
                         <tr key={request.id} className="hover:bg-gray-50">
@@ -571,20 +573,20 @@ export default function ProjectManagementPage() {
                             <div className="flex items-center space-x-2">
                               {/* APPROVAL BUTTON - ENHANCED WITH CUSTOMER CHECK */}
                               {(() => {
-                                console.log('ðŸŽ¯ TESTING APPROVAL BUTTON for:', request.id)
-                                console.log('ðŸŽ¯ Request status:', request.status)
-                                console.log('ðŸŽ¯ Request approval_status:', request.approval_status)
-                                console.log('ðŸŽ¯ Customer missing:', request.customer_missing)
-                                console.log('ðŸŽ¯ Can approve result:', canApprove)
+                                console.log('🎯 TESTING APPROVAL BUTTON for:', request.id)
+                                console.log('🎯 Request status:', request.status)
+                                console.log('🎯 Request approval_status:', request.approval_status)
+                                console.log('🎯 Customer missing:', request.customer_missing)
+                                console.log('🎯 Can approve result:', canApprove)
                                 
                                 if (canApprove && !request.customer_missing) {
-                                  console.log('âœ… SHOULD SHOW APPROVAL BUTTON for:', request.id)
+                                  console.log('✅ SHOULD SHOW APPROVAL BUTTON for:', request.id)
                                   return (
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => {
-                                        console.log('ðŸŽ¯ APPROVAL BUTTON CLICKED for:', request.id)
+                                        console.log('🎯 APPROVAL BUTTON CLICKED for:', request.id)
                                         handleApproveRequest(request)
                                       }}
                                       className="text-green-600 hover:text-green-700 border border-green-300"
@@ -594,7 +596,7 @@ export default function ProjectManagementPage() {
                                     </Button>
                                   )
                                 } else if (canApprove && request.customer_missing) {
-                                  console.log('âš ï¸ APPROVAL BLOCKED - missing customer for:', request.id)
+                                  console.log('⚠️ APPROVAL BLOCKED - missing customer for:', request.id)
                                   return (
                                     <Button
                                       variant="ghost"
@@ -607,7 +609,7 @@ export default function ProjectManagementPage() {
                                     </Button>
                                   )
                                 } else {
-                                  console.log('âŒ NOT SHOWING APPROVAL BUTTON for:', request.id, 'status:', request.status)
+                                  console.log('❌ NOT SHOWING APPROVAL BUTTON for:', request.id, 'status:', request.status)
                                   return null
                                 }
                               })()}
@@ -751,7 +753,7 @@ export default function ProjectManagementPage() {
             workRequest={selectedWorkRequest}
             isOpen={showApprovalModal}
             onClose={() => {
-              console.log('ðŸ”„ Closing approval modal')
+              console.log('🔄 Closing approval modal')
               setShowApprovalModal(false)
               setSelectedWorkRequest(null)
             }}
@@ -773,6 +775,8 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

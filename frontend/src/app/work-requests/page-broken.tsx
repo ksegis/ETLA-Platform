@@ -1,4 +1,6 @@
-﻿"use client";
+﻿'use client';
+
+"use client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,14 +21,14 @@ import {
   User,
   Calendar,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/Card";
+} from "@/components/ui/card";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import TenantSelector from "@/components/TenantSelector";
 import {
@@ -789,6 +791,9 @@ export default function WorkRequestsPage() {
     </DashboardLayout>
   );
 }
+
+
+
 
 
 

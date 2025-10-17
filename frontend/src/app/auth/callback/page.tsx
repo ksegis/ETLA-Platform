@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -58,7 +60,7 @@ export default function AuthCallback() {
                   department: null,
                   job_title: 'User',
                   avatar_url: data.session.user.user_metadata?.avatar_url,
-                  email: data.session.user.email,
+                  email: data.session.user?.email,
                   role: 'user',
                   role_level: 'sub_client',
                   tenant_id: defaultTenant.id,
@@ -105,7 +107,7 @@ export default function AuthCallback() {
               const { error: invitationError } = await supabase
                 .from('user_invitations')
                 .insert({
-                  email: data.session.user.email,
+                  email: data.session.user?.email,
                   invited_by: null, // Self-registered via Google
                   tenant_id: defaultTenant.id,
                   role: 'user',
@@ -133,7 +135,7 @@ export default function AuthCallback() {
                   resource_id: data.session.user.id,
                   details: {
                     method: 'google_oauth',
-                    email: data.session.user.email,
+                    email: data.session.user?.email,
                     full_name: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name,
                     tenant_assigned: defaultTenant.name
                   },
@@ -190,7 +192,7 @@ export default function AuthCallback() {
                   resource_id: data.session.user.id,
                   details: {
                     method: 'google_oauth',
-                    email: data.session.user.email
+                    email: data.session.user?.email
                   },
                   ip_address: null,
                   user_agent: navigator.userAgent,

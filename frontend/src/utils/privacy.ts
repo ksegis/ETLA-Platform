@@ -7,10 +7,10 @@ export function maskSSN(value: string | null | undefined, show: string = 'last4'
   if (cleaned.length !== 9) return value;
   
   if (show === 'last4') {
-    return `â€¢â€¢â€¢-â€¢â€¢-${cleaned.slice(-4)}`;
+    return `•••-••-${cleaned.slice(-4)}`;
   }
   
-  return 'â€¢â€¢â€¢-â€¢â€¢-â€¢â€¢â€¢â€¢';
+  return '•••-••-••••';
 }
 
 export function maskEIN(value: string | null | undefined, show: string = 'last4'): string {
@@ -20,20 +20,20 @@ export function maskEIN(value: string | null | undefined, show: string = 'last4'
   if (cleaned.length !== 9) return value;
   
   if (show === 'last4') {
-    return `â€¢â€¢-â€¢â€¢â€¢${cleaned.slice(-4)}`;
+    return `••-•••${cleaned.slice(-4)}`;
   }
   
-  return 'â€¢â€¢-â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
+  return '••-•••••••';
 }
 
 export function maskAccount(value: string | null | undefined, show: string = 'last4'): string {
   if (!value) return '';
   
   if (show === 'last4' && value.length >= 4) {
-    return `â€¢â€¢â€¢â€¢${value.slice(-4)}`;
+    return `••••${value.slice(-4)}`;
   }
   
-  return 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
+  return '••••••••';
 }
 
 export function formatCurrency(value: number | null | undefined, locale: string = 'en-US'): string {

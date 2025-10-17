@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'

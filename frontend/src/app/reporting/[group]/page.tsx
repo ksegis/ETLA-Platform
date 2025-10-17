@@ -1,4 +1,4 @@
-import ClientGroupPage from "./ClientGroupPage";
+﻿import ClientGroupPage from "./ClientGroupPage";
 import type { GroupKey } from "../_data";
 
 // Next.js 15: `params` is a Promise and there is no exported PageProps type.

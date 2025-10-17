@@ -6,8 +6,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { exportUtils } from '@/utils/exportUtils';
 import { brandingService } from '@/services/brandingService';
@@ -611,6 +611,8 @@ export default function EnhancedTaxRecordsWithLocalTax({
     </div>
   );
 }
+
+
 
 
 

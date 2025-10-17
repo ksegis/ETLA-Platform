@@ -1,10 +1,12 @@
-﻿
+﻿'use client';
+
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Eye,
   EyeOff,
@@ -15,7 +17,7 @@ import {
   Mail,
   User,
 } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 interface InviteAcceptanceState {
   email: string;
   fullName: string;
@@ -74,7 +76,7 @@ function AcceptInviteForm() {
         // Check if this is an invite session
         if (session?.user?.email && session?.user?.user_metadata?.invited) {
           const inviteData = {
-            email: session.user.email,
+            email: session.user?.email,
             invited_by_name: session.user.user_metadata.invited_by_name,
             tenant_name: session.user.user_metadata.tenant_name,
             role: session.user.user_metadata.role,
@@ -84,7 +86,7 @@ function AcceptInviteForm() {
             ...prev,
             isValidInvite: true,
             isCheckingInvite: false,
-            email: session.user.email || "",
+            email: session.user?.email || "",
             inviteData,
           }));
         } else {
@@ -493,6 +495,8 @@ export default function AcceptInvitePage() {
     </Suspense>
   );
 }
+
+
 
 
 

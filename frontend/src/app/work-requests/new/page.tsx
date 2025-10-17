@@ -1,8 +1,10 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import { Upload, X, Plus, AlertCircle, CheckCircle, Database, LogIn, Copy, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 const supabase = createSupabaseBrowserClient()
@@ -67,19 +69,19 @@ export default function NewWorkRequestPage() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('ðŸ” Checking authentication status...')
+        console.log('🔍 Checking authentication status...')
         setAuthStatus('loading')
         
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
-          console.error('âŒ Session error:', sessionError)
+          console.error('❌ Session error:', sessionError)
           setAuthStatus('unauthenticated')
           return
         }
 
         if (!session) {
-          console.warn('âš ï¸ No active session found')
+          console.warn('⚠️ No active session found')
           setAuthStatus('unauthenticated')
           return
         }
@@ -87,17 +89,17 @@ export default function NewWorkRequestPage() {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
         if (userError || !user) {
-          console.error('âŒ User error:', userError)
+          console.error('❌ User error:', userError)
           setAuthStatus('unauthenticated')
           return
         }
 
-        console.log('ðŸ‘¤ Authenticated user:', user.email, 'ID:', user.id)
+        console.log('👤 Authenticated user:', user?.email, 'ID:', user.id)
         setCurrentUser(user)
         setAuthStatus('authenticated')
 
         // Look up tenant_id
-        console.log('ðŸ” Looking up user tenant_id...')
+        console.log('🔍 Looking up user tenant_id...')
         const { data: tenantData, error: tenantError } = await supabase
           .from('tenant_users')
           .select('tenant_id')
@@ -105,17 +107,17 @@ export default function NewWorkRequestPage() {
           .maybeSingle()
 
         if (tenantError) {
-          console.error('âŒ Error fetching tenant_id:', tenantError)
+          console.error('❌ Error fetching tenant_id:', tenantError)
         } else if (tenantData && tenantData.tenant_id) {
-          console.log('ðŸ¢ User tenant_id:', tenantData.tenant_id)
+          console.log('🏢 User tenant_id:', tenantData.tenant_id)
           setUserTenantId(tenantData.tenant_id)
-          console.log('âœ… Tenant lookup completed successfully')
+          console.log('✅ Tenant lookup completed successfully')
         } else {
-          console.warn('âš ï¸ User not associated with any tenant')
+          console.warn('⚠️ User not associated with any tenant')
         }
 
       } catch (error) {
-        console.error('âŒ Error in authentication/tenant lookup:', error)
+        console.error('❌ Error in authentication/tenant lookup:', error)
         setAuthStatus('unauthenticated')
       }
     }
@@ -123,7 +125,7 @@ export default function NewWorkRequestPage() {
     initializeAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('ðŸ”„ Auth state changed:', event, session?.user?.email)
+      console.log('🔄 Auth state changed:', event, session?.user?.email)
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         initializeAuth()
       } else if (event === 'SIGNED_OUT') {
@@ -210,7 +212,7 @@ export default function NewWorkRequestPage() {
     try {
       window.location.href = '/login'
     } catch (error) {
-      console.error('âŒ Login redirect failed:', error)
+      console.error('❌ Login redirect failed:', error)
     }
   }
 
@@ -238,7 +240,7 @@ export default function NewWorkRequestPage() {
     setSubmitMessage('')
 
     try {
-      console.log('ðŸš€ REAL DATABASE SUBMISSION STARTED!')
+      console.log('🚀 REAL DATABASE SUBMISSION STARTED!')
 
       // Test connection
       const { error: connectionError } = await supabase.from('work_requests').select('count').limit(1)
@@ -246,23 +248,23 @@ export default function NewWorkRequestPage() {
         throw new Error(`Connection failed: ${connectionError.message}`)
       }
       
-      console.log('âœ… Supabase connection successful!')
-      console.log('ðŸ‘¤ Using authenticated user:', currentUser.email, 'ID:', currentUser.id)
+      console.log('✅ Supabase connection successful!')
+      console.log('👤 Using authenticated user:', currentUser.email, 'ID:', currentUser.id)
 
       // Use tenant_id if available, otherwise use fallback
       let finalTenantId = userTenantId
       if (!finalTenantId) {
         finalTenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff'
-        console.log('âš ï¸ No tenant_id found, using fallback tenant_id:', finalTenantId)
+        console.log('⚠️ No tenant_id found, using fallback tenant_id:', finalTenantId)
       }
 
       // Generate user-friendly request ID
       const userFriendlyId = createRequestId()
-      console.log('ðŸŽ¯ Generated user-friendly ID:', userFriendlyId)
+      console.log('🎯 Generated user-friendly ID:', userFriendlyId)
 
       // DEBUG: Check if customer exists before inserting
-      console.log('ðŸ” DEBUG: Checking if customer exists in customers table...')
-      console.log('ðŸ”‘ DEBUG: Looking for customer_id:', currentUser.id)
+      console.log('🔍 DEBUG: Checking if customer exists in customers table...')
+      console.log('🔑 DEBUG: Looking for customer_id:', currentUser.id)
 
       const { data: customerCheck, error: customerCheckError } = await supabase
         .from('customers')
@@ -271,16 +273,16 @@ export default function NewWorkRequestPage() {
         .maybeSingle()
 
       if (customerCheckError) {
-        console.error('âŒ DEBUG: Error checking customer:', customerCheckError)
+        console.error('❌ DEBUG: Error checking customer:', customerCheckError)
         throw new Error(`Error checking customer: ${customerCheckError.message}`)
       } else if (customerCheck) {
-        console.log('âœ… DEBUG: Customer exists:', customerCheck)
+        console.log('✅ DEBUG: Customer exists:', customerCheck)
       } else {
-        console.error('âŒ DEBUG: Customer NOT found in customers table for ID:', currentUser.id)
+        console.error('❌ DEBUG: Customer NOT found in customers table for ID:', currentUser.id)
         throw new Error(`Customer not found in customers table for ID: ${currentUser.id}`)
       }
 
-      console.log('ðŸ“‹ DEBUG: About to insert with customer_id:', currentUser.id)
+      console.log('📋 DEBUG: About to insert with customer_id:', currentUser.id)
 
       // Prepare the data for insertion
       const requestData = {
@@ -299,7 +301,7 @@ export default function NewWorkRequestPage() {
         request_id: userFriendlyId
       }
 
-      console.log('ðŸ’¾ Inserting into work_requests table:', requestData)
+      console.log('💾 Inserting into work_requests table:', requestData)
 
       // Insert into Supabase
       const { data: insertData, error: insertError } = await supabase
@@ -308,12 +310,12 @@ export default function NewWorkRequestPage() {
         .select()
 
       if (insertError) {
-        console.error('âŒ Database insert failed:', insertError)
+        console.error('❌ Database insert failed:', insertError)
         throw new Error(`Failed to save request: ${insertError.message}`)
       }
 
-      console.log('âœ… DATABASE INSERT SUCCESSFUL!')
-      console.log('ðŸ“‹ Inserted data:', insertData)
+      console.log('✅ DATABASE INSERT SUCCESSFUL!')
+      console.log('📋 Inserted data:', insertData)
 
       // Set success data for enhanced confirmation
       setSuccessData({
@@ -340,12 +342,12 @@ export default function NewWorkRequestPage() {
       })
 
     } catch (error) {
-      console.error('âŒ SUBMISSION FAILED:', error)
+      console.error('❌ SUBMISSION FAILED:', error)
       setSubmitStatus('error')
       setSubmitMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
       
       // Save to localStorage as backup
-      console.log('ðŸ’¾ Saving to localStorage as backup...')
+      console.log('💾 Saving to localStorage as backup...')
       const backupData = {
         ...formData,
         id: `backup-${Date.now()}`,
@@ -358,9 +360,9 @@ export default function NewWorkRequestPage() {
         const existingRequests = JSON.parse(localStorage.getItem('etla_work_requests') || '[]')
         existingRequests.push(backupData)
         localStorage.setItem('etla_work_requests', JSON.stringify(existingRequests))
-        console.log('ðŸ’¾ Backup saved to localStorage')
+        console.log('💾 Backup saved to localStorage')
       } catch (storageError) {
-        console.error('âŒ Failed to save backup to localStorage:', storageError)
+        console.error('❌ Failed to save backup to localStorage:', storageError)
       }
     } finally {
       setIsSubmitting(false)
@@ -432,10 +434,10 @@ export default function NewWorkRequestPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <h3 className="font-semibold text-blue-900 mb-2">What happens next?</h3>
               <ul className="text-sm text-blue-800 space-y-1 text-left">
-                <li>â€¢ Your request will be reviewed by our team within 24 hours</li>
-                <li>â€¢ You'll receive email notifications about status updates</li>
-                <li>â€¢ You can track progress using your Request ID: <strong>{successData.userFriendlyId}</strong></li>
-                <li>â€¢ Our team may contact you for additional information if needed</li>
+                <li>• Your request will be reviewed by our team within 24 hours</li>
+                <li>• You'll receive email notifications about status updates</li>
+                <li>• You can track progress using your Request ID: <strong>{successData.userFriendlyId}</strong></li>
+                <li>• Our team may contact you for additional information if needed</li>
               </ul>
             </div>
 
@@ -474,7 +476,7 @@ export default function NewWorkRequestPage() {
               onClick={() => window.location.href = '/work-requests'}
               className="flex items-center gap-2"
             >
-              â† Back to Requests
+              ← Back to Requests
             </Button>
           </div>
           
@@ -517,7 +519,7 @@ export default function NewWorkRequestPage() {
               </p>
               {userTenantId && authStatus === 'authenticated' && (
                 <p className="text-xs text-green-600 mt-1">
-                  âœ… Tenant ID: {userTenantId}
+                  ✅ Tenant ID: {userTenantId}
                 </p>
               )}
             </div>
@@ -941,6 +943,8 @@ export default function NewWorkRequestPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

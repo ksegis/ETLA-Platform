@@ -19,7 +19,7 @@ export function useAuthStable() {
     const userId = auth.user?.id || null
     const tenantId = '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Default tenant ID
     
-    console.log('ðŸ”„ Syncing PMBOK service with auth and tenant contexts:', {
+    console.log('🔄 Syncing PMBOK service with auth and tenant contexts:', {
       userId,
       tenantId,
       userEmail: auth.user?.email,
@@ -40,7 +40,7 @@ export function useAuthStable() {
   // useEffect(() => {
   //   if (pmbok && typeof pmbok.onAuthChange === 'function') {
   //     const unsubscribe = pmbok.onAuthChange((userId, tenantId) => {
-  //       console.log('ðŸ”„ PMBOK service auth context changed:', {
+  //       console.log('🔄 PMBOK service auth context changed:', {
   //         userId,
   //         tenantId
   //       })

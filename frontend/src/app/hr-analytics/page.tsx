@@ -1,13 +1,13 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useTenant } from '@/contexts/TenantContext';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 // HR Analytics specific interfaces
 interface HRMetrics {
@@ -134,7 +134,7 @@ export default function HRAnalyticsDashboard() {
 
   const renderFinancialAuditSection = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-bold text-gray-900">ðŸ’° Financial Audit Section</h3>
+      <h3 className="text-xl font-bold text-gray-900">💰 Financial Audit Section</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Payroll Expense Trending */}
         <Card className="p-6">
@@ -220,7 +220,7 @@ export default function HRAnalyticsDashboard() {
 
   const renderComplianceAuditSection = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-bold text-gray-900">ðŸ“Š Compliance Audit Section</h3>
+      <h3 className="text-xl font-bold text-gray-900">📊 Compliance Audit Section</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Overtime Distribution */}
         <Card className="p-6">
@@ -302,7 +302,7 @@ export default function HRAnalyticsDashboard() {
 
   const renderOperationalAuditSection = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-bold text-gray-900">âš™ï¸ Operational Audit Section</h3>
+      <h3 className="text-xl font-bold text-gray-900">⚙️ Operational Audit Section</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Data Completeness Scoring */}
         <Card className="p-6">
@@ -389,7 +389,7 @@ export default function HRAnalyticsDashboard() {
 
   const renderRiskManagementSection = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-bold text-gray-900">âš ï¸ Risk Management Section</h3>
+      <h3 className="text-xl font-bold text-gray-900">⚠️ Risk Management Section</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Garnishment Tracking */}
         <Card className="p-6">
@@ -566,6 +566,8 @@ export default function HRAnalyticsDashboard() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

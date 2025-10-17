@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle, XCircle, Clock, AlertCircle, Loader2 } from 'lucide-react'
 import { pmbok } from '@/services/pmbok_service'
 import type { WorkRequest } from '@/types'
@@ -53,17 +53,17 @@ export default function WorkRequestApprovalModal({
       }
 
       if (result.success) {
-        console.log(`âœ… Work request ${action} successful`)
+        console.log(`✅ Work request ${action} successful`)
         onApprovalComplete()
         onClose()
         resetForm()
       } else {
-        console.error(`âŒ Work request ${action} failed:`, result.error)
+        console.error(`❌ Work request ${action} failed:`, result.error)
         alert(`Failed to ${action} work request: ${result.error}`)
       }
 
     } catch (error) {
-      console.error(`âŒ Error during ${action}:`, error)
+      console.error(`❌ Error during ${action}:`, error)
       alert(`Error during ${action}: ${error}`)
     } finally {
       setloading(false)
@@ -273,6 +273,8 @@ export default function WorkRequestApprovalModal({
     </div>
   )
 }
+
+
 
 
 

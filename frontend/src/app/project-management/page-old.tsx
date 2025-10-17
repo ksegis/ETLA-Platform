@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -22,8 +24,8 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
 import MissingCustomerModal from '@/components/MissingCustomerModal'
@@ -76,7 +78,7 @@ export default function ProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log('ðŸ“Š loading dashboard data with stable auth:', {
+      console.log('📊 loading dashboard data with stable auth:', {
         userId: auth.user?.id,
         tenantId: auth.tenant?.id,
         isStable: auth.isStable
@@ -95,14 +97,14 @@ export default function ProjectManagementPage() {
         risks
       })
 
-      console.log('âœ… Dashboard data loaded successfully:', {
+      console.log('✅ Dashboard data loaded successfully:', {
         workRequests: workRequests.length,
         projects: projects.length,
         risks: risks.length
       })
 
     } catch (error) {
-      console.error('âŒ Error loading dashboard data:', error)
+      console.error('❌ Error loading dashboard data:', error)
       setError('Failed to load dashboard data')
     } finally {
       setloading(false)
@@ -114,7 +116,7 @@ export default function ProjectManagementPage() {
     const status = request.approval_status || request.status
     const canApprove = status === 'submitted' || status === 'under_review'
     
-    console.log(`ðŸ” Approval check for "${request.title}": {
+    console.log(`🔍 Approval check for "${request.title}": {
       id: "${request.id}",
       status: "${request.status}", 
       approval_status: ${request.approval_status || 'undefined'},
@@ -127,27 +129,27 @@ export default function ProjectManagementPage() {
 
   // Handle approval request
   const handleApproveRequest = (request: WorkRequest) => {
-    console.log('ðŸ” Opening approval modal for request:', request.id)
+    console.log('🔍 Opening approval modal for request:', request.id)
     setSelectedWorkRequest(request)
     setShowApprovalModal(true)
   }
 
   // Handle approval completion
   const handleApprovalComplete = () => {
-    console.log('âœ… Approval completed, refreshing data')
+    console.log('✅ Approval completed, refreshing data')
     loadDashboardData()
   }
 
   // Handle missing customer fix
   const handleFixMissingCustomer = (request: WorkRequest) => {
-    console.log('ðŸ”§ Opening missing customer modal for request:', request.id)
+    console.log('🔧 Opening missing customer modal for request:', request.id)
     setMissingCustomerWorkRequest(request)
     setShowMissingCustomerModal(true)
   }
 
   // Handle customer fixed
   const handleCustomerFixed = () => {
-    console.log('âœ… Customer fixed, refreshing data')
+    console.log('✅ Customer fixed, refreshing data')
     loadDashboardData()
   }
 
@@ -402,7 +404,7 @@ export default function ProjectManagementPage() {
                   </thead>
                   <tbody>
                     {getFilteredWorkRequests().map((request: any) => {
-                      console.log(`ðŸ” RENDERING ACTIONS for request: ${request.id} ${request.title}`)
+                      console.log(`🔍 RENDERING ACTIONS for request: ${request.id} ${request.title}`)
                       const effectiveStatus = request.approval_status || request.status
                       const isMissingCustomer = request.customer_name === 'Missing Customer'
                       
@@ -432,7 +434,7 @@ export default function ProjectManagementPage() {
                             </div>
                             {isMissingCustomer && (
                               <div className="text-xs text-orange-600 mt-1">
-                                âš ï¸ Customer data missing
+                                ⚠️ Customer data missing
                               </div>
                             )}
                           </td>
@@ -665,6 +667,8 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

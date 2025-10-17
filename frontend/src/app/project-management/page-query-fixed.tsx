@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import { 
@@ -50,14 +52,14 @@ import {
   Clock3,
   Zap
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
-import { createSupabaseBrowserClient } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 const supabase = createSupabaseBrowserClient()
 
@@ -502,6 +504,8 @@ export default function QueryFixedProjectManagementPage() {
     }
   }
 }
+
+
 
 
 

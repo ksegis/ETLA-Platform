@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Heart, Shield, Eye, CheckCircle } from 'lucide-react'
 
 export default function BenefitsPage() {
@@ -114,6 +114,8 @@ export default function BenefitsPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

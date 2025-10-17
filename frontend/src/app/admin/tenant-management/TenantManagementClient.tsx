@@ -1,15 +1,17 @@
-﻿"use client";
+﻿'use client';
+
+"use client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 import { useState, useEffect } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -38,7 +40,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/Card";
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -529,7 +531,7 @@ export default function TenantManagementClient() { // Renamed component
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-medium text-gray-900">
-                          {user.email}
+                          {user?.email}
                         </p>
                         <p className="text-sm text-gray-500">
                           Joined: {new Date(user.created_at).toLocaleDateString()}
@@ -537,7 +539,7 @@ export default function TenantManagementClient() { // Renamed component
                       </div>
                       <div className="flex items-center gap-2">
                         <Select
-                          value={user.role}
+                          value={user?.role ?? currentUserRole}
                           onValueChange={(newRole) =>
                             updateUserRole(user.id, newRole)
                           }
@@ -720,6 +722,8 @@ function CreateTenantForm({ onCreateTenant }: any) {
     </form>
   );
 }
+
+
 
 
 

@@ -49,7 +49,7 @@ export const RBAC_TEST_SCENARIOS = {
         expected:
           "currentUserRole indicates host-level admin; spot-check a few high-level permissions",
         test: (p: PermissionsApi) => {
-          // We donâ€™t assume a specific helper like isHostAdmin(); we just spot-check breadth.
+          // We don’t assume a specific helper like isHostAdmin(); we just spot-check breadth.
           const canSeeAccess = p.canView(FEATURES.ACCESS_CONTROL as any);
           const canSeeTenants = p.canView(FEATURES.TENANT_MANAGEMENT as any);
           const canSeeProjects = p.canView(FEATURES.PROJECT_MANAGEMENT as any);
@@ -167,7 +167,7 @@ export const RBACTestComponent: React.FC = () => {
                   canView(feature as any) ? "text-green-600" : "text-red-600"
                 }
               >
-                {canView(feature as any) ? "âœ“ View Allowed" : "âœ— View Denied"}
+                {canView(feature as any) ? "✓ View Allowed" : "✗ View Denied"}
               </span>
             </div>
           ))}
@@ -188,12 +188,12 @@ export const RBACTestComponent: React.FC = () => {
             <WorkRequestGuard
               fallback={
                 <div className="text-red-600">
-                  âŒ No access to work requests
+                  ❌ No access to work requests
                 </div>
               }
             >
               <div className="text-green-600">
-                âœ… Work request access granted
+                ✅ Work request access granted
               </div>
             </WorkRequestGuard>
           </div>
@@ -202,10 +202,10 @@ export const RBACTestComponent: React.FC = () => {
             <h3 className="font-medium mb-2">Project Guard Test</h3>
             <ProjectGuard
               fallback={
-                <div className="text-red-600">âŒ No access to projects</div>
+                <div className="text-red-600">❌ No access to projects</div>
               }
             >
-              <div className="text-green-600">âœ… Project access granted</div>
+              <div className="text-green-600">✅ Project access granted</div>
             </ProjectGuard>
           </div>
 
@@ -241,34 +241,34 @@ export const RBACTestComponent: React.FC = () => {
         <h2 className="text-lg font-semibold mb-3">Explicit Checks</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div className="p-3 border rounded">
-            <div className="font-medium mb-1">Work Requests â€” VIEW</div>
+            <div className="font-medium mb-1">Work Requests — VIEW</div>
             {checkPermission(FEATURES.WORK_REQUESTS as any, PERMISSIONS.VIEW)
-              ? "âœ… Allowed"
-              : "âŒ Denied"}
+              ? "✅ Allowed"
+              : "❌ Denied"}
           </div>
           <div className="p-3 border rounded">
-            <div className="font-medium mb-1">Work Requests â€” CREATE</div>
+            <div className="font-medium mb-1">Work Requests — CREATE</div>
             {checkPermission(FEATURES.WORK_REQUESTS as any, PERMISSIONS.CREATE)
-              ? "âœ… Allowed"
-              : "âŒ Denied"}
+              ? "✅ Allowed"
+              : "❌ Denied"}
           </div>
           <div className="p-3 border rounded">
-            <div className="font-medium mb-1">Projects â€” UPDATE</div>
+            <div className="font-medium mb-1">Projects — UPDATE</div>
             {checkPermission(
               FEATURES.PROJECT_MANAGEMENT as any,
               PERMISSIONS.UPDATE,
             )
-              ? "âœ… Allowed"
-              : "âŒ Denied"}
+              ? "✅ Allowed"
+              : "❌ Denied"}
           </div>
           <div className="p-3 border rounded">
-            <div className="font-medium mb-1">Projects â€” DELETE</div>
+            <div className="font-medium mb-1">Projects — DELETE</div>
             {checkPermission(
               FEATURES.PROJECT_MANAGEMENT as any,
               PERMISSIONS.DELETE,
             )
-              ? "âœ… Allowed"
-              : "âŒ Denied"}
+              ? "✅ Allowed"
+              : "❌ Denied"}
           </div>
         </div>
       </div>

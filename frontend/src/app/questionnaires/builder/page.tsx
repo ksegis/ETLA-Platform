@@ -1,8 +1,8 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -529,7 +529,7 @@ export default function QuestionnaireBuilder() {
                         onClick={() => removeTag(tag)}
                         className="ml-1 text-gray-500 hover:text-gray-700"
                       >
-                        Ã—
+                        ×
                       </button>
                     </Badge>
                   ))}
@@ -767,6 +767,8 @@ export default function QuestionnaireBuilder() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

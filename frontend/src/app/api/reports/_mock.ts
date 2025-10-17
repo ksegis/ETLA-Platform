@@ -1,8 +1,7 @@
-﻿export type MockPayload = {
-  columns: string[];
-  rows: any[];
-  docs?: Array<{ id: string; name: string; url?: string; size?: number }>;
-};
+﻿// src/app/api/reports/_mock.ts
+
+export type DocMeta = { id: string; name: string; url?: string; size?: number };
+export type MockPayload = { columns: string[]; rows: any[]; docs?: DocMeta[] };
 
 /** ---------- Helpers ---------- */
 function round2(n: number) {
@@ -32,7 +31,7 @@ export function applyDemoFilters(
   const { from, to, filters, limit = 50, offset = 0 } = opts || {};
   let out = rows.slice();
 
-  // Date range â€“ try these common columns
+  // Date range – try these common columns
   const dateKeys = ["PayDate", "EffectiveDate", "PeriodStart", "date", "paydate"];
   function pickDate(r: any) {
     for (const k of dateKeys) if (r[k]) return r[k];
@@ -65,7 +64,7 @@ export function applyDemoFilters(
     });
   }
 
-  // Common keys across new reports
+  // Common helpers
   const like = (key: string) =>
     f[key] ? (r: any) => String(r[key] ?? "").toLowerCase().includes(String(f[key]).toLowerCase()) : null;
 
@@ -93,12 +92,10 @@ export function applyDemoFilters(
   // Job History filters
   if (f.employee_id) predicates.push(like("EmployeeID")!);
   if (f.employee_name) predicates.push(like("EmployeeName")!);
-  if (f.department) predicates.push(like("Department")!);
   if (f.supervisor) predicates.push(like("Supervisor")!);
   if (f.job_code) predicates.push(like("JobCode")!);
   if (f.action) predicates.push(like("Action")!);
   if (f.reason_code) predicates.push(like("ReasonCode")!);
-  if (f.location) predicates.push(like("Location")!);
 
   // Position History filters
   if (f.position_id) predicates.push(like("PositionID")!);
@@ -113,14 +110,13 @@ export function applyDemoFilters(
 
   const total = out.length;
   const paged = out.slice(offset, offset + limit);
-
   const columns = paged[0] ? Object.keys(paged[0]) : Object.keys(rows[0] ?? {});
   return { columns, rows: paged, total };
 }
 
 /** ---------- Demo datasets ---------- */
 
-// Checks detail (already used earlier)
+// Checks detail
 function makeCheckDetailHistory(): MockPayload {
   const columns = [
     "EmployeeID",
@@ -208,7 +204,7 @@ function makeCheckDetailHistory(): MockPayload {
   return { columns, rows };
 }
 
-/** Department Analysis (best practice, per period per department) */
+/** Department Analysis */
 function makeDepartmentAnalysis(): MockPayload {
   const columns = [
     "PeriodStart",
@@ -224,8 +220,8 @@ function makeDepartmentAnalysis(): MockPayload {
     "Bonus",
     "EmployerTaxes",
     "Benefits",
-    "Burden",           // EmployerTaxes + Benefits
-    "TotalLaborCost",   // Regular + OT + Bonus + Burden
+    "Burden",
+    "TotalLaborCost",
     "AvgCompPerFTE",
   ];
 
@@ -237,9 +233,7 @@ function makeDepartmentAnalysis(): MockPayload {
   ];
 
   const rows: any[] = [];
-  const months = [
-    mm(2025, 7), mm(2025, 8), mm(2025, 9), mm(2025, 10), mm(2025, 11),
-  ];
+  const months = [mm(2025, 7), mm(2025, 8), mm(2025, 9), mm(2025, 10), mm(2025, 11)];
 
   months.forEach((start, idx) => {
     const label = new Date(start).toLocaleString(undefined, { month: "short", year: "numeric" });
@@ -247,7 +241,7 @@ function makeDepartmentAnalysis(): MockPayload {
       const headcount = 8 + di * 2 + (idx % 2);
       const fte = headcount - (di % 2 ? 1 : 0) * 0.5;
 
-      const regular = 52000 / 26 * headcount * (1 + di * 0.03);
+      const regular = (52000 / 26) * headcount * (1 + di * 0.03);
       const ot = (di % 2 ? 800 : 300) * (1 + idx * 0.05);
       const bonus = idx === 2 && di % 2 === 0 ? 2500 : 0;
 
@@ -281,7 +275,7 @@ function makeDepartmentAnalysis(): MockPayload {
   return { columns, rows };
 }
 
-/** Job History (effective-dated changes per employee) */
+/** Job History */
 function makeJobHistory(): MockPayload {
   const columns = [
     "EffectiveDate",
@@ -306,13 +300,6 @@ function makeJobHistory(): MockPayload {
     { id: "E002", name: "John Crichton" },
     { id: "E003", name: "D. Peacekeeper" },
     { id: "E004", name: "Pa'u Zotoh Zhaan" },
-  ];
-  const actions = [
-    { action: "Hire", reason: "New Hire" },
-    { action: "Job Change", reason: "Promotion" },
-    { action: "Job Change", reason: "Transfer" },
-    { action: "Pay Change", reason: "Merit Increase" },
-    { action: "Termination", reason: "Voluntary" },
   ];
   const jobs = [
     { code: "SALES", title: "Sales Associate", dept: "SALES", flsa: "Non-exempt", pg: "S1", payType: "Hourly", base: 18.5 },
@@ -387,14 +374,14 @@ function makeJobHistory(): MockPayload {
   return { columns, rows };
 }
 
-/** Position History (effective-dated position changes) */
+/** Position History */
 function makePositionHistory(): MockPayload {
   const columns = [
     "PositionID",
     "PositionTitle",
     "Department",
     "Supervisor",
-    "Status",           // Active / Closed
+    "Status",
     "FTE",
     "StandardHours",
     "PayGrade",
@@ -403,7 +390,7 @@ function makePositionHistory(): MockPayload {
     "EffectiveStart",
     "EffectiveEnd",
     "ReasonCode",
-    "FilledBy",         // employee name (if filled)
+    "FilledBy",
   ];
 
   const positions = [
@@ -487,7 +474,3 @@ export function getMockReport(id: string): MockPayload | null {
       };
   }
 }
-
-
-
-

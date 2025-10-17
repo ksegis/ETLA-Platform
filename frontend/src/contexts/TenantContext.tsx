@@ -1,46 +1,101 @@
-﻿"use client";
-import { createContext, useContext, useState, useEffect } from "react";
-// use your existing TenantUser type if you have one
-// adjust import path as needed:
-import type { TenantUser } from "@/types"; // Assuming TenantUser is in @/types/index.ts or similar
+﻿'use client';
+
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
+
+export type Tenant = { id: string; name: string };
 
 export type TenantContextType = {
-  tenantId: string | null;
-  selectedTenant: string | null;
-  tenantUser: TenantUser | null; // <-- ADD
-  // ...existing fields
+  currentTenantId: string | null;
+  currentTenant: Tenant | null;
+
+  /** legacy aliases used around the app */
+  selectedTenant: Tenant | null;        // alias of currentTenant
+  tenantId: string | null;              // alias of currentTenantId
+
+  availableTenants: Tenant[];
+
+  /** some parts of the app used both boolean and function-call form */
+  isMultiTenant: boolean | (() => boolean);
+  isDemoMode: boolean;
+  canSelectTenant: boolean;
+
+  setSelectedTenant: (tenantId: string | null) => void;
+
+  /** Some components read this exact casing */
+  Loading: boolean;
 };
 
-const TenantContext = createContext<TenantContextType>({
-  tenantId: null,
-  selectedTenant: null,
-  tenantUser: null, // <-- ADD default
-  // ...existing defaults
-});
+const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
-export function TenantProvider({ children }: { children: React.ReactNode }) {
-  const [tenantId, setTenantId] = useState<string | null>(null);
-  const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
-  const [tenantUser, setTenantUser] = useState<TenantUser | null>(null); // <-- ADD state
+export function TenantProvider({
+  children,
+  initialTenants = [],
+  initialTenantId = null,
+  demoMode = false,
+}: {
+  children: ReactNode;
+  initialTenants?: Tenant[];
+  initialTenantId?: string | null;
+  demoMode?: boolean;
+}) {
+  const [availableTenants, setAvailableTenants] = useState<Tenant[]>(
+    initialTenants.length ? initialTenants : [],
+  );
+  const [currentTenantId, setCurrentTenantId] = useState<string | null>(initialTenantId);
+  const [Loading] = useState<boolean>(false);
 
-  // TODO: wherever you load tenant user today, call setTenantUser(...)
-  // Example:
-  // useEffect(() => { fetchTenantUser().then(setTenantUser); }, [tenantId]);
+  useEffect(() => {
+    if (!availableTenants.length) {
+      setAvailableTenants([{ id: 'default', name: 'Default Tenant' }]);
+      if (!currentTenantId) setCurrentTenantId('default');
+    }
+  }, [availableTenants.length, currentTenantId]);
 
-  const value: TenantContextType = {
-    tenantId,
-    selectedTenant,
-    tenantUser, // <-- INCLUDE in value
-    // ...existing fields
-  };
+  const setSelectedTenant = useCallback((tenantId: string | null) => {
+    setCurrentTenantId(tenantId);
+  }, []);
+
+  const value = useMemo<TenantContextType>(() => {
+    const currentTenant =
+      availableTenants.find((t) => t.id === currentTenantId) ?? null;
+
+    const isMultiTenantBool = availableTenants.length > 1;
+    const isMultiTenantFn = () => isMultiTenantBool;
+
+    return {
+      currentTenantId,
+      currentTenant,
+      selectedTenant: currentTenant,
+      tenantId: currentTenantId,
+      availableTenants,
+      isMultiTenant: isMultiTenantFn, // callable (code that does isMultiTenant()) will work
+      isDemoMode: demoMode,
+      canSelectTenant: true,
+      setSelectedTenant,
+      Loading,
+    };
+  }, [availableTenants, currentTenantId, demoMode, setSelectedTenant, Loading]);
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 }
 
-export const useTenant = () => useContext(TenantContext);
-export default TenantContext;
+export function useTenant(): TenantContextType {
+  const ctx = useContext(TenantContext);
+  if (!ctx) throw new Error('useTenant must be used within <TenantProvider>');
+  return ctx;
+}
 
-
-
-
-
+/** compatibility exports */
+export function useCurrentTenantId(): string | null {
+  return useTenant().currentTenantId;
+}
+export { useTenant as useTenantContext }; // some files import this name
+export default useCurrentTenantId;

@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import { 
@@ -13,7 +15,7 @@ import {
   CheckCircle,
   ArrowLeft
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface Project {
@@ -487,6 +489,8 @@ export default function ProjectSchedulePage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

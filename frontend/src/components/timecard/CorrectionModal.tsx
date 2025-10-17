@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, Clock } from 'lucide-react'
 import timecardService, { TimecardDailySummaryV2, TimecardCorrectionData } from '@/services/timecardService'
 import { useAuth } from '@/contexts/AuthContext'
@@ -141,7 +141,7 @@ export function CorrectionModal({ isOpen, onClose, onSave, initialData }: Correc
         override_ot_hours: formData.ot_hours ? parseFloat(formData.ot_hours) : null,
         override_dt_hours: formData.dt_hours ? parseFloat(formData.dt_hours) : null,
         correction_reason: formData.correction_reason.trim(),
-        corrected_by: user.email || 'Unknown'
+        corrected_by: user?.email || 'Unknown'
       }
 
       await timecardService.correctDailySummary(
@@ -344,6 +344,8 @@ export function CorrectionModal({ isOpen, onClose, onSave, initialData }: Correc
     </Dialog>
   )
 }
+
+
 
 
 

@@ -1,9 +1,11 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LogIn, Loader2, AlertCircle, Mail, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
@@ -413,6 +415,8 @@ export default function LoginPage() {
     </Suspense>
   )
 }
+
+
 
 
 

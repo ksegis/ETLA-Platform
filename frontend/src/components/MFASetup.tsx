@@ -1,10 +1,10 @@
 ﻿'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Shield, Smartphone, Key, Copy, Check, AlertCircle, Download } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/browser'
 import QRCode from 'qrcode'
 
 interface MFASetupProps {
@@ -411,6 +411,8 @@ Instructions:
     </div>
   )
 }
+
+
 
 
 

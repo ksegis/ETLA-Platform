@@ -130,7 +130,7 @@ function normalizeFeatureName(f?: string): string {
 
 function normalizePermissionName(p?: string): string {
   if (!p) return "view";
-  // Donâ€™t force-case: we pass through because your PERMISSIONS come from "@/rbac/constants"
+  // Don’t force-case: we pass through because your PERMISSIONS come from "@/rbac/constants"
   return String(p);
 }
 
@@ -271,7 +271,7 @@ export function RouteGuard({
       }
     }
 
-    // 5) Dynamic routes (with parameters) â€” use feature + permission checks
+    // 5) Dynamic routes (with parameters) — use feature + permission checks
     const dynamicRouteChecks: Array<{ pattern: RegExp; feature: string; permission: string }> = [
       {
         pattern: /^\/work-requests\/[^/]+$/,
@@ -381,8 +381,8 @@ export function withRouteGuard<P extends object>(
 }
 
 /* ------------------------------------------------------------- */
-/* Specific guards â€” now explicit about feature + permission      */
-/* (so they donâ€™t rely on â€œpermission-onlyâ€ legacy behavior)      */
+/* Specific guards — now explicit about feature + permission      */
+/* (so they don’t rely on “permission-only” legacy behavior)      */
 /* ------------------------------------------------------------- */
 export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   return (

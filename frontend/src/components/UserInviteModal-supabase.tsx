@@ -1,10 +1,10 @@
 ﻿'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { X, Mail, Users, Send, Clock, MessageSquare } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/browser'
 
 interface Tenant {
   id: string
@@ -401,7 +401,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                       <div>
                         <p className="font-medium">{invitation.email}</p>
                         <p className="text-sm text-gray-500">
-                          {roles.find((r: any) => r.value === invitation.role)?.label} â€¢ 
+                          {roles.find((r: any) => r.value === invitation.role)?.label} • 
                           {roleLevels.find((l: any) => l.value === invitation.role_level)?.label}
                         </p>
                       </div>
@@ -452,6 +452,8 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
     </div>
   )
 }
+
+
 
 
 

@@ -1,5 +1,5 @@
 ﻿import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServerClient } from '@/lib/supabase/browser'
 import { 
   RBACMatrixRowUser, 
   RBACPermissionCatalog, 
@@ -20,7 +20,7 @@ export class RBACAdminService {
    */
   static async listTenants(): Promise<Array<{ id: string; name: string }>> {
     try {
-      const supabase = createSupabaseServerClient();
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from('tenants')
         .select('id, name')
@@ -59,7 +59,7 @@ export class RBACAdminService {
       const { page = 1, limit = 50, search } = options
       const offset = (page - 1) * limit
 
-      const supabase = createSupabaseServerClient();
+      const supabase = createSupabaseBrowserClient();
       let query = supabase
         .from("tenant_users")
         .select(`
@@ -80,7 +80,7 @@ export class RBACAdminService {
       }
 
       // Get total count
-      const { count } = await createSupabaseServerClient()
+      const { count } = await createSupabaseBrowserClient()
         .from("tenant_users")
         .select('*', { count: 'exact', head: true })
         .eq('tenant_id', tenantId)
@@ -176,7 +176,7 @@ export class RBACAdminService {
   static async getUserDetail(tenantId: string, userId: string): Promise<RBACUserDetail> {
     try {
       // Get user profile
-      const supabase = createSupabaseServerClient();
+      const supabase = createSupabaseBrowserClient();
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -186,7 +186,7 @@ export class RBACAdminService {
       if (profileError) throw profileError
 
       // Get tenant membership
-      const { data: membership, error: membershipError } = await createSupabaseServerClient()
+      const { data: membership, error: membershipError } = await createSupabaseBrowserClient()
         .from("tenant_users")
         .select('role, is_active, tenant_id')
         .eq('user_id', userId)
@@ -198,7 +198,7 @@ export class RBACAdminService {
       // Get user overrides (if table exists)
       let overrides: Array<{ permissionId: string; effect: 'allow' | 'deny' }> = []
       try {
-        const { data: overrideData } = await createSupabaseServerClient()
+        const { data: overrideData } = await createSupabaseBrowserClient()
           .from("user_tenant_permissions")
           .select('permission_id, effect')
           .eq('user_id', userId)
@@ -290,7 +290,7 @@ export class RBACAdminService {
   static async applyChanges(request: RBACApplyChangesRequest): Promise<{ success: boolean; error?: string }> {
     try {
       // Start a transaction by calling a stored procedure
-      const supabase = createSupabaseServerClient();
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase.rpc("apply_rbac_changes", {
         p_tenant_id: request.tenantId,
         p_actor_user_id: request.actorUserId,
@@ -319,7 +319,7 @@ export class RBACAdminService {
    */
   static async getAuditLog(tenantId: string, limit: number = 100): Promise<any[]> {
     try {
-      const supabase = createSupabaseServerClient();
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from('activity_log')
         .select(`

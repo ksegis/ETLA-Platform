@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { 
   FileText, 
   User, 
@@ -429,6 +429,8 @@ export default function AuditTrailPage() {
 }
 
 export const dynamic = "force-dynamic"
+
+
 
 
 

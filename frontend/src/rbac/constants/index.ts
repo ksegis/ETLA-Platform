@@ -3,8 +3,8 @@
 /**
  * Central RBAC constants (no imports to avoid cycles).
  * - Exposes FEATURES, CORE_PERMISSIONS, PERMISSIONS, ROLES
- * - Exposes types: Feature, Permission, Role
- * Includes helpful ALL_ROLES and legacy alias maps
+ * - Types: Feature, Permission, Role, RoleFeaturePermissions, RolePermissionEntry, RoleMatrix, RolePermissionsMatrix
+ * - ROLE_MATRIX (canonical), DEFAULT_ROLE_PERMISSIONS (flat legacy-style map by role key)
  */
 
 /* =========================
@@ -47,7 +47,7 @@ export const FEATURES = {
   BENEFITS_MANAGEMENT: 'benefits-management',
   PAYROLL_PROCESSING: 'payroll-processing',
 
-  // Talent (for dashboard/menu compatibility)
+  // Talent (menu compatibility)
   TALENT_JOBS: 'talent-jobs',
   TALENT_CANDIDATES: 'talent-candidates',
   TALENT_INTERVIEWS: 'talent-interviews',
@@ -75,7 +75,7 @@ export const CORE_PERMISSIONS = {
 export const PERMISSIONS = {
   ...CORE_PERMISSIONS,
 
-  // Menu/route gating aliases (legacy) - these should ideally be refactored to use feature + canonical permission directly
+  // Legacy/menu aliases (prefer using feature + canonical permissions)
   JOB_MANAGE: CORE_PERMISSIONS.EDIT,
   CANDIDATE_READ: CORE_PERMISSIONS.VIEW,
   INTERVIEW_MANAGE: CORE_PERMISSIONS.EDIT,
@@ -106,10 +106,16 @@ export const PERMISSIONS = {
   WORK_REQUEST_READ: CORE_PERMISSIONS.VIEW,
   REPORTING_VIEW: CORE_PERMISSIONS.VIEW,
 
-  // Composite legacy (feature_permission) - these should ideally be refactored to use feature + canonical permission directly
+  // Composite legacy (prefer refactor to feature+permission)
   WORK_REQUESTS_CREATE: CORE_PERMISSIONS.CREATE,
   WORK_REQUESTS_UPDATE: CORE_PERMISSIONS.UPDATE,
   WORK_REQUESTS_DELETE: CORE_PERMISSIONS.DELETE,
+
+  // Missing aliases used around the app
+  PROJECT_CREATE: CORE_PERMISSIONS.CREATE,
+  WORK_REQUEST_CREATE: CORE_PERMISSIONS.CREATE,
+  WORK_REQUEST_UPDATE: CORE_PERMISSIONS.UPDATE,
+  TIMECARD_READ_ALL: CORE_PERMISSIONS.VIEW,
 } as const;
 export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
@@ -119,10 +125,10 @@ export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 export const ROLES = {
   HOST_ADMIN: 'host_admin',
   CLIENT_ADMIN: 'client_admin',
-  TENANT_ADMIN: 'tenant_admin', // keep explicit key for UI checks
+  TENANT_ADMIN: 'tenant_admin',
   PROGRAM_MANAGER: 'program_manager',
   CLIENT_USER: 'client_user',
-  USER: 'user', // alias used in some placess
+  USER: 'user',
 } as const;
 export type Role = typeof ROLES[keyof typeof ROLES];
 
@@ -136,9 +142,22 @@ export const ALL_ROLES: Role[] = [
 ];
 
 /* =========================
- * Role Matrix
+ * Role Matrix Types
  * ========================= */
-export const ROLE_MATRIX = {
+export type RoleFeaturePermissions = {
+  [feature in Feature]?: Permission[];
+};
+
+export type RolePermissionEntry = RoleFeaturePermissions;
+
+export type RoleMatrix = {
+  [role in Role]?: RolePermissionEntry;
+};
+
+/* =========================
+ * Canonical Role -> Feature/Permissions
+ * ========================= */
+export const ROLE_MATRIX: RoleMatrix = {
   [ROLES.HOST_ADMIN]: {
     [FEATURES.MIGRATION_WORKBENCH]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
     [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
@@ -171,6 +190,7 @@ export const ROLE_MATRIX = {
     [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
     [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
   },
+
   [ROLES.CLIENT_ADMIN]: {
     [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
     [FEATURES.DATA_VALIDATION]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
@@ -202,6 +222,7 @@ export const ROLE_MATRIX = {
     [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
     [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
   },
+
   [ROLES.TENANT_ADMIN]: {
     [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
     [FEATURES.DATA_VALIDATION]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
@@ -230,6 +251,7 @@ export const ROLE_MATRIX = {
     [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
     [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE, CORE_PERMISSIONS.MANAGE],
   },
+
   [ROLES.PROGRAM_MANAGER]: {
     [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
     [FEATURES.DATA_VALIDATION]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.MANAGE],
@@ -252,6 +274,7 @@ export const ROLE_MATRIX = {
     [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
     [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.UPDATE, CORE_PERMISSIONS.DELETE],
   },
+
   [ROLES.CLIENT_USER]: {
     [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
     [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW],
@@ -265,6 +288,7 @@ export const ROLE_MATRIX = {
     [FEATURES.TALENT_INTERVIEWS]: [CORE_PERMISSIONS.VIEW],
     [FEATURES.TALENT_OFFERS]: [CORE_PERMISSIONS.VIEW],
   },
+
   [ROLES.USER]: {
     [FEATURES.FILE_UPLOAD]: [CORE_PERMISSIONS.VIEW, CORE_PERMISSIONS.CREATE, CORE_PERMISSIONS.IMPORT],
     [FEATURES.PROJECT_MANAGEMENT]: [CORE_PERMISSIONS.VIEW],
@@ -280,40 +304,51 @@ export const ROLE_MATRIX = {
   },
 } as const;
 
-
-export type RoleMatrix = {
-  [key in Role]?: RolePermissionEntry;
-};
-
 /* =========================
- * Legacy mirrors (optional)
+ * Legacy/compat mirrors
  * ========================= */
 export const FEATURES_LEGACY = {
-  ACCESS_CONTROL:     FEATURES.ACCESS_CONTROL,
-  TENANT_MANAGEMENT:  FEATURES.TENANT_MANAGEMENT,
-  WORK_REQUESTS:      FEATURES.WORK_REQUESTS,
-  PROJECTS:           FEATURES.PROJECT_MANAGEMENT,
+  ACCESS_CONTROL: FEATURES.ACCESS_CONTROL,
+  TENANT_MANAGEMENT: FEATURES.TENANT_MANAGEMENT,
+  WORK_REQUESTS: FEATURES.WORK_REQUESTS,
+  PROJECTS: FEATURES.PROJECT_MANAGEMENT,
   PROJECT_MANAGEMENT: FEATURES.PROJECT_MANAGEMENT,
-  RISK_MANAGEMENT:    FEATURES.RISK_MANAGEMENT,
-  EMPLOYEES:          FEATURES.EMPLOYEES,
-  PROFILES:           FEATURES.EMPLOYEE_RECORDS,
-  DASHBOARDS:         FEATURES.DASHBOARDS,
-  REPORTING:          FEATURES.REPORTING,
-  ANALYTICS:          FEATURES.ANALYTICS,
+  RISK_MANAGEMENT: FEATURES.RISK_MANAGEMENT,
+  EMPLOYEES: FEATURES.EMPLOYEES,
+  PROFILES: FEATURES.EMPLOYEE_RECORDS,
+  DASHBOARDS: FEATURES.DASHBOARDS,
+  REPORTING: FEATURES.REPORTING,
+  ANALYTICS: FEATURES.ANALYTICS,
 } as const;
 
 export const PERMISSIONS_LEGACY = {
-  VIEW:                 PERMISSIONS.VIEW,
-  CREATE:               PERMISSIONS.CREATE,
-  EDIT:                 PERMISSIONS.UPDATE, // EDIT -> UPDATE
-  DELETE:               PERMISSIONS.DELETE,
-  APPROVE:              PERMISSIONS.APPROVE,
+  VIEW: PERMISSIONS.VIEW,
+  CREATE: PERMISSIONS.CREATE,
+  EDIT: PERMISSIONS.UPDATE, // EDIT -> UPDATE
+  DELETE: PERMISSIONS.DELETE,
+  APPROVE: PERMISSIONS.APPROVE,
   WORK_REQUESTS_CREATE: PERMISSIONS.WORK_REQUESTS_CREATE,
   WORK_REQUESTS_UPDATE: PERMISSIONS.WORK_REQUESTS_UPDATE,
   WORK_REQUESTS_DELETE: PERMISSIONS.WORK_REQUESTS_DELETE,
 } as const;
 
+/* =========================
+ * Flat matrix by role key (for code expecting a literal key map)
+ * ========================= */
+export interface RolePermissionsMatrix {
+  host_admin: RolePermissionEntry;
+  program_manager: RolePermissionEntry;
+  client_admin: RolePermissionEntry;
+  client_user: RolePermissionEntry;
+  tenant_admin: RolePermissionEntry;
+  user: RolePermissionEntry;
+}
 
-
-
-
+export const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
+  host_admin: ROLE_MATRIX[ROLES.HOST_ADMIN] ?? {},
+  program_manager: ROLE_MATRIX[ROLES.PROGRAM_MANAGER] ?? {},
+  client_admin: ROLE_MATRIX[ROLES.CLIENT_ADMIN] ?? {},
+  client_user: ROLE_MATRIX[ROLES.CLIENT_USER] ?? {},
+  tenant_admin: ROLE_MATRIX[ROLES.TENANT_ADMIN] ?? {},
+  user: ROLE_MATRIX[ROLES.USER] ?? {},
+};

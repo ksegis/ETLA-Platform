@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -22,8 +24,8 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
 import MissingCustomerModal from '@/components/MissingCustomerModal'
@@ -71,7 +73,7 @@ export default function ProjectManagementPage() {
       setloading(true)
       setError(null)
       
-      console.log("ðŸ“Š loading dashboard data with ready auth:", auth.isReady);
+      console.log("📊 loading dashboard data with ready auth:", auth.isReady);
       // Load all data in parallel
       const [workRequests, projectCharters, risks] = await Promise.all([
         pmbok.getWorkRequests(),
@@ -85,7 +87,7 @@ export default function ProjectManagementPage() {
         risks
       })
 
-      console.log('âœ… Dashboard data loaded:', {
+      console.log('✅ Dashboard data loaded:', {
         workRequests: workRequests.length,
         projectCharters: projectCharters.length,
         risks: risks.length,
@@ -93,7 +95,7 @@ export default function ProjectManagementPage() {
       })
 
     } catch (error) {
-      console.error('âŒ Error loading dashboard data:', error)
+      console.error('❌ Error loading dashboard data:', error)
       setError('Failed to load dashboard data')
     } finally {
       setloading(false)
@@ -171,25 +173,25 @@ export default function ProjectManagementPage() {
 
   // Action handlers
   const handleViewRequest = (id: string) => {
-    console.log('ðŸ‘ï¸ Viewing work request:', id)
+    console.log('👁️ Viewing work request:', id)
     router.push(`/work-requests/${id}`)
   }
 
   const handleEditRequest = (id: string) => {
-    console.log('âœï¸ Editing work request:', id)
+    console.log('✏️ Editing work request:', id)
     router.push('/work-requests')
   }
 
   const handleDeleteRequest = async (id: string) => {
     if (confirm('Are you sure you want to delete this work request?')) {
-      console.log('ðŸ—‘ï¸ Deleting work request:', id)
+      console.log('🗑️ Deleting work request:', id)
       // TODO: Implement delete functionality
       alert('Delete functionality not yet implemented')
     }
   }
 
   const handleApproveRequest = (request: WorkRequest) => {
-    console.log('âœ… Opening approval modal for:', request.id)
+    console.log('✅ Opening approval modal for:', request.id)
     setSelectedWorkRequest(request)
     setShowApprovalModal(true)
   }
@@ -633,6 +635,8 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

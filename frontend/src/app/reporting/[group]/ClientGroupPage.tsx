@@ -1,6 +1,9 @@
+﻿'use client';
+
 "use client";
 
 import * as React from "react";
+import { useState } from 'react';
 import ReportTable from "../_components/ReportTable";
 import PreviewModal from "../_components/PreviewModal";
 import BackNav from "../_components/BackNav";

@@ -1,4 +1,6 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState } from 'react'
 import { 
@@ -17,7 +19,7 @@ import {
   Filter,
   Search
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface TeamMember {
@@ -447,6 +449,8 @@ export default function TeamResourcesPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 

@@ -1,13 +1,13 @@
 ﻿import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext-stable'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'ETLA Platform',
-  description: 'Enterprise Technology Leadership Analytics Platform',
+  description: 'Extract Transform Load and Analyze Platform',
 }
 
 export default function RootLayout({

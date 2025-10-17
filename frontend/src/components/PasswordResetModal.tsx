@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { X, Key, Mail, AlertTriangle, CheckCircle } from 'lucide-react'
 import { userManagement } from '@/services/userManagementService'
 
@@ -40,7 +40,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     setError('')
 
     try {
-      const response = await userManagement.resetUserPassword(user.email)
+      const response = await userManagement.resetUserPassword(user?.email)
       
       if (response.success) {
         setSuccess(true)
@@ -68,7 +68,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     setError('')
 
     try {
-      const response = await userManagement.resetUserPassword(user.email, newPassword)
+      const response = await userManagement.resetUserPassword(user?.email, newPassword)
       
       if (response.success) {
         setSuccess(true)
@@ -148,7 +148,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
                   <Mail className="h-4 w-4 text-gray-600 mr-2" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-sm text-gray-600">{user?.email}</p>
                   </div>
                 </div>
               </div>
@@ -239,6 +239,8 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     </div>
   )
 }
+
+
 
 
 

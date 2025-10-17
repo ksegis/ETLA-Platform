@@ -110,7 +110,7 @@ class PMBOKService {
   constructor() {
     // Use singleton Supabase client
     this.supabase = createSupabaseBrowserClient()
-    console.log("ðŸ”§ PMBOK Service: Created with default demo context")
+    console.log("🔧 PMBOK Service: Created with default demo context")
   }
 
   // Get current user ID from auth context
@@ -140,16 +140,16 @@ class PMBOKService {
       this.currentUserId = userId
       this.currentTenantId = tenantId
       this.isInitialized = true
-      console.log('âœ… PMBOK Service: Initialized with user context:', { userId, tenantId })
+      console.log('✅ PMBOK Service: Initialized with user context:', { userId, tenantId })
     } else {
-      console.log('âš ï¸ PMBOK Service: Using demo context - no user/tenant provided')
+      console.log('⚠️ PMBOK Service: Using demo context - no user/tenant provided')
     }
   }
 
   // Update user context when auth changes
   updateUserContext(userId: string, tenantId: string) {
     if (this.currentUserId !== userId || this.currentTenantId !== tenantId) {
-      console.log('ðŸ”„ PMBOK Service: Updating user context:', { 
+      console.log('🔄 PMBOK Service: Updating user context:', { 
         from: { userId: this.currentUserId, tenantId: this.currentTenantId },
         to: { userId, tenantId }
       })
@@ -164,7 +164,7 @@ class PMBOKService {
     const customerIds = Array.from(new Set(workRequests.map((wr: any) => wr.customer_id).filter(Boolean)))
     
     if (customerIds.length === 0) {
-      console.log('âš ï¸ No customer IDs found in work requests')
+      console.log('⚠️ No customer IDs found in work requests')
       return workRequests.map((wr: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
@@ -172,21 +172,21 @@ class PMBOKService {
     }
 
     try {
-      console.log('ðŸ‘¥ Fetching customer information for IDs:', customerIds)
+      console.log('👥 Fetching customer information for IDs:', customerIds)
       const { data: profiles, error } = await this.supabase
         .from('profiles')
         .select('id, name, email')
         .in('id', customerIds)
 
       if (error) {
-        console.error('âŒ Error fetching customer profiles:', error)
+        console.error('❌ Error fetching customer profiles:', error)
         return workRequests.map((wr: any) => ({
           ...wr,
           customer_name: 'Unknown Customer'
         }))
       }
 
-      console.log('âœ… Profile query succeeded, found:', profiles?.length || 0, 'profiles')
+      console.log('✅ Profile query succeeded, found:', profiles?.length || 0, 'profiles')
       
       // Create customer lookup map
       const customerMap = new Map()
@@ -201,7 +201,7 @@ class PMBOKService {
       }))
 
     } catch (error) {
-      console.error('âŒ Exception during customer lookup:', error)
+      console.error('❌ Exception during customer lookup:', error)
       return workRequests.map((wr: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
@@ -211,9 +211,9 @@ class PMBOKService {
 
   async getWorkRequests(): Promise<WorkRequest[]> {
     try {
-      console.log('ðŸ” loading work requests from database...')
+      console.log('🔍 loading work requests from database...')
       const currentUserId = this.getCurrentUserId()
-      console.log('ðŸ¢ Current context:', { 
+      console.log('🏢 Current context:', { 
         userId: currentUserId, 
         tenantId: this.currentTenantId,
         initialized: this.isInitialized 
@@ -227,31 +227,31 @@ class PMBOKService {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('âŒ Error fetching work requests:', error)
+        console.error('❌ Error fetching work requests:', error)
         throw error
       }
 
-      console.log('âœ… Work requests query succeeded, found:', workRequests?.length || 0, 'records')
+      console.log('✅ Work requests query succeeded, found:', workRequests?.length || 0, 'records')
       
       if (workRequests && workRequests.length > 0) {
-        console.log('ðŸ“‹ Sample work request:', workRequests[0])
+        console.log('📋 Sample work request:', workRequests[0])
         
         // Handle missing customers gracefully
         const workRequestsWithCustomers = await this.handleMissingCustomers(workRequests)
-        console.log('âœ… Data transformation completed, returning', workRequestsWithCustomers.length, 'records')
+        console.log('✅ Data transformation completed, returning', workRequestsWithCustomers.length, 'records')
         return workRequestsWithCustomers
       }
 
       return []
     } catch (error) {
-      console.error('âŒ Error in getWorkRequests:', error)
+      console.error('❌ Error in getWorkRequests:', error)
       return []
     }
   }
 
   async getProjects(): Promise<ProjectCharter[]> {
     try {
-      console.log('ðŸ“Š loading projects from database...')
+      console.log('📊 loading projects from database...')
       
       const { data: projects, error } = await this.supabase
         .from('project_charters')
@@ -260,21 +260,21 @@ class PMBOKService {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('âŒ Error fetching projects:', error)
+        console.error('❌ Error fetching projects:', error)
         throw error
       }
 
-      console.log('âœ… Projects query succeeded, found:', projects?.length || 0, 'records')
+      console.log('✅ Projects query succeeded, found:', projects?.length || 0, 'records')
       return projects || []
     } catch (error) {
-      console.error('âŒ Error in getProjects:', error)
+      console.error('❌ Error in getProjects:', error)
       return []
     }
   }
 
   async getRisks(): Promise<Risk[]> {
     try {
-      console.log('âš ï¸ loading risks from database...')
+      console.log('⚠️ loading risks from database...')
       
       const { data: risks, error } = await this.supabase
         .from('risks')
@@ -283,14 +283,14 @@ class PMBOKService {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('âŒ Error fetching risks:', error)
+        console.error('❌ Error fetching risks:', error)
         throw error
       }
 
-      console.log('âœ… Risks query succeeded, found:', risks?.length || 0, 'records')
+      console.log('✅ Risks query succeeded, found:', risks?.length || 0, 'records')
       return risks || []
     } catch (error) {
-      console.error('âŒ Error in getRisks:', error)
+      console.error('❌ Error in getRisks:', error)
       return []
     }
   }
@@ -298,7 +298,7 @@ class PMBOKService {
   // Approval workflow methods
   async approveWorkRequest(workRequestId: string, approverComments?: string): Promise<{ success: boolean; projectId?: string; error?: string }> {
     try {
-      console.log('âœ… Approving work request:', workRequestId)
+      console.log('✅ Approving work request:', workRequestId)
       
       // Update work request status
       const { error: updateError } = await this.supabase
@@ -313,22 +313,22 @@ class PMBOKService {
         .eq('tenant_id', this.currentTenantId)
 
       if (updateError) {
-        console.error('âŒ Error updating work request:', updateError)
+        console.error('❌ Error updating work request:', updateError)
         return { success: false, error: updateError.message }
       }
 
-      console.log('âœ… Work request approved successfully')
+      console.log('✅ Work request approved successfully')
       return { success: true, projectId: `proj_${Date.now()}` }
 
     } catch (error) {
-      console.error('âŒ Error in approveWorkRequest:', error)
+      console.error('❌ Error in approveWorkRequest:', error)
       return { success: false, error: 'Failed to approve work request' }
     }
   }
 
   async declineWorkRequest(workRequestId: string, reason: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('âŒ Declining work request:', workRequestId, 'Reason:', reason)
+      console.log('❌ Declining work request:', workRequestId, 'Reason:', reason)
       
       const { error } = await this.supabase
         .from('work_requests')
@@ -343,22 +343,22 @@ class PMBOKService {
         .eq('tenant_id', this.currentTenantId)
 
       if (error) {
-        console.error('âŒ Error declining work request:', error)
+        console.error('❌ Error declining work request:', error)
         return { success: false, error: error.message }
       }
 
-      console.log('âœ… Work request declined successfully')
+      console.log('✅ Work request declined successfully')
       return { success: true }
 
     } catch (error) {
-      console.error('âŒ Error in declineWorkRequest:', error)
+      console.error('❌ Error in declineWorkRequest:', error)
       return { success: false, error: 'Failed to decline work request' }
     }
   }
 
   async setWorkRequestUnderReview(workRequestId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('ðŸ” Setting work request under review:', workRequestId)
+      console.log('🔍 Setting work request under review:', workRequestId)
       
       const { error } = await this.supabase
         .from('work_requests')
@@ -372,15 +372,15 @@ class PMBOKService {
         .eq('tenant_id', this.currentTenantId)
 
       if (error) {
-        console.error('âŒ Error setting work request under review:', error)
+        console.error('❌ Error setting work request under review:', error)
         return { success: false, error: error.message }
       }
 
-      console.log('âœ… Work request set under review successfully')
+      console.log('✅ Work request set under review successfully')
       return { success: true }
 
     } catch (error) {
-      console.error('âŒ Error in setWorkRequestUnderReview:', error)
+      console.error('❌ Error in setWorkRequestUnderReview:', error)
       return { success: false, error: 'Failed to set work request under review' }
     }
   }
@@ -388,7 +388,7 @@ class PMBOKService {
   // Method to create missing customers
   async createMissingCustomer(name: string, email: string): Promise<{ success: boolean; customerId?: string; error?: string }> {
     try {
-      console.log('ðŸ‘¤ Creating missing customer:', { name, email })
+      console.log('👤 Creating missing customer:', { name, email })
       
       const customerId = `cust_${Date.now()}`
       const { data: customer, error } = await this.supabase
@@ -405,15 +405,15 @@ class PMBOKService {
         .single()
 
       if (error) {
-        console.error('âŒ Error creating customer:', error)
+        console.error('❌ Error creating customer:', error)
         return { success: false, error: error.message }
       }
 
-      console.log('âœ… Customer created successfully:', customerId)
+      console.log('✅ Customer created successfully:', customerId)
       return { success: true, customerId }
 
     } catch (error) {
-      console.error('âŒ Error in createMissingCustomer:', error)
+      console.error('❌ Error in createMissingCustomer:', error)
       return { success: false, error: 'Failed to create customer' }
     }
   }
@@ -421,7 +421,7 @@ class PMBOKService {
   // Method to link work request to existing customer
   async linkWorkRequestToCustomer(workRequestId: string, customerId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('ðŸ”— Linking work request to customer:', { workRequestId, customerId })
+      console.log('🔗 Linking work request to customer:', { workRequestId, customerId })
       
       const { error } = await this.supabase
         .from('work_requests')
@@ -433,15 +433,15 @@ class PMBOKService {
         .eq('tenant_id', this.currentTenantId)
 
       if (error) {
-        console.error('âŒ Error linking work request to customer:', error)
+        console.error('❌ Error linking work request to customer:', error)
         return { success: false, error: error.message }
       }
 
-      console.log('âœ… Work request linked to customer successfully')
+      console.log('✅ Work request linked to customer successfully')
       return { success: true }
 
     } catch (error) {
-      console.error('âŒ Error in linkWorkRequestToCustomer:', error)
+      console.error('❌ Error in linkWorkRequestToCustomer:', error)
       return { success: false, error: 'Failed to link work request to customer' }
     }
   }
@@ -456,13 +456,13 @@ class PMBOKService {
         .order('name', { ascending: true })
 
       if (error) {
-        console.error('âŒ Error fetching available customers:', error)
+        console.error('❌ Error fetching available customers:', error)
         return []
       }
 
       return customers || []
     } catch (error) {
-      console.error('âŒ Error in getAvailableCustomers:', error)
+      console.error('❌ Error in getAvailableCustomers:', error)
       return []
     }
   }
@@ -490,7 +490,7 @@ class PMBOKService {
         converted: workRequests.filter((r) => r.approval_status === 'converted_to_project').length
       }
     } catch (error) {
-      console.error('âŒ Error getting work request stats:', error)
+      console.error('❌ Error getting work request stats:', error)
       return { total: 0, pending: 0, approved: 0, declined: 0, converted: 0 }
     }
   }

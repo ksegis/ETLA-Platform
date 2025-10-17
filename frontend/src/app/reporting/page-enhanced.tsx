@@ -1,13 +1,13 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useTenant } from '@/contexts/TenantContext';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/browser';
 
 // Enhanced interfaces for the new database schema
 interface EnhancedEmployee {
@@ -921,12 +921,12 @@ const EnhancedReportingPage: React.FC = () => {
   );
 
   const tabs = [
-    { id: 'employees', label: 'Enhanced Employees', icon: 'ðŸ‘¥' },
-    { id: 'pay-statements', label: 'Pay Statements', icon: 'ðŸ’°' },
-    { id: 'timecards', label: 'Timecards', icon: 'â°' },
-    { id: 'jobs', label: 'Job Catalog', icon: 'ðŸ’¼' },
-    { id: 'tax-records', label: 'Tax Records', icon: 'ðŸ“‹' },
-    { id: 'all-reports', label: 'All Reports', icon: 'ðŸ“Š' }
+    { id: 'employees', label: 'Enhanced Employees', icon: '👥' },
+    { id: 'pay-statements', label: 'Pay Statements', icon: '💰' },
+    { id: 'timecards', label: 'Timecards', icon: '⏰' },
+    { id: 'jobs', label: 'Job Catalog', icon: '💼' },
+    { id: 'tax-records', label: 'Tax Records', icon: '📋' },
+    { id: 'all-reports', label: 'All Reports', icon: '📊' }
   ];
 
   return (
@@ -990,6 +990,8 @@ const EnhancedReportingPage: React.FC = () => {
 };
 
 export default EnhancedReportingPage;
+
+
 
 
 

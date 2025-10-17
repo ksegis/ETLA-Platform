@@ -1,8 +1,8 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -869,6 +869,8 @@ export default function InterviewsPage() {
     </DashboardLayout>
   );
 }
+
+
 
 
 

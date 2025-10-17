@@ -7,8 +7,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { PERMISSIONS, ROLES, CORE_PERMISSIONS } from "@/rbac/constants";
@@ -66,7 +66,7 @@ export default function RBACTestPanel() {
   };
 
   const getResultIcon = (passed: boolean) => {
-    return passed ? "âœ…" : "âŒ";
+    return passed ? "✅" : "❌";
   };
 
   const passedTests = testResults.filter((r) => r.passed).length;
@@ -79,7 +79,7 @@ export default function RBACTestPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            ðŸ”’ RBAC Testing Panel
+            🔒 RBAC Testing Panel
           </CardTitle>
           <CardDescription>
             Test Role-Based Access Control permissions for the current user
@@ -120,7 +120,7 @@ export default function RBACTestPanel() {
                   Running Tests...
                 </>
               ) : (
-                <>ðŸ§ª Run RBAC Tests</>
+                <>🧪 Run RBAC Tests</>
               )}
             </Button>
 
@@ -159,10 +159,10 @@ export default function RBACTestPanel() {
                           {result.permission}
                         </td>
                         <td className="p-2 text-center">
-                          {result.expected ? "âœ…" : "âŒ"}
+                          {result.expected ? "✅" : "❌"}
                         </td>
                         <td className="p-2 text-center">
-                          {result.actual ? "âœ…" : "âŒ"}
+                          {result.actual ? "✅" : "❌"}
                         </td>
                         <td
                           className={`p-2 text-center font-semibold ${getResultColor(result.passed)}`}
@@ -244,6 +244,8 @@ export default function RBACTestPanel() {
     </div>
   );
 }
+
+
 
 
 

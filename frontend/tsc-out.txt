@@ -1,0 +1,2 @@
+﻿src/app/api/reports/_mock.ts(5,2): error TS1005: '>' expected.
+src/app/api/reports/_mock.ts(8,1): error TS1131: Property or signature expected.

@@ -1,8 +1,10 @@
-﻿'use client'
+﻿'use client';
+
+'use client'
 
 import { useState, useEffect } from 'react'
 import { Search, Filter, RefreshCw, Plus, Eye, Edit, MoreHorizontal, Database, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 const supabase = createSupabaseBrowserClient()
@@ -89,22 +91,22 @@ export default function WorkRequestsPage() {
     try {
       setIsLoading(true)
       setError(null)
-      console.log('ðŸ” Loading work requests from database...')
+      console.log('🔍 Loading work requests from database...')
 
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       
       if (userError || !user) {
-        console.warn('âš ï¸ No authenticated user, falling back to localStorage')
+        console.warn('⚠️ No authenticated user, falling back to localStorage')
         loadFromLocalStorage()
         return
       }
 
       setCurrentUser(user)
-      console.log('ðŸ‘¤ Loading requests for user:', user.email, 'ID:', user.id)
+      console.log('👤 Loading requests for user:', user?.email, 'ID:', user.id)
 
       // First, try to query work_requests with profiles (since foreign key points to profiles)
-      console.log('ðŸ” Attempting to query work_requests with profiles relationship...')
+      console.log('🔍 Attempting to query work_requests with profiles relationship...')
       const { data: workRequestsData, error: requestsError } = await supabase
         .from('work_requests')
         .select(`
@@ -117,10 +119,10 @@ export default function WorkRequestsPage() {
         .order('created_at', { ascending: false })
 
       if (requestsError) {
-        console.error('âŒ Error loading work requests with profiles:', requestsError)
+        console.error('❌ Error loading work requests with profiles:', requestsError)
         
         // If profiles relationship fails, try without relationships
-        console.log('ðŸ” Falling back to simple work_requests query...')
+        console.log('🔍 Falling back to simple work_requests query...')
         const { data: simpleData, error: simpleError } = await supabase
           .from('work_requests')
           .select('*')
@@ -128,13 +130,13 @@ export default function WorkRequestsPage() {
           .order('created_at', { ascending: false })
 
         if (simpleError) {
-          console.error('âŒ Error loading simple work requests:', simpleError)
+          console.error('❌ Error loading simple work requests:', simpleError)
           setError(`Database error: ${simpleError.message}`)
           loadFromLocalStorage()
           return
         }
 
-        console.log('âœ… Successfully loaded work requests (simple query):', simpleData?.length || 0)
+        console.log('✅ Successfully loaded work requests (simple query):', simpleData?.length || 0)
         const requests = simpleData || []
         setWorkRequests(requests)
         setFilteredRequests(requests)
@@ -149,8 +151,8 @@ export default function WorkRequestsPage() {
         return
       }
 
-      console.log('âœ… Successfully loaded work requests with profiles:', workRequestsData?.length || 0)
-      console.log('ðŸ“‹ Work requests data:', workRequestsData)
+      console.log('✅ Successfully loaded work requests with profiles:', workRequestsData?.length || 0)
+      console.log('📋 Work requests data:', workRequestsData)
 
       const requests = workRequestsData || []
       setWorkRequests(requests)
@@ -160,12 +162,12 @@ export default function WorkRequestsPage() {
 
       // If no database records, also check localStorage
       if (requests.length === 0) {
-        console.log('ðŸ“¦ No database records found, checking localStorage...')
+        console.log('📦 No database records found, checking localStorage...')
         loadFromLocalStorage(true) // true = append to database results
       }
 
     } catch (error) {
-      console.error('âŒ Error in loadWorkRequests:', error)
+      console.error('❌ Error in loadWorkRequests:', error)
       setError(error instanceof Error ? error.message : 'Unknown error occurred')
       loadFromLocalStorage()
     } finally {
@@ -176,7 +178,7 @@ export default function WorkRequestsPage() {
   // Load customer info separately if needed
   const loadCustomerInfo = async (requests: WorkRequest[]) => {
     try {
-      console.log('ðŸ” Loading customer info separately...')
+      console.log('🔍 Loading customer info separately...')
       
       // Get unique customer IDs - FIXED: Use Array.from instead of spread operator
       const customerIds = Array.from(new Set(requests.map(r => r.customer_id)))
@@ -188,7 +190,7 @@ export default function WorkRequestsPage() {
         .in('id', customerIds)
 
       if (!customersError && customersData) {
-        console.log('âœ… Successfully loaded customer info:', customersData.length)
+        console.log('✅ Successfully loaded customer info:', customersData.length)
         
         // Merge customer info with requests
         const updatedRequests = requests.map(request => ({
@@ -199,21 +201,21 @@ export default function WorkRequestsPage() {
         setWorkRequests(updatedRequests)
         setFilteredRequests(updatedRequests)
       } else {
-        console.warn('âš ï¸ Could not load customer info:', customersError?.message)
+        console.warn('⚠️ Could not load customer info:', customersError?.message)
       }
     } catch (error) {
-      console.error('âŒ Error loading customer info:', error)
+      console.error('❌ Error loading customer info:', error)
     }
   }
 
   // Load work requests from localStorage as fallback
   const loadFromLocalStorage = (append = false) => {
     try {
-      console.log('ðŸ“¦ Loading work requests from localStorage...')
+      console.log('📦 Loading work requests from localStorage...')
       const stored = localStorage.getItem('etla_work_requests')
       const localRequests = stored ? JSON.parse(stored) : []
       
-      console.log('ðŸ“¦ Found localStorage requests:', localRequests.length)
+      console.log('📦 Found localStorage requests:', localRequests.length)
 
       if (localRequests.length > 0) {
         // Convert localStorage format to match database format
@@ -253,17 +255,17 @@ export default function WorkRequestsPage() {
         }
         
         setLastLoaded(new Date().toLocaleTimeString())
-        console.log('âœ… Successfully loaded from localStorage')
+        console.log('✅ Successfully loaded from localStorage')
       } else {
         if (!append) {
           setWorkRequests([])
           setFilteredRequests([])
           setDataSource('none')
         }
-        console.log('ðŸ“¦ No localStorage requests found')
+        console.log('📦 No localStorage requests found')
       }
     } catch (error) {
-      console.error('âŒ Error loading from localStorage:', error)
+      console.error('❌ Error loading from localStorage:', error)
       if (!append) {
         setWorkRequests([])
         setFilteredRequests([])
@@ -389,20 +391,20 @@ export default function WorkRequestsPage() {
           <h3 className="text-sm font-medium text-gray-900 mb-2">Debug Information</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-600">
             <div>
-              <span className="font-medium">ðŸ“Š Total requests loaded:</span> {workRequests.length}
+              <span className="font-medium">📊 Total requests loaded:</span> {workRequests.length}
             </div>
             <div>
-              <span className="font-medium">ðŸ” Filtered requests shown:</span> {filteredRequests.length}
+              <span className="font-medium">🔍 Filtered requests shown:</span> {filteredRequests.length}
             </div>
             <div>
-              <span className="font-medium">ðŸ“¦ Data source:</span> {dataSource}
+              <span className="font-medium">📦 Data source:</span> {dataSource}
             </div>
             <div>
-              <span className="font-medium">ðŸ•’ Last loaded:</span> {lastLoaded}
+              <span className="font-medium">🕒 Last loaded:</span> {lastLoaded}
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            ðŸ’¡ Check browser console for detailed logs
+            💡 Check browser console for detailed logs
           </p>
         </div>
 
@@ -652,6 +654,8 @@ export default function WorkRequestsPage() {
     </DashboardLayout>
   )
 }
+
+
 
 
 
