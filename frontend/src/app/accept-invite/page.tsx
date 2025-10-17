@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import {
   Eye,
   EyeOff,
@@ -17,7 +17,7 @@ import {
   Mail,
   User,
 } from "lucide-react";
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 interface InviteAcceptanceState {
   email: string;
   fullName: string;

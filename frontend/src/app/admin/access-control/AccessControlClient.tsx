@@ -5,8 +5,8 @@ import type React from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '../../../contexts/AuthContext';
+import { usePermissions } from '../../../hooks/usePermissions';
 import { FEATURES, PERMISSIONS, ROLES } from '@/rbac/constants';
 import { RBACAdminService } from '@/services/rbac_admin_service';
 import { applyRbacChangesAction } from './actions';
