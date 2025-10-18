@@ -377,7 +377,7 @@ export default function ReportingClient() {
                     case 'employees': {
                       const filtered = filterDataBySearch(employeeData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable data={filtered}
+                        <TraditionalReportTable rows={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'employee_code', label: 'Employee Code' },
@@ -388,19 +388,14 @@ export default function ReportingClient() {
                             { key: 'hire_date', label: 'Hire Date' },
                             { key: 'pay_type', label: 'Pay Type' },
                           ]}
-                          onRowClick={(row) => setSelectedEmployee(row as FacsimileEmployee)}
-                          onViewFacsimile={handleViewFacsimile}
-                          onPrintFacsimile={handlePrintFacsimile}
                           viewMode={getViewMode('employees')}
-                          loading={loading}
-                          error={error}
                         />
                       );
                     }
                     case 'pay-statements': {
                       const filtered = filterDataBySearch(payStatementData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable data={filtered}
+                        <TraditionalReportTable rows={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'pay_date', label: 'Pay Date' },
@@ -411,19 +406,14 @@ export default function ReportingClient() {
                             { key: 'net_pay', label: 'Net Pay', render: (i) => `$${(i.net_pay || 0).toFixed(2)}` },
                             { key: 'check_status', label: 'Status' },
                           ]}
-                          onRowClick={(row) => openFacsimile(row as FacsimilePayStatement, 'pay_statement')}
-                          onViewFacsimile={handleViewFacsimile}
-                          onPrintFacsimile={handlePrintFacsimile}
                           viewMode={getViewMode('pay-statements')}
-                          loading={loading}
-                          error={error}
                         />
                       );
                     }
                     case 'timecards': {
                       const filtered = filterDataBySearch(timecardData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable data={filtered}
+                        <TraditionalReportTable rows={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'work_date', label: 'Work Date' },
@@ -433,19 +423,14 @@ export default function ReportingClient() {
                             { key: 'dt_hours', label: 'Double Time' },
                             { key: 'is_corrected', label: 'Corrected?' },
                           ]}
-                          onRowClick={(row) => openFacsimile(row as FacsimileTimecard, 'timecard')}
-                          onViewFacsimile={handleViewFacsimile}
-                          onPrintFacsimile={handlePrintFacsimile}
                           viewMode={getViewMode('timecards')}
-                          loading={loading}
-                          error={error}
                         />
                       );
                     }
                     case 'jobs': {
                       const filtered = filterDataBySearch(jobData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable data={filtered}
+                        <TraditionalReportTable rows={filtered}
                           columns={[
                             { key: 'job_title', label: 'Job Title' },
                             { key: 'job_code', label: 'Job Code' },
@@ -455,19 +440,14 @@ export default function ReportingClient() {
                             { key: 'status', label: 'Status' },
                             { key: 'employee_count', label: 'Employees' },
                           ]}
-                          onRowClick={(row) => console.log('Job row clicked:', row)}
-                          onViewFacsimile={handleViewFacsimile}
-                          onPrintFacsimile={handlePrintFacsimile}
                           viewMode={getViewMode('jobs')}
-                          loading={loading}
-                          error={error}
                         />
                       );
                     }
                     case 'tax-records': {
                       const filtered = filterDataBySearch(taxData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable data={filtered}
+                        <TraditionalReportTable rows={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'tax_year', label: 'Tax Year' },
@@ -476,19 +456,14 @@ export default function ReportingClient() {
                             { key: 'document_status', label: 'Document Status' },
                             { key: 'issue_date', label: 'Issue Date' },
                           ]}
-                          onRowClick={(row) => openFacsimile(row as FacsimileTaxRecord, 'tax_w2')}
-                          onViewFacsimile={handleViewFacsimile}
-                          onPrintFacsimile={handlePrintFacsimile}
                           viewMode={getViewMode('tax-records')}
-                          loading={loading}
-                          error={error}
                         />
                       );
                     }
                     case 'benefits-deductions': {
                       const filtered = filterDataBySearch(benefitData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable data={filtered}
+                        <TraditionalReportTable rows={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'deduction_type', label: 'Type' },
@@ -497,19 +472,14 @@ export default function ReportingClient() {
                             { key: 'frequency', label: 'Frequency' },
                             { key: 'effective_date', label: 'Effective Date' },
                           ]}
-                          onRowClick={(row) => console.log('Benefit row clicked:', row)}
-                          onViewFacsimile={handleViewFacsimile}
-                          onPrintFacsimile={handlePrintFacsimile}
                           viewMode={getViewMode('benefits-deductions')}
-                          loading={loading}
-                          error={error}
                         />
                       );
                     }
                     case 'compliance': {
                       const filtered = filterDataBySearch(complianceData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable data={filtered}
+                        <TraditionalReportTable rows={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'compliance_type', label: 'Type' },
@@ -518,12 +488,7 @@ export default function ReportingClient() {
                             { key: 'filing_date', label: 'Filing Date' },
                             { key: 'due_date', label: 'Due Date' },
                           ]}
-                          onRowClick={(row) => console.log('Compliance row clicked:', row)}
-                          onViewFacsimile={handleViewFacsimile}
-                          onPrintFacsimile={handlePrintFacsimile}
                           viewMode={getViewMode('compliance')}
-                          loading={loading}
-                          error={error}
                         />
                       );
                     }
@@ -560,6 +525,7 @@ export default function ReportingClient() {
     </div>
   );
 }
+
 
 
 
