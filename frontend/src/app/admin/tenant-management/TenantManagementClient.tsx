@@ -59,7 +59,7 @@ import {
   Search,
   AlertCircle,
 } from "lucide-react";
-import { Tenant, User } from "@/types";
+import { Tenant, User } from "../../../types";
 import DashboardLayout from "../../../components/layout/DashboardLayout";
 import { FEATURES, PERMISSIONS, ROLES } from "../../../rbac/constants"; // Corrected import path
 import { usePathname } from 'next/navigation';
