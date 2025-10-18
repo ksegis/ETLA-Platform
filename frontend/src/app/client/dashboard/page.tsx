@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 'use client'
 
@@ -20,8 +20,8 @@ import {
   ArrowUp,
   ArrowDown
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import DashboardLayout from '@/components/layout/DashboardLayout'
+import { Button } from '../../../components/ui/button'
+import DashboardLayout from '../../../components/layout/DashboardLayout'
 
 interface ClientKPIs {
   projects: {
@@ -348,7 +348,7 @@ export default function ClientDashboard() {
                     key={star} 
                     className={`text-lg ${star <= Math.floor(clientKPIs.quality.satisfactionScore) ? 'text-yellow-400' : 'text-gray-300'}`}
                   >
-                    ★
+                    ?
                   </span>
                 ))}
               </div>
