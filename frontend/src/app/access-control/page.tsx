@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import RBACTestPanel from '@/components/RBACTestPanel';
+import React from 'react';
+import RBACTestPanel from '../../components/RBACTestPanel';
 
 const AccessControlPage = () => {
   return (
