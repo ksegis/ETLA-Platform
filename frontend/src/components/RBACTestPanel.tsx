@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 
-import { PERMISSIONS, ROLES, CORE_PERMISSIONS } from "@/rbac/constants";
-import { DEFAULT_ROLE_PERMISSIONS } from "@/rbac/roles";
+
+import { PERMISSIONS, ROLES, CORE_PERMISSIONS, DEFAULT_ROLE_PERMISSIONS } from "@/rbac/constants";
 
 
 interface TestResult {
