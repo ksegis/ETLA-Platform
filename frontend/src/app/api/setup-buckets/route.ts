@@ -1,10 +1,10 @@
-﻿/**
+/**
  * Setup Buckets API Route
  * Handles Supabase storage bucket initialization
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient } from '../../../lib/supabase/server';
 
 export async function POST(_request: NextRequest) {
   try {
