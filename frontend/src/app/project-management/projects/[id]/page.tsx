@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 'use client'
 
@@ -23,8 +23,8 @@ import {
   Edit,
   Save
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import DashboardLayout from '@/components/layout/DashboardLayout'
+import { Button } from '../../../../components/ui/button'
+import DashboardLayout from '../../../../components/layout/DashboardLayout'
 
 interface Project {
   id: string

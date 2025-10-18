@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 'use client'
 
@@ -18,8 +18,8 @@ import {
   FileText,
   Send
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import DashboardLayout from '@/components/layout/DashboardLayout'
+import { Button } from '../../../../components/ui/button'
+import DashboardLayout from '../../../../components/layout/DashboardLayout'
 
 interface WorkRequest {
   id: string
@@ -392,7 +392,7 @@ export default function RequestReviewPage({ params }: { params: Promise<{ id: st
                         <div>
                           <p className="text-sm font-medium text-gray-900">{attachment.filename}</p>
                           <p className="text-xs text-gray-600">
-                            {formatFileSize(attachment.size)} • {formatDate(attachment.uploadedAt)}
+                            {formatFileSize(attachment.size)} � {formatDate(attachment.uploadedAt)}
                           </p>
                         </div>
                       </div>
