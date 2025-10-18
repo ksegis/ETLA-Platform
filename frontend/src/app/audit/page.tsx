@@ -1,6 +1,7 @@
 'use client'
 
-import { useAuth } from "../../contexts/AuthContext"
+import { useAuth } from
+import { useTenant } from '@/contexts/TenantContext'; "../../contexts/AuthContext"
 import DashboardLayout from "../../components/layout/DashboardLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
@@ -19,7 +20,7 @@ import {
 } from 'lucide-react'
 
 export default function AuditTrailPage() {
-  const { currentTenant: tenant } = useAuth()
+  const { currentTenant: tenant } = useTenant()
 
   return (
     <DashboardLayout>
