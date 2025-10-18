@@ -118,7 +118,7 @@ export default function ProjectManagementPageRBAC() {
   const router = useRouter();
 
   const { user } = useAuth();
-  const { selectedTenant, tenantUser } = useTenant();
+  const { selectedTenant } = useTenant();
   const { currentUserRole: effectiveUserRole } = usePermissions();
 
   // Safely derive a role the UI can display:
@@ -667,6 +667,7 @@ export default function ProjectManagementPageRBAC() {
     </RouteGuard>
   );
 }
+
 
 
 
