@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 "use client";
 
@@ -138,7 +138,7 @@ interface AuthUser {
 export default function TenantManagementClient() { // Renamed component
   const { user } = useAuth();
   const isAuthenticated = !!user;
-  const { tenantUser } = useTenant();
+  const { currentTenant } = useTenant();
   const { checkPermission, loading: permissionsloading } = usePermissions();
   const [tenants, setTenants] = useState<ExtendedTenant[]>([]);
   const [users, setUsers] = useState<TenantUser[]>([]);
