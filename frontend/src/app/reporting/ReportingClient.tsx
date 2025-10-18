@@ -47,7 +47,7 @@ interface EnhancedFilters {
 export default function ReportingClient() {
   // New unified contexts
   const { loading: authLoading } = useAuth();
-  const { tenantId, setTenantId, isDemoMode } = useTenant();const { tenantId, setTenantId } = useTenant();
+  const { tenantId, setTenantId, isDemoMode } = useTenant();
   const { isMultiTenant } = useMultiTenantMode(); // shim feeds from Tenant/Auth
   const accessibleTenantIds = useAccessibleTenantIds() ?? []; // expect [{id,name},...]
 
@@ -574,6 +574,7 @@ export default function ReportingClient() {
     </div>
   );
 }
+
 
 
 
