@@ -1,6 +1,6 @@
 ﻿import React from "react";
-import { usePermissions } from "@/hooks/usePermissions";
-import { type Role } from "@/rbac/constants";
+import { usePermissions } from "hooks/usePermissions";
+import { type Role } from "rbac/constants";
 
 type RoleGuardProps = {
   allow: Role[];

@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { getMockRows } from "@/app/reporting/_mock";
+import { getMockRows } from "app/reporting/_mock";
 
 export const dynamic = "force-dynamic"; // no caching
 

@@ -1,7 +1,7 @@
-﻿import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
-import { withPermissionCheck, ServiceAuth, getServiceAuthContext } from '@/utils/serviceAuth'
-import { FEATURES, PERMISSIONS } from '@/rbac/constants/index'
-import type { WorkRequest, ProjectCharter, Risk } from '@/types'
+﻿import { createSupabaseBrowserClient } from 'lib/supabase/browser'
+import { withPermissionCheck, ServiceAuth, getServiceAuthContext } from 'utils/serviceAuth'
+import { FEATURES, PERMISSIONS } from 'rbac/constants/index'
+import type { WorkRequest, ProjectCharter, Risk } from 'types'
 
 // Enhanced WorkRequest interface with approval workflow fields
 export interface WorkRequestWithApproval extends WorkRequest {

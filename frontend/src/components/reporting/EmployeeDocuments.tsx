@@ -6,12 +6,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/lib/supabase';
-import { exportUtils } from '@/utils/exportUtils';
+import { Card } from 'components/ui/card';
+import { Button } from 'components/ui/button';
+import { Input } from 'components/ui/input';
+import { Badge } from 'components/ui/badge';
+import { supabase } from 'lib/supabase';
+import { exportUtils } from 'utils/exportUtils';
 import { 
   FileText, 
   Download, 

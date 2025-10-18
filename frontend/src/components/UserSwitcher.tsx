@@ -1,10 +1,10 @@
 ﻿'use client'
 
 import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from 'components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
 import { User, LogIn, LogOut, Loader2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from 'contexts/AuthContext'
 
 interface TestUser {
   email: string

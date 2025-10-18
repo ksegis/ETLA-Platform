@@ -1,5 +1,5 @@
-﻿import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
-import { createSupabaseServerClient } from '@/lib/supabase/browser'
+﻿import { createSupabaseBrowserClient } from 'lib/supabase/browser'
+import { createSupabaseServerClient } from 'lib/supabase/browser'
 import { 
   RBACMatrixRowUser, 
   RBACPermissionCatalog, 
@@ -8,11 +8,11 @@ import {
   RBACApplyChangesRequest,
   Tenant,
   User
-} from '@/types'
+} from 'types'
 
-import { logger } from '@/lib/logger'
-import { assertPermission } from '@/server/rbac';
-import { FEATURES, PERMISSIONS } from '@/rbac/constants';
+import { logger } from 'lib/logger'
+import { assertPermission } from 'server/rbac';
+import { FEATURES, PERMISSIONS } from 'rbac/constants';
 
 export class RBACAdminService {
   /**

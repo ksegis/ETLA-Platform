@@ -1,4 +1,4 @@
-﻿import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+﻿import { createSupabaseBrowserClient } from 'lib/supabase/browser'
 
 // Interface for the v2 view data structure
 export interface TimecardDailySummaryV2 {

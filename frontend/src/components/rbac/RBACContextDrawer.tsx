@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { X, User, Shield, Calendar, Mail, Building, AlertCircle, Check, Minus } from 'lucide-react'
-import { RBACUserDetail, RBACPermissionCell } from '@/types'
+import { RBACUserDetail, RBACPermissionCell } from 'types'
 
 interface RBACContextDrawerProps {
   isOpen: boolean

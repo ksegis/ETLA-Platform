@@ -4,8 +4,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Button } from 'components/ui/button'
 import { 
   User, 
   Lock, 
@@ -26,8 +26,8 @@ import {
   QrCode,
   Download
 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { useAuth } from 'contexts/AuthContext'
+import { createSupabaseBrowserClient } from 'lib/supabase/browser'
 
 interface ProfileData {
   id: string

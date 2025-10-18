@@ -1,10 +1,10 @@
 ﻿'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Button } from 'components/ui/button'
 import { X, User, Mail, Building, Shield, Phone, Briefcase, Save } from 'lucide-react'
-import { userManagement, type UserUpdateData } from "@/services/userManagementService"
+import { userManagement, type UserUpdateData } from "services/userManagementService"
 
 interface User {
   id: string

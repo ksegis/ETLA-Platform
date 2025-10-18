@@ -7,7 +7,7 @@ import {
   PERMISSIONS,
   type Feature,
   type Permission,
-} from "@/hooks/usePermissions";
+} from "hooks/usePermissions";
 
 /* =========================
  * Generic PermissionGuard

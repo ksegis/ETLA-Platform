@@ -1,10 +1,10 @@
 ﻿'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Button } from 'components/ui/button'
 import { X, Trash2, AlertTriangle, CheckCircle, Users, Calendar, Database } from 'lucide-react'
-import { userManagement, type CleanupOptions } from "@/services/userManagementService"
+import { userManagement, type CleanupOptions } from "services/userManagementService"
 
 interface UserCleanupModalProps {
   isOpen: boolean

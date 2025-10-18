@@ -8,8 +8,8 @@ export function createSupabaseBrowserClient() {
   );
 }
 
-// Support legacy imports like: import { createClient } from "@/lib/supabase/browser"
+// Support legacy imports like: import { createClient } from "lib/supabase/browser"
 export { createBrowserClient as createClient } from "@supabase/ssr";
 
-// Support default import: import createSupabaseBrowserClient from "@/lib/supabase/browser"
+// Support default import: import createSupabaseBrowserClient from "lib/supabase/browser"
 export default createSupabaseBrowserClient;

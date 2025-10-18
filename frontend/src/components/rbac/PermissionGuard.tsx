@@ -1,7 +1,7 @@
 ﻿"use client";
 import React from "react";
-import { usePermissions } from "@/hooks/usePermissions";
-import type { Feature, Permission } from "@/rbac/constants";
+import { usePermissions } from "hooks/usePermissions";
+import type { Feature, Permission } from "rbac/constants";
 
 export type PermissionGuardProps = {
   feature: Feature;

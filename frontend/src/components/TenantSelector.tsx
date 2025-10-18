@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react'
 import { ChevronDown, Building, Check } from 'lucide-react'
-import { useTenant } from '@/contexts/TenantContext'
-import { Button } from '@/components/ui/button'
+import { useTenant } from 'contexts/TenantContext'
+import { Button } from 'components/ui/button'
 
 export default function TenantSelector() {
   const { 

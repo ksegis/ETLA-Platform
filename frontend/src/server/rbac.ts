@@ -1,5 +1,5 @@
 ﻿// server-safe RBAC
-import { ROLES, FEATURES, PERMISSIONS, ROLE_MATRIX } from "@/rbac/constants";
+import { ROLES, FEATURES, PERMISSIONS, ROLE_MATRIX } from "rbac/constants";
 
 type Role = (typeof ROLES)[keyof typeof ROLES];
 type Feature = (typeof FEATURES)[keyof typeof FEATURES];

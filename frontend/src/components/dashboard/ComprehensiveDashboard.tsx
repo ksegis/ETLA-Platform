@@ -1,12 +1,12 @@
 ﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, PayStatement } from "@/types";
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useTenant } from '@/contexts/TenantContext';
-import { supabase } from '@/lib/supabase/browser';
+import { User, PayStatement } from "types";
+import { Card } from 'components/ui/card';
+import { Button } from 'components/ui/button';
+import { Badge } from 'components/ui/badge';
+import { useTenant } from 'contexts/TenantContext';
+import { supabase } from 'lib/supabase/browser';
 
 interface DashboardMetrics {
   employees: {

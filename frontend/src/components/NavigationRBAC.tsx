@@ -1,8 +1,8 @@
 ﻿import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { usePermissions } from "@/hooks/usePermissions";
-import { PERMISSIONS, ROLES, FEATURES } from "@/rbac/constants";
+import { usePermissions } from "hooks/usePermissions";
+import { PERMISSIONS, ROLES, FEATURES } from "rbac/constants";
 
 // Navigation item interface
 interface NavItem {

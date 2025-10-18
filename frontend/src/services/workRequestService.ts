@@ -1,4 +1,4 @@
-﻿import { createSupabaseServerClient } from '@/lib/supabase/server'
+﻿import { createSupabaseServerClient } from 'lib/supabase/server'
 
 export interface WorkRequest {
   id: string

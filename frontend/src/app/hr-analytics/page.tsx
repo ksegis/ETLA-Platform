@@ -1,13 +1,13 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useTenant } from '@/contexts/TenantContext';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { Card } from 'components/ui/card';
+import { Button } from 'components/ui/button';
+import { Input } from 'components/ui/input';
+import { Badge } from 'components/ui/badge';
+import DashboardLayout from 'components/layout/DashboardLayout';
+import { useTenant } from 'contexts/TenantContext';
+import { createSupabaseBrowserClient } from 'lib/supabase/browser';
 
 // HR Analytics specific interfaces
 interface HRMetrics {

@@ -24,14 +24,14 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
-import MissingCustomerModal from '@/components/MissingCustomerModal'
-import { useAuth } from '@/contexts/AuthContext'
-import { pmbok } from '@/services/pmbok_service'
-import type { WorkRequest, ProjectCharter, Risk } from '@/services/pmbok_service'
+import { Button } from 'components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import DashboardLayout from 'components/layout/DashboardLayout'
+import WorkRequestApprovalModal from 'components/WorkRequestApprovalModal'
+import MissingCustomerModal from 'components/MissingCustomerModal'
+import { useAuth } from 'contexts/AuthContext'
+import { pmbok } from 'services/pmbok_service'
+import type { WorkRequest, ProjectCharter, Risk } from 'services/pmbok_service'
 
 export default function ProjectManagementPage() {
   const router = useRouter()

@@ -3,11 +3,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
+import { useAuth } from 'contexts/AuthContext'
+import DashboardLayout from 'components/layout/DashboardLayout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Button } from 'components/ui/button'
+import WorkRequestApprovalModal from 'components/WorkRequestApprovalModal'
 import {
   Clock, 
   CheckCircle, 
@@ -35,13 +35,13 @@ import {
   ThumbsDown,
   Clock4,
 } from 'lucide-react'
-import { pmbok } from '@/services/pmbok_service'
+import { pmbok } from 'services/pmbok_service'
 
 // Force dynamic rendering to avoid SSR issues
 export const dynamic = 'force-dynamic'
 
 // Import interfaces from PMBOK service
-import type { WorkRequest, ProjectCharter, Risk } from '@/types'
+import type { WorkRequest, ProjectCharter, Risk } from 'types'
 
 interface DashboardData {
   workRequests: WorkRequest[]

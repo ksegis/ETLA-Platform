@@ -1,27 +1,27 @@
 ﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
+import { Button } from 'components/ui/button';
+import { Badge } from 'components/ui/badge';
+import { Input } from 'components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from 'components/ui/select';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from 'components/ui/tooltip';
 import { Calendar, Download, Clock, User, Building, FileSpreadsheet, AlertTriangle } from 'lucide-react';
-import { useCustomerBranding } from '@/services/brandingService';
-import { exportToExcel } from '@/utils/exportUtils';
-import timecardService, { TimecardDailySummaryV2, TimecardFilters } from '@/services/timecardService';
+import { useCustomerBranding } from 'services/brandingService';
+import { exportToExcel } from 'utils/exportUtils';
+import timecardService, { TimecardDailySummaryV2, TimecardFilters } from 'services/timecardService';
 
 interface SimpleTimecardGridProps {
   tenantId: string;

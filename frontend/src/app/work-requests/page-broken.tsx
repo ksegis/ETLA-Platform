@@ -21,24 +21,24 @@ import {
   User,
   Calendar,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import TenantSelector from "@/components/TenantSelector";
+} from "components/ui/card";
+import DashboardLayout from "components/layout/DashboardLayout";
+import TenantSelector from "components/TenantSelector";
 import {
   workRequestService,
   type WorkRequest,
-} from "@/services/workRequestService";
-import { useTenant, useCurrentTenantId } from "@/contexts/TenantContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/hooks/usePermissions";
-import { FEATURES, PERMISSIONS } from "@/rbac/constants";
+} from "services/workRequestService";
+import { useTenant, useCurrentTenantId } from "contexts/TenantContext";
+import { useAuth } from "contexts/AuthContext";
+import { usePermissions } from "hooks/usePermissions";
+import { FEATURES, PERMISSIONS } from "rbac/constants";
 
 // Status configuration
 const statusConfig = {

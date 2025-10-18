@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "es6"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      { "name": "next" }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/**/*",
+    "src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist",
+
+    // Legacy/backup patterns (app + components)
+    "src/**/*-original*.ts",
+    "src/**/*-original*.tsx",
+    "src/**/*-backup*.ts",
+    "src/**/*-backup*.tsx",
+    "src/**/*-old*.ts",
+    "src/**/*-old*.tsx",
+    "src/**/page-before-*.ts",
+    "src/**/page-before-*.tsx",
+    "src/**/page-backup*.ts",
+    "src/**/page-backup*.tsx"
+  ]
+}

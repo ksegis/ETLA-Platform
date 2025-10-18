@@ -17,7 +17,7 @@ import type {
   RBACUserDetail,
   RBACChangeOperation,
   RBACApplyChangesRequest,
-} from '@/types';
+} from 'types';
 
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';

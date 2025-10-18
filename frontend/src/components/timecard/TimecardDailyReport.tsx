@@ -1,24 +1,24 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
+import { Button } from 'components/ui/button'
+import { Input } from 'components/ui/input'
+import { Label } from 'components/ui/label'
+import { Badge } from 'components/ui/badge'
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from '@/components/ui/select'
+} from 'components/ui/select'
 import { 
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from 'components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from 'components/ui/table'
 import { 
   AlertTriangle, 
   Calendar, 
@@ -38,9 +38,9 @@ import {
   Search, 
   User 
 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useTenant } from '@/contexts/TenantContext'
-import timecardService, { TimecardDailySummaryV2, TimecardFilters } from '@/services/timecardService'
+import { useAuth } from 'contexts/AuthContext'
+import { useTenant } from 'contexts/TenantContext'
+import timecardService, { TimecardDailySummaryV2, TimecardFilters } from 'services/timecardService'
 import { CorrectionModal } from './CorrectionModal'
 
 interface TimecardDailyReportProps {

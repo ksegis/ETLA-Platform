@@ -1,4 +1,4 @@
-﻿import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+﻿import { createSupabaseBrowserClient } from 'lib/supabase/browser'
 
 // Enhanced WorkRequest interface with approval workflow fields
 export interface WorkRequest {

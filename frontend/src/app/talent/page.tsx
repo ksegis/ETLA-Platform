@@ -8,11 +8,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useTenant } from '@/contexts/TenantContext';
-import { supabase } from '@/lib/supabase/browser';
+import { Card } from 'components/ui/card';
+import { Button } from 'components/ui/button';
+import DashboardLayout from 'components/layout/DashboardLayout';
+import { useTenant } from 'contexts/TenantContext';
+import { supabase } from 'lib/supabase/browser';
 import {
   Users,
   Briefcase,

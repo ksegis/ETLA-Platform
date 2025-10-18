@@ -2,10 +2,10 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "hooks/usePermissions";
+import { useAuth } from "contexts/AuthContext";
 import { NoAccessFallback } from "./PermissionGuards"; // (kept; safe if unused)
-import { PERMISSIONS, ROLES, FEATURES } from "@/rbac/constants";
+import { PERMISSIONS, ROLES, FEATURES } from "rbac/constants";
 
 /* ------------------------------------------------------------------ */
 /* Route permission configuration (kept as-is, but now actually used) */
@@ -130,7 +130,7 @@ function normalizeFeatureName(f?: string): string {
 
 function normalizePermissionName(p?: string): string {
   if (!p) return "view";
-  // Don’t force-case: we pass through because your PERMISSIONS come from "@/rbac/constants"
+  // Don’t force-case: we pass through because your PERMISSIONS come from "rbac/constants"
   return String(p);
 }
 
@@ -170,7 +170,7 @@ export interface RouteGuardProps {
   requiredPermission?: string;
 
   /** Optional role gating */
-  roles?: string[]; // uses your ROLES from "@/rbac/constants"
+  roles?: string[]; // uses your ROLES from "rbac/constants"
   anyRole?: boolean; // kept for compatibility; "any" by default
 }
 

@@ -20,7 +20,7 @@ import {
   Shield,
   Info
 } from 'lucide-react'
-import { RBACMatrixRowUser, RBACPermissionCell, RBACPermissionCatalog } from '@/types'
+import { RBACMatrixRowUser, RBACPermissionCell, RBACPermissionCatalog } from 'types'
 
 interface RBACMatrixGridProps {
   users: RBACMatrixRowUser[]

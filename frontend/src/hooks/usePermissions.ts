@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from 'contexts/AuthContext';
 
 
 
@@ -15,7 +15,7 @@ import {
   type Feature,
   type Permission,
   type Role,
-} from '@/rbac/constants';
+} from 'rbac/constants';
 
 export { FEATURES, PERMISSIONS, ROLES };
 export type { Feature, Permission, Role };

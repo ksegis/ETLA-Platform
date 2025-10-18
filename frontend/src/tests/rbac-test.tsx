@@ -8,16 +8,16 @@
  */
 
 import React from "react";
-import { usePermissions } from "@/hooks/usePermissions";
-import { FEATURES, PERMISSIONS } from "@/rbac/constants";
+import { usePermissions } from "hooks/usePermissions";
+import { FEATURES, PERMISSIONS } from "rbac/constants";
 import {
   PermissionGuard,
   WorkRequestGuard,
   ProjectGuard,
   WorkRequestCreateButton,
   WorkRequestApproveButton,
-} from "@/components/PermissionGuards";
-import { RouteGuard } from "@/components/RouteGuard";
+} from "components/PermissionGuards";
+import { RouteGuard } from "components/RouteGuard";
 
 type PermissionsApi = ReturnType<typeof usePermissions>;
 

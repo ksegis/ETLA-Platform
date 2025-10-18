@@ -2,20 +2,20 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { createSupabaseBrowserClient } from 'lib/supabase/browser';
 const supabase = createSupabaseBrowserClient();
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useTenant } from '@/contexts/TenantContext';
-import { useMultiTenantMode } from '@/contexts/MultiTenantModeContext';
-import { useAccessibleTenantIds } from '@/hooks/useAccessibleTenantIds';
+import { useAuth } from 'contexts/AuthContext';
+import { useTenant } from 'contexts/TenantContext';
+import { useMultiTenantMode } from 'contexts/MultiTenantModeContext';
+import { useAccessibleTenantIds } from 'hooks/useAccessibleTenantIds';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { Button } from 'components/ui/button';
+import { Input } from 'components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from 'components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from 'components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'components/ui/select';
+import { Label } from 'components/ui/label';
 import {
   Search, Filter, RefreshCcw, Users, DollarSign, Clock, Briefcase,
   FileText, Heart, Shield, ChevronDown, ChevronUp, LayoutDashboard,
@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 import PreviewModal from './_components/PreviewModal';
-import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+import TraditionalReportTable from 'components/reporting/TraditionalReportTable';
 import type { ReportType } from './_data';
 
 // --- Data types (unchanged) ---

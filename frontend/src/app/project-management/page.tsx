@@ -4,8 +4,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import DashboardLayout from 'components/layout/DashboardLayout'
+import { createSupabaseBrowserClient } from 'lib/supabase/browser'
 import { 
   Search, 
   Filter, 
