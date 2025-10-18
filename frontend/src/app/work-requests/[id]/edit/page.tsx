@@ -4,8 +4,8 @@
 
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Upload, X, Calendar, DollarSign, Clock, Save, AlertCircle } from 'lucide-react'
-import { Button } from 'components/ui/button'
-import DashboardLayout from 'components/layout/DashboardLayout'
+import { Button } from '@/components/ui/button'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface FormData {
   title: string

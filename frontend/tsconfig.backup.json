@@ -1,7 +1,7 @@
-{
+﻿{
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "es6"],
+    "target": "es2020",
+    "lib": ["dom", "es2020"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -13,13 +13,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      { "name": "next" }
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "plugins": [{ "name": "next" }],
+    "baseUrl": "src",
     "forceConsistentCasingInFileNames": true
   },
   "include": [
@@ -30,21 +25,5 @@
     "src/**/*",
     "src/types/**/*.d.ts"
   ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "dist",
-
-    // Legacy/backup patterns (app + components)
-    "src/**/*-original*.ts",
-    "src/**/*-original*.tsx",
-    "src/**/*-backup*.ts",
-    "src/**/*-backup*.tsx",
-    "src/**/*-old*.ts",
-    "src/**/*-old*.tsx",
-    "src/**/page-before-*.ts",
-    "src/**/page-before-*.tsx",
-    "src/**/page-backup*.ts",
-    "src/**/page-backup*.tsx"
-  ]
+  "exclude": ["node_modules", ".next", "dist"]
 }

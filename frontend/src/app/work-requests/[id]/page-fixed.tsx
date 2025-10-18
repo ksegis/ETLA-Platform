@@ -5,8 +5,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Calendar, Clock, DollarSign, User, MessageCircle, Paperclip, Edit, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react'
-import { Button } from 'components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { pmbok } from 'services/pmbok_service'
 import type { WorkRequest } from 'types'
 

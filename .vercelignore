@@ -6,7 +6,7 @@ dist/
 # Ignore dependency directories
 node_modules/
 
-# Ignore environment variables (Vercel handles these separately)
+# Ignore environment variables
 .env.local
 .env.development.local
 .env.test.local
@@ -37,3 +37,8 @@ coverage/
 
 # Ignore husky
 .husky/
+
+# Ignore backup directories
+__ui_dupe_backup/
+*_backup/
+*.backup.*
