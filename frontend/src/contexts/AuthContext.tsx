@@ -135,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setIsStable(true);
       setLoading(false);
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -237,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       currentUserRole,
       tenantUser,
       isStable,
+      loading,
       hasRole,      loading,
       hasRole,
       hasPermission,
@@ -274,4 +276,5 @@ export function useAuth(): AuthContextType {
   }
   return ctx;
 }
+
 
