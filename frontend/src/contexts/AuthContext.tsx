@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, {
   createContext,
@@ -54,7 +54,6 @@ export type AuthContextType = {
   tenantUser: TenantUserLite | null;
   isStable: boolean;
   loading: boolean;
-  isAuthenticated: boolean;
   isAuthenticated: boolean;
   hasRole: (role: RoleKey) => boolean;
   hasPermission: (feature: Feature, permission: Permission) => boolean;
@@ -242,8 +241,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isStable,
       loading,
       isAuthenticated: !!user,
-      isAuthenticated: !!user, hasRole,      loading,
-      isAuthenticated: !!user, hasRole,
+      hasRole,      loading,
+      hasRole,
       hasPermission,
       checkPermission,
       checkAnyPermission,
@@ -259,8 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       currentUserRole,
       tenantUser,
       isStable, loading,
-      isAuthenticated: !!user, hasRole,      loading,
-      isAuthenticated: !!user, hasRole,
+      hasRole,      loading,
+      hasRole,
       hasPermission,
       checkPermission,
       checkAnyPermission,
@@ -279,6 +278,5 @@ export function useAuth(): AuthContextType {
   }
   return ctx;
 }
-
 
 
