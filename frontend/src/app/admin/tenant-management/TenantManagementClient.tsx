@@ -32,15 +32,15 @@ type TriggerProps = ComponentProps<typeof BaseSelectTrigger> &
 
 const SelectTrigger = BaseSelectTrigger as unknown as
   ForwardRefExoticComponent<TriggerProps>;
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "../../../components/ui/label";
+import { Badge } from "../../../components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "../../../components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -48,7 +48,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "../../../components/ui/dialog";
 import {
   Building,
   Users,
@@ -60,7 +60,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Tenant, User } from "@/types";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import DashboardLayout from "../../../components/layout/DashboardLayout";
 import { FEATURES, PERMISSIONS, ROLES } from "@/rbac/constants"; // Corrected import path
 import { usePathname } from 'next/navigation';
 
