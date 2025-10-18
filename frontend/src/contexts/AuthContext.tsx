@@ -55,6 +55,7 @@ export type AuthContextType = {
   isStable: boolean;
   loading: boolean;
   isAuthenticated: boolean;
+  isAuthenticated: boolean;
   hasRole: (role: RoleKey) => boolean;
   hasPermission: (feature: Feature, permission: Permission) => boolean;
   checkPermission: (feature: Feature, permission?: Permission) => boolean;
@@ -240,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       tenantUser,
       isStable,
       loading,
+      isAuthenticated: !!user,
       isAuthenticated: !!user, hasRole,      loading,
       isAuthenticated: !!user, hasRole,
       hasPermission,
