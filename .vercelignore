@@ -6,31 +6,17 @@ dist/
 # Ignore dependency directories
 node_modules/
 
-# Ignore environment variables and sensitive files
-.env
+# Ignore environment variables (Vercel handles these separately)
 .env.local
 .env.development.local
-.env.production.local
-.env.*
-*.env
-*.pem
-*.key
-*.crt
-private-keys/
+.env.test.local
 
-# Ignore editor/IDE specific files and configurations
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# Ignore Git specific files and directories
+# Ignore Git directory
 .git/
-.gitignore
-.gitattributes
-.gitmodules
 
-# Ignore test files and directories
+# Ignore test files
+__tests__/
+coverage/
 *.test.js
 *.test.jsx
 *.test.ts
@@ -39,42 +25,15 @@ private-keys/
 *.spec.jsx
 *.spec.ts
 *.spec.tsx
-__tests__/
-coverage/
 
-# Ignore documentation and markdown files (unless they are part of your app)
-*.md
-*.mdx
+# Ignore editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 
-# Ignore temporary files and logs
+# Ignore logs
 *.log
-*.tmp
-tmp/
 
-# Ignore configuration files not needed at runtime
-vercel.json
-next.config.js
-tsconfig.json
-jsconfig.json
-.eslintrc.json
-.prettierrc.json
-.prettierignore
-.npmrc
-.yarnrc
-.pnpmrc
-
-# Ignore husky configuration (if not needed for deployment runtime)
+# Ignore husky
 .husky/
-
-# Ignore any other large or sensitive files not needed for the final build
-public/uploads/
-src/data/
-
-# Example: If you have a specific folder for local development assets only
-local-assets/
-
-# Example: If you have a specific folder for design files
-design/
-
-# Example: If you have a specific folder for database migrations
-database/migrations/
