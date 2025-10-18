@@ -1,7 +1,7 @@
 'use client'
 
-import { useAuth } from
-import { useTenant } from '@/contexts/TenantContext'; "../../contexts/AuthContext"
+import { useAuth } from '../../contexts/AuthContext'
+import { useTenant } from '../../contexts/TenantContext'
 import DashboardLayout from "../../components/layout/DashboardLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
@@ -430,6 +430,8 @@ export default function AuditTrailPage() {
 }
 
 export const dynamic = "force-dynamic"
+
+
 
 
 
