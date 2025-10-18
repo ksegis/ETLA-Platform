@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import React from 'react'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import TimecardRecalculationTool from '@/components/admin/TimecardRecalculationTool'
+import DashboardLayout from "../../../components/layout/DashboardLayout"
+import TimecardRecalculationTool from "../../../components/admin/TimecardRecalculationTool"
 
 export default function TimecardUtilitiesPage() {
   return (
