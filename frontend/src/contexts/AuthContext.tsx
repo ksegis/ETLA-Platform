@@ -122,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUserRole, setCurrentUserRole] = useState<RoleKey | null>(null);
   const [tenantUser, setTenantUser] = useState<TenantUserLite | null>(null);
   const [isStable, setIsStable] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Initialize Supabase auth listener
   useEffect(() => {
