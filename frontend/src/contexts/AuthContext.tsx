@@ -53,6 +53,7 @@ export type AuthContextType = {
   currentUserRole: RoleKey | null;
   tenantUser: TenantUserLite | null;
   isStable: boolean;
+  loading: boolean;
   hasRole: (role: RoleKey) => boolean;
   hasPermission: (feature: Feature, permission: Permission) => boolean;
   checkPermission: (feature: Feature, permission?: Permission) => boolean;
@@ -133,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setIsStable(true);
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -235,6 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       currentUserRole,
       tenantUser,
       isStable,
+      hasRole,      loading,
       hasRole,
       hasPermission,
       checkPermission,
@@ -250,7 +253,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       currentTenantId,
       currentUserRole,
       tenantUser,
-      isStable,
+      isStable, loading,
+      hasRole,      loading,
       hasRole,
       hasPermission,
       checkPermission,
@@ -270,3 +274,4 @@ export function useAuth(): AuthContextType {
   }
   return ctx;
 }
+
