@@ -377,9 +377,7 @@ export default function ReportingClient() {
                     case 'employees': {
                       const filtered = filterDataBySearch(employeeData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable
-                          title="Employees"
-                          data={filtered}
+                        <TraditionalReportTable data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'employee_code', label: 'Employee Code' },
@@ -402,9 +400,7 @@ export default function ReportingClient() {
                     case 'pay-statements': {
                       const filtered = filterDataBySearch(payStatementData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable
-                          title="Pay Statements"
-                          data={filtered}
+                        <TraditionalReportTable data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'pay_date', label: 'Pay Date' },
@@ -427,9 +423,7 @@ export default function ReportingClient() {
                     case 'timecards': {
                       const filtered = filterDataBySearch(timecardData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable
-                          title="Timecards"
-                          data={filtered}
+                        <TraditionalReportTable data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'work_date', label: 'Work Date' },
@@ -451,9 +445,7 @@ export default function ReportingClient() {
                     case 'jobs': {
                       const filtered = filterDataBySearch(jobData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable
-                          title="Jobs"
-                          data={filtered}
+                        <TraditionalReportTable data={filtered}
                           columns={[
                             { key: 'job_title', label: 'Job Title' },
                             { key: 'job_code', label: 'Job Code' },
@@ -475,9 +467,7 @@ export default function ReportingClient() {
                     case 'tax-records': {
                       const filtered = filterDataBySearch(taxData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable
-                          title="Tax Records"
-                          data={filtered}
+                        <TraditionalReportTable data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'tax_year', label: 'Tax Year' },
@@ -498,9 +488,7 @@ export default function ReportingClient() {
                     case 'benefits-deductions': {
                       const filtered = filterDataBySearch(benefitData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable
-                          title="Benefits & Deductions"
-                          data={filtered}
+                        <TraditionalReportTable data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'deduction_type', label: 'Type' },
@@ -521,9 +509,7 @@ export default function ReportingClient() {
                     case 'compliance': {
                       const filtered = filterDataBySearch(complianceData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable
-                          title="Compliance"
-                          data={filtered}
+                        <TraditionalReportTable data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'compliance_type', label: 'Type' },
@@ -574,6 +560,7 @@ export default function ReportingClient() {
     </div>
   );
 }
+
 
 
 
