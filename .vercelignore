@@ -42,3 +42,6 @@ coverage/
 __ui_dupe_backup/
 *_backup/
 *.backup.*
+# Backup files
+frontend/src/app/**/*backup*
+frontend/src/app/**/*-backup-*

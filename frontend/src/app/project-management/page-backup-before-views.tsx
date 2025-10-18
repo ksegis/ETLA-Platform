@@ -3,6 +3,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createSupabaseBrowserClient } from '../../../lib/supabase/browser'
 import { 
   Users, 
   FileText, 
@@ -85,7 +86,7 @@ export default function ProjectManagementPage() {
       console.log('loading project data for tenant:', selectedTenant.id, selectedTenant.name)
 
       // Load projects
-      const { data: projectData, error: projectError } = await supabase
+      const { data: projectData, error: projectError } = const supabase = createSupabaseBrowserClient(); await supabase
         .from('project_charters')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
@@ -99,7 +100,7 @@ export default function ProjectManagementPage() {
       }
 
       // Load work requests
-      const { data: workRequestData, error: workRequestError } = await supabase
+      const { data: workRequestData, error: workRequestError } = const supabase = createSupabaseBrowserClient(); await supabase
         .from('work_requests')
         .select('*')
         .eq('tenant_id', selectedTenant.id)
