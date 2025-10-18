@@ -379,16 +379,6 @@ export default function ReportingClient() {
                       return (
                         <TraditionalReportTable rows={filtered}
                           columns={[
-                            { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'employee_code', label: 'Employee Code' },
-                            { key: 'position', label: 'Position' },
-                            { key: 'home_department', label: 'Department' },
-                            { key: 'division', label: 'Division' },
-                            { key: 'employment_status', label: 'Status' },
-                            { key: 'hire_date', label: 'Hire Date' },
-                            { key: 'pay_type', label: 'Pay Type' },
-                          ]}
-                          viewMode={getViewMode('employees')}
                         />
                       );
                     }
@@ -397,16 +387,6 @@ export default function ReportingClient() {
                       return (
                         <TraditionalReportTable rows={filtered}
                           columns={[
-                            { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'pay_date', label: 'Pay Date' },
-                            { key: 'check_number', label: 'check &num;' },
-                            { key: 'pay_period_start', label: 'Period Start' },
-                            { key: 'pay_period_end', label: 'Period End' },
-                            { key: 'gross_pay', label: 'Gross Pay', render: (i) => `$${(i.gross_pay || 0).toFixed(2)}` },
-                            { key: 'net_pay', label: 'Net Pay', render: (i) => `$${(i.net_pay || 0).toFixed(2)}` },
-                            { key: 'check_status', label: 'Status' },
-                          ]}
-                          viewMode={getViewMode('pay-statements')}
                         />
                       );
                     }
@@ -415,15 +395,6 @@ export default function ReportingClient() {
                       return (
                         <TraditionalReportTable rows={filtered}
                           columns={[
-                            { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'work_date', label: 'Work Date' },
-                            { key: 'total_hours', label: 'Total Hours' },
-                            { key: 'regular_hours', label: 'Regular' },
-                            { key: 'ot_hours', label: 'Overtime' },
-                            { key: 'dt_hours', label: 'Double Time' },
-                            { key: 'is_corrected', label: 'Corrected?' },
-                          ]}
-                          viewMode={getViewMode('timecards')}
                         />
                       );
                     }
@@ -432,15 +403,6 @@ export default function ReportingClient() {
                       return (
                         <TraditionalReportTable rows={filtered}
                           columns={[
-                            { key: 'job_title', label: 'Job Title' },
-                            { key: 'job_code', label: 'Job Code' },
-                            { key: 'department', label: 'Department' },
-                            { key: 'division', label: 'Division' },
-                            { key: 'location', label: 'Location' },
-                            { key: 'status', label: 'Status' },
-                            { key: 'employee_count', label: 'Employees' },
-                          ]}
-                          viewMode={getViewMode('jobs')}
                         />
                       );
                     }
@@ -449,14 +411,6 @@ export default function ReportingClient() {
                       return (
                         <TraditionalReportTable rows={filtered}
                           columns={[
-                            { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'tax_year', label: 'Tax Year' },
-                            { key: 'form_type', label: 'Form Type' },
-                            { key: 'filing_status', label: 'Filing Status' },
-                            { key: 'document_status', label: 'Document Status' },
-                            { key: 'issue_date', label: 'Issue Date' },
-                          ]}
-                          viewMode={getViewMode('tax-records')}
                         />
                       );
                     }
@@ -465,14 +419,6 @@ export default function ReportingClient() {
                       return (
                         <TraditionalReportTable rows={filtered}
                           columns={[
-                            { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'deduction_type', label: 'Type' },
-                            { key: 'deduction_code', label: 'Code' },
-                            { key: 'amount', label: 'Amount', render: (i) => `$${(i.amount || 0).toFixed(2)}` },
-                            { key: 'frequency', label: 'Frequency' },
-                            { key: 'effective_date', label: 'Effective Date' },
-                          ]}
-                          viewMode={getViewMode('benefits-deductions')}
                         />
                       );
                     }
@@ -481,14 +427,6 @@ export default function ReportingClient() {
                       return (
                         <TraditionalReportTable rows={filtered}
                           columns={[
-                            { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'compliance_type', label: 'Type' },
-                            { key: 'reporting_period', label: 'Period' },
-                            { key: 'status', label: 'Status' },
-                            { key: 'filing_date', label: 'Filing Date' },
-                            { key: 'due_date', label: 'Due Date' },
-                          ]}
-                          viewMode={getViewMode('compliance')}
                         />
                       );
                     }
