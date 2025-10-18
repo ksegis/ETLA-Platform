@@ -117,7 +117,7 @@ interface DashboardData {
 export default function ProjectManagementPageRBAC() {
   const router = useRouter();
 
-  const { user } = useAuth();
+  const { user, tenantUser } = useAuth();
   const { selectedTenant } = useTenant();
   const { currentUserRole: effectiveUserRole } = usePermissions();
 
