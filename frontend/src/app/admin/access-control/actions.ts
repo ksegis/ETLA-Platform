@@ -1,10 +1,10 @@
-﻿'use server';
+'use server';
 
-import { RBACAdminService } from 'services/rbac_admin_service';
-import { RBACApplyChangesRequest } from 'types';
-import { FEATURES, PERMISSIONS, ROLES, Role } from 'rbac/constants';
-import { logger } from '@/lib/logger';
-import { assertPermission } from 'server/rbac';
+import { RBACAdminService } from '../../../services/rbac_admin_service';
+import { RBACApplyChangesRequest } from '../../../types';
+import { FEATURES, PERMISSIONS, ROLES, Role } from '../../../rbac/constants';
+import { logger } from '../../../lib/logger';
+import { assertPermission } from '../../../server/rbac';
 
 export async function applyRbacChangesAction(request: RBACApplyChangesRequest, actorId: string): Promise<{ success: boolean; error?: string }> {
   try {
