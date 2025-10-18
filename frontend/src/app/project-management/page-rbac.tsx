@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { usePermissions } from "hooks/usePermissions";
 import { FEATURES, PERMISSIONS, ROLES, type Feature } from "rbac/constants";
 import { pmbokRBAC } from "services/pmbok_service_rbac";
-import { useAuth } from 'contexts/AuthContext';
-import { useTenant } from 'contexts/TenantContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import {
   PermissionGuard,
   WorkRequestGuard,
@@ -22,10 +22,10 @@ import {
   NoAccessFallback,
   PermissionStatus,
   PermissionDebugPanel,
-} from "components/PermissionGuards";
-import { RouteGuard } from "components/RouteGuard";
-import RoleGuard from "components/auth/RoleGuard";
-import { BreadcrumbRBAC, QuickActionsRBAC } from "components/NavigationRBAC";
+} from "@/components/PermissionGuards";
+import { RouteGuard } from "@/components/RouteGuard";
+import RoleGuard from "@/components/auth/RoleGuard";
+import { BreadcrumbRBAC, QuickActionsRBAC } from "@/components/NavigationRBAC";
 
 interface ProjectCharter {
   id: string;
@@ -667,6 +667,7 @@ export default function ProjectManagementPageRBAC() {
     </RouteGuard>
   );
 }
+
 
 
 

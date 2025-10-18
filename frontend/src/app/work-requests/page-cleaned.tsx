@@ -4,14 +4,14 @@
 
 import React, { useState, useEffect } from 'react'
 import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List } from 'lucide-react'
-import { Button } from 'components/ui/button'
-import { Input } from 'components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import { Badge } from 'components/ui/badge'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import { supabase } from 'lib/supabase/browser'
-import { useAuth } from 'contexts/AuthContext'
-import { useTenant } from 'contexts/TenantContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import { supabase } from '@/lib/supabase/browser'
+import { useAuth } from '@/contexts/AuthContext'
+import { useTenant } from '@/contexts/TenantContext'
 
 // Types
 interface WorkRequest {
@@ -641,6 +641,7 @@ export default function WorkRequestsPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

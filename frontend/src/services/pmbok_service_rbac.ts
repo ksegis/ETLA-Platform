@@ -1,4 +1,4 @@
-﻿import { createSupabaseBrowserClient } from 'lib/supabase/browser'
+﻿import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { withPermissionCheck, ServiceAuth, getServiceAuthContext } from 'utils/serviceAuth'
 import { FEATURES, PERMISSIONS } from 'rbac/constants/index'
 import type { WorkRequest, ProjectCharter, Risk } from 'types'
@@ -589,6 +589,7 @@ export const pmbokRBAC = new PMBOKServiceRBAC()
 
 // Export the service class for type checking
 export default PMBOKServiceRBAC
+
 
 
 

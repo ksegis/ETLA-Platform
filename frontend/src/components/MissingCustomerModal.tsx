@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
-import { Button } from 'components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle, User, Mail, Link, Plus, Loader2 } from 'lucide-react'
 import { pmbok } from 'services/pmbok_service'
 
@@ -287,6 +287,7 @@ export default function MissingCustomerModal({
     </div>
   )
 }
+
 
 
 

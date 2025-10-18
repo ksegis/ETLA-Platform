@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { createSupabaseBrowserClient } from 'lib/supabase/browser';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 export interface CustomerBranding {
   legalName: string;
@@ -424,6 +424,7 @@ export function useCustomerBranding(tenantId?: string) {
 // Add React import for the hook
 import { useEffect, useState } from 'react';
 import React from 'react';
+
 
 
 

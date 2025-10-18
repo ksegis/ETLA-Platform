@@ -7,10 +7,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "components/ui/card";
-import { Button } from "components/ui/button";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { usePermissions } from "hooks/usePermissions";
-import { useAuth } from "contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { PERMISSIONS, ROLES, CORE_PERMISSIONS } from "rbac/constants";
 
 
@@ -244,6 +244,7 @@ export default function RBACTestPanel() {
     </div>
   );
 }
+
 
 
 

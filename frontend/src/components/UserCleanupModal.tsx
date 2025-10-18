@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import { Button } from 'components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { X, Trash2, AlertTriangle, CheckCircle, Users, Calendar, Database } from 'lucide-react'
 import { userManagement, type CleanupOptions } from "services/userManagementService"
 
@@ -425,6 +425,7 @@ export default function UserCleanupModal({ isOpen, onClose, onSuccess }: UserCle
     </div>
   )
 }
+
 
 
 

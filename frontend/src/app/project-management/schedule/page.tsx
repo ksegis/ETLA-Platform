@@ -15,8 +15,8 @@ import {
   CheckCircle,
   ArrowLeft
 } from 'lucide-react'
-import { Button } from 'components/ui/button'
-import DashboardLayout from 'components/layout/DashboardLayout'
+import { Button } from '@/components/ui/button'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface Project {
   id: string
@@ -489,6 +489,7 @@ export default function ProjectSchedulePage() {
     </DashboardLayout>
   )
 }
+
 
 
 

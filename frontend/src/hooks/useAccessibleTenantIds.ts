@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useTenant } from "contexts/TenantContext";
+import { useTenant } from "@/contexts/TenantContext";
 
 /** Return the list of tenantIds the current user can access. */
 export function useAccessibleTenantIds(): string[] {
@@ -9,6 +9,7 @@ export function useAccessibleTenantIds(): string[] {
 }
 
 export default useAccessibleTenantIds;
+
 
 
 

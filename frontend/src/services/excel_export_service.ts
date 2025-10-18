@@ -1,5 +1,5 @@
 ﻿import * as XLSX from 'xlsx'
-import { createSupabaseBrowserClient } from 'lib/supabase/browser'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 
 interface ExportConfig {
   reportType: string
@@ -394,6 +394,7 @@ export class ExcelExportService {
     }
   }
 }
+
 
 
 

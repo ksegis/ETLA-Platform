@@ -3,8 +3,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import { createSupabaseBrowserClient } from 'lib/supabase/browser'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { BarChart3, Users, FileText, TrendingUp, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface DashboardStats {
@@ -331,6 +331,7 @@ export default function DashboardPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import { Button } from 'components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { X, Key, Mail, AlertTriangle, CheckCircle } from 'lucide-react'
 import { userManagement } from 'services/userManagementService'
 
@@ -239,6 +239,7 @@ export default function PasswordResetModal({ isOpen, onClose, onSuccess, user }:
     </div>
   )
 }
+
 
 
 

@@ -3,12 +3,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from 'contexts/AuthContext'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import { Button } from 'components/ui/button'
-import WorkRequestApprovalModal from 'components/WorkRequestApprovalModal'
-import MissingCustomerModal from 'components/MissingCustomerModal'
+import { useAuth } from '@/contexts/AuthContext'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
+import MissingCustomerModal from '@/components/MissingCustomerModal'
 import {
   Clock, 
   CheckCircle, 
@@ -775,6 +775,7 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

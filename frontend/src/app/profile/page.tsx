@@ -4,10 +4,10 @@
 
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import { Button } from 'components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { User, Mail, Phone, Building, ArrowLeft } from 'lucide-react'
-import { useAuth } from 'contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -143,6 +143,7 @@ export default function ProfilePage() {
     </div>
   )
 }
+
 
 
 

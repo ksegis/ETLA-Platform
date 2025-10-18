@@ -2,7 +2,7 @@
 
 // src/hooks/usePermissions.tsx
 import { useEffect, useState, ReactNode } from 'react'
-import { useAuth } from 'contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { ROLES, FEATURES, CORE_PERMISSIONS, PERMISSIONS, ROLE_MATRIX } from 'rbac/constants';
 
 /* =========================
@@ -317,6 +317,7 @@ export function RoleGuard({
   const allowed = (Array.isArray(allow) ? allow : [allow]).map(String)
   return allowed.includes(String(currentUserRole)) ? <>{children}</> : <>{fallback}</>
 }
+
 
 
 

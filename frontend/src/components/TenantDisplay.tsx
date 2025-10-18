@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import React from 'react'
-import { useTenant } from 'contexts/TenantContext'
+import { useTenant } from '@/contexts/TenantContext'
 import { Building } from 'lucide-react'
 
 interface TenantDisplayProps {
@@ -88,6 +88,7 @@ export function useFriendlyTenantName(tenantId?: string): string {
   
   return 'Unknown Tenant'
 }
+
 
 
 

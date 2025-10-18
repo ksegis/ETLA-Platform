@@ -16,8 +16,8 @@ import {
   ProjectGuard,
   WorkRequestCreateButton,
   WorkRequestApproveButton,
-} from "components/PermissionGuards";
-import { RouteGuard } from "components/RouteGuard";
+} from "@/components/PermissionGuards";
+import { RouteGuard } from "@/components/RouteGuard";
 
 type PermissionsApi = ReturnType<typeof usePermissions>;
 
@@ -346,6 +346,7 @@ export const validateRBACImplementation = {
 };
 
 export default RBACTestComponent;
+
 
 
 

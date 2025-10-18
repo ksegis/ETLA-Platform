@@ -4,9 +4,9 @@
 
 import { useState, useEffect } from 'react'
 import { Upload, X, Plus, AlertCircle, CheckCircle, Database, LogIn, Copy, ExternalLink } from 'lucide-react'
-import { Button } from 'components/ui/button'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import { createSupabaseBrowserClient } from 'lib/supabase/browser'
+import { Button } from '@/components/ui/button'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 const supabase = createSupabaseBrowserClient()
 
 interface FileUpload {
@@ -943,6 +943,7 @@ export default function NewWorkRequestPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

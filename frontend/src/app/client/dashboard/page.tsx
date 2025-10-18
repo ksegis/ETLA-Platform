@@ -20,8 +20,8 @@ import {
   ArrowUp,
   ArrowDown
 } from 'lucide-react'
-import { Button } from 'components/ui/button'
-import DashboardLayout from 'components/layout/DashboardLayout'
+import { Button } from '@/components/ui/button'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
 interface ClientKPIs {
   projects: {
@@ -543,6 +543,7 @@ export default function ClientDashboard() {
     </DashboardLayout>
   )
 }
+
 
 
 

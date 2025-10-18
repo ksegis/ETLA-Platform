@@ -4,11 +4,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useAuth } from 'contexts/AuthContext'
-import { useTenant } from 'contexts/TenantContext'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import { Button } from 'components/ui/button'
+import { useAuth } from '@/contexts/AuthContext'
+import { useTenant } from '@/contexts/TenantContext'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Users,
   UserPlus,
@@ -35,9 +35,9 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react'
-import { createSupabaseBrowserClient } from 'lib/supabase/browser'
-import UserCreationModal from 'components/UserCreationModal'
-import UserInviteModal from 'components/UserInviteModal'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import UserCreationModal from '@/components/UserCreationModal'
+import UserInviteModal from '@/components/UserInviteModal'
 
 interface User {
   id: string
@@ -913,6 +913,7 @@ export default function AccessControlPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

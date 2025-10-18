@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { pmbok } from 'services/pmbok_service'
-import WorkRequestApprovalModal from 'components/WorkRequestApprovalModal'
+import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
 
 interface DashboardData {
   workRequests: any[]
@@ -491,6 +491,7 @@ export default function ProjectManagementPage() {
     </div>
   )
 }
+
 
 
 

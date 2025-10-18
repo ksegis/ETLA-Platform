@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import React from 'react'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import TimecardDailyReport from 'components/timecard/TimecardDailyReport'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import TimecardDailyReport from '@/components/timecard/TimecardDailyReport'
 
 export default function TimecardsPage() {
   return (
@@ -22,6 +22,7 @@ export default function TimecardsPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

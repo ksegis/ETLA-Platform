@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from 'contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import Image from 'next/image'
 
 export default function SplashPage() {
@@ -192,6 +192,7 @@ export default function SplashPage() {
     </div>
   )
 }
+
 
 
 

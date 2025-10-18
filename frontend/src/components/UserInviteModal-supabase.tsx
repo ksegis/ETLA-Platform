@@ -1,10 +1,10 @@
 ﻿'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import { Button } from 'components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { X, Mail, Users, Send, Clock, MessageSquare } from 'lucide-react'
-import { supabase } from 'lib/supabase/browser'
+import { supabase } from '@/lib/supabase/browser'
 
 interface Tenant {
   id: string
@@ -452,6 +452,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
     </div>
   )
 }
+
 
 
 

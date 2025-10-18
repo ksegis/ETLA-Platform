@@ -5,8 +5,8 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 import React from 'react'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import EnhancedTaxRecordsWithLocalTax from 'components/reporting/EnhancedTaxRecordsWithLocalTax'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import EnhancedTaxRecordsWithLocalTax from '@/components/reporting/EnhancedTaxRecordsWithLocalTax'
 
 export default function TaxRecordsPage() {
   return (
@@ -21,6 +21,7 @@ export default function TaxRecordsPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

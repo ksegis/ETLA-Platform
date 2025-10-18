@@ -1,4 +1,4 @@
-﻿import { createSupabaseServerClient } from 'lib/supabase/server'
+﻿import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 /**
  * HR Report Query Service
@@ -670,6 +670,7 @@ export class HRReportQueryService {
     }
   }
 }
+
 
 
 

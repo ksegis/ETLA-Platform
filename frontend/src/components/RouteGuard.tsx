@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { usePermissions } from "hooks/usePermissions";
-import { useAuth } from "contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { NoAccessFallback } from "./PermissionGuards"; // (kept; safe if unused)
 import { PERMISSIONS, ROLES, FEATURES } from "rbac/constants";
 
@@ -448,6 +448,7 @@ export function getAccessibleRoutes(
 }
 
 export default RouteGuard;
+
 
 
 

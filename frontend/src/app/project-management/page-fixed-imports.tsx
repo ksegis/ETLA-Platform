@@ -24,11 +24,11 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { Button } from 'components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'components/ui/card'
-import DashboardLayout from 'components/layout/DashboardLayout'
-import WorkRequestApprovalModal from 'components/WorkRequestApprovalModal'
-import MissingCustomerModal from 'components/MissingCustomerModal'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
+import MissingCustomerModal from '@/components/MissingCustomerModal'
 import { useAuthStable } from 'hooks/useAuthStable'
 import { pmbok } from 'services/pmbok_service'
 import type { WorkRequest, ProjectCharter, Risk } from 'types'
@@ -635,6 +635,7 @@ export default function ProjectManagementPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

@@ -1,8 +1,8 @@
 ﻿'use client'
 
 import { useEffect } from 'react'
-import { useAuth } from 'contexts/AuthContext'
-// import { useTenant } from 'contexts/TenantContext' // TenantContext not available
+import { useAuth } from '@/contexts/AuthContext'
+// import { useTenant } from '@/contexts/TenantContext' // TenantContext not available
 import { pmbok } from 'services/pmbok_service'
 
 /**
@@ -99,6 +99,7 @@ export function useAuthForData() {
     tenant: auth.tenant
   }
 }
+
 
 
 
