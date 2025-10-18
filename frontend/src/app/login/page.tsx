@@ -26,8 +26,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
 
   const [activeTab, setActiveTab] = useState<'login' | 'forgot'>('login')
-  const { signIn } = useAuth()
-  const router = useRouter()
+    const router = useRouter()
   const searchParams = useSearchParams()
 
   const [forgotState, setForgotState] = useState<ForgotPasswordState>({
@@ -57,7 +56,13 @@ function LoginForm() {
     setError('')
 
     try {
-      await signIn(email, password)
+      const supabase = createSupabaseBrowserClient()
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      if (signInError) throw signInError
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Login failed')
@@ -415,6 +420,7 @@ export default function LoginPage() {
     </Suspense>
   )
 }
+
 
 
 
