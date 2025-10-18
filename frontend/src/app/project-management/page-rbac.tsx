@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 
 'use client'
@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { usePermissions } from "hooks/usePermissions";
 import { FEATURES, PERMISSIONS, ROLES, type Feature } from "rbac/constants";
 import { pmbokRBAC } from "services/pmbok_service_rbac";
-import { useAuth } from '@/contexts/AuthContext';
-import { useTenant } from '@/contexts/TenantContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
 import {
   PermissionGuard,
   WorkRequestGuard,

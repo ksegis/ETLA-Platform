@@ -1,9 +1,9 @@
-﻿'use client'
+'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useAuth } from '../../contexts/AuthContext'
+import DashboardLayout from '../../components/layout/DashboardLayout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
 import { Upload, FileText, Database, CheckCircle } from 'lucide-react'
 
 export default function UploadPage() {

@@ -1,12 +1,12 @@
-﻿'use client';
+'use client';
 
 'use client'
 
 import { useState, useEffect } from 'react'
 import { Search, Filter, RefreshCw, Plus, Eye, Edit, MoreHorizontal, Database, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { Button } from '../../components/ui/button'
+import DashboardLayout from '../../components/layout/DashboardLayout'
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser'
 const supabase = createSupabaseBrowserClient()
 
 interface WorkRequest {

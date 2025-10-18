@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 /**
  * Jobs Management Page
@@ -8,15 +8,15 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Badge } from '../../../components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/dialog';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useTenant } from '@/contexts/TenantContext';
-import { supabase } from '@/lib/supabase/browser';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../../../components/ui/dialog';
+import DashboardLayout from '../../../components/layout/DashboardLayout';
+import { useTenant } from '../../../contexts/TenantContext';
+import { supabase } from '../../../lib/supabase/browser';
 import {
   Plus,
   Search,

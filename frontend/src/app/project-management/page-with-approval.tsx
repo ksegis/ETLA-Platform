@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { pmbok } from 'services/pmbok_service'
-import WorkRequestApprovalModal from '@/components/WorkRequestApprovalModal'
+import WorkRequestApprovalModal from '../../components/WorkRequestApprovalModal'
 
 interface DashboardData {
   workRequests: any[]
