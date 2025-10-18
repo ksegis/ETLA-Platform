@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button'
 import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
 export default function JobsPage() {
-  const { tenant } = useAuth()
+  const { currentTenant: tenant } = useTenant()
 
   return (
     <DashboardLayout>
@@ -153,6 +153,7 @@ export default function JobsPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

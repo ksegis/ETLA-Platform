@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button'
 import { Upload, FileText, Database, CheckCircle } from 'lucide-react'
 
 export default function UploadPage() {
-  const { tenant } = useAuth()
+  const { currentTenant: tenant } = useTenant()
 
   return (
     <DashboardLayout>
@@ -141,6 +141,7 @@ export default function UploadPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

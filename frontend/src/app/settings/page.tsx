@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button'
 import { Settings, Users, Database, Shield, Bell } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { tenant } = useAuth()
+  const { currentTenant: tenant } = useTenant()
 
   return (
     <DashboardLayout>
@@ -207,6 +207,7 @@ export default function SettingsPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

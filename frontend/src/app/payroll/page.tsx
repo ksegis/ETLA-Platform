@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button'
 import { FileText, DollarSign, Calculator, CheckCircle } from 'lucide-react'
 
 export default function PayrollPage() {
-  const { tenant } = useAuth()
+  const { currentTenant: tenant } = useTenant()
 
   return (
     <DashboardLayout>
@@ -114,6 +114,7 @@ export default function PayrollPage() {
     </DashboardLayout>
   )
 }
+
 
 
 

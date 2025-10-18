@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 export default function ValidationRulesPage() {
-  const { tenant } = useAuth()
+  const { currentTenant: tenant } = useTenant()
 
   return (
     <DashboardLayout>
@@ -321,6 +321,7 @@ export default function ValidationRulesPage() {
     </DashboardLayout>
   )
 }
+
 
 
 
