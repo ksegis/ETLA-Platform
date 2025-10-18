@@ -136,7 +136,7 @@ interface AuthUser {
 }
 
 export default function TenantManagementClient() { // Renamed component
-  const { user } = useAuth();
+  const { user, currentUserRole } = useAuth();
   const isAuthenticated = !!user;
   const { currentTenant } = useTenant();
   const { checkPermission, loading: permissionsloading } = usePermissions();
