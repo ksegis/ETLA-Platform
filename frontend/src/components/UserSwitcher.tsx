@@ -83,7 +83,7 @@ const TEST_USERS: TestUser[] = [
 ]
 
 export default function UserSwitcher() {
-  const { signIn, signOut, user, isAuthenticated } = useAuth()
+  const { signOut, user, isAuthenticated } = useAuth()
   const [Loading, setIsloading] = useState(false)
   const [loadingUser, setloadingUser] = useState<string | null>(null)
 
