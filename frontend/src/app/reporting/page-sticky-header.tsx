@@ -8,7 +8,8 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import ComprehensiveDashboard from '../../components/dashboard/ComprehensiveDashboard';
 import TraditionalReportTable from '../../components/reporting/TraditionalReportTable';
 import { useTenant } from '../../contexts/TenantContext';
-import { supabase } from '../../lib/supabase/browser';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+const supabase = createSupabaseBrowserClient();
 import { List, Grid, Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield, BarChart3 } from 'lucide-react';
 
 // Enhanced interfaces for the new database schema
