@@ -115,7 +115,7 @@ export default function EmployeeDocuments({
     }
 
     loadDocuments();
-  }, [employeeId, tenantId, canViewDocuments, loadDocuments]);
+  }, [employeeId, tenantId, canViewDocuments]);
 
   const loadDocuments = useCallback(async () => {
     try {
