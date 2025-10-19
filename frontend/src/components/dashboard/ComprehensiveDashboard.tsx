@@ -106,7 +106,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     
     if (isDemoMode) {
       tenantIds = ['99883779-9517-4ca9-a3f8-7fdc59051f0e']; // Demo tenant ID
-    } else if (isMultiTenant() && availableTenants.length > 0) {
+    } else if (isMultiTenant && availableTenants.length > 0) {
       tenantIds = availableTenants.map(t => t.id);
     } else if (selectedTenant) {
       tenantIds = [selectedTenant.id];
