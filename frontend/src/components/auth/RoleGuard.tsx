@@ -1,5 +1,5 @@
-﻿import React from "react";
-import { usePermissions } from "hooks/usePermissions";
+import React from "react";
+import { useAuth } from "hooks/usePermissions";
 import { type Role } from "rbac/constants";
 
 type RoleGuardProps = {
@@ -9,7 +9,7 @@ type RoleGuardProps = {
 };
 
 export default function RoleGuard({ allow, fallback = null, children }: RoleGuardProps) {
-  const { hasRole } = usePermissions();
+  const { hasRole } = useAuth();
   const allowed = allow.some((r) => hasRole(r));
   if (!allowed) return <>{fallback}</>;
   return <>{children}</>;
