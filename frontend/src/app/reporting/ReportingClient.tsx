@@ -48,8 +48,8 @@ export default function ReportingClient() {
   // New unified contexts
   const { loading: authLoading } = useAuth();
   const { tenantId, isDemoMode } = useTenant();
-  const { isMultiTenant } = useMultiTenantMode(); // shim feeds from Tenant/Auth
-  const accessibleTenantIds = useAccessibleTenantIds() ?? []; // expect [{id,name},...]
+  const { isMultiTenant } = useMultiTenantMode();
+  const accessibleTenantIds = useAccessibleTenantIds() ?? [];
 
   const [activeTab, setActiveTab] = useState<string>('employees');
   const [loading, setLoading] = useState<boolean>(false);
@@ -96,7 +96,6 @@ export default function ReportingClient() {
     deductionType: '', complianceType: '', searchTerm: '',
   });
 
-  // Tenant filter (for multi-tenant users)
   const [tenantFilter, setTenantFilter] = useState<string>('');
 
   const getSearchableFields = (tabId: string): string[] => {
@@ -377,56 +376,105 @@ export default function ReportingClient() {
                     case 'employees': {
                       const filtered = filterDataBySearch(employeeData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable rows={filtered}
+                        <TraditionalReportTable
+                          rows={filtered}
                           columns={[
+                            { key: 'employee_name', label: 'Employee Name' },
+                            { key: 'employee_code', label: 'Employee Code' },
+                            { key: 'position', label: 'Position' },
+                            { key: 'home_department', label: 'Department' },
+                            { key: 'pay_type', label: 'Pay Type' }
+                          ]}
                         />
                       );
                     }
                     case 'pay-statements': {
                       const filtered = filterDataBySearch(payStatementData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable rows={filtered}
+                        <TraditionalReportTable
+                          rows={filtered}
                           columns={[
+                            { key: 'check_number', label: 'Check Number' },
+                            { key: 'employee_name', label: 'Employee Name' },
+                            { key: 'pay_date', label: 'Pay Date' },
+                            { key: 'gross_pay', label: 'Gross Pay' },
+                            { key: 'net_pay', label: 'Net Pay' }
+                          ]}
                         />
                       );
                     }
                     case 'timecards': {
                       const filtered = filterDataBySearch(timecardData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable rows={filtered}
+                        <TraditionalReportTable
+                          rows={filtered}
                           columns={[
+                            { key: 'employee_name', label: 'Employee Name' },
+                            { key: 'work_date', label: 'Work Date' },
+                            { key: 'total_hours', label: 'Total Hours' },
+                            { key: 'regular_hours', label: 'Regular Hours' },
+                            { key: 'ot_hours', label: 'OT Hours' }
+                          ]}
                         />
                       );
                     }
                     case 'jobs': {
                       const filtered = filterDataBySearch(jobData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable rows={filtered}
+                        <TraditionalReportTable
+                          rows={filtered}
                           columns={[
+                            { key: 'job_title', label: 'Job Title' },
+                            { key: 'job_code', label: 'Job Code' },
+                            { key: 'department', label: 'Department' },
+                            { key: 'location', label: 'Location' },
+                            { key: 'status', label: 'Status' }
+                          ]}
                         />
                       );
                     }
                     case 'tax-records': {
                       const filtered = filterDataBySearch(taxData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable rows={filtered}
+                        <TraditionalReportTable
+                          rows={filtered}
                           columns={[
+                            { key: 'employee_name', label: 'Employee Name' },
+                            { key: 'tax_year', label: 'Tax Year' },
+                            { key: 'form_type', label: 'Form Type' },
+                            { key: 'wages_tips_compensation', label: 'Wages' },
+                            { key: 'federal_income_tax_withheld', label: 'Federal Tax' }
+                          ]}
                         />
                       );
                     }
                     case 'benefits-deductions': {
                       const filtered = filterDataBySearch(benefitData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable rows={filtered}
+                        <TraditionalReportTable
+                          rows={filtered}
                           columns={[
+                            { key: 'employee_name', label: 'Employee Name' },
+                            { key: 'deduction_type', label: 'Deduction Type' },
+                            { key: 'deduction_code', label: 'Code' },
+                            { key: 'amount', label: 'Amount' },
+                            { key: 'frequency', label: 'Frequency' }
+                          ]}
                         />
                       );
                     }
                     case 'compliance': {
                       const filtered = filterDataBySearch(complianceData, filters.searchTerm);
                       return (
-                        <TraditionalReportTable rows={filtered}
+                        <TraditionalReportTable
+                          rows={filtered}
                           columns={[
+                            { key: 'employee_name', label: 'Employee Name' },
+                            { key: 'compliance_type', label: 'Compliance Type' },
+                            { key: 'reporting_period', label: 'Period' },
+                            { key: 'status', label: 'Status' },
+                            { key: 'due_date', label: 'Due Date' }
+                          ]}
                         />
                       );
                     }
@@ -463,10 +511,3 @@ export default function ReportingClient() {
     </div>
   );
 }
-
-
-
-
-
-
-
