@@ -113,6 +113,11 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
           tenant_id: formData.tenant_id,
           role: formData.role,
           role_level: formData.role_level,
+          full_name: email.split('@')[0], // Use email prefix as placeholder
+          password: Math.random().toString(36).slice(-12), // Temporary password
+          can_invite_users: false,
+          can_manage_sub_clients: false,
+          permission_scope: 'tenant' as const,
         })
         results.push({ email, ...result })
       }
