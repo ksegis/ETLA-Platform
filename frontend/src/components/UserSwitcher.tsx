@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { User, LogIn, LogOut, Loader2 } from 'lucide-react'
+import { createSupabaseBrowserClient } from '../lib/supabase/browser'
+const supabase = createSupabaseBrowserClient()
 import { useAuth } from '../contexts/AuthContext'
 
 interface TestUser {
@@ -103,7 +105,7 @@ export default function UserSwitcher() {
       
       // Sign in as the test user
       console.log(`Attempting to sign in as: ${testUser.email}`)
-      const { error } = await signIn(testUser.email, testUser.password)
+      const { error } = await supabase.auth.signInWithPassword({ email: testUser.email, password: testUser.password })
       
       if (error) {
         console.error('Detailed login error:', {
