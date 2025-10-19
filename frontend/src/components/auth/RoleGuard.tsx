@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "hooks/usePermissions";
+import { useAuth } from "../../contexts/AuthContext";
 import { type Role } from "rbac/constants";
 
 type RoleGuardProps = {
