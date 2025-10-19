@@ -6,7 +6,8 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { useTenant } from '../../contexts/TenantContext';
-import { supabase } from '../../lib/supabase/browser';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser'
+const supabase = createSupabaseBrowserClient();;
 
 interface DashboardMetrics {
   employees: {
