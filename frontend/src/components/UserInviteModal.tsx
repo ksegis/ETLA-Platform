@@ -1,10 +1,10 @@
-﻿'use client'
+'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
+import { Button } from './ui/button'
 import { X, Mail, Building, Shield, Send, Users } from 'lucide-react'
-import { userManagement, supabase, type UserInvitationData } from '@/lib/supabase/browser'
+import { userManagement, supabase, type UserInvitationData } from '../lib/supabase/browser'
 
 interface UserInviteModalProps {
   isOpen: boolean

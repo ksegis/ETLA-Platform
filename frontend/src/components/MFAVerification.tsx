@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from './ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Shield, Smartphone, Key, AlertCircle, ArrowLeft } from 'lucide-react'
-import { supabase } from '@/lib/supabase/browser'
+import { createSupabaseBrowserClient } from '../lib/supabase/browser'
+const supabase = createSupabaseBrowserClient();
 
 interface MFAVerificationProps {
   onSuccess: () => void
