@@ -1,9 +1,9 @@
-Ôªø"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { usePermissions } from "hooks/usePermissions";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import { NoAccessFallback } from "./PermissionGuards"; // (kept; safe if unused)
 import { PERMISSIONS, ROLES, FEATURES } from "rbac/constants";
 
@@ -130,7 +130,7 @@ function normalizeFeatureName(f?: string): string {
 
 function normalizePermissionName(p?: string): string {
   if (!p) return "view";
-  // Don‚Äôt force-case: we pass through because your PERMISSIONS come from "rbac/constants"
+  // Donít force-case: we pass through because your PERMISSIONS come from "rbac/constants"
   return String(p);
 }
 
@@ -271,7 +271,7 @@ export function RouteGuard({
       }
     }
 
-    // 5) Dynamic routes (with parameters) ‚Äî use feature + permission checks
+    // 5) Dynamic routes (with parameters) ó use feature + permission checks
     const dynamicRouteChecks: Array<{ pattern: RegExp; feature: string; permission: string }> = [
       {
         pattern: /^\/work-requests\/[^/]+$/,
@@ -381,8 +381,8 @@ export function withRouteGuard<P extends object>(
 }
 
 /* ------------------------------------------------------------- */
-/* Specific guards ‚Äî now explicit about feature + permission      */
-/* (so they don‚Äôt rely on ‚Äúpermission-only‚Äù legacy behavior)      */
+/* Specific guards ó now explicit about feature + permission      */
+/* (so they donít rely on ìpermission-onlyî legacy behavior)      */
 /* ------------------------------------------------------------- */
 export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   return (
