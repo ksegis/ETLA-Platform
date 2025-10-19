@@ -16,7 +16,8 @@ import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../../../components/ui/dialog';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { useTenant } from '../../../contexts/TenantContext';
-import { supabase } from '../../../lib/supabase/browser';
+import { createSupabaseBrowserClient } from '../../../lib/supabase/browser';
+const supabase = createSupabaseBrowserClient();
 import {
   Plus,
   Search,
