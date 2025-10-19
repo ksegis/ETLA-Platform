@@ -242,7 +242,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isAuthenticated: !!user,
       hasRole,
-      hasRole,
       hasPermission,
       checkPermission,
       checkAnyPermission,
