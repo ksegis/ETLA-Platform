@@ -41,8 +41,8 @@ import {
   Calendar as CalendarIcon,
   FileCheck
 } from 'lucide-react'
-import { Button } from '..\../components/ui/button'
-import { createSupabaseBrowserClient } from '..\../lib/supabase/browser'
+import { Button } from '../components/ui/button'
+import { createSupabaseBrowserClient } from '../lib/supabase/browser'
 const supabase = createSupabaseBrowserClient()
 
 interface DashboardLayoutProps {

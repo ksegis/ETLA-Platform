@@ -21,8 +21,8 @@ import {
   RefreshCw, 
   Settings 
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { useTenant } from '../contexts/TenantContext'
+import { useAuth } from '../../contexts/AuthContext'
+import { useTenant } from '../../contexts/TenantContext'
 import timecardService from 'services/timecardService'
 
 interface TimecardRecalculationToolProps {
