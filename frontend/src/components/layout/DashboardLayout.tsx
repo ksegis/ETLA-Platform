@@ -58,6 +58,7 @@ type NavigationGroup = {
   bgColor: string;
   hoverColor: string;
   textColor: string;
+  defaultExpanded?: boolean;
   items: Array<{ name: string; href: string; icon: any; isNew?: boolean; }>;
 };
 
