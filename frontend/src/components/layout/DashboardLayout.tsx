@@ -54,6 +54,10 @@ type NavigationGroup = {
   id: string;
   title: string;
   icon: any;
+  color: string;
+  bgColor: string;
+  hoverColor: string;
+  textColor: string;
   items: Array<{ name: string; href: string; icon: any; isNew?: boolean; }>;
 };
 
