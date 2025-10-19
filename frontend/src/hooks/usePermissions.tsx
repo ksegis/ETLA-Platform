@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 // src/hooks/usePermissions.tsx
 import { useEffect, useState, ReactNode } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 import { ROLES, FEATURES, CORE_PERMISSIONS, PERMISSIONS, ROLE_MATRIX } from 'rbac/constants';
 
 /* =========================

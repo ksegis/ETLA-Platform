@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Enhanced Tax Records Component with Local Tax Support
  * Features: Federal, state, and local tax breakdown with advanced filtering and export
  */
@@ -6,9 +6,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '..\../components/ui/card';
+import { Button } from '..\../components/ui/button';
+import { Badge } from '..\../components/ui/badge';
 import { exportUtils } from 'utils/exportUtils';
 import { brandingService } from 'services/brandingService';
 import { 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ATS Pipeline Kanban Component
  * Features: Drag-and-drop candidate management, stage progression, and analytics
  */
@@ -6,9 +6,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '..\../components/ui/card';
+import { Button } from '..\../components/ui/button';
+import { Badge } from '..\../components/ui/badge';
 import { 
   Users, 
   Clock, 

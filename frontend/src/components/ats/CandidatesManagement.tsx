@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ATS Candidates Management Component
  * Features: Comprehensive candidate profiles, search, filtering, and bulk operations
  */
@@ -6,9 +6,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '..\../components/ui/card';
+import { Button } from '..\../components/ui/button';
+import { Badge } from '..\../components/ui/badge';
 import { 
   Users, 
   Search, 

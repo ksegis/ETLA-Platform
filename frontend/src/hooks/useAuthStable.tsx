@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-// import { useTenant } from '@/contexts/TenantContext' // TenantContext not available
+import { useAuth } from '../contexts/AuthContext'
+// import { useTenant } from '../contexts/TenantContext' // TenantContext not available
 import { pmbok } from 'services/pmbok_service'
 
 /**
@@ -15,7 +15,7 @@ export function useAuthStable() {
 
   useEffect(() => {
     if (auth.isStable && auth.user) {
-      console.log('🔄 useAuthStable: Syncing PMBOK service with auth context:', {
+      console.log('?? useAuthStable: Syncing PMBOK service with auth context:', {
         userId: auth.user.id,
         userEmail: auth.user?.email,
         tenantId: '54afbd1d-e72a-41e1-9d39-2c8a08a257ff' // Default tenant ID
@@ -24,7 +24,7 @@ export function useAuthStable() {
       // Update PMBOK service with current user context (if method exists)
       // pmbok.updateUserContext(auth.user.id, '54afbd1d-e72a-41e1-9d39-2c8a08a257ff')
     } else if (auth.isStable && !auth.loading) {
-      console.log('⚠️ useAuthStable: Auth stable but missing user, using demo context')
+      console.log('?? useAuthStable: Auth stable but missing user, using demo context')
       // Fallback to demo context for stability
       // pmbok.updateUserContext('demo-user-id', '54afbd1d-e72a-41e1-9d39-2c8a08a257ff')
     }
