@@ -113,8 +113,6 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
           tenant_id: formData.tenant_id,
           role: formData.role,
           role_level: formData.role_level,
-          invited_by_name: currentUserName,
-          tenant_name: tenantData?.name || 'ETLA Platform'
         })
         results.push({ email, ...result })
       }
