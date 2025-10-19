@@ -12,7 +12,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useTenant } from '../../contexts/TenantContext';
-import { createSupabaseBrowserClient } from 'import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 const supabase = createSupabaseBrowserClient();
 import {
   Users,
