@@ -10,7 +10,8 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { supabase } from '../lib/supabase';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser'
+const supabase = createSupabaseBrowserClient();;
 import { exportUtils } from 'utils/exportUtils';
 import { 
   FileText, 
