@@ -4,7 +4,9 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { X, Mail, Building, Shield, Send, Users } from 'lucide-react'
-import { userManagement, supabase, type UserInvitationData } from '../lib/supabase/browser'
+import { createSupabaseBrowserClient } from '../lib/supabase/browser'
+import { userManagement, type UserInvitationData } from 'services/userManagementService'
+const supabase = createSupabaseBrowserClient();
 
 interface UserInviteModalProps {
   isOpen: boolean
