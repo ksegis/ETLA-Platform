@@ -489,7 +489,7 @@ export default function ReportingClient() {
 
       {showFacsimileModal && (
         <PreviewModal
-          isOpen={showFacsimileModal}
+          open={showFacsimileModal}
           onClose={closeFacsimile}
           data={facsimileData}
           type={facsimileType}
