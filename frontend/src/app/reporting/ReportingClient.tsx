@@ -314,6 +314,7 @@ export default function ReportingClient() {
                 </SelectContent>
               </Select>
             </div>
+          )}
 
         </header>
 
