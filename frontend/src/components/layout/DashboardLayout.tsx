@@ -54,7 +54,7 @@ type NavigationGroup = {
   id: string;
   title: string;
   icon: any;
-  items: Array<{ name: string; href: string; icon: any; }>;
+  items: Array<{ name: string; href: string; icon: any; isNew?: boolean; }>;
 };
 
 const navigation = [
