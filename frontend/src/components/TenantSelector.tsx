@@ -15,7 +15,7 @@ export default function TenantSelector() {
   const [isOpen, setIsOpen] = useState(false)
 
   // Don't show selector if user can't select tenants or in demo mode
-  if (!canSelectTenant() || isDemoMode || availableTenants.length <= 1) {
+  if (!canSelectTenant || isDemoMode || availableTenants.length <= 1) {
     return null
   }
 
