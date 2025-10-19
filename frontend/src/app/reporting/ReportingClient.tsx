@@ -314,7 +314,7 @@ export default function ReportingClient() {
                 </SelectContent>
               </Select>
             </div>
-          )}
+      )*/ }
         </header>
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
@@ -368,7 +368,7 @@ export default function ReportingClient() {
                     </div>
                     {renderFilterControls()}
                   </Card>
-                )}
+      )*/ }
               </CardHeader>
               <CardContent>
                 {(() => {
@@ -487,7 +487,7 @@ export default function ReportingClient() {
         </main>
       </div>
 
-      {showFacsimileModal && (
+      {/* showFacsimileModal && (
         <PreviewModal
           open={showFacsimileModal}
           onClose={closeFacsimile}
@@ -495,7 +495,7 @@ export default function ReportingClient() {
           type={facsimileType}
           employee={selectedEmployee}
         />
-      )}
+      )*/ }
 
       {showNewFacsimileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -507,7 +507,7 @@ export default function ReportingClient() {
             <pre>{JSON.stringify(newFacsimileRecord, null, 2)}</pre>
           </div>
         </div>
-      )}
+      )*/ }
     </div>
   );
 }
