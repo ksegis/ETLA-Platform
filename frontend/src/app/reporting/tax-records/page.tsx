@@ -6,9 +6,11 @@ export const fetchCache = 'force-no-store';
 
 import React from 'react'
 import DashboardLayout from '../../../components/layout/DashboardLayout'
+import { useTenant } from '../../../contexts/TenantContext';
 import EnhancedTaxRecordsWithLocalTax from '../../../components/reporting/EnhancedTaxRecordsWithLocalTax'
 
 export default function TaxRecordsPage() {
+  const { tenantId } = useTenant();
   return (
     <DashboardLayout>
       <div className="p-6">
@@ -16,7 +18,7 @@ export default function TaxRecordsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Tax Records</h1>
           <p className="text-gray-600">View and manage employee tax records and withholdings</p>
         </div>
-        <EnhancedTaxRecordsWithLocalTax />
+        <EnhancedTaxRecordsWithLocalTax tenantId={tenantId || ""} />
       </div>
     </DashboardLayout>
   )
