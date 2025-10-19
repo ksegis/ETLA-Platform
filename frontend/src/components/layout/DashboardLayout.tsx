@@ -50,6 +50,15 @@ interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
+type NavigationGroup = {
+  id: string;
+  title: string;
+  icon: any;
+  items: Array<{ name: string; href: string; icon: any; }>;
+};
+  children: React.ReactNode
+}
+
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Work Requests', href: '/work-requests', icon: Briefcase },
