@@ -370,6 +370,7 @@ export default function ReportingClient() {
                     {renderFilterControls()}
                   </Card>
 
+                )}
               </CardHeader>
               <CardContent>
                 {(() => {
