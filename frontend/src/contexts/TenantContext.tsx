@@ -27,7 +27,8 @@ export type TenantContextType = {
   isDemoMode: boolean;
   canSelectTenant: boolean;
 
-  setSelectedTenant: (tenantId: string | null) => void;
+  setSelectedTenant: (tenantId: string | null
+  setTenantId: (id: string | null) => void;) => void;
 
   /** Some components read this exact casing */
   Loading: boolean;
@@ -99,3 +100,4 @@ export function useCurrentTenantId(): string | null {
 }
 export { useTenant as useTenantContext }; // some files import this name
 export default useCurrentTenantId;
+
