@@ -12,7 +12,9 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useTenant } from '../../contexts/TenantContext';
-import { supabase } from '../../lib/supabase/browser';
+import { createSupabaseBrowserClient } from 'import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+const supabase = createSupabaseBrowserClient();';
+const supabase = createSupabaseBrowserClient();
 import {
   Users,
   Briefcase,

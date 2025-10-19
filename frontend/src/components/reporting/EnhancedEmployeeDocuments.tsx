@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Enhanced Employee Documents Component
  * Features: Advanced RBAC, document preview, bulk operations, and audit trail
  */

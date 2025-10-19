@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Employee Documents Component
  * Displays employee documents with filtering, preview, and RBAC enforcement
  */
