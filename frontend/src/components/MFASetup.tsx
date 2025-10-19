@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Shield, Smartphone, Key, Copy, Check, AlertCircle, Download } from 'lucide-react'
-import { supabase } from '../lib/supabase/browser'
+import { createSupabaseBrowserClient } from '../lib/supabase/browser'
 import QRCode from 'qrcode'
 
 interface MFASetupProps {
@@ -419,3 +419,5 @@ Instructions:
 
 
 
+
+const supabase = createSupabaseBrowserClient();
