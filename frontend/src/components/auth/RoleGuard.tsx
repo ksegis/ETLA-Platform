@@ -1,8 +1,8 @@
 import React from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { type RoleKey } from "../../contexts/AuthContext";
+import { type RoleKeyKey } from "../../contexts/AuthContext";
 
-type RoleGuardProps = {
+type RoleKeyGuardProps = {
   allow: RoleKey[];
   fallback?: React.ReactNode;
   children: React.ReactNode;
@@ -14,6 +14,7 @@ export default function RoleGuard({ allow, fallback = null, children }: RoleGuar
   if (!allowed) return <>{fallback}</>;
   return <>{children}</>;
 }
+
 
 
 
