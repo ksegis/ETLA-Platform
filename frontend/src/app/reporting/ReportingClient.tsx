@@ -1,4 +1,4 @@
-// src/app/reporting/ReportingClient.tsx
+﻿// src/app/reporting/ReportingClient.tsx
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -46,10 +46,10 @@ interface EnhancedFilters {
 
 export default function ReportingClient() {
   // New unified contexts
-  const { loading: authLoading } = useAuth();
-  const { tenantId, isDemoMode } = useTenant();
-  const { isMultiTenant } = useMultiTenantMode();
-  const accessibleTenantIds = useAccessibleTenantIds() ?? [];
+  const { loading: authLoading, isDemoMode } = useAuth();
+  const { tenantId, setTenantId } = useTenant();
+  const { isMultiTenant } = useMultiTenantMode(); // shim feeds from Tenant/Auth
+  const accessibleTenantIds = useAccessibleTenantIds() ?? []; // expect [{id,name},...]
 
   const [activeTab, setActiveTab] = useState<string>('employees');
   const [loading, setLoading] = useState<boolean>(false);
@@ -96,6 +96,7 @@ export default function ReportingClient() {
     deductionType: '', complianceType: '', searchTerm: '',
   });
 
+  // Tenant filter (for multi-tenant users)
   const [tenantFilter, setTenantFilter] = useState<string>('');
 
   const getSearchableFields = (tabId: string): string[] => {
@@ -315,7 +316,6 @@ export default function ReportingClient() {
               </Select>
             </div>
           )}
-
         </header>
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
@@ -369,7 +369,6 @@ export default function ReportingClient() {
                     </div>
                     {renderFilterControls()}
                   </Card>
-
                 )}
               </CardHeader>
               <CardContent>
@@ -379,14 +378,24 @@ export default function ReportingClient() {
                       const filtered = filterDataBySearch(employeeData, filters.searchTerm);
                       return (
                         <TraditionalReportTable
-                          rows={filtered}
+                          title="Employees"
+                          data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'employee_code', label: 'Employee Code' },
                             { key: 'position', label: 'Position' },
                             { key: 'home_department', label: 'Department' },
-                            { key: 'pay_type', label: 'Pay Type' }
+                            { key: 'division', label: 'Division' },
+                            { key: 'employment_status', label: 'Status' },
+                            { key: 'hire_date', label: 'Hire Date' },
+                            { key: 'pay_type', label: 'Pay Type' },
                           ]}
+                          onRowClick={(row) => setSelectedEmployee(row as FacsimileEmployee)}
+                          onViewFacsimile={handleViewFacsimile}
+                          onPrintFacsimile={handlePrintFacsimile}
+                          viewMode={getViewMode('employees')}
+                          loading={loading}
+                          error={error}
                         />
                       );
                     }
@@ -394,14 +403,24 @@ export default function ReportingClient() {
                       const filtered = filterDataBySearch(payStatementData, filters.searchTerm);
                       return (
                         <TraditionalReportTable
-                          rows={filtered}
+                          title="Pay Statements"
+                          data={filtered}
                           columns={[
-                            { key: 'check_number', label: 'Check Number' },
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'pay_date', label: 'Pay Date' },
-                            { key: 'gross_pay', label: 'Gross Pay' },
-                            { key: 'net_pay', label: 'Net Pay' }
+                            { key: 'check_number', label: 'check &num;' },
+                            { key: 'pay_period_start', label: 'Period Start' },
+                            { key: 'pay_period_end', label: 'Period End' },
+                            { key: 'gross_pay', label: 'Gross Pay', render: (i) => `$${(i.gross_pay || 0).toFixed(2)}` },
+                            { key: 'net_pay', label: 'Net Pay', render: (i) => `$${(i.net_pay || 0).toFixed(2)}` },
+                            { key: 'check_status', label: 'Status' },
                           ]}
+                          onRowClick={(row) => openFacsimile(row as FacsimilePayStatement, 'pay_statement')}
+                          onViewFacsimile={handleViewFacsimile}
+                          onPrintFacsimile={handlePrintFacsimile}
+                          viewMode={getViewMode('pay-statements')}
+                          loading={loading}
+                          error={error}
                         />
                       );
                     }
@@ -409,14 +428,23 @@ export default function ReportingClient() {
                       const filtered = filterDataBySearch(timecardData, filters.searchTerm);
                       return (
                         <TraditionalReportTable
-                          rows={filtered}
+                          title="Timecards"
+                          data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'work_date', label: 'Work Date' },
                             { key: 'total_hours', label: 'Total Hours' },
-                            { key: 'regular_hours', label: 'Regular Hours' },
-                            { key: 'ot_hours', label: 'OT Hours' }
+                            { key: 'regular_hours', label: 'Regular' },
+                            { key: 'ot_hours', label: 'Overtime' },
+                            { key: 'dt_hours', label: 'Double Time' },
+                            { key: 'is_corrected', label: 'Corrected?' },
                           ]}
+                          onRowClick={(row) => openFacsimile(row as FacsimileTimecard, 'timecard')}
+                          onViewFacsimile={handleViewFacsimile}
+                          onPrintFacsimile={handlePrintFacsimile}
+                          viewMode={getViewMode('timecards')}
+                          loading={loading}
+                          error={error}
                         />
                       );
                     }
@@ -424,14 +452,23 @@ export default function ReportingClient() {
                       const filtered = filterDataBySearch(jobData, filters.searchTerm);
                       return (
                         <TraditionalReportTable
-                          rows={filtered}
+                          title="Jobs"
+                          data={filtered}
                           columns={[
                             { key: 'job_title', label: 'Job Title' },
                             { key: 'job_code', label: 'Job Code' },
                             { key: 'department', label: 'Department' },
+                            { key: 'division', label: 'Division' },
                             { key: 'location', label: 'Location' },
-                            { key: 'status', label: 'Status' }
+                            { key: 'status', label: 'Status' },
+                            { key: 'employee_count', label: 'Employees' },
                           ]}
+                          onRowClick={(row) => console.log('Job row clicked:', row)}
+                          onViewFacsimile={handleViewFacsimile}
+                          onPrintFacsimile={handlePrintFacsimile}
+                          viewMode={getViewMode('jobs')}
+                          loading={loading}
+                          error={error}
                         />
                       );
                     }
@@ -439,14 +476,22 @@ export default function ReportingClient() {
                       const filtered = filterDataBySearch(taxData, filters.searchTerm);
                       return (
                         <TraditionalReportTable
-                          rows={filtered}
+                          title="Tax Records"
+                          data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
                             { key: 'tax_year', label: 'Tax Year' },
                             { key: 'form_type', label: 'Form Type' },
-                            { key: 'wages_tips_compensation', label: 'Wages' },
-                            { key: 'federal_income_tax_withheld', label: 'Federal Tax' }
+                            { key: 'filing_status', label: 'Filing Status' },
+                            { key: 'document_status', label: 'Document Status' },
+                            { key: 'issue_date', label: 'Issue Date' },
                           ]}
+                          onRowClick={(row) => openFacsimile(row as FacsimileTaxRecord, 'tax_w2')}
+                          onViewFacsimile={handleViewFacsimile}
+                          onPrintFacsimile={handlePrintFacsimile}
+                          viewMode={getViewMode('tax-records')}
+                          loading={loading}
+                          error={error}
                         />
                       );
                     }
@@ -454,14 +499,22 @@ export default function ReportingClient() {
                       const filtered = filterDataBySearch(benefitData, filters.searchTerm);
                       return (
                         <TraditionalReportTable
-                          rows={filtered}
+                          title="Benefits & Deductions"
+                          data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'deduction_type', label: 'Deduction Type' },
+                            { key: 'deduction_type', label: 'Type' },
                             { key: 'deduction_code', label: 'Code' },
-                            { key: 'amount', label: 'Amount' },
-                            { key: 'frequency', label: 'Frequency' }
+                            { key: 'amount', label: 'Amount', render: (i) => `$${(i.amount || 0).toFixed(2)}` },
+                            { key: 'frequency', label: 'Frequency' },
+                            { key: 'effective_date', label: 'Effective Date' },
                           ]}
+                          onRowClick={(row) => console.log('Benefit row clicked:', row)}
+                          onViewFacsimile={handleViewFacsimile}
+                          onPrintFacsimile={handlePrintFacsimile}
+                          viewMode={getViewMode('benefits-deductions')}
+                          loading={loading}
+                          error={error}
                         />
                       );
                     }
@@ -469,14 +522,22 @@ export default function ReportingClient() {
                       const filtered = filterDataBySearch(complianceData, filters.searchTerm);
                       return (
                         <TraditionalReportTable
-                          rows={filtered}
+                          title="Compliance"
+                          data={filtered}
                           columns={[
                             { key: 'employee_name', label: 'Employee Name' },
-                            { key: 'compliance_type', label: 'Compliance Type' },
+                            { key: 'compliance_type', label: 'Type' },
                             { key: 'reporting_period', label: 'Period' },
                             { key: 'status', label: 'Status' },
-                            { key: 'due_date', label: 'Due Date' }
+                            { key: 'filing_date', label: 'Filing Date' },
+                            { key: 'due_date', label: 'Due Date' },
                           ]}
+                          onRowClick={(row) => console.log('Compliance row clicked:', row)}
+                          onViewFacsimile={handleViewFacsimile}
+                          onPrintFacsimile={handlePrintFacsimile}
+                          viewMode={getViewMode('compliance')}
+                          loading={loading}
+                          error={error}
                         />
                       );
                     }
@@ -489,15 +550,15 @@ export default function ReportingClient() {
         </main>
       </div>
 
-      {/* showFacsimileModal && (
+      {showFacsimileModal && (
         <PreviewModal
-          open={showFacsimileModal}
+          isOpen={showFacsimileModal}
           onClose={closeFacsimile}
           data={facsimileData}
           type={facsimileType}
           employee={selectedEmployee}
         />
-
+      )}
 
       {showNewFacsimileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -509,7 +570,10 @@ export default function ReportingClient() {
             <pre>{JSON.stringify(newFacsimileRecord, null, 2)}</pre>
           </div>
         </div>
-
+      )}
     </div>
   );
 }
+
+
+
