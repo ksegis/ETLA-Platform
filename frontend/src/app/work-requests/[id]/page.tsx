@@ -1,4 +1,4 @@
-'use client';
+ï»¿'use client';
 
 'use client'
 
@@ -645,7 +645,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                           <div>
                             <p className="font-medium text-gray-900">{attachment.filename}</p>
                             <p className="text-sm text-gray-500">
-                              {formatFileSize(attachment.size)} • Uploaded {formatDate(attachment.uploadedAt)}
+                              {formatFileSize(attachment.size)} ï¿½ Uploaded {formatDate(attachment.uploadedAt)}
                             </p>
                           </div>
                         </div>
