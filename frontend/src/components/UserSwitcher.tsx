@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { User, LogIn, LogOut, Loader2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 
 interface TestUser {
   email: string
