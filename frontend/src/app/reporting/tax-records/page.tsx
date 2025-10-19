@@ -16,7 +16,7 @@ export default function TaxRecordsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Tax Records</h1>
           <p className="text-gray-600">View and manage employee tax records and withholdings</p>
         </div>
-        <EnhancedTaxRecordsWithLocalTax taxRecords={[]} />
+        <EnhancedTaxRecordsWithLocalTax />
       </div>
     </DashboardLayout>
   )
