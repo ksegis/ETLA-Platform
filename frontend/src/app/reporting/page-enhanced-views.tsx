@@ -822,13 +822,13 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
-            data={filteredData}
+ rows={filteredData}
             columns={employeeColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+
+))}
             title="Employee Directory"
-            onExportCSV={() => downloadCSV(filteredData, 'enhanced_employees')}
-            onExportJSON={() => downloadJSON(filteredData, 'enhanced_employees')}
+
+
           />
         ) : (
           <div className="grid gap-4">
@@ -898,13 +898,13 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
-            data={filteredData}
+ rows={filteredData}
             columns={payStatementColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+
+))}
             title="Pay Statements"
-            onExportCSV={() => downloadCSV(filteredData, 'enhanced_pay_statements')}
-            onExportJSON={() => downloadJSON(filteredData, 'enhanced_pay_statements')}
+
+
           />
         ) : (
           <div className="grid gap-4">
@@ -994,13 +994,13 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
-            data={filteredData}
+ rows={filteredData}
             columns={timecardColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+
+))}
             title="Timecards"
-            onExportCSV={() => downloadCSV(filteredData, 'enhanced_timecards')}
-            onExportJSON={() => downloadJSON(filteredData, 'enhanced_timecards')}
+
+
           />
         ) : (
           <div className="grid gap-4">
@@ -1081,13 +1081,13 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
-            data={filteredData}
+ rows={filteredData}
             columns={jobColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+
+))}
             title="Job Catalog"
-            onExportCSV={() => downloadCSV(filteredData, 'job_catalog')}
-            onExportJSON={() => downloadJSON(filteredData, 'job_catalog')}
+
+
           />
         ) : (
           <div className="grid gap-4">
@@ -1155,13 +1155,13 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
-            data={filteredData}
+ rows={filteredData}
             columns={taxColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+
+))}
             title="Tax Records"
-            onExportCSV={() => downloadCSV(filteredData, 'tax_records')}
-            onExportJSON={() => downloadJSON(filteredData, 'tax_records')}
+
+
           />
         ) : (
           <div className="grid gap-4">
@@ -1239,13 +1239,13 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
-            data={filteredData}
+ rows={filteredData}
             columns={benefitColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+
+))}
             title="Benefits & Deductions"
-            onExportCSV={() => downloadCSV(filteredData, 'benefits_deductions')}
-            onExportJSON={() => downloadJSON(filteredData, 'benefits_deductions')}
+
+
           />
         ) : (
           <div className="grid gap-4">
@@ -1321,13 +1321,13 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
-            data={filteredData}
+ rows={filteredData}
             columns={complianceColumns}
-            searchTerm={filters.searchTerm}
-            onSearch={(term: any) => setFilters(prev => ({ ...prev, searchTerm: term }))}
+
+))}
             title="Compliance Reports"
-            onExportCSV={() => downloadCSV(filteredData, 'compliance_reports')}
-            onExportJSON={() => downloadJSON(filteredData, 'compliance_reports')}
+
+
           />
         ) : (
           <div className="grid gap-4">
