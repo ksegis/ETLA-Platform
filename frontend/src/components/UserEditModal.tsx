@@ -75,7 +75,7 @@ export default function UserEditModal({ isOpen, onClose, onSuccess, user, tenant
         phone: user.phone || '',
         department: user.department || '',
         job_title: user.job_title || '',
-        role: user?.role ?? currentUserRole,
+        role: user?.role ?? 'user',
         role_level: user.role_level,
         tenant_id: user.tenant_id,
         is_active: user.is_active,
