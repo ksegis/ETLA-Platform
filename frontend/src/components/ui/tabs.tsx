@@ -1,8 +1,8 @@
-"use client";
+ï»¿"use client";
 
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { cn } from "../../lib/utils"; // or replace cn with a no-op: (…classes: string[]) => classes.filter(Boolean).join(" ")
+import { cn } from "../../lib/utils"; // or replace cn with a no-op: (ï¿½classes: string[]) => classes.filter(Boolean).join(" ")
 
 export const Tabs = TabsPrimitive.Root;
 
@@ -50,6 +50,7 @@ export const TabsContent = React.forwardRef<
   />
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
+
 
 
 
