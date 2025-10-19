@@ -107,7 +107,8 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
       // Send invitations one by one using the new sendInvitation method
       const results = []
       for (const email of validEmails) {
-        const result = await userManagement.sendInvitation({
+        // TODO: Implement invitation functionality
+        const result = await userManagement.createUser({
           email: email,
           tenant_id: formData.tenant_id,
           role: formData.role,
