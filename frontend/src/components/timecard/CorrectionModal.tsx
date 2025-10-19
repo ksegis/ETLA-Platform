@@ -9,7 +9,7 @@ import { Textarea } from '../ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { AlertTriangle, Clock } from 'lucide-react'
 import timecardService, { TimecardDailySummaryV2, TimecardCorrectionData } from 'services/timecardService'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface CorrectionModalProps {
   isOpen: boolean
