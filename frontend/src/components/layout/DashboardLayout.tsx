@@ -82,6 +82,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['operations', 'etl-cockpit', 'talent', 'questionnaires'])
+
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(groupId)
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    )
+  }
   const router = useRouter()
   const pathname = usePathname()
 
