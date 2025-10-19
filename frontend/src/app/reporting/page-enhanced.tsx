@@ -7,7 +7,8 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useTenant } from '../../contexts/TenantContext';
-import { supabase } from '../../lib/supabase/browser';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+const supabase = createSupabaseBrowserClient();
 
 // Enhanced interfaces for the new database schema
 interface EnhancedEmployee {
