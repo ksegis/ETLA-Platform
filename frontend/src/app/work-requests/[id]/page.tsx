@@ -1,12 +1,12 @@
-﻿'use client';
+'use client';
 
 'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Calendar, Clock, DollarSign, User, MessageCircle, Paperclip, Edit, CheckCircle, XCircle, AlertCircle, Loader2, Building, Phone, Mail, MapPin, Tag, FileText, TrendingUp, AlertTriangle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '../../../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card'
 import { pmbok } from 'services/pmbok_service'
 import type { WorkRequest } from 'services/pmbok_service'
 
@@ -213,7 +213,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
     try {
       setloading(true)
       setError(null)
-      console.log('🔍 loading work request:', requestId)
+      console.log('?? loading work request:', requestId)
 
       if (useRealData) {
         // TRY TO LOAD REAL DATA FIRST
@@ -238,25 +238,25 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
             }
 
             setRequest(enhancedRequest)
-            console.log('✅ Real work request loaded and enhanced:', enhancedRequest)
+            console.log('? Real work request loaded and enhanced:', enhancedRequest)
             return
           }
         } catch (realDataError) {
-          console.warn('⚠️ Failed to load real data, falling back to mock:', realDataError)
+          console.warn('?? Failed to load real data, falling back to mock:', realDataError)
         }
       }
 
       // FALLBACK TO MOCK DATA IF REAL DATA FAILS OR NOT FOUND
       if (requestId === '1' || !useRealData) {
         setRequest(mockRequest)
-        console.log('✅ Mock work request loaded:', mockRequest)
+        console.log('? Mock work request loaded:', mockRequest)
       } else {
         setError('Work request not found')
-        console.error('❌ Work request not found:', requestId)
+        console.error('? Work request not found:', requestId)
       }
 
     } catch (error) {
-      console.error('❌ Error loading work request:', error)
+      console.error('? Error loading work request:', error)
       setError('Failed to load work request')
     } finally {
       setloading(false)
@@ -284,9 +284,9 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
       } : null)
 
       setNewComment('')
-      console.log('✅ Comment added successfully')
+      console.log('? Comment added successfully')
     } catch (error) {
-      console.error('❌ Error adding comment:', error)
+      console.error('? Error adding comment:', error)
       alert('Failed to add comment. Please try again.')
     } finally {
       setIsAddingComment(false)
@@ -645,7 +645,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                           <div>
                             <p className="font-medium text-gray-900">{attachment.filename}</p>
                             <p className="text-sm text-gray-500">
-                              {formatFileSize(attachment.size)} • Uploaded {formatDate(attachment.uploadedAt)}
+                              {formatFileSize(attachment.size)} � Uploaded {formatDate(attachment.uploadedAt)}
                             </p>
                           </div>
                         </div>
