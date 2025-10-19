@@ -822,13 +822,8 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
- rows={filteredData}
+            rows={filteredData}
             columns={employeeColumns}
-
-))}
-            title="Employee Directory"
-
-
           />
         ) : (
           <div className="grid gap-4">
@@ -898,13 +893,8 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
- rows={filteredData}
+            rows={filteredData}
             columns={payStatementColumns}
-
-))}
-            title="Pay Statements"
-
-
           />
         ) : (
           <div className="grid gap-4">
@@ -994,13 +984,8 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
- rows={filteredData}
+            rows={filteredData}
             columns={timecardColumns}
-
-))}
-            title="Timecards"
-
-
           />
         ) : (
           <div className="grid gap-4">
@@ -1081,13 +1066,8 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
- rows={filteredData}
+            rows={filteredData}
             columns={jobColumns}
-
-))}
-            title="Job Catalog"
-
-
           />
         ) : (
           <div className="grid gap-4">
@@ -1155,13 +1135,8 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
- rows={filteredData}
+            rows={filteredData}
             columns={taxColumns}
-
-))}
-            title="Tax Records"
-
-
           />
         ) : (
           <div className="grid gap-4">
@@ -1239,13 +1214,8 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
- rows={filteredData}
+            rows={filteredData}
             columns={benefitColumns}
-
-))}
-            title="Benefits & Deductions"
-
-
           />
         ) : (
           <div className="grid gap-4">
@@ -1321,13 +1291,8 @@ const EnhancedReportingPage: React.FC = () => {
         
         {currentViewMode === 'list' ? (
           <TraditionalReportTable
- rows={filteredData}
+            rows={filteredData}
             columns={complianceColumns}
-
-))}
-            title="Compliance Reports"
-
-
           />
         ) : (
           <div className="grid gap-4">
