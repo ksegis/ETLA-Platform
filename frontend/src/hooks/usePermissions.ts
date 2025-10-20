@@ -48,7 +48,9 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
     role: ROLES.TENANT_ADMIN,
     permissions: Object.values(FEATURES).map((feature) => ({ feature, permission: CORE_PERMISSIONS.MANAGE })),
   },
-      { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+  [ROLES.CLIENT_ADMIN]: {
+    role: ROLES.CLIENT_ADMIN,
+    permissions: [
       { feature: FEATURES.ACCESS_CONTROL, permission: CORE_PERMISSIONS.VIEW },
       { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
       { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.MANAGE },
