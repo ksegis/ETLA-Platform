@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -9,10 +10,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { 
-  Users, 
-  Search, 
-  Filter, 
+import {
+  Users,
+  Search,
+  Filter,
   Plus,
   Download,
   Upload,
@@ -43,55 +44,62 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+// Candidate Document Interface
+interface CandidateDocument {
+  fileName: string;
+  url: string;
+  type: string;
+}
+
+// Candidate Address Interface
+interface CandidateAddress {
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
 interface Candidate {
   id: string;
   name: string;
   email: string;
-  phone?: string;
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
-  jobLocation?: string;
-  requisitionId?: string;
-  requisitionDescription?: string;
-  current_position?: string;
-  current_company?: string;
-  experience_years: number;
-  education: string;
-  skills: string[];
-  rating: number;
-  status: 'active' | 'on_hold' | 'rejected' | 'hired';
-  source: string;
-  applied_date: string;
-  last_activity: string;
-  salary_expectation?: number;
+  phone: string;
+  address: CandidateAddress;
+  jobLocation: string;
+  requisitionId: string;
+  requisitionDescription: string;
+  title: string;
+  company: string;
+  experience: string;
+  expectedSalary: number;
+  currentSalary: number;
   availability: string;
-  notes?: string;
-  documents?: Array<{
-    fileName: string;
-    url: string;
-    type: string;
+  status: 'active' | 'on_hold' | 'rejected' | 'hired';
+  rating: number;
+  skills: string[];
+  education: Array<{
+    degree: string;
+    school: string;
+    year: string;
+    gpa: string;
   }>;
-  portfolio_url?: string;
-  linkedin_url?: string;
-  github_url?: string;
+  workHistory: Array<{
+    title: string;
+    company: string;
+    duration: string;
+    description: string;
+  }>;
+  certifications: string[];
+  languages: string[];
+  portfolio: string;
+  github: string;
+  linkedin: string;
+  documents: CandidateDocument[];
+  notes: string;
+  source: string;
+  addedDate: string;
+  lastContact: string;
   tags: string[];
-  applications: Array<{
-    job_id: string;
-    job_title: string;
-    stage: string;
-    applied_date: string;
-  }>;
-  interviews: Array<{
-    id: string;
-    type: string;
-    date: string;
-    status: string;
-    feedback?: string;
-  }>;
 }
 
 interface CandidatesManagementProps {
@@ -112,14 +120,14 @@ export default function CandidatesManagement({
   jobId
 }: CandidatesManagementProps) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loading, setloading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [skillFilter, setSkillFilter] = useState<string>('');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [experienceFilter, setExperienceFilter] = useState<string>('all');
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<keyof Candidate>('applied_date');
+  const [sortBy, setSortBy] = useState<keyof Candidate>('addedDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Mock data - replace with actual API call
@@ -139,43 +147,51 @@ export default function CandidatesManagement({
         jobLocation: 'San Francisco, CA',
         requisitionId: 'REQ001',
         requisitionDescription: 'Lead engineer for cloud-native applications.',
-        current_position: 'Senior Software Engineer',
-        current_company: 'TechCorp Inc.',
-        experience_years: 8,
-        education: 'MS Computer Science, Stanford University',
-        skills: ['React', 'TypeScript', 'Node.js', 'Python', 'AWS'],
-        rating: 4.8,
-        status: 'active',
-        source: 'LinkedIn',
-        applied_date: '2024-01-15',
-        last_activity: '2024-01-20',
-        salary_expectation: 150000,
+        title: 'Senior Software Engineer',
+        company: 'TechCorp Inc.',
+        experience: '8 years',
+        expectedSalary: 150000,
+        currentSalary: 140000,
         availability: 'Immediate',
-        notes: 'Strong technical background with leadership experience',
+        status: 'active',
+        rating: 4.8,
+        skills: ['React', 'TypeScript', 'Node.js', 'Python', 'AWS'],
+        education: [
+          {
+            degree: 'MS Computer Science',
+            school: 'Stanford University',
+            year: '2019',
+            gpa: '3.8'
+          }
+        ],
+        workHistory: [
+          {
+            title: 'Senior Software Engineer',
+            company: 'TechCorp Inc.',
+            duration: '2022 - Present',
+            description: 'Lead development of microservices architecture'
+          },
+          {
+            title: 'Software Engineer',
+            company: 'StartupXYZ',
+            duration: '2019 - 2022',
+            description: 'Full-stack development using React and Node.js'
+          }
+        ],
+        certifications: ['AWS Solutions Architect', 'Certified Kubernetes Administrator'],
+        languages: ['English (Native)', 'Spanish (Conversational)'],
+        portfolio: 'https://sarahjohnson.dev',
+        github: 'https://github.com/sarahjohnson',
+        linkedin: 'https://linkedin.com/in/sarahjohnson',
         documents: [
           { fileName: 'sarah-johnson-resume.pdf', url: '/resumes/sarah-johnson.pdf', type: 'application/pdf' },
           { fileName: 'sarah-johnson-coverletter.docx', url: '/resumes/sarah-johnson-coverletter.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
         ],
-        linkedin_url: 'https://linkedin.com/in/sarahjohnson',
-        github_url: 'https://github.com/sarahjohnson',
+        notes: 'Strong technical background with leadership experience',
+        source: 'LinkedIn',
+        addedDate: '2024-01-15',
+        lastContact: '2024-01-20',
         tags: ['senior', 'full-stack', 'leadership'],
-        applications: [
-          {
-            job_id: 'job1',
-            job_title: 'Senior Full Stack Developer',
-            stage: 'Technical Interview',
-            applied_date: '2024-01-15'
-          }
-        ],
-        interviews: [
-          {
-            id: 'int1',
-            type: 'Phone Screen',
-            date: '2024-01-18',
-            status: 'completed',
-            feedback: 'Excellent communication skills and technical knowledge'
-          }
-        ]
       },
       {
         id: '2',
@@ -191,47 +207,56 @@ export default function CandidatesManagement({
         jobLocation: 'New York, NY',
         requisitionId: 'REQ002',
         requisitionDescription: 'Product vision and roadmap for new SaaS offering.',
-        current_position: 'Product Manager',
-        current_company: 'StartupXYZ',
-        experience_years: 5,
-        education: 'MBA, Wharton School',
-        skills: ['Product Strategy', 'Agile', 'Data Analysis', 'SQL'],
-        rating: 4.5,
-        status: 'active',
-        source: 'Company Website',
-        applied_date: '2024-01-12',
-        last_activity: '2024-01-19',
-        salary_expectation: 120000,
+        title: 'Product Manager',
+        company: 'StartupXYZ',
+        experience: '5 years',
+        expectedSalary: 120000,
+        currentSalary: 110000,
         availability: '2 weeks notice',
-        notes: 'Strong product sense with startup experience',
+        status: 'active',
+        rating: 4.5,
+        skills: ['Product Strategy', 'Agile', 'Data Analysis', 'SQL'],
+        education: [
+          {
+            degree: 'MBA',
+            school: 'Wharton School',
+            year: '2018',
+            gpa: '3.9'
+          }
+        ],
+        workHistory: [
+          {
+            title: 'Senior Product Manager',
+            company: 'Innovation Labs',
+            duration: '2021 - Present',
+            description: 'Led product strategy for B2B SaaS platform'
+          },
+          {
+            title: 'Product Manager',
+            company: 'TechGiant',
+            duration: '2018 - 2021',
+            description: 'Managed mobile app product line'
+          }
+        ],
+        certifications: ['Certified Scrum Product Owner', 'Google Analytics Certified'],
+        languages: ['English (Native)', 'Mandarin (Native)', 'Japanese (Basic)'],
+        portfolio: 'https://michaelchen.pm',
+        github: '',
+        linkedin: 'https://linkedin.com/in/michaelchen',
         documents: [
           { fileName: 'michael-chen-resume.pdf', url: '/resumes/michael-chen.pdf', type: 'application/pdf' },
         ],
-        linkedin_url: 'https://linkedin.com/in/michaelchen',
+        notes: 'Strong product sense with startup experience',
+        source: 'Company Website',
+        addedDate: '2024-01-12',
+        lastContact: '2024-01-19',
         tags: ['product', 'startup', 'analytics'],
-        applications: [
-          {
-            job_id: 'job2',
-            job_title: 'Senior Product Manager',
-            stage: 'Final Interview',
-            applied_date: '2024-01-12'
-          }
-        ],
-        interviews: [
-          {
-            id: 'int2',
-            type: 'Product Case Study',
-            date: '2024-01-16',
-            status: 'completed',
-            feedback: 'Great strategic thinking and problem-solving approach'
-          }
-        ]
       }
     ];
 
     setTimeout(() => {
       setCandidates(mockCandidates);
-      setloading(false);
+      setLoading(false);
     }, 1000);
   }, []);
 
@@ -258,9 +283,11 @@ export default function CandidatesManagement({
       filtered = filtered.filter(candidate =>
         candidate.name.toLowerCase().includes(term) ||
         candidate.email.toLowerCase().includes(term) ||
-        candidate.current_company?.toLowerCase().includes(term) ||
-        candidate.current_position?.toLowerCase().includes(term) ||
-        candidate.skills.some(skill => skill.toLowerCase().includes(term))
+        candidate.company.toLowerCase().includes(term) ||
+        candidate.title.toLowerCase().includes(term) ||
+        candidate.skills.some(skill => skill.toLowerCase().includes(term)) ||
+        candidate.requisitionDescription.toLowerCase().includes(term) ||
+        candidate.jobLocation.toLowerCase().includes(term)
       );
     }
 
@@ -269,8 +296,8 @@ export default function CandidatesManagement({
     }
 
     if (skillFilter) {
-      filtered = filtered.filter(candidate => 
-        candidate.skills.some(skill => 
+      filtered = filtered.filter(candidate =>
+        candidate.skills.some(skill =>
           skill.toLowerCase().includes(skillFilter.toLowerCase())
         )
       );
@@ -283,10 +310,11 @@ export default function CandidatesManagement({
     if (experienceFilter !== 'all') {
       const [min, max] = experienceFilter.split('-').map(Number);
       filtered = filtered.filter(candidate => {
+        const experienceYears = parseInt(candidate.experience);
         if (max) {
-          return candidate.experience_years >= min && candidate.experience_years <= max;
+          return experienceYears >= min && experienceYears <= max;
         } else {
-          return candidate.experience_years >= min;
+          return experienceYears >= min;
         }
       });
     }
@@ -341,294 +369,143 @@ export default function CandidatesManagement({
       case 'hired':
         return 'outline';
       default:
-        return 'outline';
+        return 'secondary';
     }
   };
 
-  // Render star rating
-  const renderStarRating = (rating: number) => {
-    return (
-      <div className="flex items-center">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-4 w-4 ${
-              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-            }`}
-          />
-        ))}
-        <span className="ml-1 text-sm text-gray-600">({rating})</span>
-      </div>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Candidates</h2>
-          <p className="text-gray-600">
-            {filteredCandidates.length} candidate{filteredCandidates.length !== 1 ? 's' : ''} found
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Candidate
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Name, email, company..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="on_hold">On Hold</option>
-              <option value="rejected">Rejected</option>
-              <option value="hired">Hired</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Skills</label>
-            <input
-              type="text"
-              placeholder="Filter by skills..."
-              value={skillFilter}
-              onChange={(e) => setSkillFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-            <select
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Sources</option>
-              {uniqueSources.map(source => (
-                <option key={source} value={source}>{source}</option>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-1 items-center space-x-2">
+          <Input
+            placeholder="Search candidates..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="on_hold">On Hold</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="hired">Hired</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={skillFilter} onValueChange={setSkillFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by Skill" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Skills</SelectItem>
+              {uniqueSkills.map(skill => (
+                <SelectItem key={skill} value={skill}>{skill}</SelectItem>
               ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Experience</label>
-            <select
-              value={experienceFilter}
-              onChange={(e) => setExperienceFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Levels</option>
-              <option value="0-2">0-2 years</option>
-              <option value="3-5">3-5 years</option>
-              <option value="6-10">6-10 years</option>
-              <option value="10">10+ years</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [field, order] = e.target.value.split('-');
-                setSortBy(field as keyof Candidate);
-                setSortOrder(order as 'asc' | 'desc');
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="applied_date-desc">Latest Applied</option>
-              <option value="applied_date-asc">Earliest Applied</option>
-              <option value="name-asc">Name A-Z</option>
-              <option value="name-desc">Name Z-A</option>
-              <option value="rating-desc">Highest Rated</option>
-              <option value="rating-asc">Lowest Rated</option>
-            </select>
-          </div>
+            </SelectContent>
+          </Select>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sources</SelectItem>
+              {uniqueSources.map(source => (
+                <SelectItem key={source} value={source}>{source}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={experienceFilter} onValueChange={setExperienceFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by Experience" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Experience</SelectItem>
+              <SelectItem value="0-1">0-1 Years</SelectItem>
+              <SelectItem value="1-3">1-3 Years</SelectItem>
+              <SelectItem value="3-5">3-5 Years</SelectItem>
+              <SelectItem value="5-10">5-10 Years</SelectItem>
+              <SelectItem value="10-">10+ Years</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={() => {
+            setSearchTerm('');
+            setStatusFilter('all');
+            setSkillFilter('');
+            setSourceFilter('all');
+            setExperienceFilter('all');
+          }}>
+            Reset Filters
+          </Button>
         </div>
-      </Card>
-
-      {/* Bulk Actions */}
-      {showBulkActions && selectedCandidates.length > 0 && (
-        <Card className="p-4 bg-blue-50 border-blue-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-blue-900">
-                {selectedCandidates.length} candidate{selectedCandidates.length !== 1 ? 's' : ''} selected
-              </span>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Email
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Tag className="h-4 w-4 mr-2" />
-                  Add Tags
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedCandidates([])}
-            >
-              Clear Selection
+        {showBulkActions && (
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" disabled={selectedCandidates.length === 0}>
+              <Download className="mr-2 h-4 w-4" /> Export Selected
+            </Button>
+            <Button variant="outline" disabled={selectedCandidates.length === 0}>
+              <Mail className="mr-2 h-4 w-4" /> Email Selected
+            </Button>
+            <Button variant="destructive" disabled={selectedCandidates.length === 0}>
+              <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
             </Button>
           </div>
-        </Card>
-      )}
+        )}
+      </div>
 
-      {/* Candidates List */}
-      <div className="space-y-4">
-        {filteredCandidates.map((candidate) => (
-          <Card key={candidate.id} className="hover:shadow-md transition-shadow">
-            <div className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4 flex-1">
-                  {showBulkActions && (
-                    <div className="flex items-center pt-1">
-                      <input
-                        type="checkbox"
-                        checked={selectedCandidates.includes(candidate.id)}
-                        onChange={() => handleCandidateSelect(candidate.id)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{candidate.name}</h3>
-                      <Badge variant={getStatusBadgeVariant(candidate.status)}>
-                        {candidate.status.replace('_', ' ')}
-                      </Badge>
-                      {renderStarRating(candidate.rating)}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-4 w-4" />
-                        <span>{candidate.email}</span>
-                      </div>
-                      {candidate.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-4 w-4" />
-                          <span>{candidate.phone}</span>
-                        </div>
-                      )}
-                      {candidate.location && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          <span>{candidate.location}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>Applied {new Date(candidate.applied_date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    {candidate.current_position && candidate.current_company && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
-                        <Briefcase className="h-4 w-4" />
-                        <span>{candidate.current_position} at {candidate.current_company}</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                      <GraduationCap className="h-4 w-4" />
-                      <span>{candidate.education}</span>
-                    </div>
-
-                    {/* Skills */}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {candidate.skills.slice(0, 5).map((skill, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {candidate.skills.length > 5 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{candidate.skills.length - 5} more
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Applications */}
-                    {candidate.applications.length > 0 && (
-                      <div className="text-sm text-gray-600">
-                        <span className="font-medium">Current Applications:</span>
-                        {candidate.applications.map((app, index) => (
-                          <span key={index} className="ml-2">
-                            {app.job_title} ({app.stage})
-                            {index < candidate.applications.length - 1 && ', '}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+      {loading ? (
+        <div className="text-center py-8">Loading candidates...</div>
+      ) : filteredCandidates.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">No candidates found matching your criteria.</div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredCandidates.map(candidate => (
+            <Card key={candidate.id} className="relative">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                    checked={selectedCandidates.includes(candidate.id)}
+                    onChange={() => handleCandidateSelect(candidate.id)}
+                  />
+                  <CardTitle className="text-lg font-bold">{candidate.name}</CardTitle>
                 </div>
-
-                <div className="flex items-center gap-2 ml-4">
-                  {candidate.resume_url && (
-                    <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {candidate.linkedin_url && (
-                    <Button variant="outline" size="sm">
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm">
-                    <MessageSquare className="h-4 w-4" />
-                  </Button>
+                <Badge variant={getStatusBadgeVariant(candidate.status)}>{candidate.status}</Badge>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center text-sm text-gray-500">
+                  <Briefcase className="mr-2 h-4 w-4" /> {candidate.title} at {candidate.company}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <MapPin className="mr-2 h-4 w-4" /> {candidate.jobLocation}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Mail className="mr-2 h-4 w-4" /> {candidate.email}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Phone className="mr-2 h-4 w-4" /> {candidate.phone}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <FileText className="mr-2 h-4 w-4" /> Req ID: {candidate.requisitionId}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Clock className="mr-2 h-4 w-4" /> Experience: {candidate.experience}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <DollarSign className="mr-2 h-4 w-4" /> Expected: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(candidate.expectedSalary)}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Star className="mr-2 h-4 w-4 text-yellow-400" /> Rating: {candidate.rating}/5
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {candidate.skills.map(skill => (
+                    <Badge key={skill} variant="outline">{skill}</Badge>
+                  ))}
+                </div>
+                <div className="flex justify-end space-x-2 mt-4">
                   <Button variant="outline" size="sm" onClick={() => onCandidateEdit?.(candidate)}>
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -636,21 +513,81 @@ export default function CandidatesManagement({
                     <Eye className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {filteredCandidates.length === 0 && (
-        <Card>
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No candidates found</h3>
-            <p className="text-gray-600">Try adjusting your filters or search terms.</p>
-          </div>
-        </Card>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="border rounded-md">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                    checked={selectedCandidates.length === filteredCandidates.length && filteredCandidates.length > 0}
+                    onChange={handleSelectAll}
+                  />
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" onClick={() => setSortBy('name')}>
+                  Name {sortBy === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" onClick={() => setSortBy('title')}>
+                  Job Title {sortBy === 'title' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" onClick={() => setSortBy('jobLocation')}>
+                  Location {sortBy === 'jobLocation' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" onClick={() => setSortBy('status')}>
+                  Status {sortBy === 'status' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" onClick={() => setSortBy('rating')}>
+                  Rating {sortBy === 'rating' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredCandidates.map(candidate => (
+                <tr key={candidate.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox h-4 w-4 text-blue-600"
+                      checked={selectedCandidates.includes(candidate.id)}
+                      onChange={() => handleCandidateSelect(candidate.id)}
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{candidate.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{candidate.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{candidate.jobLocation}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <Badge variant={getStatusBadgeVariant(candidate.status)}>{candidate.status}</Badge>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${i < candidate.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                      />
+                    ))}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Button variant="ghost" size="sm" onClick={() => onCandidateSelect?.(candidate)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onCandidateEdit?.(candidate)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 }
+
