@@ -6,7 +6,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 // import type { SupabaseClient } from '@supabase/supabase-js';
 
 export function createSupabaseServerClient(/* : SupabaseClient */) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
