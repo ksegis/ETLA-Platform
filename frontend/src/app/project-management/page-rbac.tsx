@@ -56,7 +56,7 @@ export default function ProjectManagementPageRBAC() {
   const canManage = (feature: Feature) =>
     checkAnyPermission(feature, [
       PERMISSIONS.CREATE,
-      PERMISSIONS.EDIT,
+      PERMISSIONS.UPDATE,
       PERMISSIONS.DELETE,
       PERMISSIONS.APPROVE,
     ]);
