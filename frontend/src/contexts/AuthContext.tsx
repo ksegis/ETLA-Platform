@@ -242,6 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isStable,
       loading,
       isAuthenticated: !!user,
+      isDemoMode: false, // TODO: Implement demo mode logic
       hasRole,
       hasPermission,
       checkPermission,
