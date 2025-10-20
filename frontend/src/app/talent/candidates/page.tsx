@@ -46,7 +46,15 @@ const MOCK_CANDIDATES = [
     name: 'Sarah Johnson',
     email: 'sarah.johnson@email.com',
     phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
+    address: {
+      street: '123 Main St',
+      city: 'San Francisco',
+      state: 'CA',
+      zip: '94105',
+    },
+    jobLocation: 'San Francisco, CA',
+    requisitionId: 'REQ001',
+    requisitionDescription: 'Lead engineer for cloud-native applications.',
     title: 'Senior Software Engineer',
     company: 'Tech Corp',
     experience: '5 years',
@@ -83,7 +91,10 @@ const MOCK_CANDIDATES = [
     portfolio: 'https://sarahjohnson.dev',
     github: 'https://github.com/sarahjohnson',
     linkedin: 'https://linkedin.com/in/sarahjohnson',
-    resumeUrl: '/resumes/sarah-johnson.pdf',
+    documents: [
+      { fileName: 'sarah-johnson-resume.pdf', url: '/resumes/sarah-johnson.pdf', type: 'application/pdf' },
+      { fileName: 'sarah-johnson-coverletter.docx', url: '/resumes/sarah-johnson-coverletter.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+    ],
     notes: 'Excellent technical skills, strong leadership potential',
     source: 'LinkedIn',
     addedDate: '2024-09-15',
@@ -95,7 +106,15 @@ const MOCK_CANDIDATES = [
     name: 'Michael Chen',
     email: 'michael.chen@email.com',
     phone: '+1 (555) 234-5678',
-    location: 'New York, NY',
+    address: {
+      street: '456 Oak Ave',
+      city: 'New York',
+      state: 'NY',
+      zip: '10001',
+    },
+    jobLocation: 'New York, NY',
+    requisitionId: 'REQ002',
+    requisitionDescription: 'Product vision and roadmap for new SaaS offering.',
     title: 'Product Manager',
     company: 'Innovation Labs',
     experience: '7 years',
@@ -138,7 +157,9 @@ const MOCK_CANDIDATES = [
     portfolio: 'https://michaelchen.pm',
     github: '',
     linkedin: 'https://linkedin.com/in/michaelchen',
-    resumeUrl: '/resumes/michael-chen.pdf',
+    documents: [
+      { fileName: 'michael-chen-resume.pdf', url: '/resumes/michael-chen.pdf', type: 'application/pdf' },
+    ],
     notes: 'Outstanding product sense, proven track record of successful launches',
     source: 'Company Website',
     addedDate: '2024-09-10',
@@ -150,7 +171,15 @@ const MOCK_CANDIDATES = [
     name: 'Emily Rodriguez',
     email: 'emily.rodriguez@email.com',
     phone: '+1 (555) 345-6789',
-    location: 'Austin, TX',
+    address: {
+      street: '789 Pine Ln',
+      city: 'Austin',
+      state: 'TX',
+      zip: '78701',
+    },
+    jobLocation: 'Austin, TX',
+    requisitionId: 'REQ003',
+    requisitionDescription: 'Design user experiences for mobile platforms.',
     title: 'UX Designer',
     company: 'Design Studio',
     experience: '4 years',
@@ -187,7 +216,10 @@ const MOCK_CANDIDATES = [
     portfolio: 'https://emilyrodriguez.design',
     github: '',
     linkedin: 'https://linkedin.com/in/emilyrodriguez',
-    resumeUrl: '/resumes/emily-rodriguez.pdf',
+    documents: [
+      { fileName: 'emily-rodriguez-resume.pdf', url: '/resumes/emily-rodriguez.pdf', type: 'application/pdf' },
+      { fileName: 'emily-rodriguez-portfolio.zip', url: '/resumes/emily-rodriguez-portfolio.zip', type: 'application/zip' },
+    ],
     notes: 'Creative portfolio, strong user research background',
     source: 'Referral',
     addedDate: '2024-09-05',
@@ -201,7 +233,15 @@ interface Candidate {
   name: string;
   email: string;
   phone: string;
-  location: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+  jobLocation: string;
+  requisitionId: string;
+  requisitionDescription: string;
   title: string;
   company: string;
   experience: string;
@@ -228,7 +268,11 @@ interface Candidate {
   portfolio: string;
   github: string;
   linkedin: string;
-  resumeUrl: string;
+  documents: Array<{
+    fileName: string;
+    url: string;
+    type: string;
+  }>;
   notes: string;
   source: string;
   addedDate: string;

@@ -48,7 +48,15 @@ interface Candidate {
   name: string;
   email: string;
   phone?: string;
-  location?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+  jobLocation?: string;
+  requisitionId?: string;
+  requisitionDescription?: string;
   current_position?: string;
   current_company?: string;
   experience_years: number;
@@ -62,7 +70,11 @@ interface Candidate {
   salary_expectation?: number;
   availability: string;
   notes?: string;
-  resume_url?: string;
+  documents?: Array<{
+    fileName: string;
+    url: string;
+    type: string;
+  }>;
   portfolio_url?: string;
   linkedin_url?: string;
   github_url?: string;
@@ -118,7 +130,15 @@ export default function CandidatesManagement({
         name: 'Sarah Johnson',
         email: 'sarah.johnson@email.com',
         phone: '+1 (555) 123-4567',
-        location: 'San Francisco, CA',
+        address: {
+          street: '123 Main St',
+          city: 'San Francisco',
+          state: 'CA',
+          zip: '94105',
+        },
+        jobLocation: 'San Francisco, CA',
+        requisitionId: 'REQ001',
+        requisitionDescription: 'Lead engineer for cloud-native applications.',
         current_position: 'Senior Software Engineer',
         current_company: 'TechCorp Inc.',
         experience_years: 8,
@@ -132,7 +152,10 @@ export default function CandidatesManagement({
         salary_expectation: 150000,
         availability: 'Immediate',
         notes: 'Strong technical background with leadership experience',
-        resume_url: '/resumes/sarah-johnson.pdf',
+        documents: [
+          { fileName: 'sarah-johnson-resume.pdf', url: '/resumes/sarah-johnson.pdf', type: 'application/pdf' },
+          { fileName: 'sarah-johnson-coverletter.docx', url: '/resumes/sarah-johnson-coverletter.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+        ],
         linkedin_url: 'https://linkedin.com/in/sarahjohnson',
         github_url: 'https://github.com/sarahjohnson',
         tags: ['senior', 'full-stack', 'leadership'],
@@ -159,7 +182,15 @@ export default function CandidatesManagement({
         name: 'Michael Chen',
         email: 'michael.chen@email.com',
         phone: '+1 (555) 987-6543',
-        location: 'New York, NY',
+        address: {
+          street: '456 Oak Ave',
+          city: 'New York',
+          state: 'NY',
+          zip: '10001',
+        },
+        jobLocation: 'New York, NY',
+        requisitionId: 'REQ002',
+        requisitionDescription: 'Product vision and roadmap for new SaaS offering.',
         current_position: 'Product Manager',
         current_company: 'StartupXYZ',
         experience_years: 5,
@@ -173,7 +204,9 @@ export default function CandidatesManagement({
         salary_expectation: 120000,
         availability: '2 weeks notice',
         notes: 'Strong product sense with startup experience',
-        resume_url: '/resumes/michael-chen.pdf',
+        documents: [
+          { fileName: 'michael-chen-resume.pdf', url: '/resumes/michael-chen.pdf', type: 'application/pdf' },
+        ],
         linkedin_url: 'https://linkedin.com/in/michaelchen',
         tags: ['product', 'startup', 'analytics'],
         applications: [
