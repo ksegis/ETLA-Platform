@@ -14,12 +14,13 @@ export type Tenant = { id: string; name: string };
 
 export type TenantContextType = {
   currentTenantId: string | null;
+  setTenantId: (id: string | null) => void;
   currentTenant: Tenant | null;
 
   /** legacy aliases used around the app */
   selectedTenant: Tenant | null;        // alias of currentTenant
-  tenantId: string | null;              // alias of currentTenantId
-  setTenantId: (id: string | null) => void;
+  tenantId: string | null;
+  setTenantId: (id: string | null) => void;              // alias of currentTenantId
 
   availableTenants: Tenant[];
 
@@ -28,8 +29,7 @@ export type TenantContextType = {
   isDemoMode: boolean;
   canSelectTenant: boolean;
 
-  setSelectedTenant: (tenantId: string | null
-  setTenantId: (id: string | null) => void;) => void;
+  setSelectedTenant: (tenantId: string | null) => void;
 
   /** Some components read this exact casing */
   Loading: boolean;
