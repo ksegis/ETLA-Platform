@@ -1,4 +1,4 @@
-﻿// src/lib/supabase/server.ts
+// src/lib/supabase/server.ts
 import 'server-only';
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
@@ -28,5 +28,6 @@ export function createSupabaseServerClient(/* : SupabaseClient */) {
     }
   );
 }
+
 
 
