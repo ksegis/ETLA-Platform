@@ -5,7 +5,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 // If you want an explicit return type:
 // import type { SupabaseClient } from '@supabase/supabase-js';
 
-export function createSupabaseServerClient(/* : SupabaseClient */) {
+export async function createSupabaseServerClient(/* : SupabaseClient */) {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -28,6 +28,7 @@ export function createSupabaseServerClient(/* : SupabaseClient */) {
     }
   );
 }
+
 
 
 
