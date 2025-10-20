@@ -55,6 +55,7 @@ export type AuthContextType = {
   isStable: boolean;
   loading: boolean;
   isAuthenticated: boolean;
+  isDemoMode: boolean;
   hasRole: (role: RoleKey) => boolean;
   hasPermission: (feature: Feature, permission: Permission) => boolean;
   checkPermission: (feature: Feature, permission?: Permission) => boolean;
