@@ -287,6 +287,7 @@ const MOCK_CANDIDATES: Candidate[] = [
   }
 ];
 
+
 export default function CandidatesPage() {
   const { selectedTenant } = useTenant();
   const [candidates, setCandidates] = useState<Candidate[]>(MOCK_CANDIDATES);
