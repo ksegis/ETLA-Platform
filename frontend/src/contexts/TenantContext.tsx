@@ -81,6 +81,7 @@ export function TenantProvider({
       isDemoMode: demoMode,
       canSelectTenant: true,
       setSelectedTenant,
+      setTenantId: setSelectedTenant, // Alias for compatibility
       Loading,
     };
   }, [availableTenants, currentTenantId, demoMode, setSelectedTenant, Loading]);
