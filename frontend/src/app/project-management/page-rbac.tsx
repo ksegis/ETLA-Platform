@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FEATURES, PERMISSIONS, ROLES, type Feature } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
