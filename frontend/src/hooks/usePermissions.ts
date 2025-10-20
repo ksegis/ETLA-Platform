@@ -41,10 +41,10 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
       { feature: FEATURES.ANALYTICS, permission: CORE_PERMISSIONS.VIEW },
       { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
       { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE_PERMISSIONS.VIEW },
-      { feature: FEATURES.DATA_VALIDATION, permission: CORE_PERMISSIONS.VIEW },
-    ],
-  },
-
+      { feature: FEATURES.DATA_VALIDATION, permission: CORE_PERMISSIONS.VIEW },  },
+  [ROLES.TENANT_ADMIN]: {
+    role: ROLES.TENANT_ADMIN,
+    permissions: Object.values(FEATURES).map((feature) => ({ feature, permission: CORE_PERMISSIONS.MANAGE })),
   [ROLES.CLIENT_ADMIN]: {
     role: ROLES.CLIENT_ADMIN,
     permissions: [
@@ -368,6 +368,7 @@ export function usePermissions() {
 }
 
 export default usePermissions;
+
 
 
 
