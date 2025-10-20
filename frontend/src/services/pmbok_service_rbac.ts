@@ -1,4 +1,4 @@
-﻿import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
+import { createSupabaseBrowserClient } from '../lib/supabase/browser'
 import { withPermissionCheck, ServiceAuth, getServiceAuthContext } from 'utils/serviceAuth'
 import { FEATURES, PERMISSIONS } from 'rbac/constants/index'
 import type { WorkRequest, ProjectCharter, Risk } from 'types'
@@ -22,7 +22,7 @@ class PMBOKServiceRBAC {
   constructor() {
     // Create Supabase client with environment variables
     this.supabase = createSupabaseBrowserClient()
-    console.log('🔧 PMBOK Service RBAC: Created with default demo context')
+    console.log('?? PMBOK Service RBAC: Created with default demo context')
   }
 
   // Initialize with user context (called after auth is stable)
@@ -31,16 +31,16 @@ class PMBOKServiceRBAC {
       this.currentUserId = userId
       this.currentTenantId = tenantId
       this.isInitialized = true
-      console.log('✅ PMBOK Service RBAC: Initialized with user context:', { userId, tenantId })
+      console.log('? PMBOK Service RBAC: Initialized with user context:', { userId, tenantId })
     } else {
-      console.log('⚠️ PMBOK Service RBAC: Using demo context - no user/tenant provided')
+      console.log('?? PMBOK Service RBAC: Using demo context - no user/tenant provided')
     }
   }
 
   // Update user context when auth changes
   updateUserContext(userId: string, tenantId: string) {
     if (this.currentUserId !== userId || this.currentTenantId !== tenantId) {
-      console.log('🔄 PMBOK Service RBAC: Updating user context:', { 
+      console.log('?? PMBOK Service RBAC: Updating user context:', { 
         from: { userId: this.currentUserId, tenantId: this.currentTenantId },
         to: { userId, tenantId }
       })
@@ -57,8 +57,8 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 loading work requests from database...')
-          console.log('🏢 Current context:', { 
+          console.log('?? loading work requests from database...')
+          console.log('?? Current context:', { 
             userId: this.currentUserId, 
             tenantId: this.currentTenantId,
             initialized: this.isInitialized 
@@ -71,15 +71,15 @@ class PMBOKServiceRBAC {
             .order('created_at', { ascending: false })
 
           if (error) {
-            console.error('❌ Error fetching work requests:', error)
+            console.error('? Error fetching work requests:', error)
             return []
           }
 
-          console.log('✅ Work requests loaded successfully:', workRequests?.length || 0)
+          console.log('? Work requests loaded successfully:', workRequests?.length || 0)
           return await this.handleMissingCustomers(workRequests || [])
 
         } catch (error) {
-          console.error('❌ Exception in getWorkRequests:', error)
+          console.error('? Exception in getWorkRequests:', error)
           return []
         }
       }
@@ -92,7 +92,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.CREATE,
       async () => {
         try {
-          console.log('📝 Creating new work request:', workRequest.title)
+          console.log('?? Creating new work request:', workRequest.title)
 
           const newWorkRequest = {
             ...workRequest,
@@ -112,15 +112,15 @@ class PMBOKServiceRBAC {
             .single()
 
           if (error) {
-            console.error('❌ Error creating work request:', error)
+            console.error('? Error creating work request:', error)
             return null
           }
 
-          console.log('✅ Work request created successfully:', data.id)
+          console.log('? Work request created successfully:', data.id)
           return data
 
         } catch (error) {
-          console.error('❌ Exception in createWorkRequest:', error)
+          console.error('? Exception in createWorkRequest:', error)
           return null
         }
       }
@@ -133,7 +133,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.UPDATE,
       async () => {
         try {
-          console.log('📝 Updating work request:', id)
+          console.log('?? Updating work request:', id)
 
           const { data, error } = await this.supabase
             .from('work_requests')
@@ -147,15 +147,15 @@ class PMBOKServiceRBAC {
             .single()
 
           if (error) {
-            console.error('❌ Error updating work request:', error)
+            console.error('? Error updating work request:', error)
             return null
           }
 
-          console.log('✅ Work request updated successfully:', id)
+          console.log('? Work request updated successfully:', id)
           return data
 
         } catch (error) {
-          console.error('❌ Exception in updateWorkRequest:', error)
+          console.error('? Exception in updateWorkRequest:', error)
           return null
         }
       }
@@ -168,7 +168,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.UPDATE,
       async () => {
         try {
-          console.log('✅ Approving work request:', id)
+          console.log('? Approving work request:', id)
 
           const { error } = await this.supabase
             .from('work_requests')
@@ -182,15 +182,15 @@ class PMBOKServiceRBAC {
             .eq('tenant_id', this.currentTenantId)
 
           if (error) {
-            console.error('❌ Error approving work request:', error)
+            console.error('? Error approving work request:', error)
             return false
           }
 
-          console.log('✅ Work request approved successfully:', id)
+          console.log('? Work request approved successfully:', id)
           return true
 
         } catch (error) {
-          console.error('❌ Exception in approveWorkRequest:', error)
+          console.error('? Exception in approveWorkRequest:', error)
           return false
         }
       }
@@ -203,7 +203,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.UPDATE,
       async () => {
         try {
-          console.log('❌ Declining work request:', id)
+          console.log('? Declining work request:', id)
 
           const { error } = await this.supabase
             .from('work_requests')
@@ -218,15 +218,15 @@ class PMBOKServiceRBAC {
             .eq('tenant_id', this.currentTenantId)
 
           if (error) {
-            console.error('❌ Error declining work request:', error)
+            console.error('? Error declining work request:', error)
             return false
           }
 
-          console.log('✅ Work request declined successfully:', id)
+          console.log('? Work request declined successfully:', id)
           return true
 
         } catch (error) {
-          console.error('❌ Exception in declineWorkRequest:', error)
+          console.error('? Exception in declineWorkRequest:', error)
           return false
         }
       }
@@ -240,7 +240,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 loading project charters from database...')
+          console.log('?? loading project charters from database...')
 
           const { data: projects, error } = await this.supabase
             .from('project_charters')
@@ -249,15 +249,15 @@ class PMBOKServiceRBAC {
             .order('created_at', { ascending: false })
 
           if (error) {
-            console.error('❌ Error fetching project charters:', error)
+            console.error('? Error fetching project charters:', error)
             return []
           }
 
-          console.log('✅ Project charters loaded successfully:', projects?.length || 0)
+          console.log('? Project charters loaded successfully:', projects?.length || 0)
           return projects || []
 
         } catch (error) {
-          console.error('❌ Exception in getProjects:', error)
+          console.error('? Exception in getProjects:', error)
           return []
         }
       }
@@ -270,7 +270,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.CREATE,
       async () => {
         try {
-          console.log('📝 Creating new project charter:', charter.title)
+          console.log('?? Creating new project charter:', charter.title)
 
           const newCharter = {
             ...charter,
@@ -288,15 +288,15 @@ class PMBOKServiceRBAC {
             .single()
 
           if (error) {
-            console.error('❌ Error creating project charter:', error)
+            console.error('? Error creating project charter:', error)
             return null
           }
 
-          console.log('✅ Project charter created successfully:', data.id)
+          console.log('? Project charter created successfully:', data.id)
           return data
 
         } catch (error) {
-          console.error('❌ Exception in createProjectCharter:', error)
+          console.error('? Exception in createProjectCharter:', error)
           return null
         }
       }
@@ -310,7 +310,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 loading risks from database...')
+          console.log('?? loading risks from database...')
 
           const { data: risks, error } = await this.supabase
             .from('risk_register')
@@ -319,15 +319,15 @@ class PMBOKServiceRBAC {
             .order('created_at', { ascending: false })
 
           if (error) {
-            console.error('❌ Error fetching risks:', error)
+            console.error('? Error fetching risks:', error)
             return []
           }
 
-          console.log('✅ Risks loaded successfully:', risks?.length || 0)
+          console.log('? Risks loaded successfully:', risks?.length || 0)
           return risks || []
 
         } catch (error) {
-          console.error('❌ Exception in getRisks:', error)
+          console.error('? Exception in getRisks:', error)
           return []
         }
       }
@@ -340,7 +340,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.CREATE,
       async () => {
         try {
-          console.log('📝 Creating new risk:', risk.title)
+          console.log('?? Creating new risk:', risk.title)
 
           const newRisk = {
             ...risk,
@@ -358,15 +358,15 @@ class PMBOKServiceRBAC {
             .single()
 
           if (error) {
-            console.error('❌ Error creating risk:', error)
+            console.error('? Error creating risk:', error)
             return null
           }
 
-          console.log('✅ Risk created successfully:', data.id)
+          console.log('? Risk created successfully:', data.id)
           return data
 
         } catch (error) {
-          console.error('❌ Exception in createRisk:', error)
+          console.error('? Exception in createRisk:', error)
           return null
         }
       }
@@ -380,7 +380,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('🔍 loading users from database...')
+          console.log('?? loading users from database...')
 
           const { data: users, error } = await this.supabase
             .from('tenant_users')
@@ -396,15 +396,15 @@ class PMBOKServiceRBAC {
             .order('created_at', { ascending: false })
 
           if (error) {
-            console.error('❌ Error fetching users:', error)
+            console.error('? Error fetching users:', error)
             return []
           }
 
-          console.log('✅ Users loaded successfully:', users?.length || 0)
+          console.log('? Users loaded successfully:', users?.length || 0)
           return users || []
 
         } catch (error) {
-          console.error('❌ Exception in getUsers:', error)
+          console.error('? Exception in getUsers:', error)
           return []
         }
       }
@@ -418,7 +418,7 @@ class PMBOKServiceRBAC {
       PERMISSIONS.VIEW,
       async () => {
         try {
-          console.log('📊 loading dashboard data...')
+          console.log('?? loading dashboard data...')
 
           const [workRequests, projects, risks] = await Promise.all([
             this.getWorkRequests(),
@@ -449,11 +449,11 @@ class PMBOKServiceRBAC {
             }
           }
 
-          console.log('✅ Dashboard data loaded successfully')
+          console.log('? Dashboard data loaded successfully')
           return dashboardData
 
         } catch (error) {
-          console.error('❌ Exception in getDashboardData:', error)
+          console.error('? Exception in getDashboardData:', error)
           return {
             workRequests: { total: 0, pending: 0, approved: 0, declined: 0 },
             projects: { total: 0, active: 0, completed: 0 },
@@ -469,7 +469,7 @@ class PMBOKServiceRBAC {
     const customerIds = Array.from(new Set(workRequests.map((wr: any) => wr.customer_id).filter(Boolean)))
     
     if (customerIds.length === 0) {
-      console.log('⚠️ No customer IDs found in work requests')
+      console.log('?? No customer IDs found in work requests')
       return workRequests.map((wr: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
@@ -477,21 +477,21 @@ class PMBOKServiceRBAC {
     }
 
     try {
-      console.log('👥 Fetching customer information for IDs:', customerIds)
+      console.log('?? Fetching customer information for IDs:', customerIds)
       const { data: profiles, error } = await this.supabase
         .from('profiles')
         .select('id, name, email')
         .in('id', customerIds)
 
       if (error) {
-        console.error('❌ Error fetching customer profiles:', error)
+        console.error('? Error fetching customer profiles:', error)
         return workRequests.map((wr: any) => ({
           ...wr,
           customer_name: 'Unknown Customer'
         }))
       }
 
-      console.log('✅ Profile query succeeded, found:', profiles?.length || 0, 'profiles')
+      console.log('? Profile query succeeded, found:', profiles?.length || 0, 'profiles')
       
       // Create customer lookup map
       const customerMap = new Map()
@@ -506,7 +506,7 @@ class PMBOKServiceRBAC {
       }))
 
     } catch (error) {
-      console.error('❌ Exception during customer lookup:', error)
+      console.error('? Exception during customer lookup:', error)
       return workRequests.map((wr: any) => ({
         ...wr,
         customer_name: 'Unknown Customer'
@@ -589,6 +589,7 @@ export const pmbokRBAC = new PMBOKServiceRBAC()
 
 // Export the service class for type checking
 export default PMBOKServiceRBAC
+
 
 
 
