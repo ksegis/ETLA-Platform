@@ -54,11 +54,11 @@ export default function ProjectManagementPageRBAC() {
     checkPermission(`${feature}:${PERMISSIONS.VIEW}`);
 
   const canManage = (feature: Feature) =>
-    checkAnyPermission([
-      `${feature}:${PERMISSIONS.CREATE}`,
-      `${feature}:${PERMISSIONS.EDIT}`,
-      `${feature}:${PERMISSIONS.DELETE}`,
-      `${feature}:${PERMISSIONS.APPROVE}`,
+    checkAnyPermission(feature, [
+      PERMISSIONS.CREATE,
+      PERMISSIONS.EDIT,
+      PERMISSIONS.DELETE,
+      PERMISSIONS.APPROVE,
     ]);
 
   // Narrow constants to Feature to satisfy <PermissionGuard feature={...}>
