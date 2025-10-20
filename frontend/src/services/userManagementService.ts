@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '../lib/supabase/server';
+﻿import { createSupabaseServerClient } from '../lib/supabase/server';
 
 // User creation data interface
 export interface UserCreationData {
@@ -56,7 +56,7 @@ export const userManagement = {
   createUser: async (userData: UserCreationData) => {
     try {
       // First, create the auth user
-      const supabase = createSupabaseServerClient();
+      const supabase = await createSupabaseServerClient();
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: userData.email,
         password: userData.password,
@@ -139,7 +139,7 @@ export const userManagement = {
       
       for (const email of invitationData.emails) {
         // Create invitation record
-        const supabase = createSupabaseServerClient();
+        const supabase = await createSupabaseServerClient();
         const { data: invitation, error: inviteError } = await supabase
           .from('user_invitations')
           .insert({
@@ -196,7 +196,7 @@ export const userManagement = {
 
   // Update user information
   updateUser: async (userId: string, updateData: UserUpdateData) => {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     try {
       const { error } = await supabase
         .from('profiles')
@@ -218,7 +218,7 @@ export const userManagement = {
 
   // Deactivate user
   deactivateUser: async (userId: string) => {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     try {
       const { error } = await supabase
         .from('profiles')
@@ -240,7 +240,7 @@ export const userManagement = {
 
   // Activate user
   activateUser: async (userId: string) => {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     try {
       const { error } = await supabase
         .from('profiles')
@@ -262,7 +262,7 @@ export const userManagement = {
 
   // Reset user password
   resetUserPassword: async (email: string, newPassword?: string) => {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     try {
       if (newPassword) {
         // Direct password reset (admin function)
@@ -305,7 +305,7 @@ export const userManagement = {
 
   // Preview cleanup operations
   previewUserCleanup: async (options: CleanupOptions) => {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     try {
       let inactiveUsers = 0
       let unconfirmedUsers = 0
@@ -359,7 +359,7 @@ export const userManagement = {
 
   // Execute cleanup operations
   executeUserCleanup: async (options: CleanupOptions) => {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     try {
       let deletedInactiveUsers = 0
       let deletedUnconfirmedUsers = 0
@@ -406,6 +406,7 @@ export const userManagement = {
     }
   }
 }
+
 
 
 
