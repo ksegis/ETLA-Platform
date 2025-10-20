@@ -20,7 +20,6 @@ export type TenantContextType = {
   /** legacy aliases used around the app */
   selectedTenant: Tenant | null;        // alias of currentTenant
   tenantId: string | null;
-  setTenantId: (id: string | null) => void;              // alias of currentTenantId
 
   availableTenants: Tenant[];
 
