@@ -1,8 +1,8 @@
-﻿// src/hooks/usePermissions.ts
+// src/hooks/usePermissions.ts
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 
 
