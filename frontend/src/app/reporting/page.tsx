@@ -713,7 +713,8 @@ const EnhancedReportingPage: React.FC = () => {
     if (!tenantloading && (isDemoMode || selectedTenant || accessibleTenantIds.length > 0)) {
       loadTabData(activeTab);
     }
-  }, [activeTab, tenantloading, isDemoMode, selectedTenant?.id, accessibleTenantIds.length, loadTabData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, tenantloading, isDemoMode, selectedTenant?.id, accessibleTenantIds.length]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

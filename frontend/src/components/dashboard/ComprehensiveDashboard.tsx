@@ -353,6 +353,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
   useEffect(() => {
     loadDashboardMetrics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTenant, selectedTimeframe, tenantloading, isDemoMode, tenantId]);
 
   if (loading) {
