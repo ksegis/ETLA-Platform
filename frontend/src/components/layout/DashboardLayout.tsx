@@ -281,15 +281,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Filter groups/items by *feature access* to avoid permission-only false negatives
   const filteredNavigationGroups = useMemo(() => {
     if (permissionsloading) return []
+    if (!navigationGroups || !canAccessFeature) return []
 
     return navigationGroups
       .map((group) => {
-        const items = group.items.filter((item) =>
-          canAccessFeature(featureForHref(item.href))
-        )
+        if (!group || !group.items) return { ...group, items: [] }
+        const items = group.items.filter((item) => {
+          if (!item || !item.href) return false
+          return canAccessFeature(featureForHref(item.href))
+        })
         return { ...group, items }
       })
-      .filter((g) => g.items.length > 0)
+      .filter((g) => g && g.items && g.items.length > 0)
   }, [permissionsloading, canAccessFeature, navigationGroups])
 
   if (permissionsloading) {
