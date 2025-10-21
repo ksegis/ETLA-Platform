@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FEATURES, PERMISSIONS, ROLES, type Feature } from "@/rbac/constants";
 import { pmbokRBAC } from "@/services/pmbok_service_rbac";
@@ -388,9 +389,7 @@ export default function ProjectManagementPageRBAC() {
                                     Status: {wr.status}
                                   </p>
                                 </div>
-                                <WorkRequestApproveButton
-                                  workRequest={wr}
-                                  onClick={() => {
+                                <WorkRequestApproveButton                                  onClick={() => {
                                     setSelectedWorkRequest(wr);
                                     setShowApprovalModal(true);
                                   }}
@@ -438,7 +437,7 @@ export default function ProjectManagementPageRBAC() {
                               >
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900">
-                                    {project.name}
+                                    {project.project_name || project.title}
                                   </p>
                                   <p className="text-sm text-gray-500">
                                     Status: {project.status}
@@ -478,10 +477,10 @@ export default function ProjectManagementPageRBAC() {
                               >
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900">
-                                    {risk.name}
+                                    {risk.risk_title || risk.title}
                                   </p>
                                   <p className="text-sm text-gray-500">
-                                    Severity: {risk.severity}
+                                    Severity: {risk.risk_level || risk.status}
                                   </p>
                                 </div>
                                 {/* Add risk specific actions here */}
@@ -519,4 +518,10 @@ export default function ProjectManagementPageRBAC() {
     </RouteGuard>
   );
 }
+
+
+
+
+
+
 

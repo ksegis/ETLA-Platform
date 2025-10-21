@@ -18,6 +18,7 @@ import {
   Plus,
   MoreVertical,
   User,
+  Users,
   Calendar,
   MapPin,
   DollarSign,
@@ -682,4 +683,5 @@ export default function CandidatesPage() {
     </DashboardLayout>
   );
 }
+
 
