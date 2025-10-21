@@ -175,6 +175,7 @@ export function usePermissions() {
     if (isDemoMode) return true;
     if (!isAuthenticated || !tenantUser) return false;
     if ((tenantUser.role as Role) === ROLES.HOST_ADMIN) return true;
+    if (!userPermissions || !Array.isArray(userPermissions)) return false;
     const normalized = normalizePermission(permission);
     return userPermissions.some((p) => p.feature === feature && normalizePermission(p.permission) === normalized);
   }
@@ -193,6 +194,7 @@ export function usePermissions() {
   }
 
   function checkAnyPermission(feature: Feature, permissions: Permission[]) {
+    if (!permissions || !Array.isArray(permissions)) return false;
     return permissions.some((perm) => hasPermission(feature, perm));
   }
 
