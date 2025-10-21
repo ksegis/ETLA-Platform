@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -11,14 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  MoreVertical, 
-  User, 
-  Calendar, 
-  MapPin, 
+import {
+  Search,
+  Filter,
+  Plus,
+  MoreVertical,
+  User,
+  Calendar,
+  MapPin,
   DollarSign,
   Clock,
   Star,
@@ -39,14 +40,80 @@ import {
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 
+// Candidate Document Interface
+interface CandidateDocument {
+  fileName: string;
+  url: string;
+  type: string;
+}
+
+// Candidate Address Interface
+interface CandidateAddress {
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
+interface Candidate {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: CandidateAddress;
+  jobLocation: string;
+  requisitionId: string;
+  requisitionDescription: string;
+  title: string;
+  company: string;
+  experience: string;
+  expectedSalary: number;
+  currentSalary: number;
+  availability: string;
+  status: string;
+  rating: number;
+  skills: string[];
+  education: Array<{
+    degree: string;
+    school: string;
+    year: string;
+    gpa: string;
+  }>;
+  workHistory: Array<{
+    title: string;
+    company: string;
+    duration: string;
+    description: string;
+  }>;
+  certifications: string[];
+  languages: string[];
+  portfolio: string;
+  github: string;
+  linkedin: string;
+  documents: CandidateDocument[];
+  notes: string;
+  source: string;
+  addedDate: string;
+  lastContact: string;
+  tags: string[];
+}
+
 // Mock candidate data
-const MOCK_CANDIDATES = [
+const MOCK_CANDIDATES: Candidate[] = [
   {
     id: '1',
     name: 'Sarah Johnson',
     email: 'sarah.johnson@email.com',
     phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
+    address: {
+      street: '123 Main St',
+      city: 'San Francisco',
+      state: 'CA',
+      zip: '94105',
+    },
+    jobLocation: 'San Francisco, CA',
+    requisitionId: 'REQ001',
+    requisitionDescription: 'Lead engineer for cloud-native applications.',
     title: 'Senior Software Engineer',
     company: 'Tech Corp',
     experience: '5 years',
@@ -83,7 +150,10 @@ const MOCK_CANDIDATES = [
     portfolio: 'https://sarahjohnson.dev',
     github: 'https://github.com/sarahjohnson',
     linkedin: 'https://linkedin.com/in/sarahjohnson',
-    resumeUrl: '/resumes/sarah-johnson.pdf',
+    documents: [
+      { fileName: 'sarah-johnson-resume.pdf', url: '/resumes/sarah-johnson.pdf', type: 'application/pdf' },
+      { fileName: 'sarah-johnson-coverletter.docx', url: '/resumes/sarah-johnson-coverletter.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+    ],
     notes: 'Excellent technical skills, strong leadership potential',
     source: 'LinkedIn',
     addedDate: '2024-09-15',
@@ -95,7 +165,15 @@ const MOCK_CANDIDATES = [
     name: 'Michael Chen',
     email: 'michael.chen@email.com',
     phone: '+1 (555) 234-5678',
-    location: 'New York, NY',
+    address: {
+      street: '456 Oak Ave',
+      city: 'New York',
+      state: 'NY',
+      zip: '10001',
+    },
+    jobLocation: 'New York, NY',
+    requisitionId: 'REQ002',
+    requisitionDescription: 'Product vision and roadmap for new SaaS offering.',
     title: 'Product Manager',
     company: 'Innovation Labs',
     experience: '7 years',
@@ -138,7 +216,9 @@ const MOCK_CANDIDATES = [
     portfolio: 'https://michaelchen.pm',
     github: '',
     linkedin: 'https://linkedin.com/in/michaelchen',
-    resumeUrl: '/resumes/michael-chen.pdf',
+    documents: [
+      { fileName: 'michael-chen-resume.pdf', url: '/resumes/michael-chen.pdf', type: 'application/pdf' },
+    ],
     notes: 'Outstanding product sense, proven track record of successful launches',
     source: 'Company Website',
     addedDate: '2024-09-10',
@@ -150,7 +230,15 @@ const MOCK_CANDIDATES = [
     name: 'Emily Rodriguez',
     email: 'emily.rodriguez@email.com',
     phone: '+1 (555) 345-6789',
-    location: 'Austin, TX',
+    address: {
+      street: '789 Pine Ln',
+      city: 'Austin',
+      state: 'TX',
+      zip: '78701',
+    },
+    jobLocation: 'Austin, TX',
+    requisitionId: 'REQ003',
+    requisitionDescription: 'Design user experiences for mobile platforms.',
     title: 'UX Designer',
     company: 'Design Studio',
     experience: '4 years',
@@ -187,7 +275,10 @@ const MOCK_CANDIDATES = [
     portfolio: 'https://emilyrodriguez.design',
     github: '',
     linkedin: 'https://linkedin.com/in/emilyrodriguez',
-    resumeUrl: '/resumes/emily-rodriguez.pdf',
+    documents: [
+      { fileName: 'emily-rodriguez-resume.pdf', url: '/resumes/emily-rodriguez.pdf', type: 'application/pdf' },
+      { fileName: 'emily-rodriguez-portfolio.zip', url: '/resumes/emily-rodriguez-portfolio.zip', type: 'application/zip' },
+    ],
     notes: 'Creative portfolio, strong user research background',
     source: 'Referral',
     addedDate: '2024-09-05',
@@ -196,45 +287,6 @@ const MOCK_CANDIDATES = [
   }
 ];
 
-interface Candidate {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  title: string;
-  company: string;
-  experience: string;
-  expectedSalary: number;
-  currentSalary: number;
-  availability: string;
-  status: string;
-  rating: number;
-  skills: string[];
-  education: Array<{
-    degree: string;
-    school: string;
-    year: string;
-    gpa: string;
-  }>;
-  workHistory: Array<{
-    title: string;
-    company: string;
-    duration: string;
-    description: string;
-  }>;
-  certifications: string[];
-  languages: string[];
-  portfolio: string;
-  github: string;
-  linkedin: string;
-  resumeUrl: string;
-  notes: string;
-  source: string;
-  addedDate: string;
-  lastContact: string;
-  tags: string[];
-}
 
 export default function CandidatesPage() {
   const { selectedTenant } = useTenant();
@@ -251,7 +303,10 @@ export default function CandidatesPage() {
     const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          candidate.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         candidate.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+                         candidate.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         candidate.requisitionDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         candidate.jobLocation.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === 'all' || candidate.status.toLowerCase() === statusFilter;
     const matchesSkill = skillFilter === 'all' || candidate.skills.includes(skillFilter);
     return matchesSearch && matchesStatus && matchesSkill;
@@ -280,605 +335,351 @@ export default function CandidatesPage() {
     ));
   };
 
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'passive': return 'bg-yellow-100 text-yellow-800';
-      case 'not interested': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Candidate Database</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your talent pool and candidate profiles
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Candidate
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Candidates</p>
-                <p className="text-2xl font-bold text-gray-900">{candidates.length}</p>
-              </div>
-              <User className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {candidates.filter(c => c.status === 'Active').length}
-                </p>
-              </div>
-              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                <div className="h-3 w-3 bg-green-600 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Passive</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {candidates.filter(c => c.status === 'Passive').length}
-                </p>
-              </div>
-              <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <div className="h-3 w-3 bg-yellow-600 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg Rating</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {(candidates.reduce((sum, c) => sum + c.rating, 0) / candidates.length).toFixed(1)}
-                </p>
-              </div>
-              <Star className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="relative flex-1 min-w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search candidates, skills, or positions..."
-                value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="passive">Passive</SelectItem>
-                <SelectItem value="not interested">Not Interested</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={skillFilter} onValueChange={setSkillFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Skill" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Skills</SelectItem>
-                {allSkills.map(skill => (
-                  <SelectItem key={skill} value={skill}>
-                    {skill}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                Grid
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                List
-              </Button>
-            </div>
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">Talent Management</h2>
+          <div className="flex items-center space-x-2">
+            <Button onClick={() => console.log('Add new candidate')}>
+              <Plus className="mr-2 h-4 w-4" /> Add Candidate
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Candidates Grid/List */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCandidates.map((candidate) => (
-            <Card key={candidate.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {/* Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-900">{candidate.name}</h3>
-                      <p className="text-sm text-gray-600">{candidate.title}</p>
-                      <p className="text-sm text-gray-500">{candidate.company}</p>
-                    </div>
-                    <Badge className={getStatusColor(candidate.status)}>
-                      {candidate.status}
-                    </Badge>
-                  </div>
-
-                  {/* Rating */}
-                  <div className="flex items-center gap-2">
-                    {renderRating(candidate.rating)}
-                    <span className="text-sm text-gray-600">({candidate.rating}/5)</span>
-                  </div>
-
-                  {/* Details */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      {candidate.location}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <DollarSign className="h-4 w-4" />
-                      {formatSalary(candidate.expectedSalary)} expected
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="h-4 w-4" />
-                      {candidate.experience}
-                    </div>
-                  </div>
-
-                  {/* Skills */}
-                  <div className="flex flex-wrap gap-1">
-                    {candidate.skills.slice(0, 3).map((skill) => (
-                      <Badge key={skill} variant="secondary" className="text-xs">
-                        {skill}
-                      </Badge>
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="candidates">Candidates</TabsTrigger>
+            <TabsTrigger value="jobs">Jobs</TabsTrigger>
+            <TabsTrigger value="interviews">Interviews</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Candidates</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{candidates.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    +20.1% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Applications</CardTitle>
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{candidates.filter(c => c.status === 'Active').length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    +180.1% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Interviews Scheduled</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">5</div>
+                  <p className="text-xs text-muted-foreground">
+                    +19% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Hired This Month</CardTitle>
+                  <Award className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">3</div>
+                  <p className="text-xs text-muted-foreground">
+                    +50% from last month
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          <TabsContent value="candidates" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-1 items-center space-x-2">
+                <Input
+                  placeholder="Search candidates..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+                />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="on_hold">On Hold</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="hired">Hired</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={skillFilter} onValueChange={setSkillFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by Skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Skills</SelectItem>
+                    {allSkills.map(skill => (
+                      <SelectItem key={skill} value={skill}>{skill}</SelectItem>
                     ))}
-                    {candidate.skills.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{candidate.skills.length - 3}
-                      </Badge>
-                    )}
-                  </div>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                  setSkillFilter('all');
+                }}>
+                  Reset Filters
+                </Button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={() => setViewMode('grid')} className={viewMode === 'grid' ? 'bg-gray-100' : ''}>Grid</Button>
+                <Button variant="outline" size="sm" onClick={() => setViewMode('list')} className={viewMode === 'list' ? 'bg-gray-100' : ''}>List</Button>
+              </div>
+            </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-2 border-t">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
+            {viewMode === 'grid' ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredCandidates.map(candidate => (
+                  <Card key={candidate.id} className="relative">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-lg font-bold">{candidate.name}</CardTitle>
+                      <Badge variant={candidate.status === 'Active' ? 'default' : 'secondary'}>{candidate.status}</Badge>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Briefcase className="mr-2 h-4 w-4" /> {candidate.title} at {candidate.company}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin className="mr-2 h-4 w-4" /> {candidate.jobLocation}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Mail className="mr-2 h-4 w-4" /> {candidate.email}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Phone className="mr-2 h-4 w-4" /> {candidate.phone}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <FileText className="mr-2 h-4 w-4" /> Req ID: {candidate.requisitionId}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Clock className="mr-2 h-4 w-4" /> Experience: {candidate.experience}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <DollarSign className="mr-2 h-4 w-4" /> Expected: {formatSalary(candidate.expectedSalary)}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Star className="mr-2 h-4 w-4 text-yellow-400" /> Rating: {candidate.rating}/5
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {candidate.skills.map(skill => (
+                          <Badge key={skill} variant="outline">{skill}</Badge>
+                        ))}
+                      </div>
+                      <Button variant="outline" size="sm" className="absolute bottom-4 right-4" onClick={() => {
                         setSelectedCandidate(candidate);
                         setIsDetailModalOpen(true);
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Candidate</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Position</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Location</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Expected Salary</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Rating</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCandidates.map((candidate) => (
-                    <tr key={candidate.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium text-gray-900">{candidate.name}</p>
-                          <p className="text-sm text-gray-600">{candidate.email}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="text-sm text-gray-900">{candidate.title}</p>
-                          <p className="text-sm text-gray-600">{candidate.company}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{candidate.location}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{formatSalary(candidate.expectedSalary)}</td>
-                      <td className="py-3 px-4">
-                        <Badge className={getStatusColor(candidate.status)}>
-                          {candidate.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1">
+                      }}>
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="border rounded-md">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Title</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                      <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredCandidates.map(candidate => (
+                      <tr key={candidate.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{candidate.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{candidate.title}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{candidate.jobLocation}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <Badge variant={candidate.status === 'Active' ? 'default' : 'secondary'}>{candidate.status}</Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center">
                           {renderRating(candidate.rating)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedCandidate(candidate);
-                              setIsDetailModalOpen(true);
-                            }}
-                          >
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            setSelectedCandidate(candidate);
+                            setIsDetailModalOpen(true);
+                          }}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
-      {/* Candidate Detail Modal */}
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          {selectedCandidate && (
-            <>
+        {/* Candidate Detail Modal */}
+        {selectedCandidate && (
+          <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+            <DialogContent className="sm:max-w-[800px]">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-3">
-                  <User className="h-6 w-6" />
-                  {selectedCandidate.name}
-                  <Badge className={getStatusColor(selectedCandidate.status)}>
-                    {selectedCandidate.status}
-                  </Badge>
-                </DialogTitle>
+                <DialogTitle>{selectedCandidate.name} - {selectedCandidate.title}</DialogTitle>
               </DialogHeader>
-
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="experience">Experience</TabsTrigger>
-                  <TabsTrigger value="education">Education</TabsTrigger>
-                  <TabsTrigger value="activity">Activity</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="overview" className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Info */}
-                    <div className="lg:col-span-2 space-y-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Basic Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Current Position</Label>
-                              <p className="text-sm text-gray-900">{selectedCandidate.title}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Company</Label>
-                              <p className="text-sm text-gray-900">{selectedCandidate.company}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Location</Label>
-                              <p className="text-sm text-gray-900">{selectedCandidate.location}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Experience</Label>
-                              <p className="text-sm text-gray-900">{selectedCandidate.experience}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Expected Salary</Label>
-                              <p className="text-sm text-gray-900">{formatSalary(selectedCandidate.expectedSalary)}</p>
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Availability</Label>
-                              <p className="text-sm text-gray-900">{selectedCandidate.availability}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Skills & Expertise</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedCandidate.skills.map((skill) => (
-                              <Badge key={skill} variant="secondary">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Notes</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-700">{selectedCandidate.notes}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Contact Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Mail className="h-4 w-4 text-gray-500" />
-                            <a href={`mailto:${selectedCandidate.email}`} className="text-sm text-blue-600 hover:underline">
-                              {selectedCandidate.email}
-                            </a>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Phone className="h-4 w-4 text-gray-500" />
-                            <a href={`tel:${selectedCandidate.phone}`} className="text-sm text-blue-600 hover:underline">
-                              {selectedCandidate.phone}
-                            </a>
-                          </div>
-                          {selectedCandidate.linkedin && (
-                            <div className="flex items-center gap-3">
-                              <Linkedin className="h-4 w-4 text-gray-500" />
-                              <a href={selectedCandidate.linkedin} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-                                LinkedIn Profile
-                              </a>
-                            </div>
-                          )}
-                          {selectedCandidate.github && (
-                            <div className="flex items-center gap-3">
-                              <Github className="h-4 w-4 text-gray-500" />
-                              <a href={selectedCandidate.github} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-                                GitHub Profile
-                              </a>
-                            </div>
-                          )}
-                          {selectedCandidate.portfolio && (
-                            <div className="flex items-center gap-3">
-                              <Globe className="h-4 w-4 text-gray-500" />
-                              <a href={selectedCandidate.portfolio} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-                                Portfolio
-                              </a>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Rating</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex items-center gap-2">
-                            {renderRating(selectedCandidate.rating)}
-                            <span className="text-sm text-gray-600 ml-2">
-                              {selectedCandidate.rating}/5
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Tags</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedCandidate.tags.map((tag) => (
-                              <Badge key={tag} variant="outline">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Actions</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          <Button variant="outline" size="sm" className="w-full justify-start">
-                            <FileText className="h-4 w-4 mr-2" />
-                            View Resume
-                          </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Schedule Interview
-                          </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Send Message
-                          </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Profile
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">Name</Label>
+                  <Input id="name" defaultValue={selectedCandidate.name} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="email" className="text-right">Email</Label>
+                  <Input id="email" defaultValue={selectedCandidate.email} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="phone" className="text-right">Phone</Label>
+                  <Input id="phone" defaultValue={selectedCandidate.phone} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="address" className="text-right">Address</Label>
+                  <Input id="address" defaultValue={`${selectedCandidate.address.street}, ${selectedCandidate.address.city}, ${selectedCandidate.address.state} ${selectedCandidate.address.zip}`} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="jobLocation" className="text-right">Job Location</Label>
+                  <Input id="jobLocation" defaultValue={selectedCandidate.jobLocation} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="requisitionId" className="text-right">Requisition ID</Label>
+                  <Input id="requisitionId" defaultValue={selectedCandidate.requisitionId} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="requisitionDescription" className="text-right">Requisition Description</Label>
+                  <Textarea id="requisitionDescription" defaultValue={selectedCandidate.requisitionDescription} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className="text-right">Job Title</Label>
+                  <Input id="title" defaultValue={selectedCandidate.title} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="company" className="text-right">Current Company</Label>
+                  <Input id="company" defaultValue={selectedCandidate.company} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="experience" className="text-right">Experience</Label>
+                  <Input id="experience" defaultValue={selectedCandidate.experience} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="expectedSalary" className="text-right">Expected Salary</Label>
+                  <Input id="expectedSalary" defaultValue={formatSalary(selectedCandidate.expectedSalary)} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="currentSalary" className="text-right">Current Salary</Label>
+                  <Input id="currentSalary" defaultValue={formatSalary(selectedCandidate.currentSalary)} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="availability" className="text-right">Availability</Label>
+                  <Input id="availability" defaultValue={selectedCandidate.availability} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="status" className="text-right">Status</Label>
+                  <Input id="status" defaultValue={selectedCandidate.status} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="rating" className="text-right">Rating</Label>
+                  <div className="col-span-3 flex items-center gap-1">
+                    {renderRating(selectedCandidate.rating)}
                   </div>
-                </TabsContent>
-
-                <TabsContent value="experience" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Briefcase className="h-5 w-5" />
-                        Work History
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {selectedCandidate.workHistory.map((job, index) => (
-                        <div key={index} className="border-l-2 border-blue-200 pl-4 pb-4">
-                          <h4 className="font-medium text-gray-900">{job.title}</h4>
-                          <p className="text-sm text-gray-600">{job.company}</p>
-                          <p className="text-sm text-gray-500">{job.duration}</p>
-                          <p className="text-sm text-gray-700 mt-2">{job.description}</p>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Award className="h-5 w-5" />
-                        Certifications
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {selectedCandidate.certifications.map((cert, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Award className="h-4 w-4 text-yellow-500" />
-                            <span className="text-sm text-gray-700">{cert}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="education" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <GraduationCap className="h-5 w-5" />
-                        Education
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {selectedCandidate.education.map((edu, index) => (
-                        <div key={index} className="border-l-2 border-green-200 pl-4 pb-4">
-                          <h4 className="font-medium text-gray-900">{edu.degree}</h4>
-                          <p className="text-sm text-gray-600">{edu.school}</p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <p className="text-sm text-gray-500">Class of {edu.year}</p>
-                            <p className="text-sm text-gray-500">GPA: {edu.gpa}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Languages</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {selectedCandidate.languages.map((language, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-blue-500" />
-                            <span className="text-sm text-gray-700">{language}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="activity" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-3">
-                          <div className="h-2 w-2 bg-blue-500 rounded-full mt-2"></div>
-                          <div>
-                            <p className="text-sm text-gray-900">Profile added to database</p>
-                            <p className="text-xs text-gray-500">{new Date(selectedCandidate.addedDate).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <div className="h-2 w-2 bg-green-500 rounded-full mt-2"></div>
-                          <div>
-                            <p className="text-sm text-gray-900">Last contact made</p>
-                            <p className="text-xs text-gray-500">{new Date(selectedCandidate.lastContact).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="skills" className="text-right">Skills</Label>
+                  <div className="col-span-3 flex flex-wrap gap-1">
+                    {selectedCandidate.skills.map(skill => (
+                      <Badge key={skill} variant="outline">{skill}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="education" className="text-right">Education</Label>
+                  <div className="col-span-3 space-y-1">
+                    {selectedCandidate.education.map((edu, index) => (
+                      <p key={index} className="text-sm text-gray-700">{edu.degree} from {edu.school} ({edu.year})</p>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="workHistory" className="text-right">Work History</Label>
+                  <div className="col-span-3 space-y-1">
+                    {selectedCandidate.workHistory.map((work, index) => (
+                      <p key={index} className="text-sm text-gray-700">{work.title} at {work.company} ({work.duration})</p>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="documents" className="text-right">Documents</Label>
+                  <div className="col-span-3 space-y-1">
+                    {selectedCandidate.documents.length > 0 ? (
+                      selectedCandidate.documents.map((doc, index) => (
+                        <a key={index} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-blue-600 hover:underline">
+                          <Download className="mr-1 h-4 w-4" /> {doc.fileName}
+                        </a>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">No documents attached.</p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="notes" className="text-right">Notes</Label>
+                  <Textarea id="notes" defaultValue={selectedCandidate.notes} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="source" className="text-right">Source</Label>
+                  <Input id="source" defaultValue={selectedCandidate.source} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="addedDate" className="text-right">Added Date</Label>
+                  <Input id="addedDate" defaultValue={selectedCandidate.addedDate} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="lastContact" className="text-right">Last Contact</Label>
+                  <Input id="lastContact" defaultValue={selectedCandidate.lastContact} className="col-span-3" readOnly />
+                </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <Label htmlFor="tags" className="text-right">Tags</Label>
+                  <div className="col-span-3 flex flex-wrap gap-1">
+                    {selectedCandidate.tags.map(tag => (
+                      <Badge key={tag} variant="secondary">{tag}</Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </DashboardLayout>
   );
 }
+
