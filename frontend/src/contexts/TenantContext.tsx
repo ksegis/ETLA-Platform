@@ -9,6 +9,8 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
+import { useAuth } from './AuthContext';
+import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
 export type Tenant = { id: string; name: string };
 
@@ -47,18 +49,66 @@ export function TenantProvider({
   initialTenantId?: string | null;
   demoMode?: boolean;
 }) {
+  const auth = useAuth();
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>(
     initialTenants.length ? initialTenants : [],
   );
   const [currentTenantId, setCurrentTenantId] = useState<string | null>(initialTenantId);
-  const [Loading] = useState<boolean>(false);
+  const [Loading, setLoading] = useState<boolean>(true);
 
+  // Load tenant information from AuthContext and database
   useEffect(() => {
-    if (!availableTenants.length) {
-      setAvailableTenants([{ id: 'default', name: 'Default Tenant' }]);
-      if (!currentTenantId) setCurrentTenantId('default');
-    }
-  }, [availableTenants.length, currentTenantId]);
+    const loadTenantInfo = async () => {
+      // Wait for auth to stabilize
+      if (!auth.isStable) {
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        // If user is authenticated, load their tenant from database
+        if (auth.user && auth.currentTenantId) {
+          const supabase = createSupabaseBrowserClient();
+          
+          // Load the tenant details from the tenants table
+          const { data: tenantData, error: tenantError } = await supabase
+            .from('tenants')
+            .select('id, name')
+            .eq('id', auth.currentTenantId)
+            .maybeSingle();
+
+          if (tenantError) {
+            console.error('Error loading tenant:', tenantError);
+          }
+
+          if (tenantData) {
+            // Set the available tenants and current tenant
+            setAvailableTenants([tenantData]);
+            setCurrentTenantId(tenantData.id);
+          } else {
+            // Fallback: use tenant ID from auth even if we can't load details
+            console.warn('Could not load tenant details, using ID from auth');
+            setAvailableTenants([{ id: auth.currentTenantId, name: 'Current Tenant' }]);
+            setCurrentTenantId(auth.currentTenantId);
+          }
+        } else if (!auth.user && !auth.loading) {
+          // User is not authenticated, use default tenant
+          setAvailableTenants([{ id: 'default', name: 'Default Tenant' }]);
+          setCurrentTenantId('default');
+        }
+      } catch (error) {
+        console.error('Error in loadTenantInfo:', error);
+        // Fallback to default tenant on error
+        setAvailableTenants([{ id: 'default', name: 'Default Tenant' }]);
+        setCurrentTenantId('default');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTenantInfo();
+  }, [auth.isStable, auth.user, auth.currentTenantId, auth.loading]);
 
   const setSelectedTenant = useCallback((tenantId: string | null) => {
     setCurrentTenantId(tenantId);
