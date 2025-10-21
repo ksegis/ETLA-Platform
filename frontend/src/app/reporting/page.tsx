@@ -377,22 +377,47 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   const openFacsimile = async (data: any, type: 'pay_statement' | 'timecard' | 'tax_w2') => {
+    console.log('openFacsimile called with:', { data, type });
     setFacsimileData(data);
     setFacsimileType(type);
     
     if (data.employee_id) {
       try {
-        const { data: employee, error } = await supabase
+        console.log('Loading employee data for employee_id:', data.employee_id);
+        // Try querying by id first (UUID), then by employee_id field
+        let employee = null;
+        let error = null;
+        
+        // First try: query by id (UUID)
+        const result1 = await supabase
           .from('employees')
           .select('*')
-          .eq('employee_id', data.employee_id)
-          .single();
+          .eq('id', data.employee_id)
+          .maybeSingle();
+        
+        if (!result1.error && result1.data) {
+          employee = result1.data;
+        } else {
+          // Second try: query by employee_id field
+          const result2 = await supabase
+            .from('employees')
+            .select('*')
+            .eq('employee_id', data.employee_id)
+            .maybeSingle();
+          
+          employee = result2.data;
+          error = result2.error;
+        }
+        
+        console.log('Employee lookup result:', { employee, error });
         
         if (!error && employee) {
           setSelectedEmployee(employee);
+        } else {
+          console.warn('Could not find employee:', data.employee_id);
         }
       } catch (err) {
-        console.log('Could not load employee data for facsimile');
+        console.error('Error loading employee data for facsimile:', err);
       }
     }
     
