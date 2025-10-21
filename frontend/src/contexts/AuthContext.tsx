@@ -56,6 +56,7 @@ export type AuthContextType = {
   loading: boolean;
   isAuthenticated: boolean;
   isDemoMode: boolean;
+  authError: string | null;
   hasRole: (role: RoleKey) => boolean;
   hasPermission: (feature: Feature, permission: Permission) => boolean;
   checkPermission: (feature: Feature, permission?: Permission) => boolean;
@@ -126,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantUser, setTenantUser] = useState<TenantUserLite | null>(null);
   const [isStable, setIsStable] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Initialize Supabase auth listener
   useEffect(() => {
@@ -162,22 +164,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loadUserTenantAndRole = async () => {
       try {
         const supabase = createSupabaseBrowserClient();
+        setAuthError(null); // Clear any previous errors
         
         // Load the user's tenant_users record
         const { data, error } = await supabase
           .from('tenant_users')
           .select('tenant_id, role')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 or 1 results
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error loading user tenant and role:', error);
+          setAuthError('Unable to load user profile. Please contact your administrator.');
+          return;
+        }
+
+        if (!data) {
+          console.warn('No tenant_users record found for user:', user.id);
+          setAuthError('Your account is not associated with any organization. Please contact your administrator.');
+          return;
+        }
 
         if (data) {
           setCurrentTenantId(data.tenant_id);
           setCurrentUserRole(data.role as RoleKey);
+          setAuthError(null); // Clear error on success
         }
-      } catch (error) {
-        console.error('Error loading user tenant and role:', error);
+      } catch (error: any) {
+        console.error('Unexpected error loading user tenant and role:', error);
+        setAuthError(`Authentication error: ${error.message || 'Unknown error'}`);
       }
     };
 
@@ -243,6 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isAuthenticated: !!user,
       isDemoMode: false, // TODO: Implement demo mode logic
+      authError,
       hasRole,
       hasPermission,
       checkPermission,
@@ -258,8 +274,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       currentTenantId,
       currentUserRole,
       tenantUser,
-      isStable, loading,
-      hasRole,      loading,
+      isStable,
+      loading,
+      authError,
       hasRole,
       hasPermission,
       checkPermission,

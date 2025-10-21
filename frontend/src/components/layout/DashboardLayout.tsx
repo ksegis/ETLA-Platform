@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface NavigationItem {
   name: string
@@ -74,8 +75,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const router = useRouter()
   const pathname = usePathname()
+  const { authError } = useAuth()
 
-  // usePermissions helpers – we’ll gate by feature access, not by “permission-only” strings
+  // usePermissions helpers – we'll gate by feature access, not by "permission-only" strings
   const {
     canAccessFeature,
     loading: permissionsloading,
@@ -295,12 +297,44 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       .filter((g) => g && g.items && g.items.length > 0)
   }, [permissionsloading, canAccessFeature, navigationGroups])
 
+  // Show error UI if there's an authentication error
+  if (authError) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
+        <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full">
+            <Shield className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Authentication Error</h2>
+          <p className="text-gray-600 text-center mb-6">{authError}</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Return to Login
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 text-center mt-6">
+            If this problem persists, please contact your system administrator.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (permissionsloading) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">loading permissions...</p>
+          <p className="text-gray-600">Loading permissions...</p>
         </div>
       </div>
     )
