@@ -290,7 +290,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         return { ...group, items }
       })
       .filter((g) => g.items.length > 0)
-  }, [permissionsloading, canAccessFeature]) // nav config is static
+  }, [permissionsloading, canAccessFeature, navigationGroups])
 
   if (permissionsloading) {
     return (
