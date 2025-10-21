@@ -351,7 +351,7 @@ export default function ProjectManagementPageRBAC() {
                         can get a quick glance at your work requests,
                         projects, and risks.
                       </p>
-                      <PermissionStatus />
+                      <PermissionStatus feature="project_management" />
                     </div>
                   </TabsContent>
 
