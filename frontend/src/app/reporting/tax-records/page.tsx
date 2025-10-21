@@ -1,8 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
 
 import React from 'react'
 import DashboardLayout from '../../../components/layout/DashboardLayout'
@@ -23,6 +20,7 @@ export default function TaxRecordsPage() {
     </DashboardLayout>
   )
 }
+
 
 
 
