@@ -65,14 +65,14 @@ export default function ReportingClient() {
     deductionType: '', complianceType: '', searchTerm: '',
   });
 
-  const [tenantFilter, setTenantFilter] = useState<string>('');
+  const [tenantFilter, setTenantFilter] = useState<string>('all');
 
   const fetchDataForTab = useCallback(async (tabId: string, targetTenantId: string) => {
     setLoading(true);
     setError(null);
     try {
       let query = supabase.from(tabId).select('*');
-      if (isMultiTenant && tenantFilter) {
+      if (isMultiTenant && tenantFilter && tenantFilter !== 'all') {
         query = query.eq('tenant_id', tenantFilter);
       } else if (targetTenantId) {
         query = query.eq('tenant_id', targetTenantId);
@@ -202,7 +202,7 @@ export default function ReportingClient() {
                   <SelectValue placeholder="Filter by tenant..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Accessible Tenants</SelectItem>
+                  <SelectItem value="all">All Accessible Tenants</SelectItem>
                   {(accessibleTenantIds || []).map((t: any) => (
                     <SelectItem key={t.id} value={t.id}>{t.name ?? t.id}</SelectItem>
                   ))}
