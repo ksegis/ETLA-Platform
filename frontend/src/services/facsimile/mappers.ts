@@ -54,7 +54,9 @@ export interface FacsimileTaxRecordData {
   medicare_tax_withheld_fmt: string;
   state_wages_fmt: string;
   state_income_tax_fmt: string;
+  local_wages_fmt: string;
   local_income_tax_fmt: string;
+  local_jurisdiction_name: string;
   document_status: string;
 }
 
@@ -129,7 +131,9 @@ export function mapToFacsimileTaxRecord(
     medicare_tax_withheld_fmt: formatCurrency(taxRecord.medicare_tax_withheld ?? 0, locale),
     state_wages_fmt: formatCurrency(taxRecord.state_wages ?? 0, locale),
     state_income_tax_fmt: formatCurrency(taxRecord.state_income_tax ?? 0, locale),
+    local_wages_fmt: formatCurrency((taxRecord as any).local_wages ?? 0, locale),
     local_income_tax_fmt: formatCurrency((taxRecord as any).local_income_tax ?? 0, locale),
+    local_jurisdiction_name: (taxRecord as any).local_jurisdiction_name || 'N/A',
     document_status: taxRecord.document_status || 'draft'
   };
 }

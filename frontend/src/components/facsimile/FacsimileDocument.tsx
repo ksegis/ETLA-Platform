@@ -392,12 +392,31 @@ function TaxRecordContent({ data, theme }: { data: FacsimileTaxRecordData; theme
             <span>State Income Tax:</span>
             <span>{data.state_income_tax_fmt}</span>
           </div>
-          <div className="flex justify-between">
-            <span>Local Income Tax:</span>
-            <span>{data.local_income_tax_fmt}</span>
-          </div>
         </div>
       </div>
+
+      {/* Local Tax Information */}
+      {(data.local_wages_fmt !== '$0.00' || data.local_income_tax_fmt !== '$0.00' || data.local_jurisdiction_name !== 'N/A') && (
+        <div>
+          <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Local Tax Information</h3>
+          <div className="space-y-3 text-sm">
+            {data.local_jurisdiction_name !== 'N/A' && (
+              <div className="flex justify-between">
+                <span>Local Jurisdiction:</span>
+                <span>{data.local_jurisdiction_name}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span>Local Wages:</span>
+              <span>{data.local_wages_fmt}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Local Income Tax:</span>
+              <span>{data.local_income_tax_fmt}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
