@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/Input';
 import { FileText, Download, DollarSign, Calendar, Building, User, MapPin } from 'lucide-react';
 import { useCustomerBranding } from '@/services/brandingService';

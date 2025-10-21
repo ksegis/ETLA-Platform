@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { User, PayStatement } from "@/types";
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/lib/supabase';
 

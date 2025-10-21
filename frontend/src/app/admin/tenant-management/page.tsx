@@ -30,7 +30,7 @@ type TriggerProps = ComponentProps<typeof BaseSelectTrigger> &
 const SelectTrigger = BaseSelectTrigger as unknown as
   ForwardRefExoticComponent<TriggerProps>;
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,

@@ -1,0 +1,842 @@
+From 6c94c2cda457db8cb167e8787dd8d9277ab8733d Mon Sep 17 00:00:00 2001
+From: ksegis <ksegis@users.noreply.github.com>
+Date: Mon, 20 Oct 2025 22:44:19 -0400
+Subject: [PATCH] Fix: Resolve Badge component casing conflict and TypeScript
+ errors
+
+- Remove duplicate Badge.tsx file (uppercase)
+- Standardize all imports to use lowercase 'badge'
+- Add missing class-variance-authority dependency
+- Fix PermissionStatus component props in page-rbac.tsx
+- Add missing icon imports (Plus, Users)
+- Fix property name references (project_name, risk_title)
+- Add missing UI component imports in CandidatesManagement.tsx
+- Build now completes successfully without errors
+---
+ frontend/package-lock.json                    | 13 ++++++++
+ frontend/package.json                         |  1 +
+ .../src/app/admin/tenant-management/page.tsx  |  2 +-
+ frontend/src/app/hr-analytics/page.tsx        |  2 +-
+ .../page-backup-before-views.tsx              |  2 +-
+ .../page-backup-with-green.tsx                |  2 +-
+ .../app/project-management/page-backup.tsx    |  2 +-
+ .../page-before-database-alignment.tsx        |  2 +-
+ .../project-management/page-before-fix.tsx    |  2 +-
+ .../page-before-minimal-fields.tsx            |  2 +-
+ .../page-before-schema-fix.tsx                |  2 +-
+ .../app/project-management/page-cleaned.tsx   |  2 +-
+ .../page-complete-pmbok.tsx                   |  2 +-
+ .../page-database-aligned.tsx                 |  2 +-
+ .../src/app/project-management/page-fixed.tsx |  2 +-
+ .../project-management/page-full-pmbok.tsx    |  2 +-
+ .../page-minimal-fields.tsx                   |  2 +-
+ .../project-management/page-query-fixed.tsx   |  2 +-
+ .../src/app/project-management/page-rbac.tsx  | 10 +++---
+ .../page-schema-compatible.tsx                |  2 +-
+ .../project-management/page-with-views.tsx    |  2 +-
+ frontend/src/app/project-management/page.tsx  |  2 +-
+ .../src/app/questionnaires/analytics/page.tsx |  2 +-
+ .../src/app/questionnaires/builder/page.tsx   |  2 +-
+ frontend/src/app/questionnaires/page.tsx      |  2 +-
+ frontend/src/app/rbac-test/page.tsx           |  2 +-
+ frontend/src/app/reporting/custom/page.tsx    |  2 +-
+ .../page-backup-before-search-indicators.tsx  |  2 +-
+ .../reporting/page-backup-before-sticky.tsx   |  2 +-
+ frontend/src/app/reporting/page-backup.tsx    |  2 +-
+ .../src/app/reporting/page-enhanced-views.tsx |  2 +-
+ frontend/src/app/reporting/page-enhanced.tsx  |  2 +-
+ .../src/app/reporting/page-sticky-header.tsx  |  2 +-
+ .../reporting/page-with-search-indicators.tsx |  2 +-
+ frontend/src/app/reporting/page.tsx           |  2 +-
+ frontend/src/app/talent/candidates/page.tsx   |  3 +-
+ frontend/src/app/talent/interviews/page.tsx   |  2 +-
+ frontend/src/app/talent/jobs/page.tsx         |  2 +-
+ frontend/src/app/talent/offers/page.tsx       |  2 +-
+ frontend/src/app/talent/pipeline/page.tsx     |  2 +-
+ .../src/app/work-requests/page-cleaned.tsx    |  2 +-
+ .../app/work-requests/page-schema-fixed.tsx   |  2 +-
+ .../app/work-requests/page-with-modals.tsx    |  2 +-
+ frontend/src/app/work-requests/page.tsx       |  2 +-
+ .../components/ats/CandidatesManagement.tsx   |  6 ++--
+ .../dashboard/ComprehensiveDashboard.tsx      |  2 +-
+ .../components/rbac/RolesPermissionsTab.tsx   |  2 +-
+ .../reporting/EnhancedEmployeeDocuments.tsx   |  2 +-
+ .../EnhancedTaxRecordsWithLocalTax.tsx        |  2 +-
+ .../reporting/EnhancedTimecardGrid.tsx        |  2 +-
+ .../reporting/SimpleTimecardGrid.tsx          |  2 +-
+ frontend/src/components/ui/Badge.tsx          | 32 -------------------
+ 52 files changed, 71 insertions(+), 86 deletions(-)
+ delete mode 100644 frontend/src/components/ui/Badge.tsx
+
+diff --git a/frontend/package-lock.json b/frontend/package-lock.json
+index 42e61235..73a4f6c9 100644
+--- a/frontend/package-lock.json
++++ b/frontend/package-lock.json
+@@ -10,6 +10,7 @@
+       "dependencies": {
+         "@supabase/supabase-js": "^2.39.0",
+         "@tanstack/react-table": "^8.21.3",
++        "class-variance-authority": "^0.7.1",
+         "clsx": "^2.0.0",
+         "echarts": "^5.6.0",
+         "echarts-for-react": "^3.0.2",
+@@ -2480,6 +2481,18 @@
+         "node": ">= 6"
+       }
+     },
++    "node_modules/class-variance-authority": {
++      "version": "0.7.1",
++      "resolved": "https://registry.npmjs.org/class-variance-authority/-/class-variance-authority-0.7.1.tgz",
++      "integrity": "sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==",
++      "license": "Apache-2.0",
++      "dependencies": {
++        "clsx": "^2.1.1"
++      },
++      "funding": {
++        "url": "https://polar.sh/cva"
++      }
++    },
+     "node_modules/client-only": {
+       "version": "0.0.1",
+       "resolved": "https://registry.npmjs.org/client-only/-/client-only-0.0.1.tgz",
+diff --git a/frontend/package.json b/frontend/package.json
+index 3843dc80..d0bb90c9 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -14,6 +14,7 @@
+   "dependencies": {
+     "@supabase/supabase-js": "^2.39.0",
+     "@tanstack/react-table": "^8.21.3",
++    "class-variance-authority": "^0.7.1",
+     "clsx": "^2.0.0",
+     "echarts": "^5.6.0",
+     "echarts-for-react": "^3.0.2",
+diff --git a/frontend/src/app/admin/tenant-management/page.tsx b/frontend/src/app/admin/tenant-management/page.tsx
+index 0e97bad5..7d5d37c9 100644
+--- a/frontend/src/app/admin/tenant-management/page.tsx
++++ b/frontend/src/app/admin/tenant-management/page.tsx
+@@ -30,7 +30,7 @@ type TriggerProps = ComponentProps<typeof BaseSelectTrigger> &
+ const SelectTrigger = BaseSelectTrigger as unknown as
+   ForwardRefExoticComponent<TriggerProps>;
+ import { Label } from "@/components/ui/label";
+-import { Badge } from "@/components/ui/Badge";
++import { Badge } from "@/components/ui/badge";
+ import {
+   Card,
+   CardContent,
+diff --git a/frontend/src/app/hr-analytics/page.tsx b/frontend/src/app/hr-analytics/page.tsx
+index ff648ea5..fd12c468 100644
+--- a/frontend/src/app/hr-analytics/page.tsx
++++ b/frontend/src/app/hr-analytics/page.tsx
+@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import { useTenant } from '@/contexts/TenantContext';
+ import { supabase } from '@/lib/supabase';
+diff --git a/frontend/src/app/project-management/page-backup-before-views.tsx b/frontend/src/app/project-management/page-backup-before-views.tsx
+index 0e8dbb1b..3c17c414 100644
+--- a/frontend/src/app/project-management/page-backup-before-views.tsx
++++ b/frontend/src/app/project-management/page-backup-before-views.tsx
+@@ -23,7 +23,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-backup-with-green.tsx b/frontend/src/app/project-management/page-backup-with-green.tsx
+index 3f2e337a..c42bb9c9 100644
+--- a/frontend/src/app/project-management/page-backup-with-green.tsx
++++ b/frontend/src/app/project-management/page-backup-with-green.tsx
+@@ -23,7 +23,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-backup.tsx b/frontend/src/app/project-management/page-backup.tsx
+index 2688a605..2cbe8fd2 100644
+--- a/frontend/src/app/project-management/page-backup.tsx
++++ b/frontend/src/app/project-management/page-backup.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-before-database-alignment.tsx b/frontend/src/app/project-management/page-before-database-alignment.tsx
+index 2e882ead..b29c3592 100644
+--- a/frontend/src/app/project-management/page-before-database-alignment.tsx
++++ b/frontend/src/app/project-management/page-before-database-alignment.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-before-fix.tsx b/frontend/src/app/project-management/page-before-fix.tsx
+index 6f8dbbb2..c8692d8d 100644
+--- a/frontend/src/app/project-management/page-before-fix.tsx
++++ b/frontend/src/app/project-management/page-before-fix.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-before-minimal-fields.tsx b/frontend/src/app/project-management/page-before-minimal-fields.tsx
+index 086f8729..b9b1ff66 100644
+--- a/frontend/src/app/project-management/page-before-minimal-fields.tsx
++++ b/frontend/src/app/project-management/page-before-minimal-fields.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-before-schema-fix.tsx b/frontend/src/app/project-management/page-before-schema-fix.tsx
+index abf5c8d7..77d7c093 100644
+--- a/frontend/src/app/project-management/page-before-schema-fix.tsx
++++ b/frontend/src/app/project-management/page-before-schema-fix.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-cleaned.tsx b/frontend/src/app/project-management/page-cleaned.tsx
+index 0e8dbb1b..3c17c414 100644
+--- a/frontend/src/app/project-management/page-cleaned.tsx
++++ b/frontend/src/app/project-management/page-cleaned.tsx
+@@ -23,7 +23,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-complete-pmbok.tsx b/frontend/src/app/project-management/page-complete-pmbok.tsx
+index 2dc3d1c4..2aa56e69 100644
+--- a/frontend/src/app/project-management/page-complete-pmbok.tsx
++++ b/frontend/src/app/project-management/page-complete-pmbok.tsx
+@@ -30,7 +30,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-database-aligned.tsx b/frontend/src/app/project-management/page-database-aligned.tsx
+index 086f8729..b9b1ff66 100644
+--- a/frontend/src/app/project-management/page-database-aligned.tsx
++++ b/frontend/src/app/project-management/page-database-aligned.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-fixed.tsx b/frontend/src/app/project-management/page-fixed.tsx
+index abf5c8d7..77d7c093 100644
+--- a/frontend/src/app/project-management/page-fixed.tsx
++++ b/frontend/src/app/project-management/page-fixed.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-full-pmbok.tsx b/frontend/src/app/project-management/page-full-pmbok.tsx
+index 2085d880..f8f4fa47 100644
+--- a/frontend/src/app/project-management/page-full-pmbok.tsx
++++ b/frontend/src/app/project-management/page-full-pmbok.tsx
+@@ -53,7 +53,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-minimal-fields.tsx b/frontend/src/app/project-management/page-minimal-fields.tsx
+index 2688a605..2cbe8fd2 100644
+--- a/frontend/src/app/project-management/page-minimal-fields.tsx
++++ b/frontend/src/app/project-management/page-minimal-fields.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-query-fixed.tsx b/frontend/src/app/project-management/page-query-fixed.tsx
+index 78288b79..8ec89e8f 100644
+--- a/frontend/src/app/project-management/page-query-fixed.tsx
++++ b/frontend/src/app/project-management/page-query-fixed.tsx
+@@ -53,7 +53,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-rbac.tsx b/frontend/src/app/project-management/page-rbac.tsx
+index 89af8d42..eeab2a13 100644
+--- a/frontend/src/app/project-management/page-rbac.tsx
++++ b/frontend/src/app/project-management/page-rbac.tsx
+@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
+ import { useRouter } from "next/navigation";
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+ import { Badge } from "@/components/ui/badge";
++import { Plus } from "lucide-react";
+ import { usePermissions } from "@/hooks/usePermissions";
+ import { FEATURES, PERMISSIONS, ROLES, type Feature } from "@/rbac/constants";
+ import { pmbokRBAC } from "@/services/pmbok_service_rbac";
+@@ -351,7 +352,7 @@ export default function ProjectManagementPageRBAC() {
+                         can get a quick glance at your work requests,
+                         projects, and risks.
+                       </p>
+-                      <PermissionStatus />
++                      <PermissionStatus feature="project_management" />
+                     </div>
+                   </TabsContent>
+ 
+@@ -389,7 +390,6 @@ export default function ProjectManagementPageRBAC() {
+                                   </p>
+                                 </div>
+                                 <WorkRequestApproveButton
+-                                  workRequest={wr}
+                                   onClick={() => {
+                                     setSelectedWorkRequest(wr);
+                                     setShowApprovalModal(true);
+@@ -438,7 +438,7 @@ export default function ProjectManagementPageRBAC() {
+                               >
+                                 <div className="flex-1">
+                                   <p className="text-sm font-medium text-gray-900">
+-                                    {project.name}
++                                    {project.project_name || project.title}
+                                   </p>
+                                   <p className="text-sm text-gray-500">
+                                     Status: {project.status}
+@@ -478,10 +478,10 @@ export default function ProjectManagementPageRBAC() {
+                               >
+                                 <div className="flex-1">
+                                   <p className="text-sm font-medium text-gray-900">
+-                                    {risk.name}
++                                    {risk.risk_title || risk.title}
+                                   </p>
+                                   <p className="text-sm text-gray-500">
+-                                    Severity: {risk.severity}
++                                    Severity: {risk.risk_level || risk.status}
+                                   </p>
+                                 </div>
+                                 {/* Add risk specific actions here */}
+diff --git a/frontend/src/app/project-management/page-schema-compatible.tsx b/frontend/src/app/project-management/page-schema-compatible.tsx
+index 2e882ead..b29c3592 100644
+--- a/frontend/src/app/project-management/page-schema-compatible.tsx
++++ b/frontend/src/app/project-management/page-schema-compatible.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page-with-views.tsx b/frontend/src/app/project-management/page-with-views.tsx
+index 6f8dbbb2..c8692d8d 100644
+--- a/frontend/src/app/project-management/page-with-views.tsx
++++ b/frontend/src/app/project-management/page-with-views.tsx
+@@ -39,7 +39,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/project-management/page.tsx b/frontend/src/app/project-management/page.tsx
+index 5ec85f77..bae2cb02 100644
+--- a/frontend/src/app/project-management/page.tsx
++++ b/frontend/src/app/project-management/page.tsx
+@@ -35,7 +35,7 @@ import {
+ import { Button } from '@/components/ui/Button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Input } from '@/components/ui/Input'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { useAuth } from '@/contexts/AuthContext'
+ import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
+diff --git a/frontend/src/app/questionnaires/analytics/page.tsx b/frontend/src/app/questionnaires/analytics/page.tsx
+index af78421f..75f37ae4 100644
+--- a/frontend/src/app/questionnaires/analytics/page.tsx
++++ b/frontend/src/app/questionnaires/analytics/page.tsx
+@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import {
+   Search,
+diff --git a/frontend/src/app/questionnaires/builder/page.tsx b/frontend/src/app/questionnaires/builder/page.tsx
+index 02126be7..bcdf9e9f 100644
+--- a/frontend/src/app/questionnaires/builder/page.tsx
++++ b/frontend/src/app/questionnaires/builder/page.tsx
+@@ -7,7 +7,7 @@ export const fetchCache = 'force-no-store';
+ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import { 
+diff --git a/frontend/src/app/questionnaires/page.tsx b/frontend/src/app/questionnaires/page.tsx
+index 21ebf5de..4c650de5 100644
+--- a/frontend/src/app/questionnaires/page.tsx
++++ b/frontend/src/app/questionnaires/page.tsx
+@@ -7,7 +7,7 @@ export const fetchCache = 'force-no-store';
+ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import { 
+diff --git a/frontend/src/app/rbac-test/page.tsx b/frontend/src/app/rbac-test/page.tsx
+index a4988c2c..b76930ab 100644
+--- a/frontend/src/app/rbac-test/page.tsx
++++ b/frontend/src/app/rbac-test/page.tsx
+@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
+ import { usePermissions } from "@/hooks/usePermissions";
+ import DashboardLayout from "@/components/layout/DashboardLayout";
+ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+-import { Badge } from "@/components/ui/Badge";
++import { Badge } from "@/components/ui/badge";
+ 
+ export default function RBACtestPage() {
+   const { user, tenantUser, isAuthenticated, loading: authloading } = useAuth();
+diff --git a/frontend/src/app/reporting/custom/page.tsx b/frontend/src/app/reporting/custom/page.tsx
+index e297f3d6..5a4a7747 100644
+--- a/frontend/src/app/reporting/custom/page.tsx
++++ b/frontend/src/app/reporting/custom/page.tsx
+@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Button } from '@/components/ui/Button'
+ import { Input } from '@/components/ui/Input'
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import { Plus, Settings, BarChart3, FileText, Download } from 'lucide-react'
+ 
+ export default function CustomReportsPage() {
+diff --git a/frontend/src/app/reporting/page-backup-before-search-indicators.tsx b/frontend/src/app/reporting/page-backup-before-search-indicators.tsx
+index e60adde9..48055130 100644
+--- a/frontend/src/app/reporting/page-backup-before-search-indicators.tsx
++++ b/frontend/src/app/reporting/page-backup-before-search-indicators.tsx
+@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
+ import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+diff --git a/frontend/src/app/reporting/page-backup-before-sticky.tsx b/frontend/src/app/reporting/page-backup-before-sticky.tsx
+index a5bd44fb..8c1c7c00 100644
+--- a/frontend/src/app/reporting/page-backup-before-sticky.tsx
++++ b/frontend/src/app/reporting/page-backup-before-sticky.tsx
+@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
+ import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+diff --git a/frontend/src/app/reporting/page-backup.tsx b/frontend/src/app/reporting/page-backup.tsx
+index f4136ba5..47b8c88f 100644
+--- a/frontend/src/app/reporting/page-backup.tsx
++++ b/frontend/src/app/reporting/page-backup.tsx
+@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
+ import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+diff --git a/frontend/src/app/reporting/page-enhanced-views.tsx b/frontend/src/app/reporting/page-enhanced-views.tsx
+index a5bd44fb..8c1c7c00 100644
+--- a/frontend/src/app/reporting/page-enhanced-views.tsx
++++ b/frontend/src/app/reporting/page-enhanced-views.tsx
+@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
+ import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+diff --git a/frontend/src/app/reporting/page-enhanced.tsx b/frontend/src/app/reporting/page-enhanced.tsx
+index cf528252..63228b6f 100644
+--- a/frontend/src/app/reporting/page-enhanced.tsx
++++ b/frontend/src/app/reporting/page-enhanced.tsx
+@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import { useTenant } from '@/contexts/TenantContext';
+ import { supabase } from '@/lib/supabase';
+diff --git a/frontend/src/app/reporting/page-sticky-header.tsx b/frontend/src/app/reporting/page-sticky-header.tsx
+index e60adde9..48055130 100644
+--- a/frontend/src/app/reporting/page-sticky-header.tsx
++++ b/frontend/src/app/reporting/page-sticky-header.tsx
+@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
+ import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+diff --git a/frontend/src/app/reporting/page-with-search-indicators.tsx b/frontend/src/app/reporting/page-with-search-indicators.tsx
+index 6c475300..a8e849f8 100644
+--- a/frontend/src/app/reporting/page-with-search-indicators.tsx
++++ b/frontend/src/app/reporting/page-with-search-indicators.tsx
+@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
+ import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+diff --git a/frontend/src/app/reporting/page.tsx b/frontend/src/app/reporting/page.tsx
+index 9cb4156a..572e2e2d 100644
+--- a/frontend/src/app/reporting/page.tsx
++++ b/frontend/src/app/reporting/page.tsx
+@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import ComprehensiveDashboard from '@/components/dashboard/ComprehensiveDashboard';
+ import TraditionalReportTable from '@/components/reporting/TraditionalReportTable';
+diff --git a/frontend/src/app/talent/candidates/page.tsx b/frontend/src/app/talent/candidates/page.tsx
+index 8df0f8d3..3e8c6f69 100644
+--- a/frontend/src/app/talent/candidates/page.tsx
++++ b/frontend/src/app/talent/candidates/page.tsx
+@@ -4,7 +4,7 @@
+ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+@@ -18,6 +18,7 @@ import {
+   Plus,
+   MoreVertical,
+   User,
++  Users,
+   Calendar,
+   MapPin,
+   DollarSign,
+diff --git a/frontend/src/app/talent/interviews/page.tsx b/frontend/src/app/talent/interviews/page.tsx
+index 03315ced..bd3aaff3 100644
+--- a/frontend/src/app/talent/interviews/page.tsx
++++ b/frontend/src/app/talent/interviews/page.tsx
+@@ -3,7 +3,7 @@
+ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+diff --git a/frontend/src/app/talent/jobs/page.tsx b/frontend/src/app/talent/jobs/page.tsx
+index 8936c85d..77068f35 100644
+--- a/frontend/src/app/talent/jobs/page.tsx
++++ b/frontend/src/app/talent/jobs/page.tsx
+@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+ import { Input } from '@/components/ui/Input';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/dialog';
+ import DashboardLayout from '@/components/layout/DashboardLayout';
+ import { useTenant } from '@/contexts/TenantContext';
+diff --git a/frontend/src/app/talent/offers/page.tsx b/frontend/src/app/talent/offers/page.tsx
+index b3e3ebe6..1870457e 100644
+--- a/frontend/src/app/talent/offers/page.tsx
++++ b/frontend/src/app/talent/offers/page.tsx
+@@ -3,7 +3,7 @@
+ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+diff --git a/frontend/src/app/talent/pipeline/page.tsx b/frontend/src/app/talent/pipeline/page.tsx
+index f18e6222..2159e876 100644
+--- a/frontend/src/app/talent/pipeline/page.tsx
++++ b/frontend/src/app/talent/pipeline/page.tsx
+@@ -3,7 +3,7 @@
+ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+diff --git a/frontend/src/app/work-requests/page-cleaned.tsx b/frontend/src/app/work-requests/page-cleaned.tsx
+index 9d4b69ae..42c35b8a 100644
+--- a/frontend/src/app/work-requests/page-cleaned.tsx
++++ b/frontend/src/app/work-requests/page-cleaned.tsx
+@@ -5,7 +5,7 @@ import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Tras
+ import { Button } from '@/components/ui/Button'
+ import { Input } from '@/components/ui/Input'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { supabase } from '@/lib/supabase'
+ import { useAuth } from '@/contexts/AuthContext'
+diff --git a/frontend/src/app/work-requests/page-schema-fixed.tsx b/frontend/src/app/work-requests/page-schema-fixed.tsx
+index d0f5dc37..1e61c151 100644
+--- a/frontend/src/app/work-requests/page-schema-fixed.tsx
++++ b/frontend/src/app/work-requests/page-schema-fixed.tsx
+@@ -5,7 +5,7 @@ import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Tras
+ import { Button } from '@/components/ui/Button'
+ import { Input } from '@/components/ui/Input'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { supabase } from '@/lib/supabase'
+ import { useAuth } from '@/contexts/AuthContext'
+diff --git a/frontend/src/app/work-requests/page-with-modals.tsx b/frontend/src/app/work-requests/page-with-modals.tsx
+index a28b5243..57885f41 100644
+--- a/frontend/src/app/work-requests/page-with-modals.tsx
++++ b/frontend/src/app/work-requests/page-with-modals.tsx
+@@ -5,7 +5,7 @@ import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Tras
+ import { Button } from '@/components/ui/Button'
+ import { Input } from '@/components/ui/Input'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import { supabase } from '@/lib/supabase'
+ import { useAuth } from '@/contexts/AuthContext'
+diff --git a/frontend/src/app/work-requests/page.tsx b/frontend/src/app/work-requests/page.tsx
+index a3e87e13..0afd1ec2 100644
+--- a/frontend/src/app/work-requests/page.tsx
++++ b/frontend/src/app/work-requests/page.tsx
+@@ -5,7 +5,7 @@ import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Tras
+ import { Button } from '@/components/ui/Button'
+ import { Input } from '@/components/ui/Input'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import DashboardLayout from '@/components/layout/DashboardLayout'
+ import WorkRequestForm from '@/components/work-requests/WorkRequestForm'
+ import { supabase } from '@/lib/supabase'
+diff --git a/frontend/src/components/ats/CandidatesManagement.tsx b/frontend/src/components/ats/CandidatesManagement.tsx
+index e46b693d..92791936 100644
+--- a/frontend/src/components/ats/CandidatesManagement.tsx
++++ b/frontend/src/components/ats/CandidatesManagement.tsx
+@@ -7,9 +7,11 @@
+  */
+ 
+ import React, { useState, useEffect, useMemo } from 'react';
+-import { Card } from '@/components/ui/Card';
++import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
++import { Input } from '@/components/ui/Input';
++import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ import {
+   Users,
+   Search,
+diff --git a/frontend/src/components/dashboard/ComprehensiveDashboard.tsx b/frontend/src/components/dashboard/ComprehensiveDashboard.tsx
+index 624271b3..dd211a1c 100644
+--- a/frontend/src/components/dashboard/ComprehensiveDashboard.tsx
++++ b/frontend/src/components/dashboard/ComprehensiveDashboard.tsx
+@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
+ import { User, PayStatement } from "@/types";
+ import { Card } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { useTenant } from '@/contexts/TenantContext';
+ import { supabase } from '@/lib/supabase';
+ 
+diff --git a/frontend/src/components/rbac/RolesPermissionsTab.tsx b/frontend/src/components/rbac/RolesPermissionsTab.tsx
+index 88563d7e..eb473d47 100644
+--- a/frontend/src/components/rbac/RolesPermissionsTab.tsx
++++ b/frontend/src/components/rbac/RolesPermissionsTab.tsx
+@@ -3,7 +3,7 @@
+ import React, { useEffect, useState } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import {
+   Plus,
+diff --git a/frontend/src/components/reporting/EnhancedEmployeeDocuments.tsx b/frontend/src/components/reporting/EnhancedEmployeeDocuments.tsx
+index 2c721bbc..e2307ee8 100644
+--- a/frontend/src/components/reporting/EnhancedEmployeeDocuments.tsx
++++ b/frontend/src/components/reporting/EnhancedEmployeeDocuments.tsx
+@@ -3,7 +3,7 @@
+ import React, { useState, useEffect } from 'react'
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+ import { Button } from '@/components/ui/Button'
+-import { Badge } from '@/components/ui/Badge'
++import { Badge } from '@/components/ui/badge'
+ import { Input } from '@/components/ui/Input'
+ import { FileText, Download, Search, User, Building, Calendar } from 'lucide-react'
+ import { useCustomerBranding } from '@/services/brandingService'
+diff --git a/frontend/src/components/reporting/EnhancedTaxRecordsWithLocalTax.tsx b/frontend/src/components/reporting/EnhancedTaxRecordsWithLocalTax.tsx
+index 90607250..6317be6f 100644
+--- a/frontend/src/components/reporting/EnhancedTaxRecordsWithLocalTax.tsx
++++ b/frontend/src/components/reporting/EnhancedTaxRecordsWithLocalTax.tsx
+@@ -3,7 +3,7 @@
+ import React, { useState, useMemo } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import { FileText, Download, DollarSign, Calendar, Building, User, MapPin } from 'lucide-react';
+ import { useCustomerBranding } from '@/services/brandingService';
+diff --git a/frontend/src/components/reporting/EnhancedTimecardGrid.tsx b/frontend/src/components/reporting/EnhancedTimecardGrid.tsx
+index 45ebd96e..6c38c6ed 100644
+--- a/frontend/src/components/reporting/EnhancedTimecardGrid.tsx
++++ b/frontend/src/components/reporting/EnhancedTimecardGrid.tsx
+@@ -3,7 +3,7 @@
+ import React, { useState, useEffect, useMemo } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import { Calendar, Download, Clock, User, Building, FileSpreadsheet } from 'lucide-react';
+ import { useCustomerBranding } from '@/services/brandingService';
+diff --git a/frontend/src/components/reporting/SimpleTimecardGrid.tsx b/frontend/src/components/reporting/SimpleTimecardGrid.tsx
+index a04bf4c1..c62ead42 100644
+--- a/frontend/src/components/reporting/SimpleTimecardGrid.tsx
++++ b/frontend/src/components/reporting/SimpleTimecardGrid.tsx
+@@ -3,7 +3,7 @@
+ import React, { useState, useEffect } from 'react';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+ import { Button } from '@/components/ui/Button';
+-import { Badge } from '@/components/ui/Badge';
++import { Badge } from '@/components/ui/badge';
+ import { Input } from '@/components/ui/Input';
+ import { Calendar, Download, Clock, User, Building, FileSpreadsheet } from 'lucide-react';
+ import { useCustomerBranding } from '@/services/brandingService';
+diff --git a/frontend/src/components/ui/Badge.tsx b/frontend/src/components/ui/Badge.tsx
+deleted file mode 100644
+index 0a22c164..00000000
+--- a/frontend/src/components/ui/Badge.tsx
++++ /dev/null
+@@ -1,32 +0,0 @@
+-import * as React from "react"
+-import { cn } from "@/lib/utils"
+-
+-export interface BadgeProps
+-  extends React.HTMLAttributes<HTMLDivElement> {
+-  variant?: 'default' | 'secondary' | 'destructive' | 'outline'
+-}
+-
+-const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+-  ({ className, variant = 'default', ...props }, ref) => {
+-    return (
+-      <div
+-        ref={ref}
+-        className={cn(
+-          "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+-          {
+-            'border-transparent bg-blue-600 text-white hover:bg-blue-700': variant === 'default',
+-            'border-transparent bg-gray-100 text-gray-900 hover:bg-gray-200': variant === 'secondary',
+-            'border-transparent bg-red-600 text-white hover:bg-red-700': variant === 'destructive',
+-            'text-gray-950 border-gray-200 bg-white hover:bg-gray-50': variant === 'outline',
+-          },
+-          className
+-        )}
+-        {...props}
+-      />
+-    )
+-  }
+-)
+-Badge.displayName = "Badge"
+-
+-export { Badge }
+-
+-- 
+2.34.1
+
