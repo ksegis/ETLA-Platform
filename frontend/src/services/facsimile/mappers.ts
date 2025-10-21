@@ -45,6 +45,7 @@ export interface FacsimileTaxRecordData {
   employee_id: string;
   tax_year: string;
   form_type: string;
+  state_code: string;
   wages_tips_compensation_fmt: string;
   federal_income_tax_withheld_fmt: string;
   social_security_wages_fmt: string;
@@ -53,6 +54,7 @@ export interface FacsimileTaxRecordData {
   medicare_tax_withheld_fmt: string;
   state_wages_fmt: string;
   state_income_tax_fmt: string;
+  local_income_tax_fmt: string;
   document_status: string;
 }
 
@@ -110,19 +112,24 @@ export function mapToFacsimileTaxRecord(
   employee?: Employee,
   locale: string = 'en-US'
 ): FacsimileTaxRecordData {
+  // Use social_security_wages as fallback for wages_tips_compensation if null
+  const wages = taxRecord.wages_tips_compensation ?? taxRecord.social_security_wages ?? 0;
+  
   return {
-    employee_name: employee?.full_name || `${employee?.first_name} ${employee?.last_name}` || '',
+    employee_name: employee?.full_name || `${employee?.first_name} ${employee?.last_name}` || 'N/A',
     employee_id: taxRecord.employee_id,
     tax_year: taxRecord.tax_year.toString(),
     form_type: taxRecord.form_type,
-    wages_tips_compensation_fmt: formatCurrency(taxRecord.wages_tips_compensation, locale),
-    federal_income_tax_withheld_fmt: formatCurrency(taxRecord.federal_income_tax_withheld, locale),
-    social_security_wages_fmt: formatCurrency(taxRecord.social_security_wages, locale),
-    social_security_tax_withheld_fmt: formatCurrency(taxRecord.social_security_tax_withheld, locale),
-    medicare_wages_fmt: formatCurrency(taxRecord.medicare_wages, locale),
-    medicare_tax_withheld_fmt: formatCurrency(taxRecord.medicare_tax_withheld, locale),
-    state_wages_fmt: formatCurrency(taxRecord.state_wages, locale),
-    state_income_tax_fmt: formatCurrency(taxRecord.state_income_tax, locale),
+    state_code: (taxRecord as any).state_code || 'N/A',
+    wages_tips_compensation_fmt: formatCurrency(wages, locale),
+    federal_income_tax_withheld_fmt: formatCurrency(taxRecord.federal_income_tax_withheld ?? 0, locale),
+    social_security_wages_fmt: formatCurrency(taxRecord.social_security_wages ?? 0, locale),
+    social_security_tax_withheld_fmt: formatCurrency(taxRecord.social_security_tax_withheld ?? 0, locale),
+    medicare_wages_fmt: formatCurrency(taxRecord.medicare_wages ?? 0, locale),
+    medicare_tax_withheld_fmt: formatCurrency(taxRecord.medicare_tax_withheld ?? 0, locale),
+    state_wages_fmt: formatCurrency(taxRecord.state_wages ?? 0, locale),
+    state_income_tax_fmt: formatCurrency(taxRecord.state_income_tax ?? 0, locale),
+    local_income_tax_fmt: formatCurrency((taxRecord as any).local_income_tax ?? 0, locale),
     document_status: taxRecord.document_status || 'draft'
   };
 }

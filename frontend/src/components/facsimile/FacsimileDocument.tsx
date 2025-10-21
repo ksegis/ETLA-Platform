@@ -351,6 +351,7 @@ function TaxRecordContent({ data, theme }: { data: FacsimileTaxRecordData; theme
         <div className="grid grid-cols-2 gap-8 text-sm">
           <div><strong>Tax Year:</strong> {data.tax_year}</div>
           <div><strong>Form Type:</strong> {data.form_type}</div>
+          <div><strong>State:</strong> {data.state_code}</div>
           <div><strong>Status:</strong> {data.document_status}</div>
         </div>
       </div>
@@ -390,6 +391,10 @@ function TaxRecordContent({ data, theme }: { data: FacsimileTaxRecordData; theme
           <div className="flex justify-between">
             <span>State Income Tax:</span>
             <span>{data.state_income_tax_fmt}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Local Income Tax:</span>
+            <span>{data.local_income_tax_fmt}</span>
           </div>
         </div>
       </div>
