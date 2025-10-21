@@ -87,8 +87,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCategoryClick }) => {
   const { 
     selectedTenant, 
-    availableTenants, 
-    isMultiTenant, 
+    tenantId,
     isDemoMode,
     Loading: tenantloading 
   } = useTenant();
@@ -106,8 +105,8 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     
     if (isDemoMode) {
       tenantIds = ['99883779-9517-4ca9-a3f8-7fdc59051f0e']; // Demo tenant ID
-    } else if (isMultiTenant && availableTenants.length > 0) {
-      tenantIds = availableTenants.map(t => t.id);
+    } else if (tenantId) {
+      tenantIds = [tenantId];
     } else if (selectedTenant) {
       tenantIds = [selectedTenant.id];
     }
@@ -350,11 +349,11 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
     } finally {
       setloading(false);
     }
-  }, [tenantloading, isDemoMode, availableTenants, selectedTenant, selectedTimeframe, isMultiTenant]);
+  }, [tenantloading, isDemoMode, tenantId, selectedTenant, selectedTimeframe]);
 
   useEffect(() => {
     loadDashboardMetrics();
-  }, [selectedTenant, selectedTimeframe, tenantloading, isDemoMode, availableTenants.length]);
+  }, [selectedTenant, selectedTimeframe, tenantloading, isDemoMode, tenantId]);
 
   if (loading) {
     return (
