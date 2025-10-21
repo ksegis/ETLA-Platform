@@ -1,4 +1,4 @@
-﻿import { cookies } from "next/headers";
+import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
 /**
@@ -7,7 +7,7 @@ import { createClient } from "@supabase/supabase-js";
  */
 export async function getSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!;
   const cookieStore = await cookies();
 
   const token =
@@ -25,6 +25,7 @@ export function publicUrl(bucket: string, path: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   return `${url}/storage/v1/object/public/${bucket}/${path}`;
 }
+
 
 
 

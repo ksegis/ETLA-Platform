@@ -10,7 +10,7 @@ export async function createSupabaseServerClient(/* : SupabaseClient */) {
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!,
     {
       cookies: {
         get(name: string) {
@@ -28,6 +28,7 @@ export async function createSupabaseServerClient(/* : SupabaseClient */) {
     }
   );
 }
+
 
 
 
