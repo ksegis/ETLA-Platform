@@ -5,6 +5,7 @@ import { User, PayStatement } from "types";
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Users, DollarSign, Clock, Briefcase, FileText, Heart, Shield } from 'lucide-react';
 import { useTenant } from '../../contexts/TenantContext';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser'
 const supabase = createSupabaseBrowserClient();;
@@ -420,7 +421,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600">{metrics.employees.total}</div>
-            <div className="text-sm text-gray-600">?? Employees</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center gap-1"><Users className="h-4 w-4" /> Employees</div>
             <div className="text-xs text-green-600 mt-1">
               {metrics.employees.active} Active
             </div>
@@ -433,7 +434,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-green-600">{metrics.payStatements.total}</div>
-            <div className="text-sm text-gray-600">?? Pay Statements</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center gap-1"><DollarSign className="h-4 w-4" /> Pay Statements</div>
             <div className="text-xs text-green-600 mt-1">
               ${(metrics.payStatements.totalGrossPay / 1000).toFixed(0)}K Total
             </div>
@@ -446,7 +447,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-purple-600">{metrics.timecards.total}</div>
-            <div className="text-sm text-gray-600">? Timecards</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center gap-1"><Clock className="h-4 w-4" /> Timecards</div>
             <div className="text-xs text-green-600 mt-1">
               {metrics.timecards.totalHours.toFixed(0)} Hours
             </div>
@@ -459,7 +460,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-orange-600">{metrics.jobs.total}</div>
-            <div className="text-sm text-gray-600">?? Job Positions</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center gap-1"><Briefcase className="h-4 w-4" /> Job Positions</div>
             <div className="text-xs text-green-600 mt-1">
               {metrics.jobs.totalEmployeesInJobs} Filled
             </div>
@@ -472,7 +473,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-red-600">{metrics.taxRecords.total}</div>
-            <div className="text-sm text-gray-600">?? Tax Records</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center gap-1"><FileText className="h-4 w-4" /> Tax Records</div>
             <div className="text-xs text-green-600 mt-1">
               ${(metrics.taxRecords.totalWages / 1000).toFixed(0)}K Wages
             </div>
@@ -485,7 +486,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-indigo-600">{metrics.benefits.total}</div>
-            <div className="text-sm text-gray-600">?? Benefits</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center gap-1"><Heart className="h-4 w-4" /> Benefits</div>
             <div className="text-xs text-green-600 mt-1">
               ${(metrics.benefits.totalEmployeeContributions / 1000).toFixed(0)}K Contrib.
             </div>
@@ -498,7 +499,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         >
           <div className="text-center">
             <div className="text-3xl font-bold text-pink-600">{metrics.compliance.total}</div>
-            <div className="text-sm text-gray-600">?? Compliance</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center gap-1"><Shield className="h-4 w-4" /> Compliance</div>
             <div className="text-xs text-red-600 mt-1">
               {metrics.compliance.overdueReports} Overdue
             </div>
@@ -511,7 +512,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
         
         {/* Employee Analytics */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">?? Employee Analytics</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Users className="h-5 w-5" /> Employee Analytics</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Active Employees:</span>
@@ -546,7 +547,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
         {/* Payroll Analytics */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">?? Payroll Analytics</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><DollarSign className="h-5 w-5" /> Payroll Analytics</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Total Gross Pay:</span>
@@ -582,7 +583,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
         {/* Time Tracking Analytics */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">? Time Tracking</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Clock className="h-5 w-5" /> Time Tracking</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Total Hours:</span>
@@ -618,7 +619,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
         {/* Job Analytics */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">?? Job Analytics</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Briefcase className="h-5 w-5" /> Job Analytics</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Total Positions:</span>
@@ -652,7 +653,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
         {/* Tax Records Analytics */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">?? Tax Analytics</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5" /> Tax Analytics</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Total Records:</span>
@@ -689,7 +690,7 @@ const ComprehensiveDashboard: React.FC<ComprehensiveDashboardProps> = ({ onCateg
 
         {/* Benefits Analytics */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">?? Benefits Analytics</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Heart className="h-5 w-5" /> Benefits Analytics</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Total Benefits:</span>
