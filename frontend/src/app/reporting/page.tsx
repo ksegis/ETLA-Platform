@@ -632,6 +632,11 @@ const EnhancedReportingPage: React.FC = () => {
       tenantIds = accessibleTenantIds;
     }
 
+    console.log('loadTabData - tenantIds:', tenantIds);
+    console.log('loadTabData - selectedTenant:', selectedTenant);
+    console.log('loadTabData - accessibleTenantIds:', accessibleTenantIds);
+    console.log('loadTabData - isDemoMode:', isDemoMode);
+
     if (!tenantIds || tenantIds.length === 0) {
       setloading(false);
       setError("No tenant selected or accessible.");
