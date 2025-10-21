@@ -116,7 +116,7 @@ function LoginForm() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">ETLA Platform</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900">HelixBridge</CardTitle>
           <CardDescription className="text-gray-600">
             Sign in to access your account
           </CardDescription>

@@ -200,6 +200,7 @@ export function usePermissions() {
     if (isDemoMode) return true;
     if (!isAuthenticated || !tenantUser) return false;
     if ((tenantUser.role as Role) === ROLES.HOST_ADMIN) return true;
+    if (!userPermissions || !Array.isArray(userPermissions)) return false;
     return userPermissions.some((p) => p.feature === feature);
   }
 
