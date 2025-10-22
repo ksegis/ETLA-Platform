@@ -144,10 +144,10 @@ export function mapToFacsimileTaxRecord(
     employee_name: employee?.full_name || `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim() || 'N/A',
     employee_id: taxRecord.employee_id,
     employee_ssn_masked: maskSSN((employee as any)?.ssn || (employee as any)?.ssn_encrypted),
-    employee_address: employee?.address_line1 || (employee as any)?.home_address || '',
-    employee_city: employee?.city || '',
-    employee_state: employee?.state || '',
-    employee_zip: employee?.zip_code || '',
+    employee_address: (employee as any)?.address_line1 || (employee as any)?.home_address || '',
+    employee_city: (employee as any)?.city || '',
+    employee_state: (employee as any)?.state || '',
+    employee_zip: (employee as any)?.zip_code || '',
     
     // Employer Information
     employer_name: tenant.name || 'N/A',
