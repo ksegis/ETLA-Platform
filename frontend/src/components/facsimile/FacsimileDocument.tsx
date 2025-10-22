@@ -336,83 +336,107 @@ function TaxRecordContent({ data, theme }: { data: FacsimileTaxRecordData; theme
   
   return (
     <div className="space-y-6">
-      {/* Employee Information */}
-      <div>
-        <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Employee</h3>
-        <div className="grid grid-cols-2 gap-8 text-sm">
-          <div><strong>Name:</strong> {data.employee_name}</div>
-          <div><strong>Employee ID:</strong> {data.employee_id}</div>
+      {/* Employer Information (Box b, c) */}
+      <div className="border-b pb-4" style={{ borderColor: colors.border }}>
+        <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Employer Information</h3>
+        <div className="text-sm space-y-1">
+          <div><strong>Employer Name:</strong> {data.employer_name}</div>
+          <div><strong>Employer EIN (Box b):</strong> {data.employer_ein}</div>
+          <div><strong>Address:</strong> {data.employer_address}</div>
+          <div>{data.employer_city}, {data.employer_state} {data.employer_zip}</div>
         </div>
       </div>
 
-      {/* Tax Information */}
-      <div>
-        <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Tax Information</h3>
-        <div className="grid grid-cols-2 gap-8 text-sm">
-          <div><strong>Tax Year:</strong> {data.tax_year}</div>
-          <div><strong>Form Type:</strong> {data.form_type}</div>
-          <div><strong>State:</strong> {data.state_code}</div>
-          <div><strong>Status:</strong> {data.document_status}</div>
-        </div>
-      </div>
-
-      {/* Tax Details */}
-      <div>
-        <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Tax Details</h3>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span>Wages & Compensation:</span>
-            <span>{data.wages_tips_compensation_fmt}</span>
+      {/* Employee Information (Box e, f, a) */}
+      <div className="border-b pb-4" style={{ borderColor: colors.border }}>
+        <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Employee Information</h3>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <div><strong>Name (Box e):</strong> {data.employee_name}</div>
+            <div><strong>SSN (Box a):</strong> {data.employee_ssn_masked}</div>
+            <div><strong>Employee ID:</strong> {data.employee_id}</div>
           </div>
-          <div className="flex justify-between">
-            <span>Federal Income Tax Withheld:</span>
-            <span>{data.federal_income_tax_withheld_fmt}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Social Security Wages:</span>
-            <span>{data.social_security_wages_fmt}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Social Security Tax Withheld:</span>
-            <span>{data.social_security_tax_withheld_fmt}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Medicare Wages:</span>
-            <span>{data.medicare_wages_fmt}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Medicare Tax Withheld:</span>
-            <span>{data.medicare_tax_withheld_fmt}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>State Wages:</span>
-            <span>{data.state_wages_fmt}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>State Income Tax:</span>
-            <span>{data.state_income_tax_fmt}</span>
+          <div>
+            <div><strong>Address (Box f):</strong></div>
+            <div>{data.employee_address}</div>
+            <div>{data.employee_city}, {data.employee_state} {data.employee_zip}</div>
           </div>
         </div>
       </div>
 
-      {/* Local Tax Information */}
+      {/* Tax Year and Form Type */}
+      <div className="grid grid-cols-3 gap-4 text-sm border-b pb-4" style={{ borderColor: colors.border }}>
+        <div><strong>Tax Year:</strong> {data.tax_year}</div>
+        <div><strong>Form Type:</strong> {data.form_type}</div>
+        <div><strong>Status:</strong> {data.document_status}</div>
+      </div>
+
+      {/* Federal Taxes (Boxes 1-6) */}
+      <div>
+        <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Federal Taxes</h3>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <div className="flex justify-between">
+            <span><strong>Box 1:</strong> Wages, tips, compensation:</span>
+            <span className="font-semibold">{data.wages_tips_compensation_fmt}</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Box 2:</strong> Federal income tax withheld:</span>
+            <span className="font-semibold">{data.federal_income_tax_withheld_fmt}</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Box 3:</strong> Social security wages:</span>
+            <span className="font-semibold">{data.social_security_wages_fmt}</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Box 4:</strong> Social security tax withheld:</span>
+            <span className="font-semibold">{data.social_security_tax_withheld_fmt}</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Box 5:</strong> Medicare wages and tips:</span>
+            <span className="font-semibold">{data.medicare_wages_fmt}</span>
+          </div>
+          <div className="flex justify-between">
+            <span><strong>Box 6:</strong> Medicare tax withheld:</span>
+            <span className="font-semibold">{data.medicare_tax_withheld_fmt}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* State Taxes (Boxes 15-17) */}
+      <div className="border-t pt-4" style={{ borderColor: colors.border }}>
+        <h3 className="font-bold mb-3" style={{ color: colors.primary }}>State Taxes</h3>
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <div><strong>Box 15:</strong> State</div>
+            <div className="font-semibold">{data.state_code}</div>
+          </div>
+          <div>
+            <div><strong>Box 16:</strong> State wages, tips, etc.</div>
+            <div className="font-semibold">{data.state_wages_fmt}</div>
+          </div>
+          <div>
+            <div><strong>Box 17:</strong> State income tax</div>
+            <div className="font-semibold">{data.state_income_tax_fmt}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Local Taxes (Boxes 18-20) */}
       {(data.local_wages_fmt !== '$0.00' || data.local_income_tax_fmt !== '$0.00' || data.local_jurisdiction_name !== 'N/A') && (
-        <div>
-          <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Local Tax Information</h3>
-          <div className="space-y-3 text-sm">
-            {data.local_jurisdiction_name !== 'N/A' && (
-              <div className="flex justify-between">
-                <span>Local Jurisdiction:</span>
-                <span>{data.local_jurisdiction_name}</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span>Local Wages:</span>
-              <span>{data.local_wages_fmt}</span>
+        <div className="border-t pt-4" style={{ borderColor: colors.border }}>
+          <h3 className="font-bold mb-3" style={{ color: colors.primary }}>Local Taxes</h3>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <div><strong>Box 18:</strong> Local wages, tips, etc.</div>
+              <div className="font-semibold">{data.local_wages_fmt}</div>
             </div>
-            <div className="flex justify-between">
-              <span>Local Income Tax:</span>
-              <span>{data.local_income_tax_fmt}</span>
+            <div>
+              <div><strong>Box 19:</strong> Local income tax</div>
+              <div className="font-semibold">{data.local_income_tax_fmt}</div>
+            </div>
+            <div>
+              <div><strong>Box 20:</strong> Locality name</div>
+              <div className="font-semibold">{data.local_jurisdiction_name}</div>
             </div>
           </div>
         </div>

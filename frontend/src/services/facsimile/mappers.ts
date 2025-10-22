@@ -41,11 +41,29 @@ export interface FacsimileTimecardData {
 }
 
 export interface FacsimileTaxRecordData {
+  // Employee Information (Box e, f)
   employee_name: string;
   employee_id: string;
+  employee_ssn_masked: string;
+  employee_address: string;
+  employee_city: string;
+  employee_state: string;
+  employee_zip: string;
+  
+  // Employer Information (Box b, c)
+  employer_name: string;
+  employer_ein: string;
+  employer_address: string;
+  employer_city: string;
+  employer_state: string;
+  employer_zip: string;
+  
+  // Tax Information
   tax_year: string;
   form_type: string;
   state_code: string;
+  
+  // Wage and Tax Amounts
   wages_tips_compensation_fmt: string;
   federal_income_tax_withheld_fmt: string;
   social_security_wages_fmt: string;
@@ -57,6 +75,7 @@ export interface FacsimileTaxRecordData {
   local_wages_fmt: string;
   local_income_tax_fmt: string;
   local_jurisdiction_name: string;
+  
   document_status: string;
 }
 
@@ -117,12 +136,33 @@ export function mapToFacsimileTaxRecord(
   // Use social_security_wages as fallback for wages_tips_compensation if null
   const wages = taxRecord.wages_tips_compensation ?? taxRecord.social_security_wages ?? 0;
   
+  // Get tenant/employer info from taxRecord (passed through from the view)
+  const tenant = (taxRecord as any).tenant || {};
+  
   return {
-    employee_name: employee?.full_name || `${employee?.first_name} ${employee?.last_name}` || 'N/A',
+    // Employee Information
+    employee_name: employee?.full_name || `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim() || 'N/A',
     employee_id: taxRecord.employee_id,
+    employee_ssn_masked: maskSSN((employee as any)?.ssn || (employee as any)?.ssn_encrypted),
+    employee_address: employee?.address_line1 || (employee as any)?.home_address || '',
+    employee_city: employee?.city || '',
+    employee_state: employee?.state || '',
+    employee_zip: employee?.zip_code || '',
+    
+    // Employer Information
+    employer_name: tenant.name || 'N/A',
+    employer_ein: tenant.ein || 'N/A',
+    employer_address: tenant.address || '',
+    employer_city: tenant.city || '',
+    employer_state: tenant.state || '',
+    employer_zip: tenant.zip_code || '',
+    
+    // Tax Information
     tax_year: taxRecord.tax_year.toString(),
     form_type: taxRecord.form_type,
     state_code: (taxRecord as any).state_code || 'N/A',
+    
+    // Wage and Tax Amounts
     wages_tips_compensation_fmt: formatCurrency(wages, locale),
     federal_income_tax_withheld_fmt: formatCurrency(taxRecord.federal_income_tax_withheld ?? 0, locale),
     social_security_wages_fmt: formatCurrency(taxRecord.social_security_wages ?? 0, locale),
@@ -134,6 +174,7 @@ export function mapToFacsimileTaxRecord(
     local_wages_fmt: formatCurrency((taxRecord as any).local_wages ?? 0, locale),
     local_income_tax_fmt: formatCurrency((taxRecord as any).local_income_tax ?? 0, locale),
     local_jurisdiction_name: (taxRecord as any).local_jurisdiction_name || 'N/A',
+    
     document_status: taxRecord.document_status || 'draft'
   };
 }

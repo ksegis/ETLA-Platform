@@ -378,6 +378,25 @@ const EnhancedReportingPage: React.FC = () => {
 
   const openFacsimile = async (data: any, type: 'pay_statement' | 'timecard' | 'tax_w2') => {
     console.log('openFacsimile called with:', { data, type });
+    
+    // Load tenant information if not already included
+    if (data.tenant_id && !data.tenant) {
+      try {
+        const { data: tenant, error: tenantError } = await supabase
+          .from('tenants')
+          .select('*')
+          .eq('id', data.tenant_id)
+          .maybeSingle();
+        
+        if (!tenantError && tenant) {
+          data.tenant = tenant;
+          console.log('Loaded tenant data:', tenant);
+        }
+      } catch (err) {
+        console.error('Error loading tenant data:', err);
+      }
+    }
+    
     setFacsimileData(data);
     setFacsimileType(type);
     
