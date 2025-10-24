@@ -652,6 +652,16 @@ export default function FacsimileModal({
             formTitle = '1099-DIV';
             formDescription = 'Dividend Income';
             break;
+          case '1099-R':
+          case '1099R':
+            formTitle = '1099-R';
+            formDescription = 'Distributions from Pensions, Annuities, Retirement';
+            break;
+          case 'W-9':
+          case 'W9':
+            formTitle = 'W-9';
+            formDescription = 'Request for Taxpayer Identification Number';
+            break;
         }
 
         return (
@@ -811,36 +821,224 @@ export default function FacsimileModal({
                       <div className="text-xl font-bold text-green-600 mt-1">${(record.nonemployee_compensation || 0).toFixed(2)}</div>
                     </div>
                     <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2. Payer made direct sales totaling $5,000 or more</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.direct_sales_indicator ? '☑ Yes' : '☐ No'}</div>
+                    </div>
+                    <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">4. Federal income tax withheld</label>
-                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_tax_withheld || 0).toFixed(2)}</div>
+                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_income_tax_withheld || record.federal_tax_withheld || 0).toFixed(2)}</div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">5. State tax withheld</label>
                       <div className="text-lg font-semibold text-gray-900 mt-1">${(record.state_tax_withheld || 0).toFixed(2)}</div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. State/Payer&apos;s state no.</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_payer_no || 'N/A'}</div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. State/Payer's state no.</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_payer_no || record.payer_state_no || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">7. State income</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.state_income || 0).toFixed(2)}</div>
                     </div>
                   </div>
                 )}
                 {(formType === 'W-4' || formType === 'W4') && (
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Filing Status</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.filing_status || 'N/A'}</div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Step 1(c): Filing Status</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.filing_status || 'Single or Married filing separately'}</div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Number of Dependents</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.dependents || 0}</div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Step 2: Multiple Jobs</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.multiple_jobs_indicator ? '☑ Yes' : '☐ No'}</div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tax Jurisdiction</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.jurisdiction || 'N/A'}</div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Step 3: Claim Dependents</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.dependents || 0} dependent(s)</div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">State Code</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state_code || 'N/A'}</div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Step 3: Total Dependent Amount</label>
+                      <div className="text-lg font-semibold text-green-600 mt-1">${(record.dependent_amount || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Step 4(a): Other Income</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.other_income || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Step 4(b): Deductions</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.deductions || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Step 4(c): Extra Withholding</label>
+                      <div className="text-lg font-semibold text-blue-600 mt-1">${(record.extra_withholding || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Effective Date</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.effective_date ? new Date(record.effective_date).toLocaleDateString() : 'N/A'}</div>
+                    </div>
+                  </div>
+                )}
+                {(formType === '1099-MISC' || formType === '1099MISC') && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1. Rents</label>
+                      <div className="text-xl font-bold text-green-600 mt-1">${(record.rents || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2. Royalties</label>
+                      <div className="text-xl font-bold text-green-600 mt-1">${(record.royalties || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">3. Other income</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.other_income || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">4. Federal income tax withheld</label>
+                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. Medical and health care payments</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.medical_health_payments || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">8. Substitute payments in lieu of dividends</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.substitute_payments || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">10. Crop insurance proceeds</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.crop_insurance || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">14. Gross proceeds paid to attorney</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.attorney_proceeds || 0).toFixed(2)}</div>
+                    </div>
+                  </div>
+                )}
+                {(formType === '1099-INT' || formType === '1099INT') && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1. Interest income</label>
+                      <div className="text-xl font-bold text-green-600 mt-1">${(record.interest_income || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2. Early withdrawal penalty</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.early_withdrawal_penalty || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">3. Interest on U.S. Savings Bonds</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.us_savings_bonds_interest || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">4. Federal income tax withheld</label>
+                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">5. Investment expenses</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.investment_expenses || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. Foreign tax paid</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.foreign_tax_paid || 0).toFixed(2)}</div>
+                    </div>
+                  </div>
+                )}
+                {(formType === '1099-DIV' || formType === '1099DIV') && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1a. Total ordinary dividends</label>
+                      <div className="text-xl font-bold text-green-600 mt-1">${(record.ordinary_dividends || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1b. Qualified dividends</label>
+                      <div className="text-lg font-semibold text-green-600 mt-1">${(record.qualified_dividends || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2a. Total capital gain distributions</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.capital_gain_distributions || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">3. Nondividend distributions</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.nondividend_distributions || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">4. Federal income tax withheld</label>
+                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. Foreign tax paid</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.foreign_tax_paid || 0).toFixed(2)}</div>
+                    </div>
+                  </div>
+                )}
+                {(formType === '1099-R' || formType === '1099R') && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1. Gross distribution</label>
+                      <div className="text-xl font-bold text-green-600 mt-1">${(record.gross_distribution || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2a. Taxable amount</label>
+                      <div className="text-xl font-bold text-orange-600 mt-1">${(record.taxable_amount || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2b. Taxable amount not determined</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.taxable_not_determined ? '☑ Yes' : '☐ No'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2b. Total distribution</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.total_distribution ? '☑ Yes' : '☐ No'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">4. Federal income tax withheld</label>
+                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">7. Distribution code(s)</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.distribution_code || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">9a. Your percentage of total distribution</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.distribution_percentage || 100}%</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">10. Amount allocable to IRR</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.irr_amount || 0).toFixed(2)}</div>
+                    </div>
+                  </div>
+                )}
+                {(formType === 'W-9' || formType === 'W9') && (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1. Name</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.taxpayer_name || record.employee?.full_name || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2. Business name</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.business_name || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">3. Federal tax classification</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.tax_classification || 'Individual/sole proprietor'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">4. Exemptions</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.exemptions || 'None'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">5. Address</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.address || record.employee?.address || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. City, State, ZIP</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.city || record.employee?.city || 'N/A'}, {record.state || record.employee?.state || 'N/A'} {record.zip_code || record.employee?.zip_code || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Taxpayer Identification Number (SSN or EIN)</label>
+                      <div className="text-xl font-bold text-blue-600 mt-1">{record.tin || record.ssn || record.ein || '***-**-****'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Certification Date</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.certification_date ? new Date(record.certification_date).toLocaleDateString() : 'N/A'}</div>
                     </div>
                   </div>
                 )}
