@@ -451,7 +451,64 @@ const EnhancedReportingPage: React.FC = () => {
   };
 
   // New facsimile modal handlers
-  const handleViewFacsimile = (record: any) => {
+  const handleViewFacsimile = async (record: any) => {
+    console.log('handleViewFacsimile called with record:', record);
+    
+    // Load tenant information if not already included
+    if (record.tenant_id && !record.tenant) {
+      try {
+        const { data: tenant, error: tenantError } = await supabase
+          .from('tenants')
+          .select('*')
+          .eq('id', record.tenant_id)
+          .maybeSingle();
+        
+        if (!tenantError && tenant) {
+          record.tenant = tenant;
+          console.log('Loaded tenant data for new modal:', tenant);
+        }
+      } catch (err) {
+        console.error('Error loading tenant data for new modal:', err);
+      }
+    }
+    
+    // Load employee information if not already included
+    if (record.employee_id && !record.employee) {
+      try {
+        console.log('Loading employee data for employee_id:', record.employee_id);
+        let employee = null;
+        
+        // First try: query by id (UUID)
+        const result1 = await supabase
+          .from('employees')
+          .select('*')
+          .eq('id', record.employee_id)
+          .maybeSingle();
+        
+        if (!result1.error && result1.data) {
+          employee = result1.data;
+        } else {
+          // Second try: query by employee_id field
+          const result2 = await supabase
+            .from('employees')
+            .select('*')
+            .eq('employee_id', record.employee_id)
+            .maybeSingle();
+          
+          employee = result2.data;
+        }
+        
+        if (employee) {
+          record.employee = employee;
+          console.log('Loaded employee data for new modal:', employee);
+        } else {
+          console.warn('Could not find employee:', record.employee_id);
+        }
+      } catch (err) {
+        console.error('Error loading employee data for new modal:', err);
+      }
+    }
+    
     setNewFacsimileRecord(record);
     setNewFacsimileType(
       activeTab === 'timecards' ? 'timecard' : 

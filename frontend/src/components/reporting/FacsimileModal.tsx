@@ -674,6 +674,38 @@ export default function FacsimileModal({
               </div>
             </div>
 
+            {/* Employer Information */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-6 m-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clipRule="evenodd" />
+                </svg>
+                <h4 className="font-semibold text-gray-900 text-lg">Employer Information</h4>
+              </div>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employer Name</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.tenant?.name || record.employer_name || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employer EIN</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">{record.tenant?.ein || record.employer_ein || 'N/A'}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Address</label>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">
+                    {record.tenant?.address || record.employer_address || 'N/A'}
+                    {(record.tenant?.city || record.employer_city) && (
+                      <div className="text-sm text-gray-600 mt-1">
+                        {record.tenant?.city || record.employer_city}, {record.tenant?.state || record.employer_state} {record.tenant?.zip_code || record.employer_zip}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Employee Information */}
             <div className="bg-gray-50 border-l-4 border-purple-500 p-6 m-6">
               <div className="flex items-center space-x-2 mb-4">
                 <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
@@ -695,6 +727,17 @@ export default function FacsimileModal({
                   <div className="text-lg font-semibold text-gray-900 mt-1">{record.ssn || '***-**-1234'}</div>
                 </div>
               </div>
+              <div className="mt-4">
+                <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employee Address</label>
+                <div className="text-gray-900 mt-1">
+                  {record.employee?.address || record.employee?.home_address || record.employee_address || 'N/A'}
+                  {(record.employee?.city || record.employee_city) && (
+                    <div className="text-sm text-gray-600 mt-1">
+                      {record.employee?.city || record.employee_city}, {record.employee?.state || record.employee_state} {record.employee?.zip_code || record.employee_zip}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="mx-6 mb-6">
@@ -710,19 +753,19 @@ export default function FacsimileModal({
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1. Wages, tips, other compensation</label>
-                      <div className="text-xl font-bold text-green-600 mt-1">${(record.wages || 0).toFixed(2)}</div>
+                      <div className="text-xl font-bold text-green-600 mt-1">${(record.wages_tips_compensation || 0).toFixed(2)}</div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">2. Federal income tax withheld</label>
-                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_tax_withheld || 0).toFixed(2)}</div>
+                      <div className="text-xl font-bold text-red-600 mt-1">${(record.federal_income_tax_withheld || 0).toFixed(2)}</div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">3. Social security wages</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.ss_wages || 0).toFixed(2)}</div>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.social_security_wages || 0).toFixed(2)}</div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">4. Social security tax withheld</label>
-                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.ss_tax_withheld || 0).toFixed(2)}</div>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.social_security_tax_withheld || 0).toFixed(2)}</div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">5. Medicare wages and tips</label>
