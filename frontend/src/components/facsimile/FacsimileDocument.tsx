@@ -334,6 +334,11 @@ function TimecardContent({ data, theme }: { data: FacsimileTimecardData; theme: 
 function TaxRecordContent({ data, theme }: { data: FacsimileTaxRecordData; theme: FacsimileTheme }) {
   const { colors } = theme.design_tokens;
   
+  // Debug: Log the data to see what's being passed
+  console.log('TaxRecordContent received data:', data);
+  console.log('Data keys:', Object.keys(data));
+  console.log('Wages value:', data.wages_tips_compensation_fmt);
+  
   return (
     <div className="space-y-6">
       {/* Employer Information (Box b, c) */}
