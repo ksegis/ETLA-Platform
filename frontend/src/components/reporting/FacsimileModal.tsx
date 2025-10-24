@@ -778,6 +778,30 @@ export default function FacsimileModal({
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">6. Medicare tax withheld</label>
                       <div className="text-lg font-semibold text-gray-900 mt-1">${(record.medicare_tax_withheld || 0).toFixed(2)}</div>
                     </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">15. State</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.state || record.employee?.state || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">16. State wages, tips, etc.</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.state_wages || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">17. State income tax</label>
+                      <div className="text-lg font-semibold text-blue-600 mt-1">${(record.state_income_tax || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">18. Local wages, tips, etc.</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.local_wages || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">19. Local income tax</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">${(record.local_income_tax || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">20. Locality name</label>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">{record.locality_name || record.employee?.city || 'N/A'}</div>
+                    </div>
                   </div>
                 )}
                 {(formType === '1099-NEC' || formType === '1099NEC') && (
