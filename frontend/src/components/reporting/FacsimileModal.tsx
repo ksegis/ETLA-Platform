@@ -625,6 +625,9 @@ export default function FacsimileModal({
 
       case 'tax_w2':
         const formType = record.form_type || 'W-2';
+        console.log('FacsimileModal - formType:', formType);
+        console.log('FacsimileModal - record data:', record);
+        console.log('FacsimileModal - wages_tips_compensation:', record.wages_tips_compensation);
         let formTitle = 'W-2';
         let formDescription = 'Annual Wage and Tax Statement';
 
@@ -749,7 +752,7 @@ export default function FacsimileModal({
                 <h4 className="font-semibold text-gray-900 text-lg">Tax Information</h4>
               </div>
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                {formType === 'W-2' && (
+                {(formType === 'W-2' || formType === 'W2' || formType?.toUpperCase() === 'W2') && (
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1. Wages, tips, other compensation</label>
@@ -777,7 +780,7 @@ export default function FacsimileModal({
                     </div>
                   </div>
                 )}
-                {formType === '1099-NEC' && (
+                {(formType === '1099-NEC' || formType === '1099NEC') && (
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">1. Nonemployee compensation</label>
@@ -797,7 +800,7 @@ export default function FacsimileModal({
                     </div>
                   </div>
                 )}
-                {formType === 'W-4' && (
+                {(formType === 'W-4' || formType === 'W4') && (
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Filing Status</label>
