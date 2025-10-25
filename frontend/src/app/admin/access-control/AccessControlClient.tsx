@@ -192,10 +192,10 @@ export default function AccessControlClient() {
           return {
             userId: user.userId,
             email: user.email,
-            displayName: user.display_name || user.email,
+            display_name: user.display_name || user.email,
             role: user.role,
-            isActive: user.is_active,
-            permissions: userPerms
+            is_active: user.is_active,
+            cells: userPerms
           };
         });
 
