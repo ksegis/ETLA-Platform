@@ -166,10 +166,19 @@ export default function AccessControlClient() {
     (async () => {
       try {
         // Get tenant users
-        const { users: tenantUsers } = await RBACAdminService.listTenantUsers(selectedTenant.id, {
+        const result = await RBACAdminService.listTenantUsers(selectedTenant.id, {
           search: searchQuery,
           limit: 100
         });
+
+        const tenantUsers = result?.users || [];
+
+        if (tenantUsers.length === 0) {
+          if (mounted.current) {
+            setUsers([]);
+          }
+          return;
+        }
 
         // Get user IDs
         const userIds = tenantUsers.map(u => u.userId);
@@ -195,6 +204,9 @@ export default function AccessControlClient() {
         }
       } catch (e) {
         console.error('AccessControl: load matrix users failed', e);
+        if (mounted.current) {
+          setUsers([]);
+        }
       } finally {
         mounted.current && setLoading(false);
       }
