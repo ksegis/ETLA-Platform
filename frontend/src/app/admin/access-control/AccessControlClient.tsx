@@ -19,6 +19,7 @@ import type {
 } from '@/types';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { InvitationsTab } from '@/components/admin/InvitationsTab';
 import { Button } from '@/components/ui/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/Input';
@@ -421,13 +422,14 @@ export default function AccessControlClient() {
               </TabsContent>
 
               <TabsContent value="invitations" className="space-y-4">
-                <div className="bg-white rounded-lg border p-6">
-                  <h3 className="text-lg font-semibold mb-4">Pending Invitations</h3>
+                {selectedTenant && (
+                  <InvitationsTab selectedTenantId={selectedTenant.id} />
+                )}
+                {!selectedTenant && (
                   <div className="text-center py-8 text-gray-500">
-                    <p>No pending invitations at this time.</p>
-                    <p className="text-sm mt-2">Invited users will appear here until they accept their invitation.</p>
+                    Please select a tenant to view invitations
                   </div>
-                </div>
+                )}
               </TabsContent>
 
               <TabsContent value="notifications" className="space-y-4">
