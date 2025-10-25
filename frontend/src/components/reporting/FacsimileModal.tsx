@@ -1144,7 +1144,7 @@ export default function FacsimileModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" onClick={onClose}>
-      <div className="bg-gray-100 rounded-lg shadow-2xl w-full max-w-[95vw] max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-gray-100 rounded-lg shadow-2xl w-auto min-w-[600px] max-w-[95vw] max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-gray-100 z-10 p-4 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">{record.sub_client_company || record.client_name || record.customer_name || 'Customer Company Name'}</h2>
