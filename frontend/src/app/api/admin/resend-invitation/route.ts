@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     // Get the invitation details
     const { data: invitation, error: invitationError } = await supabaseAdmin
       .from('user_invitations')
-      .select('*, tenants(name, type)')
+      .select('*')
       .eq('id', invitationId)
       .single();
 
@@ -63,6 +63,13 @@ export async function POST(request: Request) {
         error: 'Invitation not found' 
       }, { status: 404 });
     }
+
+    // Get tenant details separately
+    const { data: tenant } = await supabaseAdmin
+      .from('tenants')
+      .select('name, type')
+      .eq('id', invitation.tenant_id)
+      .single();
 
     // Check if user already exists in Supabase Auth
     const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
@@ -77,8 +84,8 @@ export async function POST(request: Request) {
 
     const existingUser = existingUsers.users.find(u => u.email === invitation.email);
 
-    const tenantName = invitation.tenants?.name || 'the organization';
-    const tenantType = invitation.tenants?.type || 'organization';
+    const tenantName = tenant?.name || 'the organization';
+    const tenantType = tenant?.type || 'organization';
 
     if (existingUser) {
       // User exists - send password reset link instead
