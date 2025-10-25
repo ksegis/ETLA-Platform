@@ -1,7 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import type { UserInvitationData } from '@/lib/supabase';
 
 // Get environment variables with fallback for build time
@@ -31,22 +29,17 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // Get the current user from the session
-    const cookieStore = await cookies();
-    const supabaseClient = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        },
-      },
-    });
+    // Get the current user from the request headers
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Authentication required' 
+      }, { status: 401 });
+    }
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Verify the user with admin client
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace('Bearer ', ''));
     
     if (userError || !user) {
       console.error('API: Failed to get current user:', userError);
