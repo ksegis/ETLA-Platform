@@ -408,7 +408,7 @@ export default function PipelinePage() {
 
       {/* Application Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-auto min-w-[600px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
           {selectedApplication && (
             <>
               <DialogHeader>

@@ -162,7 +162,7 @@ export function CorrectionModal({ isOpen, onClose, onSave, initialData }: Correc
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className="w-auto min-w-[600px] max-w-[90vw]">
         <DialogHeader>
           <DialogTitle>Edit Timecard Correction</DialogTitle>
           {initialData && (

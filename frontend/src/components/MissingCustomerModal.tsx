@@ -136,7 +136,7 @@ export default function MissingCustomerModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
+      <Card className="w-auto min-w-[400px] max-w-[90vw] mx-4">
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" />
