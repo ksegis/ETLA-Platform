@@ -102,7 +102,7 @@ export async function POST(request: Request) {
               invitation_id: invitation.id,
               custom_message: invitationData.message
             },
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/callback`
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/set-password`
           }
         );
 

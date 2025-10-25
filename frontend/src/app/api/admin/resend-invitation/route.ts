@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
         invitation.email,
         {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/callback`
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/set-password`
         }
       );
 
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
             invitation_id: invitation.id,
             custom_message: invitation.message
           },
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/callback`
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/set-password`
         }
       );
 
