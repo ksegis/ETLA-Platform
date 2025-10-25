@@ -149,7 +149,7 @@ export default function AccessControlClient() {
     if (!selectedTenant) return;
     (async () => {
       try {
-        const catalog = await RBACAdminService.listPermissionCatalog(selectedTenant.id);
+        const catalog = await RBACAdminService.listPermissionCatalog();
         if (mounted.current) {
           setPermissionCatalog(catalog);
         }
