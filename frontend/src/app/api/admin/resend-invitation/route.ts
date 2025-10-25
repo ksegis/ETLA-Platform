@@ -91,16 +91,15 @@ export async function POST(request: Request) {
       // User exists - send password reset link instead
       console.log(`API: User ${invitation.email} already exists, sending password reset link`);
       
-      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email: invitation.email,
-        options: {
+      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
+        invitation.email,
+        {
           redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/callback`
         }
-      });
+      );
 
       if (resetError) {
-        console.error(`API: Failed to generate magic link for ${invitation.email}:`, resetError);
+        console.error(`API: Failed to send password reset email for ${invitation.email}:`, resetError);
         return NextResponse.json({ 
           success: false, 
           error: resetError.message 
@@ -118,8 +117,8 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ 
         success: true,
-        message: 'Magic link sent successfully',
-        method: 'magic_link'
+        message: 'Password reset email sent successfully',
+        method: 'password_reset'
       });
     } else {
       // User doesn't exist - send fresh invitation

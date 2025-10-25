@@ -83,8 +83,8 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
       const result = await response.json();
       
       if (result.success) {
-        const message = result.method === 'magic_link' 
-          ? 'A magic link has been sent to the user\'s email. They can use this to access their account.'
+        const message = result.method === 'password_reset' 
+          ? 'A password reset email has been sent. The user can use this link to access their account.'
           : 'Invitation resent successfully!';
         alert(message);
         fetchInvitations(); // Refresh the list
