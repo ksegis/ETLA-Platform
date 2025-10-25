@@ -58,15 +58,22 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
     }
   };
 
-  const handleResend = async (invitation: Invitation) => {
+   const handleResend = async (invitation: Invitation) => {
     try {
       setActionLoading(invitation.id);
       
-      // Call the invite API again with the same data
+      // Get the current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('You must be logged in to resend invitations');
+        return;
+      }
+      
       const response = await fetch('/api/admin/invite-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           emails: [invitation.email],
@@ -75,6 +82,8 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
           tenantId: invitation.tenant_id,
           expiresInDays: 7,
           customMessage: invitation.custom_message || ''
+        }),
+      });invitation.custom_message || ''
         }),
       });
 
