@@ -83,8 +83,6 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
           expiresInDays: 7,
           customMessage: invitation.custom_message || ''
         }),
-      });invitation.custom_message || ''
-        }),
       });
 
       const result = await response.json();
