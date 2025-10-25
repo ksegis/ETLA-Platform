@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import type { UserInvitationData } from '@/lib/supabase';
@@ -32,10 +33,15 @@ export async function POST(request: Request) {
 
     // Get the current user from the session
     const cookieStore = await cookies();
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    const supabaseClient = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
         },
       },
     });
