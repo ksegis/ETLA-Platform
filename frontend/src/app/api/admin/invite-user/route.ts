@@ -4,7 +4,7 @@ import type { UserInvitationData } from '@/lib/supabase';
 
 // Get environment variables with fallback for build time
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_TOKEN || '';
 
 // Only create admin client if both URL and key are available
 const supabaseAdmin = supabaseUrl && supabaseServiceKey 
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   try {
     // Check if Supabase admin client is available
     if (!supabaseAdmin) {
-      console.error('API: Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY.');
+      console.error('API: Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_TOKEN.');
       return NextResponse.json({ 
         success: false, 
         error: 'Server configuration error: Admin client not available' 
