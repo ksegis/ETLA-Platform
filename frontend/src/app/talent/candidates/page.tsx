@@ -583,7 +583,7 @@ export default function CandidatesPage() {
 
       {/* Candidate Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="w-auto min-w-[600px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[90vw] max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedCandidate && (
             <>
               <DialogHeader>

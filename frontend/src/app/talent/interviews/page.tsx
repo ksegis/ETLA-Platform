@@ -550,7 +550,7 @@ export default function InterviewsPage() {
 
       {/* Interview Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="w-auto min-w-[600px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[85vw] max-w-5xl max-h-[90vh] overflow-y-auto">
           {selectedInterview && (
             <>
               <DialogHeader>

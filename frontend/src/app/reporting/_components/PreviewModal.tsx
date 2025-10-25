@@ -171,7 +171,7 @@ export default function PreviewModal({ open, report, onClose }: Props) {
       aria-modal="true"
       aria-label="Report preview"
     >
-      <div className="relative mt-8 w-auto min-w-[600px] max-w-[95vw] rounded-xl bg-white shadow-xl ring-1 ring-black/5">
+      <div className="relative mt-8 w-[90vw] max-w-7xl rounded-xl bg-white shadow-xl ring-1 ring-black/5">
         {/* Header */}
         <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
           <div>
