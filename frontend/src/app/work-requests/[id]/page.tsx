@@ -213,13 +213,24 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
     try {
       setloading(true)
       setError(null)
-      console.log('?? loading work request:', requestId)
+      console.log('🔍 Loading work request:', requestId)
 
       if (useRealData) {
-        // TRY TO LOAD REAL DATA FIRST
+        // TRY TO LOAD REAL DATA DIRECTLY FROM DATABASE
         try {
-          const workRequests = await pmbok.getWorkRequests()
-          const foundRequest = workRequests.find((wr: any) => wr.id === requestId)
+          const { createSupabaseBrowserClient } = await import('../../../lib/supabase/browser')
+          const supabase = createSupabaseBrowserClient()
+          
+          const { data: foundRequest, error: dbError } = await supabase
+            .from('work_requests')
+            .select('*')
+            .eq('id', requestId)
+            .single()
+
+          if (dbError) {
+            console.error('❌ Database error:', dbError)
+            throw dbError
+          }
 
           if (foundRequest) {
             // MERGE REAL DATA WITH MOCK DATA STRUCTURE TO PRESERVE FUNCTIONALITY
@@ -249,10 +260,10 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
       // FALLBACK TO MOCK DATA IF REAL DATA FAILS OR NOT FOUND
       if (requestId === '1' || !useRealData) {
         setRequest(mockRequest)
-        console.log('? Mock work request loaded:', mockRequest)
+        console.log('📝 Mock work request loaded:', mockRequest)
       } else {
-        setError('Work request not found')
-        console.error('? Work request not found:', requestId)
+        setError('This work request could not be loaded. It may have been deleted or you may not have permission to view it.')
+        console.error('❌ Work request not found:', requestId)
       }
 
     } catch (error) {
