@@ -54,6 +54,16 @@ export async function POST(request: Request) {
     const invitations = [];
     const errors = [];
 
+    // Fetch tenant name
+    const { data: tenant, error: tenantError } = await supabaseAdmin
+      .from('tenants')
+      .select('name, type')
+      .eq('id', invitationData.tenant_id)
+      .single();
+
+    const tenantName = tenant?.name || 'the organization';
+    const tenantType = tenant?.type || 'organization';
+
     for (const email of invitationData.emails) {
       try {
         // Create invitation record
@@ -87,6 +97,8 @@ export async function POST(request: Request) {
               role: invitationData.role,
               role_level: invitationData.role_level,
               tenant_id: invitationData.tenant_id,
+              tenant_name: tenantName,
+              tenant_type: tenantType,
               invitation_id: invitation.id,
               custom_message: invitationData.message
             },
