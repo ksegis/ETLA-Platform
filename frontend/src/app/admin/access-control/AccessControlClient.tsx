@@ -99,12 +99,12 @@ export default function AccessControlClient() {
   const currentUserId = user?.id ?? null;
 
   const isHostAdmin = useMemo(
-    () => currentUserRole?.role === ROLES.HOST_ADMIN,
+    () => currentUserRole === ROLES.HOST_ADMIN,
     [currentUserRole]
   );
 
   const isAdmin = useMemo(
-    () => currentUserRole?.role === ROLES.HOST_ADMIN || currentUserRole?.role === ROLES.CLIENT_ADMIN,
+    () => currentUserRole === ROLES.HOST_ADMIN || currentUserRole === ROLES.CLIENT_ADMIN,
     [currentUserRole]
   );
 
