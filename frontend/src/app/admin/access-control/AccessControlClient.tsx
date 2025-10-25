@@ -242,7 +242,7 @@ export default function AccessControlClient() {
     const currentPerm = currentUser.cells?.find((p) => p.permissionId === permissionId);
     if (!currentPerm) return;
 
-    const currentValue = currentPerm.value;
+    const currentValue = currentPerm.state;
     let nextValue: 'allow' | 'deny' | 'none';
 
     if (currentValue === 'allow') {
