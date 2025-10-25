@@ -98,7 +98,18 @@ export default function AccessControlClient() {
 
   const currentUserId = user?.id ?? null;
 
-  const mounted = useRef(true);
+  const isHostAdmin = useMemo(
+    () => currentUserRole?.role === ROLES.HOST_ADMIN,
+    [currentUserRole]
+  );
+
+  const isAdmin = useMemo(
+    () => currentUserRole?.role === ROLES.HOST_ADMIN || currentUserRole?.role === ROLES.CLIENT_ADMIN,
+    [currentUserRole]
+  );
+
+  const mounted = useRef(false);
+
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -106,148 +117,128 @@ export default function AccessControlClient() {
     };
   }, []);
 
-  const canViewAccess = useMemo(() => {
-    if (permissionsLoading) return false;
-    try {
-      return checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW);
-    } catch {
-      return false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [permissionsLoading]);
-
-  const initRan = useRef(false);
+  // Check permission
   useEffect(() => {
-    if (!isAuthenticated || permissionsLoading || initRan.current) return;
-
-    if (!canViewAccess) {
-      router.replace('/unauthorized');
-      return;
+    if (permissionsLoading) return;
+    const canAccess = checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW);
+    if (!canAccess) {
+      router.push('/unauthorized');
     }
+  }, [checkPermission, permissionsLoading, router]);
 
-    initRan.current = true;
-
-    const load = async () => {
-      setLoading(true);
+  // Load tenants
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId) return;
+    (async () => {
       try {
-        const [fetchedTenants, fetchedCatalog] = await Promise.all([
-          RBACAdminService.listTenants(),
-          RBACAdminService.listPermissionCatalog(),
-        ]);
-
-        if (!mounted.current) return;
-
-        setTenants(fetchedTenants);
-        if (!selectedTenant && fetchedTenants.length > 0) {
-          setSelectedTenant(fetchedTenants[0]);
+        const list = await RBACAdminService.listTenants();
+        if (mounted.current) {
+          setTenants(list);
+          if (list.length > 0) {
+            setSelectedTenant(list[0]);
+          }
         }
-        setPermissionCatalog(fetchedCatalog);
       } catch (e) {
-        console.error('AccessControl: initial load failed', e);
+        console.error('AccessControl: load tenants failed', e);
+      }
+    })();
+  }, [isAuthenticated, currentUserId]);
+
+  // Load permission catalog
+  useEffect(() => {
+    if (!selectedTenant) return;
+    (async () => {
+      try {
+        const catalog = await RBACAdminService.getPermissionCatalog(selectedTenant.id);
+        if (mounted.current) {
+          setPermissionCatalog(catalog);
+        }
+      } catch (e) {
+        console.error('AccessControl: load permission catalog failed', e);
+      }
+    })();
+  }, [selectedTenant]);
+
+  // Load users
+  useEffect(() => {
+    if (!selectedTenant) return;
+    setLoading(true);
+    (async () => {
+      try {
+        const matrixUsers = await RBACAdminService.getMatrixUsers(selectedTenant.id, searchQuery);
+        if (mounted.current) {
+          setUsers(matrixUsers);
+        }
+      } catch (e) {
+        console.error('AccessControl: load matrix users failed', e);
       } finally {
         mounted.current && setLoading(false);
       }
-    };
+    })();
+  }, [selectedTenant, searchQuery]);
 
-    load();
-  }, [isAuthenticated, permissionsLoading, canViewAccess, router, selectedTenant]);
-
+  // Load user detail when selected
   useEffect(() => {
-    if (!selectedTenant) return;
-
-    const controller = new AbortController();
-    const t = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const { users: fetchedUsers } = await RBACAdminService.listTenantUsers(
-          selectedTenant.id,
-          { search: searchQuery }
-        );
-
-        if (!mounted.current || controller.signal.aborted) return;
-
-        const userIds = fetchedUsers.map(u => u.userId);
-        const effectivePermissions = await RBACAdminService.getEffectivePermissions(
-          selectedTenant.id,
-          userIds
-        );
-
-        if (!mounted.current || controller.signal.aborted) return;
-
-        const withPerms = fetchedUsers.map(u => ({
-          ...u,
-          cells: effectivePermissions.get(u.userId) ?? [],
-        }));
-
-        setUsers(withPerms);
-      } catch (e) {
-        if (!controller.signal.aborted) {
-          console.error('AccessControl: loadTenantUsers failed', e);
-        }
-      } finally {
-        mounted.current && !controller.signal.aborted && setLoading(false);
-      }
-    }, 250);
-
-    return () => {
-      controller.abort();
-      clearTimeout(t);
-    };
-  }, [selectedTenant?.id, searchQuery]);
-
-  useEffect(() => {
-    if (!selectedUserId || !selectedTenant) return;
-
-    let cancelled = false;
+    if (!selectedUserId || !selectedTenant) {
+      setUserDetail(null);
+      return;
+    }
+    setUserDetailLoading(true);
     (async () => {
-      setUserDetailLoading(true);
       try {
         const detail = await RBACAdminService.getUserDetail(selectedTenant.id, selectedUserId);
-        if (!mounted.current || cancelled) return;
-        setUserDetail(detail);
+        if (mounted.current) {
+          setUserDetail(detail);
+        }
       } catch (e) {
-        if (!cancelled) console.error('AccessControl: loadUserDetail failed', e);
+        console.error('AccessControl: load user detail failed', e);
       } finally {
-        !cancelled && mounted.current && setUserDetailLoading(false);
+        mounted.current && setUserDetailLoading(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedUserId, selectedTenant?.id]);
+  }, [selectedUserId, selectedTenant]);
 
   const handleCellClick = (userId: string, permissionId: string) => {
-    const row = users.find(u => u.userId === userId);
-    const currentCell = row?.cells?.find(c => c.permissionId === permissionId);
-    const current = draftChanges.get(`${userId}:${permissionId}`) || currentCell?.state || 'none';
-
-    const next: 'allow' | 'deny' | 'none' =
-      current === 'allow' ? 'deny' : current === 'deny' ? 'none' : 'allow';
-
     const key = `${userId}:${permissionId}`;
-    const nextDraft = new Map(draftChanges);
-    if (next === 'none') nextDraft.delete(key);
-    else nextDraft.set(key, next);
-    setDraftChanges(nextDraft);
+    const currentUser = users.find((u) => u.userId === userId);
+    if (!currentUser) return;
 
-    setChangeQueue(prev => [
-      ...prev,
-      {
-        id: `${Date.now()}`,
-        type: 'permission_change',
-        op: next === 'none' ? 'clearOverride' : 'setOverride',
-        userId,
-        permissionId,
-        oldValue: current as 'allow' | 'deny' | 'none',
-        newValue: next,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
+    const currentPerm = currentUser.permissions.find((p) => p.permissionId === permissionId);
+    if (!currentPerm) return;
+
+    const currentValue = currentPerm.value;
+    let nextValue: 'allow' | 'deny' | 'none';
+
+    if (currentValue === 'allow') {
+      nextValue = 'deny';
+    } else if (currentValue === 'deny') {
+      nextValue = 'none';
+    } else {
+      nextValue = 'allow';
+    }
+
+    const newDrafts = new Map(draftChanges);
+    newDrafts.set(key, nextValue);
+    setDraftChanges(newDrafts);
+
+    const newQueue = [...changeQueue];
+    const existingIndex = newQueue.findIndex(
+      (op) => op.userId === userId && op.permissionId === permissionId
+    );
+    if (existingIndex >= 0) {
+      newQueue[existingIndex] = { userId, permissionId, newValue: nextValue };
+    } else {
+      newQueue.push({ userId, permissionId, newValue: nextValue });
+    }
+    setChangeQueue(newQueue);
+  };
+
+  const handleUserClick = (userId: string) => {
+    setSelectedUserId(userId);
   };
 
   const handleApplyChanges = async () => {
-    if (changeQueue.length === 0 || !selectedTenant || !currentUserId) return;
+    if (!selectedTenant || !currentUserId) return;
 
     setLoading(true);
     try {
@@ -293,34 +284,23 @@ export default function AccessControlClient() {
       <div className="flex-1 p-6 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              Access Control &amp; Security
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowInviteModal(true)}
-                >
-                  Invite User
-                </Button>
-                <Button onClick={() => setShowCreateModal(true)}>
-                  Create User
-                </Button>
+            <div className="flex flex-col space-y-4">
+              <div className="flex justify-between items-center">
+                <CardTitle>Access Control &amp; Security</CardTitle>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowInviteModal(true)}
+                  >
+                    Invite User
+                  </Button>
+                  <Button onClick={() => setShowCreateModal(true)}>
+                    Create User
+                  </Button>
+                </div>
               </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs
-              value={activeTab}
-              onValueChange={(v: string) => setActiveTab(v as TabKey)}
-              className="w-full"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <TabsList>
-                  <TabsTrigger value="users">Users</TabsTrigger>
-                  <TabsTrigger value="roles">Roles &amp; Permissions</TabsTrigger>
-                  <TabsTrigger value="invitations">Invitations</TabsTrigger>
-                  <TabsTrigger value="notifications">Notifications</TabsTrigger>
-                </TabsList>
+              
+              <div className="flex items-center justify-between">
                 <div className="flex space-x-2">
                   <Input
                     placeholder="Search users..."
@@ -336,7 +316,7 @@ export default function AccessControlClient() {
                       setSelectedUserId(null);
                     }}
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Select Tenant" />
                     </SelectTrigger>
                     <SelectContent>
@@ -349,84 +329,102 @@ export default function AccessControlClient() {
                   </Select>
                 </div>
               </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Tabs
+              value={activeTab}
+              onValueChange={(v: string) => setActiveTab(v as TabKey)}
+              className="w-full"
+            >
+              <TabsList className="mb-4">
+                <TabsTrigger value="users">Users</TabsTrigger>
+                <TabsTrigger value="roles">Roles &amp; Permissions</TabsTrigger>
+                <TabsTrigger value="invitations">Invitations</TabsTrigger>
+                <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              </TabsList>
 
-              <TabsContent value="users">
-                <RBACMatrixGrid
-                  users={users}
-                  permissionCatalog={permissionCatalog}
-                  onCellClick={handleCellClick}
-                  onUserClick={setSelectedUserId}
-                  loading={loading}
-                  draftChanges={draftChanges}
-                />
-                {pendingChangesCount > 0 && (
-                  <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white p-3 rounded-lg shadow-lg flex items-center space-x-4 z-50">
-                    <span>{pendingChangesCount} pending changes</span>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setDraftChanges(new Map());
-                        setChangeQueue([]);
-                      }}
-                    >
-                      Discard
-                    </Button>
-                    <Button onClick={handleApplyChanges}>Apply Changes</Button>
+              <TabsContent value="users" className="space-y-4">
+                {selectedTenant && (
+                  <div className="overflow-x-auto">
+                    <RBACMatrixGrid
+                      users={users}
+                      permissionCatalog={permissionCatalog}
+                      onCellClick={handleCellClick}
+                      onUserClick={handleUserClick}
+                      loading={loading}
+                      draftChanges={draftChanges}
+                    />
+                  </div>
+                )}
+                {!selectedTenant && (
+                  <div className="text-center py-8 text-gray-500">
+                    Please select a tenant to view users
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="roles">
-                <RolesPermissionsTab selectedTenantId={selectedTenant?.id} />
+              <TabsContent value="roles" className="space-y-4">
+                {selectedTenant && (
+                  <RolesPermissionsTab selectedTenantId={selectedTenant.id} />
+                )}
+                {!selectedTenant && (
+                  <div className="text-center py-8 text-gray-500">
+                    Please select a tenant to view roles and permissions
+                  </div>
+                )}
               </TabsContent>
 
-              <TabsContent value="invitations">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Pending Invitations</h3>
-                    <Button onClick={() => setShowInviteModal(true)}>
-                      Send New Invitation
-                    </Button>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
+              <TabsContent value="invitations" className="space-y-4">
+                <div className="bg-white rounded-lg border p-6">
+                  <h3 className="text-lg font-semibold mb-4">Pending Invitations</h3>
+                  <div className="text-center py-8 text-gray-500">
                     <p>No pending invitations at this time.</p>
                     <p className="text-sm mt-2">Invited users will appear here until they accept their invitation.</p>
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="notifications">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">System Notifications</h3>
-                  <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
-                    <p>No notifications at this time.</p>
-                    <p className="text-sm mt-2">User activity and system events will appear here.</p>
+              <TabsContent value="notifications" className="space-y-4">
+                <div className="bg-white rounded-lg border p-6">
+                  <h3 className="text-lg font-semibold mb-4">System Notifications</h3>
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No new notifications.</p>
+                    <p className="text-sm mt-2">System notifications and audit logs will appear here.</p>
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
+
+        {pendingChangesCount > 0 && (
+          <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium">
+                {pendingChangesCount} pending change{pendingChangesCount !== 1 ? 's' : ''}
+              </span>
+              <Button onClick={handleApplyChanges} disabled={loading}>
+                Apply Changes
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {selectedUserId && (
-        <div className="w-80 border-l bg-gray-50 p-6 overflow-y-auto">
-          <UserDetailPanel
-            userId={selectedUserId}
-            tenantId={selectedTenant?.id || ''}
-            onClose={() => setSelectedUserId(null)}
-            userDetail={userDetail}
-            loading={userDetailLoading}
-            isHostAdmin={currentUserRole === ROLES.HOST_ADMIN}
-            isAdmin={
-              currentUserRole === ROLES.HOST_ADMIN ||
-              currentUserRole === ROLES.CLIENT_ADMIN
-            }
-          />
-        </div>
+      {selectedUserId && selectedTenant && (
+        <UserDetailPanel
+          userId={selectedUserId}
+          tenantId={selectedTenant.id}
+          onClose={() => setSelectedUserId(null)}
+          userDetail={userDetail}
+          loading={userDetailLoading}
+          isHostAdmin={isHostAdmin}
+          isAdmin={isAdmin}
+        />
       )}
 
-      {/* User Invitation Modal */}
+      {/* User Invite Modal */}
       <UserInviteModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
