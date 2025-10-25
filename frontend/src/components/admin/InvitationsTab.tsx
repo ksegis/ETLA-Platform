@@ -24,6 +24,7 @@ interface InvitationsTabProps {
 export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId }) => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,12 +43,16 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
 
       if (error) {
         console.error('Error fetching invitations:', error);
+        setError(error.message || 'Failed to fetch invitations');
         return;
       }
+      
+      setError(null);
 
       setInvitations(data || []);
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error: any) {
+      console.error('Error fetching invitations:', error);
+      setError(error.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -138,6 +143,30 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
         <h3 className="text-lg font-semibold mb-4">Pending Invitations</h3>
         <div className="text-center py-8 text-gray-500">
           Loading invitations...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg border p-6">
+        <h3 className="text-lg font-semibold mb-4">Pending Invitations</h3>
+        <div className="text-center py-8">
+          <p className="text-red-600 mb-2">Error loading invitations</p>
+          <p className="text-sm text-gray-500">{error}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-4"
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              fetchInvitations();
+            }}
+          >
+            Retry
+          </Button>
         </div>
       </div>
     );
