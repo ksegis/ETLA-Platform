@@ -30,6 +30,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// Import user management modals
+import UserInviteModal from '@/components/UserInviteModal';
+import UserCreationModal from '@/components/UserCreationModal';
+
 /* ---------- dynamic imports (typed) ---------- */
 const RBACMatrixGrid = dynamic(
   () => import('@/components/rbac/RBACMatrixGrid'),
@@ -87,6 +91,10 @@ export default function AccessControlClient() {
 
   const [draftChanges, setDraftChanges] = useState<Map<string, 'allow' | 'deny' | 'none'>>(new Map());
   const [changeQueue, setChangeQueue] = useState<RBACChangeOperation[]>([]);
+
+  // Modal states
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const currentUserId = user?.id ?? null;
 
@@ -259,7 +267,26 @@ export default function AccessControlClient() {
     }
   };
 
+  const handleInviteSuccess = () => {
+    // Reload users list after successful invitation
+    setSearchQuery(q => q + ' '); // trigger reload
+    setActiveTab('invitations'); // Switch to invitations tab to see the new invitation
+  };
+
+  const handleCreateSuccess = () => {
+    // Reload users list after successful user creation
+    setSearchQuery(q => q + ' '); // trigger reload
+  };
+
   const pendingChangesCount = draftChanges.size;
+
+  // Prepare tenants data for modals
+  const tenantsForModal = tenants.map(t => ({
+    id: t.id,
+    name: t.name,
+    code: t.id.substring(0, 8).toUpperCase(), // Generate a code from ID
+    tenant_type: 'client' // Default type
+  }));
 
   return (
     <div className="flex h-full">
@@ -269,8 +296,15 @@ export default function AccessControlClient() {
             <CardTitle className="flex justify-between items-center">
               Access Control &amp; Security
               <div className="flex space-x-2">
-                <Button variant="outline">Invite User</Button>
-                <Button>Create User</Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowInviteModal(true)}
+                >
+                  Invite User
+                </Button>
+                <Button onClick={() => setShowCreateModal(true)}>
+                  Create User
+                </Button>
               </div>
             </CardTitle>
           </CardHeader>
@@ -346,8 +380,30 @@ export default function AccessControlClient() {
                 <RolesPermissionsTab selectedTenantId={selectedTenant?.id} />
               </TabsContent>
 
-              <TabsContent value="invitations">Invitations content here.</TabsContent>
-              <TabsContent value="notifications">Notifications content here.</TabsContent>
+              <TabsContent value="invitations">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Pending Invitations</h3>
+                    <Button onClick={() => setShowInviteModal(true)}>
+                      Send New Invitation
+                    </Button>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
+                    <p>No pending invitations at this time.</p>
+                    <p className="text-sm mt-2">Invited users will appear here until they accept their invitation.</p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="notifications">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">System Notifications</h3>
+                  <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500">
+                    <p>No notifications at this time.</p>
+                    <p className="text-sm mt-2">User activity and system events will appear here.</p>
+                  </div>
+                </div>
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
@@ -369,6 +425,23 @@ export default function AccessControlClient() {
           />
         </div>
       )}
+
+      {/* User Invitation Modal */}
+      <UserInviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onSuccess={handleInviteSuccess}
+        tenants={tenantsForModal}
+      />
+
+      {/* User Creation Modal */}
+      <UserCreationModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
+        tenants={tenantsForModal}
+      />
     </div>
   );
 }
+
