@@ -139,7 +139,7 @@ export default function PaystubModal({ row, allRows, open, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-auto bg-black/50 p-4 print:bg-white print:p-0">
-      <div className="relative w-full max-w-6xl rounded-2xl bg-white shadow-2xl print:max-w-none print:rounded-none print:shadow-none">
+      <div className="relative w-full max-w-[95vw] rounded-2xl bg-white shadow-2xl print:max-w-none print:rounded-none print:shadow-none">
         {/* Toolbar (hidden in print) */}
         <div className="flex items-center justify-between border-b border-gray-200 p-3 print:hidden">
           <h3 className="text-base font-semibold text-gray-900">Paystub</h3>
