@@ -2,11 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { UserInvitationData } from '@/lib/supabase';
 
-// Supabase client for server-side admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Get environment variables with fallback for build time
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Only create admin client if both URL and key are available
+const supabaseAdmin = supabaseUrl && supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 /**
  * Handles sending user invitations via email.
@@ -16,6 +19,15 @@ const supabaseAdmin = createClient(
  */
 export async function POST(request: Request) {
   try {
+    // Check if Supabase admin client is available
+    if (!supabaseAdmin) {
+      console.error('API: Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY.');
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Server configuration error: Admin client not available' 
+      }, { status: 500 });
+    }
+
     const invitationData: UserInvitationData = await request.json();
 
     const invitations = [];
