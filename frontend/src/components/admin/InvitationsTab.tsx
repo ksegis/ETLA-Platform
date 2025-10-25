@@ -11,7 +11,7 @@ interface Invitation {
   role_level: string;
   tenant_id: string;
   invited_by: string;
-  invited_at: string;
+  created_at: string;
   expires_at: string;
   status: string;
   custom_message?: string;
@@ -39,7 +39,7 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
         .select('*')
         .eq('tenant_id', selectedTenantId)
         .eq('status', 'pending')
-        .order('invited_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching invitations:', error);
@@ -232,7 +232,7 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(invitation.invited_at)}
+                    {formatDate(invitation.created_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(invitation.expires_at)}
