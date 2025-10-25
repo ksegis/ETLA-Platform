@@ -326,57 +326,56 @@ export default function AccessControlClient() {
   }));
 
   return (
-    <div className="flex h-full">
-      <div className="flex-1 p-6 space-y-6">
+    <div className="flex h-full flex-col">
+      {/* Fixed Header */}
+      <div className="bg-white border-b p-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Access Control &amp; Security</h1>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowInviteModal(true)}
+            >
+              Invite User
+            </Button>
+            <Button onClick={() => setShowCreateModal(true)}>
+              Create User
+            </Button>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-[200px]"
+          />
+          <Select
+            value={selectedTenant?.id || ''}
+            onValueChange={(tenantId) => {
+              const t = tenants.find(x => x.id === tenantId) || null;
+              setSelectedTenant(t);
+              setSelectedUserId(null);
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select Tenant" />
+            </SelectTrigger>
+            <SelectContent>
+              {tenants.map(t => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 p-6 overflow-auto">
         <Card>
-          <CardHeader>
-            <div className="flex flex-col space-y-4">
-              <div className="flex justify-between items-center">
-                <CardTitle>Access Control &amp; Security</CardTitle>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowInviteModal(true)}
-                  >
-                    Invite User
-                  </Button>
-                  <Button onClick={() => setShowCreateModal(true)}>
-                    Create User
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Search users..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-[200px]"
-                  />
-                  <Select
-                    value={selectedTenant?.id || ''}
-                    onValueChange={(tenantId) => {
-                      const t = tenants.find(x => x.id === tenantId) || null;
-                      setSelectedTenant(t);
-                      setSelectedUserId(null);
-                    }}
-                  >
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Select Tenant" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tenants.map(t => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
           <CardContent>
             <Tabs
               value={activeTab}
