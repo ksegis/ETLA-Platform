@@ -550,7 +550,7 @@ export default function InterviewsPage() {
 
       {/* Interview Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[90vw] max-h-[90vh] overflow-y-auto">
           {selectedInterview && (
             <>
               <DialogHeader>
@@ -760,7 +760,7 @@ export default function InterviewsPage() {
 
       {/* Schedule Interview Modal */}
       <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-auto min-w-[600px] max-w-[85vw]">
           <DialogHeader>
             <DialogTitle>Schedule New Interview</DialogTitle>
           </DialogHeader>

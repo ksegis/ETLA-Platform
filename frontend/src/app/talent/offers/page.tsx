@@ -563,7 +563,7 @@ export default function OffersPage() {
 
       {/* Offer Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[90vw] max-h-[90vh] overflow-y-auto">
           {selectedOffer && (
             <>
               <DialogHeader>
@@ -880,7 +880,7 @@ export default function OffersPage() {
 
       {/* Create Offer Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[85vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Offer</DialogTitle>
           </DialogHeader>
