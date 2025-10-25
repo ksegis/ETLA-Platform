@@ -239,7 +239,7 @@ export default function AccessControlClient() {
     const currentUser = users.find((u) => u.userId === userId);
     if (!currentUser) return;
 
-    const currentPerm = currentUser.permissions.find((p) => p.permissionId === permissionId);
+    const currentPerm = currentUser.cells?.find((p) => p.permissionId === permissionId);
     if (!currentPerm) return;
 
     const currentValue = currentPerm.value;
