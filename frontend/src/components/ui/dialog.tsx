@@ -59,7 +59,7 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({ children }) => {
 
 export const DialogContent: React.FC<DialogContentProps> = ({ className = '', children }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-xl p-6 ${className || 'w-full max-w-md mx-4'}`}>
       {children}
     </div>
   );
@@ -164,7 +164,7 @@ export const AlertDialogTrigger: React.FC<AlertDialogTriggerProps> = ({ children
 
 export const AlertDialogContent: React.FC<AlertDialogContentProps> = ({ className = '', children }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-xl p-6 ${className || 'w-full max-w-md mx-4'}`}>
       {children}
     </div>
   );
