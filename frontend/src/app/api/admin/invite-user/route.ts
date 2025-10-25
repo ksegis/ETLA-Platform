@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import type { UserInvitationData } from '@/lib/supabase';
 
 // Get environment variables with fallback for build time
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_TOKEN || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN || '';
 
 // Only create admin client if both URL and key are available
 const supabaseAdmin = supabaseUrl && supabaseServiceKey 
@@ -28,6 +30,26 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
+    // Get the current user from the session
+    const cookieStore = await cookies();
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    });
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('API: Failed to get current user:', userError);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Authentication required' 
+      }, { status: 401 });
+    }
+
     const invitationData: UserInvitationData = await request.json();
 
     const invitations = [];
@@ -44,6 +66,7 @@ export async function POST(request: Request) {
             role_level: invitationData.role_level,
             tenant_id: invitationData.tenant_id,
             message: invitationData.message,
+            invited_by: user.id, // Add the current user's ID
             expires_at: new Date(Date.now() + invitationData.expires_in_days * 24 * 60 * 60 * 1000).toISOString(),
             status: 'pending',
             created_at: new Date().toISOString()
