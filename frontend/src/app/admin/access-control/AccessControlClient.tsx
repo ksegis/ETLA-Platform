@@ -165,7 +165,31 @@ export default function AccessControlClient() {
     setLoading(true);
     (async () => {
       try {
-        const matrixUsers = await RBACAdminService.getMatrixUsers(selectedTenant.id, searchQuery);
+        // Get tenant users
+        const { users: tenantUsers } = await RBACAdminService.listTenantUsers(selectedTenant.id, {
+          search: searchQuery,
+          limit: 100
+        });
+
+        // Get user IDs
+        const userIds = tenantUsers.map(u => u.userId);
+
+        // Get effective permissions for all users
+        const effectivePermissions = await RBACAdminService.getEffectivePermissions(selectedTenant.id, userIds);
+
+        // Build matrix users
+        const matrixUsers: RBACMatrixRowUser[] = tenantUsers.map(user => {
+          const userPerms = effectivePermissions.get(user.userId) || [];
+          return {
+            userId: user.userId,
+            email: user.email,
+            displayName: user.display_name || user.email,
+            role: user.role,
+            isActive: user.is_active,
+            permissions: userPerms
+          };
+        });
+
         if (mounted.current) {
           setUsers(matrixUsers);
         }
