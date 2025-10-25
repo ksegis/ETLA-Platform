@@ -732,11 +732,21 @@ export const userManagement = {
   // Create a new user with complete RBAC setup
   createUser: async (userData: UserCreationData) => {
     try {
+      // Get the current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add Authorization header if session exists
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      
       const response = await fetch('/api/admin/create-user', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(userData),
       });
 
@@ -751,11 +761,21 @@ export const userManagement = {
   // Invite users via email
   inviteUsers: async (invitationData: UserInvitationData) => {
     try {
+      // Get the current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add Authorization header if session exists
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      
       const response = await fetch('/api/admin/invite-user', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(invitationData),
       });
 
