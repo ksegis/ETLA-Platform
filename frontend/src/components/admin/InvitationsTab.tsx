@@ -69,26 +69,24 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
         return;
       }
       
-      const response = await fetch('/api/admin/invite-user', {
+      const response = await fetch('/api/admin/resend-invitation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          emails: [invitation.email],
-          role: invitation.role,
-          roleLevel: invitation.role_level,
-          tenantId: invitation.tenant_id,
-          expiresInDays: 7,
-          customMessage: invitation.custom_message || ''
+          invitationId: invitation.id
         }),
       });
 
       const result = await response.json();
       
       if (result.success) {
-        alert('Invitation resent successfully!');
+        const message = result.method === 'magic_link' 
+          ? 'A magic link has been sent to the user\'s email. They can use this to access their account.'
+          : 'Invitation resent successfully!';
+        alert(message);
         fetchInvitations(); // Refresh the list
       } else {
         alert(`Failed to resend invitation: ${result.error}`);
