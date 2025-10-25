@@ -79,10 +79,30 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // In a real implementation, you would send an email here
-        // For now, we'll just create the invitation record
-        // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
-        
+        // Use Supabase Auth to invite the user and send email
+        const { data: authInvite, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+          email,
+          {
+            data: {
+              role: invitationData.role,
+              role_level: invitationData.role_level,
+              tenant_id: invitationData.tenant_id,
+              invitation_id: invitation.id,
+              custom_message: invitationData.message
+            },
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/callback`
+          }
+        );
+
+        if (authError) {
+          console.error(`API: Failed to send auth invitation for ${email}:`, authError);
+          // Delete the invitation record if auth invite fails
+          await supabaseAdmin.from('user_invitations').delete().eq('id', invitation.id);
+          errors.push({ email, error: authError.message });
+          continue;
+        }
+
+        console.log(`API: Successfully invited ${email}`);
         invitations.push(invitation);
       } catch (error) {
         console.error(`API: Unexpected error inviting ${email}:`, error);
