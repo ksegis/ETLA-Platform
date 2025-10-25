@@ -261,10 +261,20 @@ export default function AccessControlClient() {
     const existingIndex = newQueue.findIndex(
       (op) => op.userId === userId && op.permissionId === permissionId
     );
+    const changeOp: RBACChangeOperation = {
+      id: `${userId}:${permissionId}:${Date.now()}`,
+      type: 'permission_change',
+      op: nextValue === 'none' ? 'clearOverride' : 'setOverride',
+      userId,
+      permissionId,
+      oldValue: currentValue,
+      newValue: nextValue,
+      effect: nextValue === 'allow' ? 'allow' : 'deny'
+    };
     if (existingIndex >= 0) {
-      newQueue[existingIndex] = { userId, permissionId, newValue: nextValue };
+      newQueue[existingIndex] = changeOp;
     } else {
-      newQueue.push({ userId, permissionId, newValue: nextValue });
+      newQueue.push(changeOp);
     }
     setChangeQueue(newQueue);
   };
