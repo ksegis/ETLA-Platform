@@ -631,9 +631,54 @@ const EnhancedReportingPage: React.FC = () => {
               { key: 'employee_name', label: 'Employee Name' },
               { key: 'tax_year', label: 'Year' },
               { key: 'form_type', label: 'Form Type' },
-              { key: 'wages_tips_compensation', label: 'Wages', render: (item) => `$${(item.wages_tips_compensation || 0).toFixed(2)}` },
-              { key: 'federal_income_tax_withheld', label: 'Fed Tax', render: (item) => `$${(item.federal_income_tax_withheld || 0).toFixed(2)}` },
-              { key: 'document_status', label: 'Status' },
+              { 
+                key: 'amount', 
+                label: 'Amount', 
+                render: (item) => {
+                  // Show appropriate amount field based on form type
+                  const formType = (item.form_type || '').toUpperCase().replace(/-/g, '');
+                  let amount = 0;
+                  
+                  if (formType === 'W2') {
+                    amount = item.wages_tips_compensation || 0;
+                  } else if (formType === 'W4') {
+                    amount = item.extra_withholding || 0;
+                  } else if (formType === '1099NEC') {
+                    amount = item.nonemployee_compensation || 0;
+                  } else if (formType === '1099MISC') {
+                    amount = item.rents || item.royalties || item.other_income || 0;
+                  } else if (formType === '1099INT') {
+                    amount = item.interest_income || 0;
+                  } else if (formType === '1099DIV') {
+                    amount = item.total_ordinary_dividends || 0;
+                  } else if (formType === '1099R') {
+                    amount = item.gross_distribution || 0;
+                  } else if (formType === 'W9') {
+                    amount = 0; // W-9 doesn't have an amount
+                  }
+                  
+                  return `$${amount.toFixed(2)}`;
+                }
+              },
+              { 
+                key: 'tax', 
+                label: 'Tax Withheld', 
+                render: (item) => {
+                  const formType = (item.form_type || '').toUpperCase().replace(/-/g, '');
+                  let tax = 0;
+                  
+                  if (formType === 'W2') {
+                    tax = item.federal_income_tax_withheld || 0;
+                  } else if (formType === '1099NEC') {
+                    tax = item.federal_income_tax_withheld || 0;
+                  } else if (formType === '1099R') {
+                    tax = item.federal_income_tax_withheld || 0;
+                  }
+                  
+                  return `$${tax.toFixed(2)}`;
+                }
+              },
+              { key: 'status', label: 'Status' },
             ]}
             onRowClick={(row) => openFacsimile(row as FacsimileTaxRecord, 'tax_w2')}
             onViewFacsimile={handleViewFacsimile}
