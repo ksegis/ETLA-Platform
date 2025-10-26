@@ -9,16 +9,22 @@ export default function SplashPage() {
   const router = useRouter()
   const { user, loading } = useAuth()
   const [showContent, setShowContent] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   useEffect(() => {
     // Check if this is an auth callback (invitation/password reset)
     const hash = window.location.hash
+    console.log('Root page hash:', hash)
+    
     if (hash && hash.includes('access_token')) {
       const hashParams = new URLSearchParams(hash.substring(1))
       const type = hashParams.get('type')
+      console.log('Auth type detected:', type)
       
       // Redirect to set-password for invite/recovery flows
       if (type === 'invite' || type === 'recovery') {
+        console.log('Redirecting to set-password page')
+        setIsRedirecting(true)
         router.push('/auth/set-password' + hash)
         return
       }
@@ -39,10 +45,13 @@ export default function SplashPage() {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  if (loading) {
+  if (loading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-400"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          {isRedirecting && <p className="text-white text-lg">Redirecting to password setup...</p>}
+        </div>
       </div>
     )
   }
