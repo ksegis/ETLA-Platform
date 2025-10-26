@@ -11,16 +11,6 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check if this is a password reset or invitation flow
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const type = hashParams.get('type')
-        
-        // If this is a password reset or invitation, redirect to set-password page
-        if (type === 'recovery' || type === 'invite' || type === 'magiclink') {
-          router.push('/auth/set-password')
-          return
-        }
-
         // Handle the OAuth callback
         const { data, error } = await supabase.auth.getSession()
         
@@ -31,6 +21,16 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
+          // Check if this is a password recovery/invitation flow
+          // These users need to set their password
+          const hashParams = new URLSearchParams(window.location.hash.substring(1))
+          const type = hashParams.get('type')
+          
+          if (type === 'recovery' || type === 'invite') {
+            router.push('/auth/set-password')
+            return
+          }
+
           // Check if this is a new user (first time Google sign-in)
           const { data: profile } = await supabase
             .from('profiles')
