@@ -11,10 +11,23 @@ export default function SplashPage() {
   const [showContent, setShowContent] = useState(false)
 
   useEffect(() => {
+    // Check if this is an auth callback (invitation/password reset)
+    const hash = window.location.hash
+    if (hash && hash.includes('access_token')) {
+      const hashParams = new URLSearchParams(hash.substring(1))
+      const type = hashParams.get('type')
+      
+      // Redirect to set-password for invite/recovery flows
+      if (type === 'invite' || type === 'recovery') {
+        router.push('/auth/set-password' + hash)
+        return
+      }
+    }
+
     // Show content with animation delay
     const timer = setTimeout(() => setShowContent(true), 500)
     return () => clearTimeout(timer)
-  }, [])
+  }, [router])
 
   const handleGetStarted = () => {
     // Always go to login page first
