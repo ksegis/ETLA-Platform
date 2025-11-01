@@ -27,7 +27,7 @@ interface InviteAcceptanceState {
 function LoadingFallback() {
   return <div>Loading…</div>;
 }
-function AcceptInviteForm() {
+function AcceptInviteFormContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
@@ -475,7 +475,7 @@ function loadingFallback() {
 export default function AcceptInvitePage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <AcceptInviteForm />
+      <AcceptInviteFormContent />
     </Suspense>
   )
 }

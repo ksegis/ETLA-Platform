@@ -19,9 +19,9 @@ export { FEATURES, PERMISSIONS, ROLES };
 export type { Feature, Permission, Role };
 
 type RolePermissionEntry = { feature: Feature; permission: Permission };
-type RolePermissionsMatrix = Record<Role, { role: Role; permissions: RolePermissionEntry[] }>;
 
-const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
+
+const DEFAULT_ROLE_PERMISSIONS: Record<Role, { role: Role; permissions: RolePermissionEntry[] }> = {
   [ROLES.HOST_ADMIN]: {
     role: ROLES.HOST_ADMIN,
     permissions: Object.values(FEATURES).map((feature) => ({ feature, permission: CORE_PERMISSIONS.MANAGE })),
@@ -40,6 +40,22 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
       { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.VIEW },
       { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE_PERMISSIONS.VIEW },
       { feature: FEATURES.DATA_VALIDATION, permission: CORE_PERMISSIONS.VIEW },
+    ],
+  },
+
+  [ROLES.PRIMARY_CLIENT_ADMIN]: {
+    role: ROLES.PRIMARY_CLIENT_ADMIN,
+    permissions: [
+      { feature: FEATURES.USER_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+      { feature: FEATURES.ACCESS_CONTROL, permission: CORE_PERMISSIONS.VIEW },
+      { feature: FEATURES.PROJECT_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+      { feature: FEATURES.WORK_REQUESTS, permission: CORE_PERMISSIONS.MANAGE },
+      { feature: FEATURES.DASHBOARDS, permission: CORE_PERMISSIONS.VIEW },
+      { feature: FEATURES.BENEFITS_MANAGEMENT, permission: CORE_PERMISSIONS.MANAGE },
+      { feature: FEATURES.EMPLOYEE_RECORDS, permission: CORE_PERMISSIONS.MANAGE },
+      { feature: FEATURES.FILE_UPLOAD, permission: CORE_PERMISSIONS.CREATE },
+      { feature: FEATURES.DATA_VALIDATION, permission: CORE_PERMISSIONS.VIEW },
+      { feature: FEATURES.MIGRATION_WORKBENCH, permission: CORE_PERMISSIONS.VIEW },
     ],
   },
 
@@ -267,7 +283,7 @@ export function usePermissions() {
 
   // Admin helpers (relax type to avoid union-narrowing error)
   const isAdmin = () =>
-    !!tenantUser && ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN] as ReadonlyArray<string>).includes(String(tenantUser.role));
+    !!tenantUser && ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN, ROLES.PRIMARY_CLIENT_ADMIN] as ReadonlyArray<string>).includes(String(tenantUser.role));
 
   const isHostAdmin = () => String(tenantUser?.role) === ROLES.HOST_ADMIN;
 
@@ -280,7 +296,7 @@ export function usePermissions() {
 
   const isSuperAdmin = () => {
     if (!isAuthenticated || !tenantUser) return false;
-    return ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN] as ReadonlyArray<string>).includes(String(tenantUser.role));
+    return ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN, ROLES.PRIMARY_CLIENT_ADMIN] as ReadonlyArray<string>).includes(String(tenantUser.role));
   };
 
   const getUserPermissions = () => ({
