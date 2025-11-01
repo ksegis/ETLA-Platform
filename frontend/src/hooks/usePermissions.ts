@@ -13,14 +13,13 @@ import {
   type Feature,
   type Permission,
   type Role,
-  type RoleKey,
 } from '@/rbac/constants';
 
 export { FEATURES, PERMISSIONS, ROLES };
 export type { Feature, Permission, Role };
 
 type RolePermissionEntry = { feature: Feature; permission: Permission };
-type RolePermissionsMatrix = Record<RoleKey, { role: Role; permissions: RolePermissionEntry[] }>;
+type RolePermissionsMatrix = Record<Role, { role: Role; permissions: RolePermissionEntry[] }>;
 
 const DEFAULT_ROLE_PERMISSIONS: RolePermissionsMatrix = {
   [ROLES.HOST_ADMIN]: {
