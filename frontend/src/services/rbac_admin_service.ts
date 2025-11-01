@@ -128,7 +128,7 @@ export class RBACAdminService {
   }
 
   /**
-   * Get effective permissions for multiple users
+   * Get effective permissions for multiple users.
    */
   static async getEffectivePermissions(
     tenantId: string,
