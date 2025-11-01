@@ -133,7 +133,7 @@ export const PERMISSIONS = {
 } as const;
 
 // -----------------------------
-// ROLES (with safe alias)
+// ROLES (with safe alias.)
 // -----------------------------
 const R = (BASE_ROLES ?? {}) as Record<string, string>;
 
