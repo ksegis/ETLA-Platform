@@ -120,12 +120,19 @@ export default function AccessControlClient() {
 
   // Check permission
   useEffect(() => {
-    if (permissionsLoading) return;
-    const canAccess = checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW);
-    if (!canAccess) {
-      router.push('/unauthorized');
-    }
-  }, [checkPermission, permissionsLoading, router]);
+  if (permissionsLoading) return;
+  
+  console.log('DEBUG: Current user role:', currentUserRole);
+  console.log('DEBUG: Is authenticated:', isAuthenticated);
+  
+  const canAccess = checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW);
+  console.log('DEBUG: Can access ACCESS_CONTROL?', canAccess);
+  
+  if (!canAccess) {
+    console.error('Access denied - redirecting to unauthorized');
+    router.push('/unauthorized');
+  }
+}, [checkPermission, permissionsLoading, router, currentUserRole, isAuthenticated]);
 
   // Load tenants
   useEffect(() => {
