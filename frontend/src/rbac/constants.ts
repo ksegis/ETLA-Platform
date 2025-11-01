@@ -143,6 +143,7 @@ export const ROLES = {
   CLIENT_ADMIN: R.CLIENT_ADMIN ?? "client_admin",
   TENANT_ADMIN: R.TENANT_ADMIN ?? R.CLIENT_ADMIN ?? "client_admin", // alias used by some pages
   PROGRAM_MANAGER: R.PROGRAM_MANAGER ?? "program_manager",
+  PRIMARY_CLIENT_ADMIN: R.PRIMARY_CLIENT_ADMIN ?? "primary_client_admin",  // ADD THIS LINE
   CLIENT_USER: R.CLIENT_USER ?? "client_user",
   USER: R.USER ?? R.CLIENT_USER ?? "client_user", // alias
 } as const;
@@ -153,6 +154,7 @@ export const ALL_ROLES: Role[] = [
   ROLES.CLIENT_ADMIN,
   ROLES.TENANT_ADMIN,     // alias of CLIENT_ADMIN
   ROLES.PROGRAM_MANAGER,
+  ROLES.PRIMARY_CLIENT_ADMIN,  // ADD THIS LINE
   ROLES.CLIENT_USER,
   ROLES.USER,
 ];
