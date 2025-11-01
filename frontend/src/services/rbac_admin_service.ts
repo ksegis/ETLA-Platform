@@ -54,19 +54,19 @@ export class RBACAdminService {
       const { page = 1, limit = 50, search } = options
       const offset = (page - 1) * limit
 
-      let query = supabase
-        .from('tenant_users')
-        .select(`
-          user_id,
-          role,
-          is_active,
-          profiles!inner(
-            id,
-            email,
-            full_name
-          )
-        `)
-        .eq('tenant_id', tenantId)
+  let query = supabase
+  .from('tenant_users')
+  .select(`
+    user_id,
+    role,
+    is_active,
+    profiles(
+      id,
+      email,
+      full_name
+    )
+  `)
+  .eq('tenant_id', tenantId)
 
       // Add search filter if provided
       if (search) {
