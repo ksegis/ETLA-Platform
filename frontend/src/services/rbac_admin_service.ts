@@ -343,7 +343,7 @@ export class RBACAdminService {
   }
 
   /**
-   * Get audit log for RBAC changes
+   * Get audit log for RBAC changes.
    */
   static async getAuditLog(tenantId: string, limit: number = 100): Promise<any[]> {
     try {
