@@ -54,19 +54,19 @@ export class RBACAdminService {
       const { page = 1, limit = 50, search } = options
       const offset = (page - 1) * limit
 
-  let query = supabase
-  .from('tenant_users')
-  .select(`
-    user_id,
-    role,
-    is_active,
-    profiles(
-      id,
-      email,
-      full_name
-    )
-  `)
-  .eq('tenant_id', tenantId)
+      let query = supabase
+        .from('tenant_users')
+        .select(`
+          user_id,
+          role,
+          is_active,
+          profiles(
+            id,
+            email,
+            full_name
+          )
+        `)
+        .eq('tenant_id', tenantId)
 
       // Add search filter if provided
       if (search) {
@@ -140,21 +140,27 @@ export class RBACAdminService {
 
       // For each user, calculate their effective permissions
       for (const userId of userIds) {
-        const userDetail = await this.getUserDetail(tenantId, userId)
-        const userCells: RBACPermissionCell[] = []
+        try {
+          const userDetail = await this.getUserDetail(tenantId, userId)
+          const userCells: RBACPermissionCell[] = []
 
-        // Process each permission in the catalog
-        for (const catalogItem of permissionCatalog) {
-          const cell = await this.calculateEffectivePermission(
-            userDetail,
-            catalogItem.permissionId,
-            catalogItem.resource,
-            catalogItem.action
-          )
-          userCells.push(cell)
+          // Process each permission in the catalog
+          for (const catalogItem of permissionCatalog) {
+            const cell = await this.calculateEffectivePermission(
+              userDetail,
+              catalogItem.permissionId,
+              catalogItem.resource,
+              catalogItem.action
+            )
+            userCells.push(cell)
+          }
+
+          effectivePermissions.set(userId, userCells)
+        } catch (userError) {
+          console.warn(`Skipping user ${userId}:`, userError)
+          // Set empty permissions for users that fail
+          effectivePermissions.set(userId, [])
         }
-
-        effectivePermissions.set(userId, userCells)
       }
 
       return effectivePermissions
@@ -174,7 +180,7 @@ export class RBACAdminService {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       if (profileError) throw profileError
 
@@ -184,9 +190,14 @@ export class RBACAdminService {
         .select('role, is_active, tenant_id')
         .eq('user_id', userId)
         .eq('tenant_id', tenantId)
-        .single()
+        .maybeSingle()
 
       if (membershipError) throw membershipError
+
+      // Handle case where user or membership doesn't exist
+      if (!membership) {
+        throw new Error(`User ${userId} is not a member of tenant ${tenantId}`)
+      }
 
       // Get user overrides (if table exists)
       let overrides: Array<{ permissionId: string; effect: 'allow' | 'deny' }> = []
@@ -207,7 +218,7 @@ export class RBACAdminService {
 
       return {
         profile: {
-          ...profile,
+          ...(profile || { id: userId, email: 'unknown@example.com' }),
           role: membership.role as any // Cast to UserRole type
         },
         membership: {
@@ -357,4 +368,3 @@ export class RBACAdminService {
 }
 
 export default RBACAdminService
-
