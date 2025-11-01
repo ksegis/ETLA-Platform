@@ -31,7 +31,7 @@ export class RBACAdminService {
   }
 
   /**
-   * List users for a specific tenant with pagination and search.
+   * List users for a specific tenant with pagination and search
    */
   static async listTenantUsers(
     tenantId: string,
