@@ -19,7 +19,7 @@ interface PasswordResetState {
 function LoadingFallback() {
   return <div>Loading…</div>;
 }
-function PasswordResetForm() {
+function PasswordResetFormContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
@@ -404,7 +404,7 @@ function loadingFallback() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <PasswordResetForm />
+      <PasswordResetFormContent />
     </Suspense>
   )
 }

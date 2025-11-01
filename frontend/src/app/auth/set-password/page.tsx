@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/Button';
 
-export default function SetPasswordPage() {
+function SetPasswordPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
@@ -233,5 +233,13 @@ export default function SetPasswordPage() {
       </div>
     </div>
   );
+}
+
+export default function SetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SetPasswordPageContent />
+    </Suspense>
+  )
 }
 
