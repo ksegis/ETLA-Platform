@@ -23,7 +23,7 @@ interface LoginState {
 function LoadingFallback() {
   return <div>Loading…</div>;
 }
-function LoginForm() {
+function LoginFormContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { signIn } = useAuth()
@@ -482,7 +482,7 @@ function loadingFallback() {
 export default function LoginPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <LoginForm />
+      <LoginFormContent />
     </Suspense>
   )
 }

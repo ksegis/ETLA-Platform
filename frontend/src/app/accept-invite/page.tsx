@@ -25,7 +25,18 @@ interface InviteAcceptanceState {
   } | null
 }
 function LoadingFallback() {
-  return <div>Loading…</div>;
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading...</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 function AcceptInviteForm() {
   const router = useRouter()
@@ -451,21 +462,6 @@ function AcceptInviteForm() {
               Back to Sign In
             </Button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function loadingFallback() {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">loading...</span>
-          </div>
         </CardContent>
       </Card>
     </div>

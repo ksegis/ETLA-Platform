@@ -116,6 +116,7 @@ export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 export const ROLES = {
   HOST_ADMIN: 'host_admin',
   CLIENT_ADMIN: 'client_admin',
+  PRIMARY_CLIENT_ADMIN: 'primary_client_admin',
   TENANT_ADMIN: 'tenant_admin', // keep explicit key for UI checks
   PROGRAM_MANAGER: 'program_manager',
   CLIENT_USER: 'client_user',
@@ -126,6 +127,7 @@ export type Role = typeof ROLES[keyof typeof ROLES];
 export const ALL_ROLES: Role[] = [
   ROLES.HOST_ADMIN,
   ROLES.CLIENT_ADMIN,
+  ROLES.PRIMARY_CLIENT_ADMIN,
   ROLES.TENANT_ADMIN,
   ROLES.PROGRAM_MANAGER,
   ROLES.CLIENT_USER,
