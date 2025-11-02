@@ -183,6 +183,11 @@ export default function AccessControlClient() {
 
         const tenantUsers = result?.users || [];
 
+        // ADD DEBUG LOGGING
+        console.log('DEBUG: Raw tenant users from API:', tenantUsers);
+        console.log('DEBUG: User IDs:', tenantUsers.map(u => u.userId));
+        console.log('DEBUG: User emails:', tenantUsers.map(u => u.email));
+
         if (tenantUsers.length === 0) {
           if (mounted.current) {
             setUsers([]);
@@ -208,6 +213,8 @@ export default function AccessControlClient() {
             cells: userPerms
           };
         });
+
+        console.log('DEBUG: Final matrix users:', matrixUsers);
 
         if (mounted.current) {
           setUsers(matrixUsers);
@@ -498,4 +505,3 @@ export default function AccessControlClient() {
     </div>
   );
 }
-
