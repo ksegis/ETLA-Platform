@@ -86,25 +86,10 @@ export class RBACAdminService {
 
       if (error) throw error
 
-      // ADD DEBUG LOGGING
-      console.log('DEBUG rbac_admin_service: Raw data from Supabase:', data);
-      console.log('DEBUG rbac_admin_service: Data length:', data?.length);
-      if (data) {
-        data.forEach((item: any, index: number) => {
-          console.log(`DEBUG rbac_admin_service: User ${index}:`, {
-            user_id: item.user_id,
-            role: item.role,
-            profiles: item.profiles
-          });
-        });
-      }
-
       const users = data?.map((item: any) => ({
         userId: item.user_id,
         email: item.profiles?.email || 'unknown@example.com',
-        display_name: item.profiles?.first_name && item.profiles?.last_name 
-          ? `${item.profiles.first_name} ${item.profiles.last_name}`
-          : item.profiles?.email || 'Unknown User',
+        display_name: item.profiles?.full_name || item.profiles?.email || 'Unknown User',
         role: item.role,
         is_active: item.is_active
       })) || []

@@ -118,23 +118,16 @@ export default function AccessControlClient() {
     };
   }, []);
 
-  // TEMPORARILY DISABLED - REMOVE AFTER DEBUGGING
-  /*
+  // Check permission to access this page
   useEffect(() => {
     if (permissionsLoading) return;
     
-    console.log('DEBUG: Current user role:', currentUserRole);
-    console.log('DEBUG: Is authenticated:', isAuthenticated);
-    
     const canAccess = checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW);
-    console.log('DEBUG: Can access ACCESS_CONTROL?', canAccess);
     
     if (!canAccess) {
-      console.error('Access denied - redirecting to unauthorized');
       router.push('/unauthorized');
     }
-  }, [checkPermission, permissionsLoading, router, currentUserRole, isAuthenticated]);
-  */
+  }, [checkPermission, permissionsLoading, router]);
 
   // Load tenants
   useEffect(() => {
@@ -183,11 +176,6 @@ export default function AccessControlClient() {
 
         const tenantUsers = result?.users || [];
 
-        // ADD DEBUG LOGGING
-        console.log('DEBUG: Raw tenant users from API:', tenantUsers);
-        console.log('DEBUG: User IDs:', tenantUsers.map(u => u.userId));
-        console.log('DEBUG: User emails:', tenantUsers.map(u => u.email));
-
         if (tenantUsers.length === 0) {
           if (mounted.current) {
             setUsers([]);
@@ -213,8 +201,6 @@ export default function AccessControlClient() {
             cells: userPerms
           };
         });
-
-        console.log('DEBUG: Final matrix users:', matrixUsers);
 
         if (mounted.current) {
           setUsers(matrixUsers);
