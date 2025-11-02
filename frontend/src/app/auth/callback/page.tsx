@@ -55,7 +55,7 @@ export default function AuthCallback() {
 
             // Create complete user record across all tables
             try {
-              // 1. Create profile
+              // 1. Create profile (WITHOUT tenant_id)
               const { error: profileError } = await supabase
                 .from('profiles')
                 .insert({
@@ -70,7 +70,6 @@ export default function AuthCallback() {
                   email: data.session.user.email,
                   role: 'user',
                   role_level: 'sub_client',
-                  tenant_id: defaultTenant.id,
                   is_active: true,
                   can_invite_users: false,
                   can_manage_sub_clients: false,
@@ -131,12 +130,12 @@ export default function AuthCallback() {
                 console.error('Invitation record creation error:', invitationError)
               }
 
-              // 4. Create audit_logs entry (if table exists)
+              // 4. Create audit_logs entry (if table exists) - using tenant from tenant_users
               const { error: auditError } = await supabase
                 .from('audit_logs')
                 .insert({
                   user_id: data.session.user.id,
-                  tenant_id: defaultTenant.id,
+                  tenant_id: defaultTenant.id, // Use the tenant they were just added to
                   action: 'user_created',
                   resource_type: 'user',
                   resource_id: data.session.user.id,
@@ -181,19 +180,20 @@ export default function AuthCallback() {
               })
               .eq('user_id', data.session.user.id)
 
-            // Log the login activity
-            const { data: userProfile } = await supabase
-              .from('profiles')
+            // Log the login activity - get tenant from tenant_users instead of profiles
+            const { data: tenantUser } = await supabase
+              .from('tenant_users')
               .select('tenant_id')
-              .eq('id', data.session.user.id)
+              .eq('user_id', data.session.user.id)
+              .limit(1)
               .single()
 
-            if (userProfile?.tenant_id) {
+            if (tenantUser?.tenant_id) {
               await supabase
                 .from('audit_logs')
                 .insert({
                   user_id: data.session.user.id,
-                  tenant_id: userProfile.tenant_id,
+                  tenant_id: tenantUser.tenant_id,
                   action: 'user_login',
                   resource_type: 'session',
                   resource_id: data.session.user.id,
@@ -233,4 +233,3 @@ export default function AuthCallback() {
     </div>
   )
 }
-
