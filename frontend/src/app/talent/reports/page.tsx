@@ -1,0 +1,282 @@
+/**
+ * Talent Reports Page
+ * Analytics and reporting for recruitment activities
+ */
+
+'use client';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useTenant } from '@/contexts/TenantContext';
+import {
+  TrendingUp,
+  Users,
+  Briefcase,
+  Calendar,
+  Clock,
+  DollarSign,
+  Target,
+  ArrowLeft,
+  Download,
+  Filter
+} from 'lucide-react';
+import Link from 'next/link';
+
+interface ReportMetric {
+  label: string;
+  value: string | number;
+  change?: string;
+  trend?: 'up' | 'down' | 'neutral';
+}
+
+export default function TalentReportsPage() {
+  const { selectedTenant } = useTenant();
+  const [dateRange, setDateRange] = useState('last_30_days');
+
+  // Mock report data
+  const recruitmentMetrics: ReportMetric[] = [
+    { label: 'Total Applications', value: 245, change: '+12%', trend: 'up' },
+    { label: 'Interviews Conducted', value: 68, change: '+8%', trend: 'up' },
+    { label: 'Offers Extended', value: 15, change: '+3%', trend: 'up' },
+    { label: 'Hires Made', value: 12, change: '+5%', trend: 'up' },
+    { label: 'Avg. Time to Hire', value: '18 days', change: '-2 days', trend: 'up' },
+    { label: 'Offer Acceptance Rate', value: '80%', change: '+5%', trend: 'up' },
+    { label: 'Cost per Hire', value: '$4,200', change: '-$300', trend: 'up' },
+    { label: 'Conversion Rate', value: '12.5%', change: '+1.2%', trend: 'up' }
+  ];
+
+  const sourceMetrics = [
+    { source: 'LinkedIn', applications: 45, hires: 6, conversionRate: '13.3%', cost: '$3,800' },
+    { source: 'Indeed', applications: 32, hires: 3, conversionRate: '9.4%', cost: '$4,100' },
+    { source: 'Referral', applications: 28, hires: 5, conversionRate: '17.9%', cost: '$2,500' },
+    { source: 'Company Website', applications: 21, hires: 2, conversionRate: '9.5%', cost: '$3,200' },
+    { source: 'Glassdoor', applications: 18, hires: 1, conversionRate: '5.6%', cost: '$5,000' }
+  ];
+
+  const departmentMetrics = [
+    { department: 'Engineering', openRoles: 5, applications: 89, hires: 4, avgTimeToHire: '21 days' },
+    { department: 'Product', openRoles: 3, applications: 42, hires: 2, avgTimeToHire: '16 days' },
+    { department: 'Design', openRoles: 2, applications: 28, hires: 2, avgTimeToHire: '14 days' },
+    { department: 'Marketing', openRoles: 2, applications: 35, hires: 2, avgTimeToHire: '12 days' },
+    { department: 'Sales', openRoles: 4, applications: 51, hires: 2, avgTimeToHire: '15 days' }
+  ];
+
+  const getTrendIcon = (trend?: 'up' | 'down' | 'neutral') => {
+    if (trend === 'up') return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (trend === 'down') return <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />;
+    return null;
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/talent">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Talent Reports</h1>
+              <p className="text-gray-500 mt-1">Analytics and insights for recruitment</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="last_7_days">Last 7 Days</option>
+              <option value="last_30_days">Last 30 Days</option>
+              <option value="last_90_days">Last 90 Days</option>
+              <option value="last_year">Last Year</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            <Button>
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+          </div>
+        </div>
+
+        {/* Key Metrics Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {recruitmentMetrics.map((metric, index) => (
+            <Card key={index}>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">{metric.label}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">{metric.value}</p>
+                    {metric.change && (
+                      <div className="flex items-center gap-1 mt-2">
+                        {getTrendIcon(metric.trend)}
+                        <span className={`text-sm ${
+                          metric.trend === 'up' ? 'text-green-600' : 
+                          metric.trend === 'down' ? 'text-red-600' : 
+                          'text-gray-600'
+                        }`}>
+                          {metric.change}
+                        </span>
+                        <span className="text-xs text-gray-500">vs last period</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Source Performance */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Source Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Source</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Applications</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Hires</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Conversion Rate</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Cost per Hire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sourceMetrics.map((source, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">{source.source}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{source.applications}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{source.hires}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{source.conversionRate}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{source.cost}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Department Performance */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Department Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Department</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Open Roles</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Applications</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Hires</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Avg. Time to Hire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {departmentMetrics.map((dept, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">{dept.department}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{dept.openRoles}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{dept.applications}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{dept.hires}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 text-right">{dept.avgTimeToHire}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pipeline Funnel */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recruitment Funnel</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { stage: 'Applications Received', count: 245, percentage: 100 },
+                { stage: 'Screening Passed', count: 156, percentage: 64 },
+                { stage: 'Interviews Scheduled', count: 68, percentage: 28 },
+                { stage: 'Assessments Completed', count: 42, percentage: 17 },
+                { stage: 'Offers Extended', count: 15, percentage: 6 },
+                { stage: 'Offers Accepted', count: 12, percentage: 5 }
+              ].map((stage, index) => (
+                <div key={index}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">{stage.stage}</span>
+                    <span className="text-sm text-gray-600">{stage.count} ({stage.percentage}%)</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className="bg-blue-600 h-3 rounded-full transition-all"
+                      style={{ width: `${stage.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity Summary */}
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Active Candidates</p>
+                  <p className="text-2xl font-bold text-gray-900">156</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <Briefcase className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Open Positions</p>
+                  <p className="text-2xl font-bold text-gray-900">16</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Upcoming Interviews</p>
+                  <p className="text-2xl font-bold text-gray-900">8</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}

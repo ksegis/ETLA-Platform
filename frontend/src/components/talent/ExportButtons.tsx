@@ -259,7 +259,7 @@ export function ExportButtons({
           </Button>
         </DropdownMenuTrigger>
         {isDropdownOpen && (
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 z-[9999]">
             <DropdownMenuLabel>Export Format</DropdownMenuLabel>
             <DropdownMenuSeparator />
             
