@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MultiSelect, MultiSelectOption } from '@/components/ui/MultiSelect';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import {
   Search,
@@ -38,14 +37,9 @@ import {
   Download,
   Edit,
   Trash2,
-  Eye,
-  Save,
-  X as XIcon
+  Eye
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
-import { SavedFiltersManager } from '@/components/talent/SavedFiltersManager';
-import { ExportButtons } from '@/components/talent/ExportButtons';
-import { FilterState } from '@/types/savedFilters';
 
 // Candidate Document Interface
 interface CandidateDocument {
@@ -105,9 +99,7 @@ interface Candidate {
   tags: string[];
 }
 
-// FilterState is imported from @/types/savedFilters
-
-// Mock candidate data with more variety for Florida locations
+// Mock candidate data
 const MOCK_CANDIDATES: Candidate[] = [
   {
     id: '1',
@@ -116,11 +108,11 @@ const MOCK_CANDIDATES: Candidate[] = [
     phone: '+1 (555) 123-4567',
     address: {
       street: '123 Main St',
-      city: 'Tampa',
-      state: 'FL',
-      zip: '33602',
+      city: 'San Francisco',
+      state: 'CA',
+      zip: '94105',
     },
-    jobLocation: 'Tampa, FL',
+    jobLocation: 'San Francisco, CA',
     requisitionId: 'REQ001',
     requisitionDescription: 'Lead engineer for cloud-native applications.',
     title: 'Senior Software Engineer',
@@ -176,11 +168,11 @@ const MOCK_CANDIDATES: Candidate[] = [
     phone: '+1 (555) 234-5678',
     address: {
       street: '456 Oak Ave',
-      city: 'Miami',
-      state: 'FL',
-      zip: '33101',
+      city: 'New York',
+      state: 'NY',
+      zip: '10001',
     },
-    jobLocation: 'Miami, FL',
+    jobLocation: 'New York, NY',
     requisitionId: 'REQ002',
     requisitionDescription: 'Product vision and roadmap for new SaaS offering.',
     title: 'Product Manager',
@@ -241,11 +233,11 @@ const MOCK_CANDIDATES: Candidate[] = [
     phone: '+1 (555) 345-6789',
     address: {
       street: '789 Pine Ln',
-      city: 'Orlando',
-      state: 'FL',
-      zip: '32801',
+      city: 'Austin',
+      state: 'TX',
+      zip: '78701',
     },
-    jobLocation: 'Orlando, FL',
+    jobLocation: 'Austin, TX',
     requisitionId: 'REQ003',
     requisitionDescription: 'Design user experiences for mobile platforms.',
     title: 'UX Designer',
@@ -293,176 +285,36 @@ const MOCK_CANDIDATES: Candidate[] = [
     addedDate: '2024-09-05',
     lastContact: '2024-09-12',
     tags: ['Design', 'UX', 'Research']
-  },
-  {
-    id: '4',
-    name: 'James Martinez',
-    email: 'james.martinez@email.com',
-    phone: '+1 (555) 456-7890',
-    address: {
-      street: '321 Beach Blvd',
-      city: 'Tampa',
-      state: 'FL',
-      zip: '33609',
-    },
-    jobLocation: 'Tampa, FL',
-    requisitionId: 'REQ001',
-    requisitionDescription: 'Lead engineer for cloud-native applications.',
-    title: 'Senior Software Engineer',
-    company: 'Cloud Systems Inc',
-    experience: '6 years',
-    expectedSalary: 125000,
-    currentSalary: 115000,
-    availability: '3 weeks notice',
-    status: 'Active',
-    rating: 5,
-    skills: ['Java', 'Spring Boot', 'Kubernetes', 'AWS', 'Microservices', 'Docker'],
-    education: [
-      {
-        degree: 'MS Computer Science',
-        school: 'University of Florida',
-        year: '2018',
-        gpa: '3.9'
-      }
-    ],
-    workHistory: [
-      {
-        title: 'Senior Software Engineer',
-        company: 'Cloud Systems Inc',
-        duration: '2020 - Present',
-        description: 'Architect and implement cloud-native solutions'
-      }
-    ],
-    certifications: ['AWS Certified Solutions Architect', 'Certified Kubernetes Administrator'],
-    languages: ['English (Native)', 'Spanish (Native)'],
-    portfolio: 'https://jamesmartinez.dev',
-    github: 'https://github.com/jmartinez',
-    linkedin: 'https://linkedin.com/in/jamesmartinez',
-    documents: [
-      { fileName: 'james-martinez-resume.pdf', url: '/resumes/james-martinez.pdf', type: 'application/pdf' },
-    ],
-    notes: 'Strong cloud architecture experience',
-    source: 'LinkedIn',
-    addedDate: '2024-09-18',
-    lastContact: '2024-09-22',
-    tags: ['Backend', 'Cloud', 'Senior']
   }
 ];
 
 
-export default function CandidatesPageEnhanced() {
+export default function CandidatesPage() {
   const { selectedTenant } = useTenant();
   const [candidates, setCandidates] = useState<Candidate[]>(MOCK_CANDIDATES);
-  
-  // Mock user and tenant IDs - in production, get from auth context
-  const userId = 'mock-user-id'; // TODO: Get from auth context
-  const tenantId = selectedTenant?.id || 'mock-tenant-id'; // TODO: Get from tenant context
-  const tenantName = selectedTenant?.name || 'ETLA Platform';
-  
-  // Enhanced filter state
-  const [filters, setFilters] = useState<FilterState>({
-    searchTerm: '',
-    locations: [],
-    jobTitles: [],
-    requisitionIds: [],
-    requisitionDescriptions: [],
-    status: 'all',
-    skills: []
-  });
-  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [skillFilter, setSkillFilter] = useState('all');
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Extract unique values for filter options
-  const getUniqueLocations = (): MultiSelectOption[] => {
-    const locations = Array.from(new Set(candidates.map(c => c.jobLocation))).sort();
-    return locations.map(loc => ({ value: loc, label: loc }));
-  };
-
-  const getUniqueJobTitles = (): MultiSelectOption[] => {
-    const titles = Array.from(new Set(candidates.map(c => c.title))).sort();
-    return titles.map(title => ({ value: title, label: title }));
-  };
-
-  const getUniqueRequisitionIds = (): MultiSelectOption[] => {
-    const reqIds = Array.from(new Set(candidates.map(c => c.requisitionId))).sort();
-    return reqIds.map(id => ({ value: id, label: id }));
-  };
-
-  const getUniqueRequisitionDescriptions = (): MultiSelectOption[] => {
-    const descriptions = Array.from(new Set(candidates.map(c => c.requisitionDescription))).sort();
-    return descriptions.map(desc => ({ value: desc, label: desc }));
-  };
-
-  const getUniqueSkills = (): MultiSelectOption[] => {
-    const skills = Array.from(new Set(candidates.flatMap(c => c.skills))).sort();
-    return skills.map(skill => ({ value: skill, label: skill }));
-  };
-
-  // Filter candidates based on all filter criteria
+  // Filter candidates
   const filteredCandidates = candidates.filter(candidate => {
-    // Search term filter
-    const matchesSearch = !filters.searchTerm || 
-      candidate.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      candidate.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      candidate.email.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      candidate.skills.some(skill => skill.toLowerCase().includes(filters.searchTerm.toLowerCase())) ||
-      candidate.requisitionDescription.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      candidate.jobLocation.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         candidate.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         candidate.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         candidate.requisitionDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         candidate.jobLocation.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Location filter (multi-select - match any)
-    const matchesLocation = filters.locations.length === 0 || 
-      filters.locations.includes(candidate.jobLocation);
-
-    // Job Title filter (multi-select - match any)
-    const matchesJobTitle = filters.jobTitles.length === 0 || 
-      filters.jobTitles.includes(candidate.title);
-
-    // Requisition ID filter (multi-select - match any)
-    const matchesRequisitionId = filters.requisitionIds.length === 0 || 
-      filters.requisitionIds.includes(candidate.requisitionId);
-
-    // Requisition Description filter (multi-select - match any)
-    const matchesRequisitionDescription = filters.requisitionDescriptions.length === 0 || 
-      filters.requisitionDescriptions.includes(candidate.requisitionDescription);
-
-    // Status filter
-    const matchesStatus = filters.status === 'all' || 
-      candidate.status.toLowerCase() === filters.status.toLowerCase();
-
-    // Skills filter (multi-select - match any)
-    const matchesSkills = filters.skills.length === 0 || 
-      filters.skills.some(skill => candidate.skills.includes(skill));
-
-    return matchesSearch && matchesLocation && matchesJobTitle && 
-           matchesRequisitionId && matchesRequisitionDescription && 
-           matchesStatus && matchesSkills;
+    const matchesStatus = statusFilter === 'all' || candidate.status.toLowerCase() === statusFilter;
+    const matchesSkill = skillFilter === 'all' || candidate.skills.includes(skillFilter);
+    return matchesSearch && matchesStatus && matchesSkill;
   });
 
-  // Clear all filters
-  const handleClearAllFilters = () => {
-    setFilters({
-      searchTerm: '',
-      locations: [],
-      jobTitles: [],
-      requisitionIds: [],
-      requisitionDescriptions: [],
-      status: 'all',
-      skills: []
-    });
-  };
-
-  // Check if any filters are active
-  const hasActiveFilters = () => {
-    return filters.searchTerm !== '' ||
-           filters.locations.length > 0 ||
-           filters.jobTitles.length > 0 ||
-           filters.requisitionIds.length > 0 ||
-           filters.requisitionDescriptions.length > 0 ||
-           filters.status !== 'all' ||
-           filters.skills.length > 0;
-  };
+  // Get unique skills for filter
+  const allSkills = Array.from(new Set(candidates.flatMap(c => c.skills))).sort();
 
   // Format salary
   const formatSalary = (amount: number) => {
@@ -484,18 +336,6 @@ export default function CandidatesPageEnhanced() {
     ));
   };
 
-  // Get filter description for exports
-  const getFilterDescription = (): string => {
-    const parts: string[] = [];
-    if (filters.searchTerm) parts.push(`Search: "${filters.searchTerm}"`);
-    if (filters.locations.length > 0) parts.push(`Locations: ${filters.locations.join(', ')}`);
-    if (filters.jobTitles.length > 0) parts.push(`Job Titles: ${filters.jobTitles.join(', ')}`);
-    if (filters.requisitionIds.length > 0) parts.push(`Req IDs: ${filters.requisitionIds.join(', ')}`);
-    if (filters.skills.length > 0) parts.push(`Skills: ${filters.skills.join(', ')}`);
-    if (filters.status !== 'all') parts.push(`Status: ${filters.status}`);
-    return parts.length > 0 ? parts.join(' | ') : 'All candidates';
-  };
-
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -515,7 +355,6 @@ export default function CandidatesPageEnhanced() {
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="interviews">Interviews</TabsTrigger>
           </TabsList>
-          
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -568,272 +407,96 @@ export default function CandidatesPageEnhanced() {
               </Card>
             </div>
           </TabsContent>
-          
           <TabsContent value="candidates" className="space-y-4">
-            {/* Enhanced Filter Section */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Filter className="h-5 w-5" />
-                    Advanced Filters
-                  </CardTitle>
-                  {hasActiveFilters() && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleClearAllFilters}
-                    >
-                      <XIcon className="h-4 w-4 mr-2" />
-                      Clear All Filters
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Search */}
-                  <div>
-                    <Label htmlFor="search">Search</Label>
-                    <div className="relative mt-1">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="search"
-                        placeholder="Search candidates..."
-                        value={filters.searchTerm}
-                        onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
-                        className="pl-8"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Location Multi-Select */}
-                  <MultiSelect
-                    label="Location"
-                    options={getUniqueLocations()}
-                    selected={filters.locations}
-                    onChange={(selected) => setFilters({ ...filters, locations: selected })}
-                    placeholder="Select locations..."
-                  />
-
-                  {/* Job Title Multi-Select */}
-                  <MultiSelect
-                    label="Job Title"
-                    options={getUniqueJobTitles()}
-                    selected={filters.jobTitles}
-                    onChange={(selected) => setFilters({ ...filters, jobTitles: selected })}
-                    placeholder="Select job titles..."
-                  />
-
-                  {/* Requisition ID Multi-Select */}
-                  <MultiSelect
-                    label="Requisition ID"
-                    options={getUniqueRequisitionIds()}
-                    selected={filters.requisitionIds}
-                    onChange={(selected) => setFilters({ ...filters, requisitionIds: selected })}
-                    placeholder="Select requisition IDs..."
-                  />
-
-                  {/* Requisition Description Multi-Select */}
-                  <MultiSelect
-                    label="Requisition Description"
-                    options={getUniqueRequisitionDescriptions()}
-                    selected={filters.requisitionDescriptions}
-                    onChange={(selected) => setFilters({ ...filters, requisitionDescriptions: selected })}
-                    placeholder="Select requisition descriptions..."
-                  />
-
-                  {/* Skills Multi-Select */}
-                  <MultiSelect
-                    label="Skills"
-                    options={getUniqueSkills()}
-                    selected={filters.skills}
-                    onChange={(selected) => setFilters({ ...filters, skills: selected })}
-                    placeholder="Select skills..."
-                  />
-
-                  {/* Status Single Select */}
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select 
-                      value={filters.status} 
-                      onValueChange={(value) => setFilters({ ...filters, status: value })}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Filter by Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="passive">Passive</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                        <SelectItem value="hired">Hired</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Filter Summary */}
-                {hasActiveFilters() && (
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm text-gray-600">
-                      Showing <span className="font-semibold">{filteredCandidates.length}</span> of{' '}
-                      <span className="font-semibold">{candidates.length}</span> candidates
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Saved Filters Manager */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Saved Filters</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <SavedFiltersManager
-                  currentFilters={filters}
-                  onLoadFilter={(loadedFilters) => setFilters(loadedFilters)}
-                  userId={userId}
-                  tenantId={tenantId}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Action Bar */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <ExportButtons
-                  candidates={filteredCandidates}
-                  filterDescription={getFilterDescription()}
-                  tenantName={tenantName}
-                  userId={userId}
-                  tenantId={tenantId}
+              <div className="flex flex-1 items-center space-x-2">
+                <Input
+                  placeholder="Search candidates..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
                 />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="on_hold">On Hold</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="hired">Hired</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={skillFilter} onValueChange={setSkillFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by Skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Skills</SelectItem>
+                    {allSkills.map(skill => (
+                      <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                  setSkillFilter('all');
+                }}>
+                  Reset Filters
+                </Button>
               </div>
               <div className="flex items-center space-x-2">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                >
-                  Grid
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  List
-                </Button>
+                <Button variant="outline" size="sm" onClick={() => setViewMode('grid')} className={viewMode === 'grid' ? 'bg-gray-100' : ''}>Grid</Button>
+                <Button variant="outline" size="sm" onClick={() => setViewMode('list')} className={viewMode === 'list' ? 'bg-gray-100' : ''}>List</Button>
               </div>
             </div>
 
-            {/* Candidates Display */}
-            {filteredCandidates.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Users className="h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No candidates found</h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Try adjusting your filters or search term
-                  </p>
-                  {hasActiveFilters() && (
-                    <Button variant="outline" onClick={handleClearAllFilters}>
-                      Clear All Filters
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : viewMode === 'grid' ? (
+            {viewMode === 'grid' ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredCandidates.map(candidate => (
-                  <Card key={candidate.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                            <User className="h-6 w-6 text-blue-600" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">{candidate.name}</CardTitle>
-                            <p className="text-sm text-gray-500">{candidate.title}</p>
-                          </div>
-                        </div>
-                        <Badge variant={candidate.status === 'Active' ? 'default' : 'secondary'}>
-                          {candidate.status}
-                        </Badge>
-                      </div>
+                  <Card key={candidate.id} className="relative">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-lg font-bold">{candidate.name}</CardTitle>
+                      <Badge variant={candidate.status === 'Active' ? 'default' : 'secondary'}>{candidate.status}</Badge>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <MapPin className="h-4 w-4 mr-2" />
-                          {candidate.jobLocation}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Briefcase className="h-4 w-4 mr-2" />
-                          {candidate.requisitionId}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Mail className="h-4 w-4 mr-2" />
-                          {candidate.email}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Phone className="h-4 w-4 mr-2" />
-                          {candidate.phone}
-                        </div>
-                        <div className="flex items-center gap-1 mt-2">
-                          {renderRating(candidate.rating)}
-                        </div>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {candidate.skills.slice(0, 3).map(skill => (
-                            <Badge key={skill} variant="outline" className="text-xs">
-                              {skill}
-                            </Badge>
-                          ))}
-                          {candidate.skills.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{candidate.skills.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                        {candidate.documents.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-                            <FileText className="h-4 w-4 text-gray-400" />
-                            <a 
-                              href={candidate.documents[0].url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Download className="h-3 w-3" />
-                              Resume
-                            </a>
-                            {candidate.documents.length > 1 && (
-                              <span className="text-xs text-gray-500">
-                                +{candidate.documents.length - 1} more
-                              </span>
-                            )}
-                          </div>
-                        )}
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Briefcase className="mr-2 h-4 w-4" /> {candidate.title} at {candidate.company}
                       </div>
-                      <div className="mt-4 flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => {
-                            setSelectedCandidate(candidate);
-                            setIsDetailModalOpen(true);
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin className="mr-2 h-4 w-4" /> {candidate.jobLocation}
                       </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Mail className="mr-2 h-4 w-4" /> {candidate.email}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Phone className="mr-2 h-4 w-4" /> {candidate.phone}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <FileText className="mr-2 h-4 w-4" /> Req ID: {candidate.requisitionId}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Clock className="mr-2 h-4 w-4" /> Experience: {candidate.experience}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <DollarSign className="mr-2 h-4 w-4" /> Expected: {formatSalary(candidate.expectedSalary)}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Star className="mr-2 h-4 w-4 text-yellow-400" /> Rating: {candidate.rating}/5
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {candidate.skills.map(skill => (
+                          <Badge key={skill} variant="outline">{skill}</Badge>
+                        ))}
+                      </div>
+                      <Button variant="outline" size="sm" className="absolute bottom-4 right-4" onClick={() => {
+                        setSelectedCandidate(candidate);
+                        setIsDetailModalOpen(true);
+                      }}>
+                        View Details
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -846,40 +509,22 @@ export default function CandidatesPageEnhanced() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Title</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Req ID</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documents</th>
                       <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredCandidates.map(candidate => (
-                      <tr key={candidate.id} className="hover:bg-gray-50">
+                      <tr key={candidate.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{candidate.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{candidate.title}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{candidate.jobLocation}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{candidate.requisitionId}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <Badge variant={candidate.status === 'Active' ? 'default' : 'secondary'}>{candidate.status}</Badge>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center">
                           {renderRating(candidate.rating)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {candidate.documents.length > 0 ? (
-                            <a 
-                              href={candidate.documents[0].url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                              <Download className="h-4 w-4" />
-                              {candidate.documents.length} file{candidate.documents.length > 1 ? 's' : ''}
-                            </a>
-                          ) : (
-                            <span className="text-gray-400">No documents</span>
-                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <Button variant="ghost" size="sm" onClick={() => {
@@ -905,7 +550,7 @@ export default function CandidatesPageEnhanced() {
               <DialogHeader>
                 <DialogTitle>{selectedCandidate.name} - {selectedCandidate.title}</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto">
+              <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="name" className="text-right">Name</Label>
                   <Input id="name" defaultValue={selectedCandidate.name} className="col-span-3" readOnly />
@@ -1038,3 +683,5 @@ export default function CandidatesPageEnhanced() {
     </DashboardLayout>
   );
 }
+
+
