@@ -71,7 +71,7 @@ export default function TalentReportsPage() {
     setShowExportMenu(false);
 
     try {
-      const { jsPDF } = await import('jspdf');
+      const jsPDF = (await import('jspdf')).default;
       const autoTable = (await import('jspdf-autotable')).default;
 
       // Create PDF document
