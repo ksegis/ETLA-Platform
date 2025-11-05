@@ -43,6 +43,7 @@ import {
   X as XIcon
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { SavedFiltersManager } from '@/components/talent/SavedFiltersManager';
 import { ExportButtons } from '@/components/talent/ExportButtons';
 import { FilterState } from '@/types/savedFilters';
@@ -352,11 +353,12 @@ const MOCK_CANDIDATES: Candidate[] = [
 
 export default function CandidatesPageEnhanced() {
   const { selectedTenant } = useTenant();
+  const { user } = useAuth();
   const [candidates, setCandidates] = useState<Candidate[]>(MOCK_CANDIDATES);
   
-  // Mock user and tenant IDs - in production, get from auth context
-  const userId = 'mock-user-id'; // TODO: Get from auth context
-  const tenantId = selectedTenant?.id || 'mock-tenant-id'; // TODO: Get from tenant context
+  // Get actual user and tenant IDs from auth context
+  const userId = user?.id || '';
+  const tenantId = selectedTenant?.id || '';
   const tenantName = selectedTenant?.name || 'ETLA Platform';
   
   // Enhanced filter state
