@@ -191,13 +191,13 @@ export default function TalentDashboard() {
             <p className="text-gray-600">Overview of your recruitment activities</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/talent/candidates">
+            <Link href="/talent/candidates/new">
               <Button variant="outline" className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Add Candidate
               </Button>
             </Link>
-            <Link href="/talent/jobs">
+            <Link href="/talent/jobs/new">
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Post Job
