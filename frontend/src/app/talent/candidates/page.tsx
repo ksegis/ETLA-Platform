@@ -376,6 +376,8 @@ export default function CandidatesPageEnhanced() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  const [isSavedFiltersOpen, setIsSavedFiltersOpen] = useState(false);
 
   // Extract unique values for filter options
   const getUniqueLocations = (): MultiSelectOption[] => {
@@ -575,25 +577,34 @@ export default function CandidatesPageEnhanced() {
           <TabsContent value="candidates" className="space-y-4">
             {/* Enhanced Filter Section */}
             <Card>
-              <CardHeader>
+              <CardHeader className="cursor-pointer" onClick={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Filter className="h-5 w-5" />
                     Advanced Filters
+                    <span className="text-sm font-normal text-gray-500 ml-2">
+                      {isAdvancedFiltersOpen ? '(Click to collapse)' : '(Click to expand)'}
+                    </span>
                   </CardTitle>
-                  {hasActiveFilters() && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleClearAllFilters}
-                    >
-                      <XIcon className="h-4 w-4 mr-2" />
-                      Clear All Filters
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {hasActiveFilters() && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleClearAllFilters();
+                        }}
+                      >
+                        <XIcon className="h-4 w-4 mr-2" />
+                        Clear All Filters
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              {isAdvancedFiltersOpen && (
+                <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Search */}
                   <div>
@@ -687,21 +698,30 @@ export default function CandidatesPageEnhanced() {
                   </div>
                 )}
               </CardContent>
+              )}
             </Card>
 
             {/* Saved Filters Manager */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Saved Filters</CardTitle>
+              <CardHeader className="cursor-pointer" onClick={() => setIsSavedFiltersOpen(!isSavedFiltersOpen)}>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Save className="h-5 w-5" />
+                  Saved Filters
+                  <span className="text-sm font-normal text-gray-500 ml-2">
+                    {isSavedFiltersOpen ? '(Click to collapse)' : '(Click to expand)'}
+                  </span>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <SavedFiltersManager
-                  currentFilters={filters}
-                  onLoadFilter={(loadedFilters) => setFilters(loadedFilters)}
-                  userId={userId}
-                  tenantId={tenantId}
-                />
-              </CardContent>
+              {isSavedFiltersOpen && (
+                <CardContent>
+                  <SavedFiltersManager
+                    currentFilters={filters}
+                    onLoadFilter={(loadedFilters) => setFilters(loadedFilters)}
+                    userId={userId}
+                    tenantId={tenantId}
+                  />
+                </CardContent>
+              )}
             </Card>
 
             {/* Action Bar */}
