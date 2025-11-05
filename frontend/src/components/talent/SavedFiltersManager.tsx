@@ -419,7 +419,10 @@ export function SavedFiltersManager({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setFilterToDelete(null)}>
+            <AlertDialogCancel onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setFilterToDelete(null);
+            }}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
