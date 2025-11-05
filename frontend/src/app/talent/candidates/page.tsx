@@ -47,6 +47,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SavedFiltersManager } from '@/components/talent/SavedFiltersManager';
 import { ExportButtons } from '@/components/talent/ExportButtons';
 import { FilterState } from '@/types/savedFilters';
+import Link from 'next/link';
 
 // Candidate Document Interface
 interface CandidateDocument {
@@ -713,6 +714,12 @@ export default function CandidatesPageEnhanced() {
                   userId={userId}
                   tenantId={tenantId}
                 />
+                <Link href="/talent/resumes">
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-2" />
+                    View All Resumes
+                  </Button>
+                </Link>
               </div>
               <div className="flex items-center space-x-2">
                 <Button
