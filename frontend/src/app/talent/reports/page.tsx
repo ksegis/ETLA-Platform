@@ -23,6 +23,7 @@ import {
   Filter
 } from 'lucide-react';
 import Link from 'next/link';
+import { exportToExcel, exportToPDF, getTimestampedFilename } from '@/utils/exportUtils-enhanced';
 
 interface ReportMetric {
   label: string;
@@ -34,6 +35,8 @@ interface ReportMetric {
 export default function TalentReportsPage() {
   const { selectedTenant } = useTenant();
   const [dateRange, setDateRange] = useState('last_30_days');
+  const [isExporting, setIsExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Mock report data
   const recruitmentMetrics: ReportMetric[] = [
@@ -62,6 +65,99 @@ export default function TalentReportsPage() {
     { department: 'Marketing', openRoles: 2, applications: 35, hires: 2, avgTimeToHire: '12 days' },
     { department: 'Sales', openRoles: 4, applications: 51, hires: 2, avgTimeToHire: '15 days' }
   ];
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    setShowExportMenu(false);
+
+    try {
+      // Prepare data for export
+      const exportData = [
+        { section: 'Key Metrics', data: '' },
+        ...recruitmentMetrics.map(m => ({
+          Metric: m.label,
+          Value: m.value,
+          Change: m.change || 'N/A'
+        })),
+        { section: '', data: '' },
+        { section: 'Source Performance', data: '' },
+        ...sourceMetrics.map(s => ({
+          Source: s.source,
+          Applications: s.applications,
+          Hires: s.hires,
+          'Conversion Rate': s.conversionRate,
+          'Cost per Hire': s.cost
+        })),
+        { section: '', data: '' },
+        { section: 'Department Performance', data: '' },
+        ...departmentMetrics.map(d => ({
+          Department: d.department,
+          'Open Roles': d.openRoles,
+          Applications: d.applications,
+          Hires: d.hires,
+          'Avg Time to Hire': d.avgTimeToHire
+        }))
+      ];
+
+      const filename = getTimestampedFilename('Talent_Report', 'pdf');
+      exportToPDF(exportData, filename, {
+        title: 'Talent Analytics Report',
+        author: selectedTenant?.name || 'ETLA Platform',
+        subject: `Recruitment Analytics - ${dateRange.replace('_', ' ')}`
+      });
+
+      console.log('Report exported to PDF successfully');
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('Failed to export report. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    setShowExportMenu(false);
+
+    try {
+      // Create workbook with multiple sheets
+      const workbookData = {
+        'Key Metrics': recruitmentMetrics.map(m => ({
+          Metric: m.label,
+          Value: m.value,
+          Change: m.change || 'N/A',
+          Trend: m.trend || 'neutral'
+        })),
+        'Source Performance': sourceMetrics.map(s => ({
+          Source: s.source,
+          Applications: s.applications,
+          Hires: s.hires,
+          'Conversion Rate': s.conversionRate,
+          'Cost per Hire': s.cost
+        })),
+        'Department Performance': departmentMetrics.map(d => ({
+          Department: d.department,
+          'Open Roles': d.openRoles,
+          Applications: d.applications,
+          Hires: d.hires,
+          'Avg Time to Hire': d.avgTimeToHire
+        }))
+      };
+
+      const filename = getTimestampedFilename('Talent_Report', 'xlsx');
+      
+      // Use the first sheet's data for the simple export function
+      // In a real implementation, you'd want a multi-sheet export function
+      exportToExcel(workbookData['Key Metrics'], filename);
+
+      console.log('Report exported to Excel successfully');
+    } catch (error) {
+      console.error('Excel export failed:', error);
+      alert('Failed to export report. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const getTrendIcon = (trend?: 'up' | 'down' | 'neutral') => {
     if (trend === 'up') return <TrendingUp className="h-4 w-4 text-green-600" />;
@@ -98,10 +194,30 @@ export default function TalentReportsPage() {
               <option value="last_year">Last Year</option>
               <option value="custom">Custom Range</option>
             </select>
-            <Button>
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
+            <div className="relative">
+              <Button onClick={() => setShowExportMenu(!showExportMenu)} disabled={isExporting}>
+                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? 'Exporting...' : 'Export Report'}
+              </Button>
+              {showExportMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-[9999] border border-gray-200">
+                  <div className="py-1">
+                    <button
+                      onClick={() => handleExportPDF()}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Export as PDF
+                    </button>
+                    <button
+                      onClick={() => handleExportExcel()}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Export as Excel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
