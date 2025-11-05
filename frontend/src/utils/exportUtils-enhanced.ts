@@ -311,7 +311,7 @@ export function exportToPDF(
       margin: { top: 10, right: 10, bottom: 10, left: 10 },
       didDrawPage: (data) => {
         // Footer
-        const pageCount = doc.getNumberOfPages();
+        const pageCount = (doc as any).internal.getNumberOfPages();
         const pageSize = doc.internal.pageSize;
         const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
         doc.setFontSize(8);
