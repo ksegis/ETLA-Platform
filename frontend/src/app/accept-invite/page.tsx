@@ -22,6 +22,7 @@ interface InviteAcceptanceState {
     invited_by_name?: string
     tenant_name?: string
     role?: string
+    invitation_id?: string // ADDED: The ID of the invitation record
   } | null
 }
 function LoadingFallback() {
@@ -68,7 +69,8 @@ function AcceptInviteFormContent() {
             email: session.user.email,
             invited_by_name: session.user.user_metadata.invited_by_name,
             tenant_name: session.user.user_metadata.tenant_name,
-            role: session.user.user_metadata.role
+            role: session.user.user_metadata.role,
+            invitation_id: session.user.user_metadata.invitation_id // ADDED
           }
 
           setState(prev => ({
@@ -175,6 +177,7 @@ function AcceptInviteFormContent() {
       }
 
       // Update user metadata if full name is provided
+      // Update user metadata if full name is provided
       if (state.fullName.trim()) {
         const { error: metadataError } = await supabase.auth.updateUser({
           data: {
@@ -189,6 +192,22 @@ function AcceptInviteFormContent() {
           // Don't fail the entire process for metadata update issues
         }
       }
+
+      // --- NEW LOGIC: Update invitation status via API ---
+      const invitationId = state.inviteData?.invitation_id; // Assuming invitation_id is in inviteData
+      if (invitationId) {
+        const apiResponse = await fetch('/api/user/accept-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invitation_id: invitationId }),
+        });
+
+        if (!apiResponse.ok) {
+          console.error('Failed to update invitation status via API.');
+          // Log error but continue with success state
+        }
+      }
+      // --- END NEW LOGIC ---
 
       setState(prev => ({
         ...prev,
