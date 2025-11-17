@@ -194,6 +194,8 @@ function AcceptInviteFormContent() {
       }
 
       // --- NEW LOGIC: Update invitation status via API ---
+      // Call refreshSession to ensure the AuthContext picks up the new role from the database
+      await supabase.auth.refreshSession();
       const invitationId = state.inviteData?.invitation_id; // Assuming invitation_id is in inviteData
       if (invitationId) {
         const apiResponse = await fetch('/api/user/accept-invite', {
