@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Get environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_TOKEN || '';
+
+// Create the server-side Supabase client
+const supabaseAdmin = supabaseUrl && supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase configuration error' },
+        { status: 500 }
+      );
+    }
+
     const { token, userId } = await request.json();
 
     if (!token) {
@@ -14,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the invitation token exists and is valid
-    const { data: invitation, error: inviteError } = await supabase
+    const { data: invitation, error: inviteError } = await supabaseAdmin
       .from('user_invitations')
       .select('*')
       .eq('token', token)
@@ -37,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the tenant_users table with the accepted invitation
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('tenant_users')
       .update({
         status: 'active',
@@ -56,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark invitation as accepted
-    const { error: acceptError } = await supabase
+    const { error: acceptError } = await supabaseAdmin
       .from('user_invitations')
       .update({
         status: 'accepted',
