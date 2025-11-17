@@ -184,7 +184,7 @@ export function usePermissions() {
   function hasPermission(feature: Feature, permission: Permission): boolean {
     if (isDemoMode) return true;
     if (!isAuthenticated || !tenantUser) return false;
-    if ((tenantUser.role as Role) === ROLES.HOST_ADMIN) return true;
+    if (String(tenantUser.role).toLowerCase() === ROLES.HOST_ADMIN) return true;
     const normalized = normalizePermission(permission);
     return userPermissions.some((p) => p.feature === feature && normalizePermission(p.permission) === normalized);
   }
@@ -209,12 +209,12 @@ export function usePermissions() {
   function canAccessFeature(feature: Feature): boolean {
     if (isDemoMode) return true;
     if (!isAuthenticated || !tenantUser) return false;
-    if ((tenantUser.role as Role) === ROLES.HOST_ADMIN) return true;
+    if (String(tenantUser.role).toLowerCase() === ROLES.HOST_ADMIN) return true;
     return userPermissions.some((p) => p.feature === feature);
   }
 
   function getPermissionLevel(feature: Feature): Permission[] {
-    if (isDemoMode || (tenantUser?.role as Role) === ROLES.HOST_ADMIN) return [CORE_PERMISSIONS.MANAGE];
+    if (isDemoMode || String(tenantUser?.role).toLowerCase() === ROLES.HOST_ADMIN) return [CORE_PERMISSIONS.MANAGE];
     if (!isAuthenticated || !tenantUser) return [];
     return userPermissions
       .filter((p) => p.feature === feature)
@@ -285,7 +285,7 @@ export function usePermissions() {
   const isAdmin = () =>
     !!tenantUser && ([ROLES.HOST_ADMIN, ROLES.CLIENT_ADMIN, ROLES.PRIMARY_CLIENT_ADMIN] as ReadonlyArray<string>).includes(String(tenantUser.role));
 
-  const isHostAdmin = () => String(tenantUser?.role) === ROLES.HOST_ADMIN;
+  const isHostAdmin = () => String(tenantUser?.role).toLowerCase() === ROLES.HOST_ADMIN;
 
   const canManageUsers = () => hasPermission(FEATURES.USER_MANAGEMENT, CORE_PERMISSIONS.MANAGE);
 
