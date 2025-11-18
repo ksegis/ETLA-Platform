@@ -3,8 +3,8 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Helper to create Supabase client
-function createClient() {
-  const cookieStore = cookies()
+async function createClient() {
+  const cookieStore = await cookies()
   
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,7 +34,7 @@ export async function POST(
 ) {
   try {
     const { id: workRequestId } = await params
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -148,7 +148,7 @@ export async function GET(
 ) {
   try {
     const { id: workRequestId } = await params
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -198,7 +198,7 @@ export async function DELETE(
 ) {
   try {
     const { id: workRequestId } = await params
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
