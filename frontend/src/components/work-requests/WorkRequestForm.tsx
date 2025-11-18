@@ -5,7 +5,7 @@ import { X, Upload, File, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
-// Types matching the database schema exactly.
+// Types matching the database schema exactly
 interface WorkRequestFormData {
   title: string
   description: string
@@ -427,21 +427,23 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <p className="text-xs text-gray-500 mb-4">
                   Maximum file size: 10MB per file
                 </p>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
-                  />
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <span>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Select Files
-                    </span>
-                  </Button>
-                </label>
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
+                  id="file-upload-input"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => document.getElementById('file-upload-input')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Select Files
+                </Button>
               </div>
             </div>
 
