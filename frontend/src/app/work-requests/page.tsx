@@ -147,9 +147,21 @@ export default function WorkRequestsPage() {
       
       console.log('loading work requests for tenants:', tenantIds)
 
+      // Query work requests with attachments
       const { data, error: queryError } = await supabase
         .from('work_requests')
-        .select('*')
+        .select(`
+          *,
+          work_request_attachments (
+            id,
+            file_name,
+            file_size,
+            file_type,
+            file_url,
+            uploaded_at,
+            uploaded_by
+          )
+        `)
         .in('tenant_id', tenantIds)
         .order('created_at', { ascending: false })
 
@@ -161,9 +173,16 @@ export default function WorkRequestsPage() {
         return
       }
 
-      console.log('Loaded work requests:', data)
-      setWorkRequests(data || [])
-      setFilteredRequests(data || [])
+      console.log('Loaded work requests with attachments:', data)
+      
+      // Format data with attachments
+      const formattedData = data?.map((request: any) => ({
+        ...request,
+        attachments: request.work_request_attachments || []
+      })) || []
+
+      setWorkRequests(formattedData)
+      setFilteredRequests(formattedData)
 
       const requestStats = {
         total: data?.length || 0,
@@ -256,12 +275,16 @@ export default function WorkRequestsPage() {
 
       // Upload files if any
       if (files.length > 0) {
+        console.log(`Starting upload of ${files.length} files...`)
         for (const file of files) {
           try {
+            console.log(`Uploading file: ${file.name}, size: ${file.size}, type: ${file.type}`)
             const timestamp = Date.now()
             const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
             const filePath = `${selectedTenant.id}/${workRequestId}/${timestamp}_${sanitizedFileName}`
+            console.log(`File path: ${filePath}`)
 
+            // Upload to Supabase Storage
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('work-request-attachments')
               .upload(filePath, file, {
@@ -270,10 +293,13 @@ export default function WorkRequestsPage() {
               })
 
             if (uploadError) {
-              console.error('Upload error:', uploadError)
-              throw new Error(`Failed to upload ${file.name}`)
+              console.error('Upload error details:', uploadError)
+              throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`)
             }
 
+            console.log('Upload successful:', uploadData)
+
+            // Save attachment record to database
             const { error: dbError } = await supabase
               .from('work_request_attachments')
               .insert({
@@ -287,17 +313,24 @@ export default function WorkRequestsPage() {
               })
 
             if (dbError) {
-              console.error('Database error:', dbError)
+              console.error('Database error details:', dbError)
+              // Cleanup: delete uploaded file
               await supabase.storage
                 .from('work-request-attachments')
                 .remove([filePath])
-              throw new Error(`Failed to save ${file.name} record`)
+              throw new Error(`Failed to save ${file.name} record: ${dbError.message}`)
             }
+
+            console.log(`Successfully uploaded and saved: ${file.name}`)
           } catch (fileError: any) {
             console.error('File upload error:', fileError)
             setError(`File upload error: ${fileError.message}`)
+            // Continue with other files even if one fails
           }
         }
+        console.log('All file uploads completed')
+      } else {
+        console.log('No files to upload')
       }
 
       setWorkRequests(prev => [data, ...prev])
@@ -890,7 +923,13 @@ export default function WorkRequestsPage() {
             setSelectedRequest(null)
           }}
           onSave={handleUpdateRequest}
-          request={selectedRequest}
+          request={selectedRequest ? {
+            ...selectedRequest,
+            attachments: selectedRequest.attachments?.map((att: any) => ({
+              ...att,
+              file_url: att.file_url // The form will generate signed URLs when needed
+            }))
+          } : null}
           title="Edit Work Request"
           userRole={tenantUser?.role}
           availableTenants={availableTenantsForCustomer}
@@ -964,6 +1003,43 @@ export default function WorkRequestsPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Internal Notes</label>
                     <p className="mt-1 text-sm text-gray-900">{selectedRequest.internal_notes}</p>
+                  </div>
+                )}
+
+                {/* Display Attachments */}
+                {selectedRequest.attachments && selectedRequest.attachments.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
+                    <div className="space-y-2">
+                      {selectedRequest.attachments.map((attachment: any) => (
+                        <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{attachment.file_name}</p>
+                              <p className="text-xs text-gray-500">
+                                {(attachment.file_size / 1024).toFixed(2)} KB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const { data } = await supabase.storage
+                                .from('work-request-attachments')
+                                .createSignedUrl(attachment.file_url, 60)
+                              if (data?.signedUrl) {
+                                window.open(data.signedUrl, '_blank')
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
