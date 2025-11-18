@@ -1,13 +1,40 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Helper to create Supabase client
+function createClient() {
+  const cookieStore = cookies()
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // Handle cookie setting errors
+          }
+        },
+      },
+    }
+  )
+}
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const { id: workRequestId } = await params
+    const supabase = createClient()
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -18,7 +45,6 @@ export async function POST(
     // Get form data
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
-    const workRequestId = params.id
     const tenantId = formData.get('tenant_id') as string
 
     if (!tenantId) {
@@ -65,7 +91,7 @@ export async function POST(
       if (uploadError) {
         console.error('Upload error:', uploadError)
         return NextResponse.json(
-          { error: `Failed to upload ${file.name}` },
+          { error: `Failed to upload ${file.name}: ${uploadError.message}` },
           { status: 500 }
         )
       }
@@ -93,7 +119,7 @@ export async function POST(
           .remove([filePath])
         
         return NextResponse.json(
-          { error: `Failed to save ${file.name} record` },
+          { error: `Failed to save ${file.name} record: ${dbError.message}` },
           { status: 500 }
         )
       }
@@ -118,17 +144,16 @@ export async function POST(
 // Get attachments for a work request
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const { id: workRequestId } = await params
+    const supabase = createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const workRequestId = params.id
 
     // Get attachments
     const { data: attachments, error } = await supabase
@@ -143,7 +168,7 @@ export async function GET(
 
     // Generate signed URLs for each attachment (for secure downloads)
     const attachmentsWithUrls = await Promise.all(
-      attachments.map(async (attachment) => {
+      (attachments || []).map(async (attachment) => {
         const { data: signedUrlData } = await supabase.storage
           .from('work-request-attachments')
           .createSignedUrl(attachment.file_url, 60 * 60) // 1 hour expiry
@@ -169,10 +194,11 @@ export async function GET(
 // Delete an attachment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const { id: workRequestId } = await params
+    const supabase = createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -186,7 +212,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Attachment ID required' }, { status: 400 })
     }
 
-    // Get attachment record.
+    // Get attachment record
     const { data: attachment, error: fetchError } = await supabase
       .from('work_request_attachments')
       .select('*')
