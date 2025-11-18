@@ -940,9 +940,10 @@ export default function WorkRequestsPage() {
 
         {/* View Modal */}
         {isViewModalOpen && selectedRequest && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+              {/* Header - Fixed */}
+              <div className="flex justify-between items-center p-6 border-b">
                 <h2 className="text-xl font-semibold">View Work Request</h2>
                 <Button
                   variant="ghost"
@@ -953,7 +954,8 @@ export default function WorkRequestsPage() {
                 </Button>
               </div>
               
-              <div className="space-y-4">
+              {/* Content - Scrollable */}
+              <div className="overflow-y-auto p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Title</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedRequest.title}</p>
@@ -999,6 +1001,20 @@ export default function WorkRequestsPage() {
                   <label className="block text-sm font-medium text-gray-700">Created</label>
                   <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.created_at)}</p>
                 </div>
+
+                {selectedRequest.business_justification && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Business Justification</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.business_justification}</p>
+                  </div>
+                )}
+
+                {selectedRequest.impact_assessment && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Impact Assessment</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.impact_assessment}</p>
+                  </div>
+                )}
                 
                 {selectedRequest.internal_notes && (
                   <div>
@@ -1010,42 +1026,54 @@ export default function WorkRequestsPage() {
                 {/* Display Attachments */}
                 {selectedRequest.attachments && selectedRequest.attachments.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Attachments ({selectedRequest.attachments.length})
+                    </label>
                     <div className="space-y-2">
                       {selectedRequest.attachments.map((attachment: any) => (
-                        <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div key={attachment.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
                           <div className="flex items-center space-x-3">
-                            <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
                             <div>
                               <p className="text-sm font-medium text-gray-900">{attachment.file_name}</p>
                               <p className="text-xs text-gray-500">
-                                {(attachment.file_size / 1024).toFixed(2)} KB
+                                {(attachment.file_size / 1024).toFixed(2)} KB • {attachment.file_type}
                               </p>
                             </div>
                           </div>
-                          <button
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={async () => {
                               const { data } = await supabase.storage
                                 .from('work-request-attachments')
-                                .createSignedUrl(attachment.file_url, 60)
+                                .createSignedUrl(attachment.file_url, 3600)
                               if (data?.signedUrl) {
                                 window.open(data.signedUrl, '_blank')
                               }
                             }}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
                           >
                             Download
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
+
+                {/* Show message if no attachments */}
+                {(!selectedRequest.attachments || selectedRequest.attachments.length === 0) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
+                    <div className="text-sm text-gray-500 italic">No attachments</div>
+                  </div>
+                )}
               </div>
               
-              <div className="flex justify-end mt-6">
+              {/* Footer - Fixed */}
+              <div className="flex justify-end p-6 border-t bg-gray-50">
                 <Button
                   variant="outline"
                   onClick={() => setIsViewModalOpen(false)}
