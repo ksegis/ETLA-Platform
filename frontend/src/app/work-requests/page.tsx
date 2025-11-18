@@ -19,9 +19,9 @@ interface WorkRequest {
   title: string
   description: string
   category: string
-  priority: 'low' | 'medium' | 'high' | 'critical'  // priority_level enum
-  urgency: 'low' | 'medium' | 'high' | 'urgent'    // urgency_level enum
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'  // request_status enum
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  urgency: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   customer_id: string
   assigned_to?: string
   estimated_hours?: number
@@ -60,7 +60,7 @@ interface WorkRequestStats {
   completed: number
 }
 
-// Status configuration - FIXED to match database enum values
+// Status configuration
 const statusConfig = {
   submitted: { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Submitted' },
   under_review: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Under Review' },
@@ -72,7 +72,7 @@ const statusConfig = {
   cancelled: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-100', label: 'Cancelled' }
 }
 
-// Priority configuration - FIXED to match database enum values
+// Priority configuration
 const priorityConfig = {
   low: { color: 'text-gray-600', bg: 'bg-gray-100', label: 'Low' },
   medium: { color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Medium' },
@@ -88,35 +88,15 @@ export default function WorkRequestsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
-  const [tenantFilter, setTenantFilter] = useState('') // New tenant filter
+  const [tenantFilter, setTenantFilter] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false) // Add view modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
   const [availableTenantsForCustomer, setAvailableTenantsForCustomer] = useState<Array<{id: string, name: string}>>([])
 
-  // Load available tenants for customer selection (for host admins and primary customer admins)
-  const loadAvailableTenants = async () => {
-    if (tenantUser?.role === 'host_admin') {
-      try {
-        const { data, error } = await supabase
-          .from('tenants')
-          .select('id, name')
-          .order('name')
-
-        if (error) throw error
-        setAvailableTenantsForCustomer(data || [])
-      } catch (err) {
-        console.error('Error loading tenants:', err)
-      }
-    } else if (tenantUser?.role === 'primary_customer_admin' && selectedTenant) {
-      // Primary customer admins can see their own tenant
-      setAvailableTenantsForCustomer([{ id: selectedTenant.id, name: selectedTenant.name }])
-      setSelectedCustomerId(selectedTenant.id)
-    }
-  }
   const [stats, setStats] = useState<WorkRequestStats>({
     total: 0,
     submitted: 0,
@@ -131,7 +111,27 @@ export default function WorkRequestsPage() {
   const accessibleTenantIds = useAccessibleTenantIds()
   const { isMultiTenant, availableTenants } = useMultiTenantMode()
 
-  // Load work requests from database - UPDATED for multi-tenant support
+  // Load available tenants
+  const loadAvailableTenants = async () => {
+    if (tenantUser?.role === 'host_admin') {
+      try {
+        const { data, error } = await supabase
+          .from('tenants')
+          .select('id, name')
+          .order('name')
+
+        if (error) throw error
+        setAvailableTenantsForCustomer(data || [])
+      } catch (err) {
+        console.error('Error loading tenants:', err)
+      }
+    } else if (tenantUser?.role === 'primary_customer_admin' && selectedTenant) {
+      setAvailableTenantsForCustomer([{ id: selectedTenant.id, name: selectedTenant.name }])
+      setSelectedCustomerId(selectedTenant.id)
+    }
+  }
+
+  // Load work requests
   const loadWorkRequests = async () => {
     const tenantIds = accessibleTenantIds
     
@@ -147,11 +147,10 @@ export default function WorkRequestsPage() {
       
       console.log('loading work requests for tenants:', tenantIds)
 
-      // Query work requests for ALL accessible tenants
       const { data, error: queryError } = await supabase
         .from('work_requests')
         .select('*')
-        .in('tenant_id', tenantIds)  // Load from ALL accessible tenants
+        .in('tenant_id', tenantIds)
         .order('created_at', { ascending: false })
 
       if (queryError) {
@@ -162,11 +161,10 @@ export default function WorkRequestsPage() {
         return
       }
 
-      console.log('Loaded work requests from all tenants:', data)
+      console.log('Loaded work requests:', data)
       setWorkRequests(data || [])
       setFilteredRequests(data || [])
 
-      // Calculate stats - FIXED to use correct enum values
       const requestStats = {
         total: data?.length || 0,
         submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
@@ -187,50 +185,36 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Create new work request - FIXED with proper field mapping and NULL handling
-  const handleCreateRequest = async (requestData: Partial<WorkRequest>) => {
+  // Create new work request with file upload
+  const handleCreateRequest = async (requestData: Partial<WorkRequest>, files: File[]) => {
     if (!selectedTenant?.id || !user?.id) {
       setError('Missing tenant or user information')
       return
     }
 
     try {
-      // Determine customer_id based on user role and context
-      // customer_id must reference profiles table, not tenants
       let customerId: string
       
       if (tenantUser?.role === 'host_admin') {
-        // Host admins can create work requests for any selected customer/tenant
-        // But customer_id must be a profile ID, so use the authenticated user's ID
         customerId = user.id
-        console.log('Using host_admin user ID as customer_id:', customerId)
       } else if (tenantUser?.role === 'client_admin' || tenantUser?.role === 'primary_customer_admin') {
-        // Client/customer admins can create work requests for their tenant
-        // Use their own profile ID as customer
         customerId = user.id
       } else {
-        // Regular users create work requests for themselves within their tenant
         customerId = user.id
       }
 
-      console.log('Determined customer_id (profile ID):', customerId, 'for user role:', tenantUser?.role)
-
-      // FIXED: Map to correct database fields with proper NULL handling
       const newRequest = {
-        // Required fields (NOT NULL in database)
         tenant_id: selectedTenant.id,
         title: requestData.title,
         description: requestData.description,
         category: requestData.category,
         priority: requestData.priority,
         urgency: requestData.urgency || 'medium',
-        customer_id: customerId, // Dynamic based on user role and permissions
-        
-        // Optional fields (nullable in database) - use NULL instead of empty strings
+        customer_id: customerId,
         status: requestData.status || 'submitted',
         assigned_to: null,
         estimated_hours: requestData.estimated_hours || null,
-        actual_hours: 0, // Default value as per schema
+        actual_hours: 0,
         budget: requestData.budget || null,
         estimated_budget: requestData.estimated_budget || null,
         required_completion_date: requestData.required_completion_date || null,
@@ -252,13 +236,9 @@ export default function WorkRequestsPage() {
         project_id: null,
         business_justification: requestData.business_justification || null,
         impact_assessment: requestData.impact_assessment || null,
-        
-        // Timestamps
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
-
-      console.log('Creating work request with proper mapping:', newRequest)
 
       const { data, error } = await supabase
         .from('work_requests')
@@ -268,21 +248,61 @@ export default function WorkRequestsPage() {
 
       if (error) {
         console.error('Error creating work request:', error)
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
-        console.error('Request data that failed:', newRequest)
         setError(`Failed to create work request: ${error.message}`)
         return
       }
 
-      console.log('Created work request:', data)
+      const workRequestId = data.id
+
+      // Upload files if any
+      if (files.length > 0) {
+        for (const file of files) {
+          try {
+            const timestamp = Date.now()
+            const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+            const filePath = `${selectedTenant.id}/${workRequestId}/${timestamp}_${sanitizedFileName}`
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('work-request-attachments')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+              })
+
+            if (uploadError) {
+              console.error('Upload error:', uploadError)
+              throw new Error(`Failed to upload ${file.name}`)
+            }
+
+            const { error: dbError } = await supabase
+              .from('work_request_attachments')
+              .insert({
+                work_request_id: workRequestId,
+                tenant_id: selectedTenant.id,
+                file_name: file.name,
+                file_size: file.size,
+                file_type: file.type,
+                file_url: uploadData.path,
+                uploaded_by: user.id
+              })
+
+            if (dbError) {
+              console.error('Database error:', dbError)
+              await supabase.storage
+                .from('work-request-attachments')
+                .remove([filePath])
+              throw new Error(`Failed to save ${file.name} record`)
+            }
+          } catch (fileError: any) {
+            console.error('File upload error:', fileError)
+            setError(`File upload error: ${fileError.message}`)
+          }
+        }
+      }
+
       setWorkRequests(prev => [data, ...prev])
       setIsCreateModalOpen(false)
-      loadWorkRequests() // Reload to update stats
+      loadWorkRequests()
       setError(null)
     } catch (error) {
       console.error('Error creating work request:', error)
@@ -290,15 +310,14 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Update work request - FIXED with proper field mapping
-  const handleUpdateRequest = async (requestData: Partial<WorkRequest>) => {
+  // Update work request with file handling
+  const handleUpdateRequest = async (requestData: Partial<WorkRequest>, files: File[]) => {
     if (!selectedRequest?.id) {
       setError('No request selected for update')
       return
     }
 
     try {
-      // FIXED: Map to correct database fields with proper NULL handling
       const updateData = {
         title: requestData.title,
         description: requestData.description,
@@ -316,8 +335,6 @@ export default function WorkRequestsPage() {
         updated_at: new Date().toISOString()
       }
 
-      console.log('Updating work request with proper mapping:', updateData)
-
       const { data, error } = await supabase
         .from('work_requests')
         .update(updateData)
@@ -331,7 +348,62 @@ export default function WorkRequestsPage() {
         return
       }
 
-      console.log('Updated work request:', data)
+      // Upload new files
+      if (files.length > 0 && selectedTenant) {
+        for (const file of files) {
+          try {
+            const timestamp = Date.now()
+            const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+            const filePath = `${selectedTenant.id}/${selectedRequest.id}/${timestamp}_${sanitizedFileName}`
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('work-request-attachments')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+              })
+
+            if (uploadError) throw new Error(`Failed to upload ${file.name}`)
+
+            await supabase
+              .from('work_request_attachments')
+              .insert({
+                work_request_id: selectedRequest.id,
+                tenant_id: selectedTenant.id,
+                file_name: file.name,
+                file_size: file.size,
+                file_type: file.type,
+                file_url: uploadData.path,
+                uploaded_by: user.id
+              })
+          } catch (fileError: any) {
+            console.error('File upload error:', fileError)
+          }
+        }
+      }
+
+      // Handle deleted attachments
+      if ((requestData as any).deletedAttachmentIds?.length > 0) {
+        for (const attachmentId of (requestData as any).deletedAttachmentIds) {
+          const { data: attachment } = await supabase
+            .from('work_request_attachments')
+            .select('file_url')
+            .eq('id', attachmentId)
+            .single()
+
+          if (attachment) {
+            await supabase.storage
+              .from('work-request-attachments')
+              .remove([attachment.file_url])
+
+            await supabase
+              .from('work_request_attachments')
+              .delete()
+              .eq('id', attachmentId)
+          }
+        }
+      }
+
       setWorkRequests(prev => prev.map((req: any) => req.id === selectedRequest.id ? data : req))
       setIsEditModalOpen(false)
       setSelectedRequest(null)
@@ -360,7 +432,7 @@ export default function WorkRequestsPage() {
       }
 
       setWorkRequests(prev => prev.filter((r: any) => r.id !== requestId))
-      loadWorkRequests() // Reload to update stats
+      loadWorkRequests()
       setError(null)
     } catch (error) {
       console.error('Error deleting work request:', error)
@@ -368,7 +440,7 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Filter requests based on search and filters
+  // Filter requests
   useEffect(() => {
     let filtered = workRequests
 
@@ -395,11 +467,11 @@ export default function WorkRequestsPage() {
     setFilteredRequests(filtered)
   }, [workRequests, searchTerm, statusFilter, priorityFilter, tenantFilter])
 
-  // Load data when accessible tenants change
+  // Load data
   useEffect(() => {
     loadWorkRequests()
     loadAvailableTenants()
-  }, [accessibleTenantIds.join(','), tenantUser?.role]) // Use accessible tenant IDs instead of selected tenant
+  }, [accessibleTenantIds.join(','), tenantUser?.role])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
@@ -411,10 +483,6 @@ export default function WorkRequestsPage() {
 
   const getBudgetAmount = (request: WorkRequest) => {
     return request.budget || request.estimated_budget || 0
-  }
-
-  const getCompletionDate = (request: WorkRequest) => {
-    return request.required_completion_date || request.requested_completion_date
   }
 
   return (
@@ -452,7 +520,7 @@ export default function WorkRequestsPage() {
           </Button>
         </div>
 
-        {/* Stats Cards - FIXED mapping */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -527,7 +595,7 @@ export default function WorkRequestsPage() {
           </Card>
         </div>
 
-        {/* Filters and View Toggle */}
+        {/* Filters */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -567,7 +635,6 @@ export default function WorkRequestsPage() {
                 <option value="critical">Critical</option>
               </select>
               
-              {/* Tenant Filter - Only show for multi-tenant users */}
               {isMultiTenant && (
                 <select
                   value={tenantFilter}
@@ -583,7 +650,6 @@ export default function WorkRequestsPage() {
                 </select>
               )}
               
-              {/* View Toggle */}
               <div className="flex border border-gray-300 rounded-md">
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -612,16 +678,7 @@ export default function WorkRequestsPage() {
             <CardTitle>Work Requests ({filteredRequests.length})</CardTitle>
             <CardDescription>
               {filteredRequests.length} of {workRequests.length} requests
-              {isMultiTenant ? (
-                <span className="ml-2">
-                  | {tenantFilter ? 
-                    `Filtered to: ${availableTenants.find(t => t.id === tenantFilter)?.name}` : 
-                    `From ${availableTenants.length} tenants`
-                  }
-                </span>
-              ) : (
-                selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>
-              )}
+              {isMultiTenant && selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -647,7 +704,6 @@ export default function WorkRequestsPage() {
                 )}
               </div>
             ) : viewMode === 'list' ? (
-              /* List View */
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -674,8 +730,8 @@ export default function WorkRequestsPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredRequests.map((request: any) => {
-                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
-                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
+                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
+                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
 
                       return (
                         <tr key={request.id} className="hover:bg-gray-50">
@@ -740,11 +796,10 @@ export default function WorkRequestsPage() {
                 </table>
               </div>
             ) : (
-              /* Grid View */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map((request: any) => {
-                  const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
-                  const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
+                  const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
+                  const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
 
                   return (
                     <Card key={request.id} className="hover:shadow-lg transition-shadow">
@@ -928,4 +983,3 @@ export default function WorkRequestsPage() {
     </DashboardLayout>
   )
 }
-
