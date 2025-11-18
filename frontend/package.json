@@ -12,6 +12,7 @@
     "build:ci": "next build"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
