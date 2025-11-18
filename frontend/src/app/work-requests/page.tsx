@@ -151,38 +151,39 @@ export default function WorkRequestsPage() {
       const { data, error: queryError } = await supabase
         .from('work_requests')
         .select(`
-          *,
-          work_request_attachments (
-            id,
-            file_name,
-            file_size,
-            file_type,
-            file_url,
-            uploaded_at,
-            uploaded_by
-          )
+          *
         `)
         .in('tenant_id', tenantIds)
         .order('created_at', { ascending: false })
 
       if (queryError) {
         console.error('Database query error:', queryError)
+        console.error('Error details:', JSON.stringify(queryError, null, 2))
         setError(`Failed to load work requests: ${queryError.message || 'Unknown error'}`)
         setWorkRequests([])
         setFilteredRequests([])
         return
       }
 
-      console.log('Loaded work requests with attachments:', data)
-      
-      // Format data with attachments
-      const formattedData = data?.map((request: any) => ({
-        ...request,
-        attachments: request.work_request_attachments || []
-      })) || []
+      // Fetch attachments separately for each work request
+      const dataWithAttachments = await Promise.all(
+        (data || []).map(async (request: any) => {
+          const { data: attachments } = await supabase
+            .from('work_request_attachments')
+            .select('*')
+            .eq('work_request_id', request.id)
+          
+          return {
+            ...request,
+            attachments: attachments || []
+          }
+        })
+      )
 
-      setWorkRequests(formattedData)
-      setFilteredRequests(formattedData)
+      console.log('Loaded work requests with attachments:', dataWithAttachments)
+      
+      setWorkRequests(dataWithAttachments)
+      setFilteredRequests(dataWithAttachments)
 
       const requestStats = {
         total: data?.length || 0,
