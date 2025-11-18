@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Upload, File, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
@@ -41,12 +41,27 @@ interface WorkRequest {
   customer_id?: string
   created_at: string
   updated_at: string
+  attachments?: WorkRequestAttachment[]
+}
+
+interface WorkRequestAttachment {
+  id?: string
+  file_name: string
+  file_size: number
+  file_type: string
+  file_url?: string
+  uploaded_at?: string
+}
+
+interface UploadedFile {
+  file: File
+  preview?: WorkRequestAttachment
 }
 
 interface WorkRequestFormProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (data: Partial<WorkRequest>) => void
+  onSave: (data: Partial<WorkRequest>, files: File[]) => void
   request?: WorkRequest | null
   title?: string
   userRole?: string
@@ -83,6 +98,9 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [existingAttachments, setExistingAttachments] = useState<WorkRequestAttachment[]>([])
+  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([])
 
   // Reset form when modal opens/closes or request changes
   useEffect(() => {
@@ -102,6 +120,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         requested_completion_date: request.requested_completion_date || '',
         estimated_hours: request.estimated_hours?.toString() || ''
       })
+      setExistingAttachments(request.attachments || [])
     } else {
       setFormData({
         title: '',
@@ -118,9 +137,56 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         requested_completion_date: '',
         estimated_hours: ''
       })
+      setExistingAttachments([])
     }
     setErrors({})
+    setUploadedFiles([])
+    setDeletedAttachmentIds([])
   }, [request, isOpen])
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const newFiles: UploadedFile[] = Array.from(files).map(file => ({
+      file,
+      preview: {
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type
+      }
+    }))
+
+    setUploadedFiles(prev => [...prev, ...newFiles])
+    
+    // Reset the input so the same file can be selected again if removed
+    e.target.value = ''
+  }
+
+  // Remove newly uploaded file (not yet saved)
+  const handleRemoveUploadedFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // Mark existing attachment for deletion
+  const handleRemoveExistingAttachment = (attachmentId: string) => {
+    setDeletedAttachmentIds(prev => [...prev, attachmentId])
+  }
+
+  // Undo deletion of existing attachment
+  const handleUndoDeleteAttachment = (attachmentId: string) => {
+    setDeletedAttachmentIds(prev => prev.filter(id => id !== attachmentId))
+  }
+
+  // Format file size for display
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+  }
 
   // Validation function
   const validateForm = (): boolean => {
@@ -156,6 +222,14 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       newErrors.estimated_hours = 'Estimated hours must be a valid number'
     }
 
+    // File size validation (max 10MB per file)
+    const maxFileSize = 10 * 1024 * 1024 // 10MB
+    uploadedFiles.forEach((uploadedFile, index) => {
+      if (uploadedFile.file.size > maxFileSize) {
+        newErrors[`file_${index}`] = `${uploadedFile.file.name} exceeds 10MB limit`
+      }
+    })
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -183,8 +257,15 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       requested_completion_date: formData.requested_completion_date || undefined,
       estimated_hours: formData.estimated_hours ? parseInt(formData.estimated_hours) : undefined
     }
+
+    // Add deleted attachment IDs if editing
+    if (request && deletedAttachmentIds.length > 0) {
+      (submitData as any).deletedAttachmentIds = deletedAttachmentIds
+    }
     
-    onSave(submitData)
+    // Pass the actual File objects to the parent
+    const files = uploadedFiles.map(uf => uf.file)
+    onSave(submitData, files)
   }
 
   if (!isOpen) return null
@@ -333,6 +414,135 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
             </div>
           </div>
 
+          {/* Document Attachments */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Document Attachments</h3>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="flex flex-col items-center">
+                <Upload className="h-12 w-12 text-gray-400 mb-3" />
+                <p className="text-sm text-gray-600 mb-2">
+                  Drag and drop files here, or click to select files
+                </p>
+                <p className="text-xs text-gray-500 mb-4">
+                  Maximum file size: 10MB per file
+                </p>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
+                  />
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <span>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Select Files
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
+
+            {/* Existing Attachments (when editing) */}
+            {existingAttachments.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">Existing Attachments</h4>
+                {existingAttachments.map((attachment) => {
+                  const isMarkedForDeletion = deletedAttachmentIds.includes(attachment.id!)
+                  return (
+                    <div
+                      key={attachment.id}
+                      className={`flex items-center justify-between p-3 border rounded-lg ${
+                        isMarkedForDeletion ? 'bg-red-50 border-red-300 opacity-50' : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3 flex-1">
+                        <File className="h-5 w-5 text-blue-500" />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${isMarkedForDeletion ? 'line-through' : ''}`}>
+                            {attachment.file_name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(attachment.file_size)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {attachment.file_url && !isMarkedForDeletion && (
+                          <a
+                            href={attachment.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-xs"
+                          >
+                            Download
+                          </a>
+                        )}
+                        {isMarkedForDeletion ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUndoDeleteAttachment(attachment.id!)}
+                          >
+                            Undo
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveExistingAttachment(attachment.id!)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Newly Uploaded Files */}
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">New Files to Upload</h4>
+                {uploadedFiles.map((uploadedFile, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3 flex-1">
+                      <File className="h-5 w-5 text-green-500" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {uploadedFile.preview?.file_name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatFileSize(uploadedFile.preview?.file_size || 0)}
+                        </p>
+                        {errors[`file_${index}`] && (
+                          <p className="text-xs text-red-500 mt-1">{errors[`file_${index}`]}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveUploadedFile(index)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Budget and Timeline */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">Budget and Timeline</h3>
@@ -456,4 +666,3 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
 }
 
 export default WorkRequestForm
-
