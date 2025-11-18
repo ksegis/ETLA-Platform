@@ -283,7 +283,7 @@ export default function WorkRequestsPage() {
                 file_size: file.size,
                 file_type: file.type,
                 file_url: uploadData.path,
-                uploaded_by: user.id
+                uploaded_by: user?.id
               })
 
             if (dbError) {
@@ -374,7 +374,7 @@ export default function WorkRequestsPage() {
                 file_size: file.size,
                 file_type: file.type,
                 file_url: uploadData.path,
-                uploaded_by: user.id
+                uploaded_by: user?.id
               })
           } catch (fileError: any) {
             console.error('File upload error:', fileError)
