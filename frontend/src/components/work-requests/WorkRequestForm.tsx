@@ -259,6 +259,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   <option value="training_support">Training Support</option>
                   <option value="database">Database</option>
                   <option value="web_development">Web Development</option>
+                  <option value="request_for_quote">Request for Quote</option>
                   <option value="general">General</option>
                 </select>
                 {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
