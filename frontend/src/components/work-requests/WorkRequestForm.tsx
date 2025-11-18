@@ -5,7 +5,7 @@ import { X, Upload, File, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
-// Types matching the database schema exactly
+// Types matching the database schema exactly.
 interface WorkRequestFormData {
   title: string
   description: string

@@ -186,7 +186,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Attachment ID required' }, { status: 400 })
     }
 
-    // Get attachment record
+    // Get attachment record.
     const { data: attachment, error: fetchError } = await supabase
       .from('work_request_attachments')
       .select('*')
