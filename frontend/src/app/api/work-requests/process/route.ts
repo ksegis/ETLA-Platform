@@ -63,9 +63,8 @@ export async function POST(request: Request) {
         .from('work_requests')
         .update({ 
           status: 'rejected',
-          reviewed_by: user_id,
-          reviewed_at: now,
-          // decline_reason: '...' (could be added later if UI provides it)
+          decline_reason: 'Rejected by administrator', // Using valid column from schema
+          updated_at: now,
         })
         .eq('id', work_request_id);
 
