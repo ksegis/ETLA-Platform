@@ -193,19 +193,22 @@ function AcceptInviteFormContent() {
         }
       }
 
-      // --- NEW LOGIC: Update invitation status via API ---
+      // --- NEW LOGIC: Update invitation status via Supabase Edge Function ---
       // Call refreshSession to ensure the AuthContext picks up the new role from the database
       await supabase.auth.refreshSession();
-      const invitationId = state.inviteData?.invitation_id; // Assuming invitation_id is in inviteData
-      if (invitationId) {
-        const apiResponse = await fetch('/api/user/accept-invite', {
+      
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const tenantId = searchParams.get('tenant_id'); // Assuming tenant_id is passed in the URL
+      
+      if (userId && tenantId) {
+        const functionResponse = await fetch('/functions/v1/accept-invitation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ invitation_id: invitationId }),
+          body: JSON.stringify({ user_id: userId, tenant_id: tenantId }),
         });
 
-        if (!apiResponse.ok) {
-          console.error('Failed to update invitation status via API.');
+        if (!functionResponse.ok) {
+          console.error('Failed to update invitation status via Edge Function.');
           // Log error but continue with success state
         }
       }
