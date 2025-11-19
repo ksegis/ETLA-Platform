@@ -86,9 +86,11 @@ export async function POST(request: Request) {
       
       // A. Create Project (Project Charter) FIRST - only update status if this succeeds
       // Map work request fields to valid project_charters columns only
+      // Generate unique project code using timestamp to avoid duplicates
+      const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
       const projectData = {
         tenant_id: workRequest.tenant_id,
-        project_code: `WR-${workRequest.id.slice(0, 8)}`, // Generate a project code from work request ID
+        project_code: `WR-${workRequest.id.slice(0, 8)}-${timestamp}`, // Unique project code with timestamp
         project_name: workRequest.title || 'Untitled Project',
         project_title: workRequest.title,
         title: workRequest.title,
