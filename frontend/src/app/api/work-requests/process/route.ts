@@ -106,7 +106,7 @@ export async function POST(request: Request) {
         tenant_id: workRequest.tenant_id,
         project_name: `Project: ${workRequest.title}`,
         project_title: `Project: ${workRequest.title}`,
-        description: workRequest.description,
+        // description field does not exist in project_charters table
         priority: workRequest.priority,
         project_category: workRequest.category,
         estimated_budget: workRequest.estimated_budget,
