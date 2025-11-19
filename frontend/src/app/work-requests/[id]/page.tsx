@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { ArrowLeft, Calendar, Clock, DollarSign, User, MessageCircle, Paperclip, Edit, CheckCircle, XCircle, AlertCircle, Loader2, Building, Phone, Mail, MapPin, Tag, FileText, TrendingUp, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -261,12 +262,13 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
     }
   }
 
+  const { currentUserRole } = useAuth();
+
   const handleProcessRequest = async (action: 'approve' | 'reject') => {
     if (!request) return;
 
-    // TODO: Replace with actual user data from AuthContext
-    const user_id = 'current_user_id'; 
-    const user_role = 'host_admin'; // Assume host_admin for now
+    // Use actual user data from AuthContext
+    const user_role = currentUserRole;
 
     if (user_role !== 'host_admin') {
       alert('You do not have permission to approve or reject work requests.');
