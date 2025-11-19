@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List, X } from 'lucide-react'
+import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List, X, File, DollarSign, Users, Target, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -19,9 +19,9 @@ interface WorkRequest {
   title: string
   description: string
   category: string
-  priority: 'low' | 'medium' | 'high' | 'critical'  // priority_level enum
-  urgency: 'low' | 'medium' | 'high' | 'urgent'    // urgency_level enum
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'  // request_status enum
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  urgency: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   customer_id: string
   assigned_to?: string
   estimated_hours?: number
@@ -49,6 +49,11 @@ interface WorkRequest {
   project_id?: string
   business_justification?: string
   impact_assessment?: string
+  risk_level?: string
+  impact_level?: string
+  dependencies?: string
+  stakeholders?: string
+  success_criteria?: string
 }
 
 interface WorkRequestStats {
@@ -60,7 +65,7 @@ interface WorkRequestStats {
   completed: number
 }
 
-// Status configuration - FIXED to match database enum values
+// Status configuration
 const statusConfig = {
   submitted: { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Submitted' },
   under_review: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Under Review' },
@@ -72,7 +77,7 @@ const statusConfig = {
   cancelled: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-100', label: 'Cancelled' }
 }
 
-// Priority configuration - FIXED to match database enum values
+// Priority configuration
 const priorityConfig = {
   low: { color: 'text-gray-600', bg: 'bg-gray-100', label: 'Low' },
   medium: { color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Medium' },
@@ -88,35 +93,15 @@ export default function WorkRequestsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
-  const [tenantFilter, setTenantFilter] = useState('') // New tenant filter
+  const [tenantFilter, setTenantFilter] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false) // Add view modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<WorkRequest | null>(null)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
   const [availableTenantsForCustomer, setAvailableTenantsForCustomer] = useState<Array<{id: string, name: string}>>([])
 
-  // Load available tenants for customer selection (for host admins and primary customer admins)
-  const loadAvailableTenants = async () => {
-    if (tenantUser?.role === 'host_admin') {
-      try {
-        const { data, error } = await supabase
-          .from('tenants')
-          .select('id, name')
-          .order('name')
-
-        if (error) throw error
-        setAvailableTenantsForCustomer(data || [])
-      } catch (err) {
-        console.error('Error loading tenants:', err)
-      }
-    } else if (tenantUser?.role === 'primary_customer_admin' && selectedTenant) {
-      // Primary customer admins can see their own tenant
-      setAvailableTenantsForCustomer([{ id: selectedTenant.id, name: selectedTenant.name }])
-      setSelectedCustomerId(selectedTenant.id)
-    }
-  }
   const [stats, setStats] = useState<WorkRequestStats>({
     total: 0,
     submitted: 0,
@@ -131,7 +116,27 @@ export default function WorkRequestsPage() {
   const accessibleTenantIds = useAccessibleTenantIds()
   const { isMultiTenant, availableTenants } = useMultiTenantMode()
 
-  // Load work requests from database - UPDATED for multi-tenant support
+  // Load available tenants
+  const loadAvailableTenants = async () => {
+    if (tenantUser?.role === 'host_admin') {
+      try {
+        const { data, error } = await supabase
+          .from('tenants')
+          .select('id, name')
+          .order('name')
+
+        if (error) throw error
+        setAvailableTenantsForCustomer(data || [])
+      } catch (err) {
+        console.error('Error loading tenants:', err)
+      }
+    } else if (tenantUser?.role === 'primary_customer_admin' && selectedTenant) {
+      setAvailableTenantsForCustomer([{ id: selectedTenant.id, name: selectedTenant.name }])
+      setSelectedCustomerId(selectedTenant.id)
+    }
+  }
+
+  // Load work requests
   const loadWorkRequests = async () => {
     const tenantIds = accessibleTenantIds
     
@@ -147,26 +152,44 @@ export default function WorkRequestsPage() {
       
       console.log('loading work requests for tenants:', tenantIds)
 
-      // Query work requests for ALL accessible tenants
+      // Query work requests with attachments
       const { data, error: queryError } = await supabase
         .from('work_requests')
-        .select('*')
-        .in('tenant_id', tenantIds)  // Load from ALL accessible tenants
+        .select(`
+          *
+        `)
+        .in('tenant_id', tenantIds)
         .order('created_at', { ascending: false })
 
       if (queryError) {
         console.error('Database query error:', queryError)
+        console.error('Error details:', JSON.stringify(queryError, null, 2))
         setError(`Failed to load work requests: ${queryError.message || 'Unknown error'}`)
         setWorkRequests([])
         setFilteredRequests([])
         return
       }
 
-      console.log('Loaded work requests from all tenants:', data)
-      setWorkRequests(data || [])
-      setFilteredRequests(data || [])
+      // Fetch attachments separately for each work request
+      const dataWithAttachments = await Promise.all(
+        (data || []).map(async (request: any) => {
+          const { data: attachments } = await supabase
+            .from('work_request_attachments')
+            .select('*')
+            .eq('work_request_id', request.id)
+          
+          return {
+            ...request,
+            attachments: attachments || []
+          }
+        })
+      )
 
-      // Calculate stats - FIXED to use correct enum values
+      console.log('Loaded work requests with attachments:', dataWithAttachments)
+      
+      setWorkRequests(dataWithAttachments)
+      setFilteredRequests(dataWithAttachments)
+
       const requestStats = {
         total: data?.length || 0,
         submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
@@ -187,50 +210,36 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Create new work request - FIXED with proper field mapping and NULL handling
-  const handleCreateRequest = async (requestData: Partial<WorkRequest>) => {
+  // Create new work request with file upload
+  const handleCreateRequest = async (requestData: Partial<WorkRequest>, files: File[]) => {
     if (!selectedTenant?.id || !user?.id) {
       setError('Missing tenant or user information')
       return
     }
 
     try {
-      // Determine customer_id based on user role and context
-      // customer_id must reference profiles table, not tenants
       let customerId: string
       
       if (tenantUser?.role === 'host_admin') {
-        // Host admins can create work requests for any selected customer/tenant
-        // But customer_id must be a profile ID, so use the authenticated user's ID
         customerId = user.id
-        console.log('Using host_admin user ID as customer_id:', customerId)
       } else if (tenantUser?.role === 'client_admin' || tenantUser?.role === 'primary_customer_admin') {
-        // Client/customer admins can create work requests for their tenant
-        // Use their own profile ID as customer
         customerId = user.id
       } else {
-        // Regular users create work requests for themselves within their tenant
         customerId = user.id
       }
 
-      console.log('Determined customer_id (profile ID):', customerId, 'for user role:', tenantUser?.role)
-
-      // FIXED: Map to correct database fields with proper NULL handling
       const newRequest = {
-        // Required fields (NOT NULL in database)
         tenant_id: selectedTenant.id,
         title: requestData.title,
         description: requestData.description,
         category: requestData.category,
         priority: requestData.priority,
         urgency: requestData.urgency || 'medium',
-        customer_id: customerId, // Dynamic based on user role and permissions
-        
-        // Optional fields (nullable in database) - use NULL instead of empty strings
+        customer_id: customerId,
         status: requestData.status || 'submitted',
         assigned_to: null,
         estimated_hours: requestData.estimated_hours || null,
-        actual_hours: 0, // Default value as per schema
+        actual_hours: 0,
         budget: requestData.budget || null,
         estimated_budget: requestData.estimated_budget || null,
         required_completion_date: requestData.required_completion_date || null,
@@ -252,13 +261,9 @@ export default function WorkRequestsPage() {
         project_id: null,
         business_justification: requestData.business_justification || null,
         impact_assessment: requestData.impact_assessment || null,
-        
-        // Timestamps
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
-
-      console.log('Creating work request with proper mapping:', newRequest)
 
       const { data, error } = await supabase
         .from('work_requests')
@@ -268,21 +273,75 @@ export default function WorkRequestsPage() {
 
       if (error) {
         console.error('Error creating work request:', error)
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
-        console.error('Request data that failed:', newRequest)
         setError(`Failed to create work request: ${error.message}`)
         return
       }
 
-      console.log('Created work request:', data)
+      const workRequestId = data.id
+
+      // Upload files if any
+      if (files.length > 0) {
+        console.log(`Starting upload of ${files.length} files...`)
+        for (const file of files) {
+          try {
+            console.log(`Uploading file: ${file.name}, size: ${file.size}, type: ${file.type}`)
+            const timestamp = Date.now()
+            const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+            const filePath = `${selectedTenant.id}/${workRequestId}/${timestamp}_${sanitizedFileName}`
+            console.log(`File path: ${filePath}`)
+
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('work-request-attachments')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+              })
+
+            if (uploadError) {
+              console.error('Upload error details:', uploadError)
+              throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`)
+            }
+
+            console.log('Upload successful:', uploadData)
+
+            // Save attachment record to database
+            const { error: dbError } = await supabase
+              .from('work_request_attachments')
+              .insert({
+                work_request_id: workRequestId,
+                tenant_id: selectedTenant.id,
+                file_name: file.name,
+                file_size: file.size,
+                file_type: file.type,
+                file_url: uploadData.path,
+                uploaded_by: user?.id
+              })
+
+            if (dbError) {
+              console.error('Database error details:', dbError)
+              // Cleanup: delete uploaded file
+              await supabase.storage
+                .from('work-request-attachments')
+                .remove([filePath])
+              throw new Error(`Failed to save ${file.name} record: ${dbError.message}`)
+            }
+
+            console.log(`Successfully uploaded and saved: ${file.name}`)
+          } catch (fileError: any) {
+            console.error('File upload error:', fileError)
+            setError(`File upload error: ${fileError.message}`)
+            // Continue with other files even if one fails
+          }
+        }
+        console.log('All file uploads completed')
+      } else {
+        console.log('No files to upload')
+      }
+
       setWorkRequests(prev => [data, ...prev])
       setIsCreateModalOpen(false)
-      loadWorkRequests() // Reload to update stats
+      loadWorkRequests()
       setError(null)
     } catch (error) {
       console.error('Error creating work request:', error)
@@ -290,15 +349,14 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Update work request - FIXED with proper field mapping
-  const handleUpdateRequest = async (requestData: Partial<WorkRequest>) => {
+  // Update work request with file handling
+  const handleUpdateRequest = async (requestData: Partial<WorkRequest>, files: File[]) => {
     if (!selectedRequest?.id) {
       setError('No request selected for update')
       return
     }
 
     try {
-      // FIXED: Map to correct database fields with proper NULL handling
       const updateData = {
         title: requestData.title,
         description: requestData.description,
@@ -316,8 +374,6 @@ export default function WorkRequestsPage() {
         updated_at: new Date().toISOString()
       }
 
-      console.log('Updating work request with proper mapping:', updateData)
-
       const { data, error } = await supabase
         .from('work_requests')
         .update(updateData)
@@ -331,7 +387,62 @@ export default function WorkRequestsPage() {
         return
       }
 
-      console.log('Updated work request:', data)
+      // Upload new files
+      if (files.length > 0 && selectedTenant) {
+        for (const file of files) {
+          try {
+            const timestamp = Date.now()
+            const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+            const filePath = `${selectedTenant.id}/${selectedRequest.id}/${timestamp}_${sanitizedFileName}`
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('work-request-attachments')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+              })
+
+            if (uploadError) throw new Error(`Failed to upload ${file.name}`)
+
+            await supabase
+              .from('work_request_attachments')
+              .insert({
+                work_request_id: selectedRequest.id,
+                tenant_id: selectedTenant.id,
+                file_name: file.name,
+                file_size: file.size,
+                file_type: file.type,
+                file_url: uploadData.path,
+                uploaded_by: user?.id
+              })
+          } catch (fileError: any) {
+            console.error('File upload error:', fileError)
+          }
+        }
+      }
+
+      // Handle deleted attachments
+      if ((requestData as any).deletedAttachmentIds?.length > 0) {
+        for (const attachmentId of (requestData as any).deletedAttachmentIds) {
+          const { data: attachment } = await supabase
+            .from('work_request_attachments')
+            .select('file_url')
+            .eq('id', attachmentId)
+            .single()
+
+          if (attachment) {
+            await supabase.storage
+              .from('work-request-attachments')
+              .remove([attachment.file_url])
+
+            await supabase
+              .from('work_request_attachments')
+              .delete()
+              .eq('id', attachmentId)
+          }
+        }
+      }
+
       setWorkRequests(prev => prev.map((req: any) => req.id === selectedRequest.id ? data : req))
       setIsEditModalOpen(false)
       setSelectedRequest(null)
@@ -360,7 +471,7 @@ export default function WorkRequestsPage() {
       }
 
       setWorkRequests(prev => prev.filter((r: any) => r.id !== requestId))
-      loadWorkRequests() // Reload to update stats
+      loadWorkRequests()
       setError(null)
     } catch (error) {
       console.error('Error deleting work request:', error)
@@ -368,7 +479,7 @@ export default function WorkRequestsPage() {
     }
   }
 
-  // Filter requests based on search and filters
+  // Filter requests
   useEffect(() => {
     let filtered = workRequests
 
@@ -395,11 +506,11 @@ export default function WorkRequestsPage() {
     setFilteredRequests(filtered)
   }, [workRequests, searchTerm, statusFilter, priorityFilter, tenantFilter])
 
-  // Load data when accessible tenants change
+  // Load data
   useEffect(() => {
     loadWorkRequests()
     loadAvailableTenants()
-  }, [accessibleTenantIds.join(','), tenantUser?.role]) // Use accessible tenant IDs instead of selected tenant
+  }, [accessibleTenantIds.join(','), tenantUser?.role])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
@@ -411,10 +522,6 @@ export default function WorkRequestsPage() {
 
   const getBudgetAmount = (request: WorkRequest) => {
     return request.budget || request.estimated_budget || 0
-  }
-
-  const getCompletionDate = (request: WorkRequest) => {
-    return request.required_completion_date || request.requested_completion_date
   }
 
   return (
@@ -452,7 +559,7 @@ export default function WorkRequestsPage() {
           </Button>
         </div>
 
-        {/* Stats Cards - FIXED mapping */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -527,7 +634,7 @@ export default function WorkRequestsPage() {
           </Card>
         </div>
 
-        {/* Filters and View Toggle */}
+        {/* Filters */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -567,7 +674,6 @@ export default function WorkRequestsPage() {
                 <option value="critical">Critical</option>
               </select>
               
-              {/* Tenant Filter - Only show for multi-tenant users */}
               {isMultiTenant && (
                 <select
                   value={tenantFilter}
@@ -583,7 +689,6 @@ export default function WorkRequestsPage() {
                 </select>
               )}
               
-              {/* View Toggle */}
               <div className="flex border border-gray-300 rounded-md">
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -612,16 +717,7 @@ export default function WorkRequestsPage() {
             <CardTitle>Work Requests ({filteredRequests.length})</CardTitle>
             <CardDescription>
               {filteredRequests.length} of {workRequests.length} requests
-              {isMultiTenant ? (
-                <span className="ml-2">
-                  | {tenantFilter ? 
-                    `Filtered to: ${availableTenants.find(t => t.id === tenantFilter)?.name}` : 
-                    `From ${availableTenants.length} tenants`
-                  }
-                </span>
-              ) : (
-                selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>
-              )}
+              {isMultiTenant && selectedTenant && <span className="ml-2">| Tenant: {selectedTenant.name}</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -647,7 +743,6 @@ export default function WorkRequestsPage() {
                 )}
               </div>
             ) : viewMode === 'list' ? (
-              /* List View */
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -674,8 +769,8 @@ export default function WorkRequestsPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredRequests.map((request: any) => {
-                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
-                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
+                      const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
+                      const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
 
                       return (
                         <tr key={request.id} className="hover:bg-gray-50">
@@ -740,11 +835,10 @@ export default function WorkRequestsPage() {
                 </table>
               </div>
             ) : (
-              /* Grid View */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map((request: any) => {
-                  const StatusIcon = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig]?.icon || Clock
-                  const statusStyle = statusConfig[request.status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
+                  const StatusIcon = statusConfig[request.status as keyof typeof statusConfig]?.icon || Clock
+                  const statusStyle = statusConfig[request.status as keyof typeof statusConfig] || statusConfig.submitted
 
                   return (
                     <Card key={request.id} className="hover:shadow-lg transition-shadow">
@@ -835,7 +929,13 @@ export default function WorkRequestsPage() {
             setSelectedRequest(null)
           }}
           onSave={handleUpdateRequest}
-          request={selectedRequest}
+          request={selectedRequest ? {
+            ...selectedRequest,
+            attachments: selectedRequest.attachments?.map((att: any) => ({
+              ...att,
+              file_url: att.file_url // The form will generate signed URLs when needed
+            }))
+          } : null}
           title="Edit Work Request"
           userRole={tenantUser?.role}
           availableTenants={availableTenantsForCustomer}
@@ -843,83 +943,302 @@ export default function WorkRequestsPage() {
           onCustomerChange={setSelectedCustomerId}
         />
 
-        {/* View Modal */}
+        {/* View Modal - Redesigned */}
         {isViewModalOpen && selectedRequest && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">View Work Request</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsViewModalOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] flex flex-col">
+              {/* Status-based colored header */}
+              <div className={`px-8 py-6 rounded-t-lg ${
+                selectedRequest.status === 'approved' ? 'bg-green-50 border-b-2 border-green-500' :
+                selectedRequest.status === 'under_review' ? 'bg-yellow-50 border-b-2 border-yellow-500' :
+                selectedRequest.status === 'in_progress' ? 'bg-blue-50 border-b-2 border-blue-500' :
+                selectedRequest.status === 'completed' ? 'bg-green-50 border-b-2 border-green-600' :
+                'bg-gray-50 border-b-2 border-gray-500'
+              }`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedRequest.title}</h2>
+                    <p className="text-sm text-gray-600 mt-1">Work Request Details</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsViewModalOpen(false)}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Title</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.title}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.description}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
+              {/* Content - Scrollable */}
+              <div className="overflow-y-auto px-8 py-6">
+                {/* Summary Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p className="text-xs font-medium text-blue-600 uppercase mb-1">Status</p>
                     <Badge className="mt-1">{selectedRequest.status}</Badge>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Priority</label>
-                    <Badge className="mt-1">{selectedRequest.priority}</Badge>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.category}</p>
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <p className="text-xs font-medium text-orange-600 uppercase mb-1">Priority</p>
+                    <Badge variant={selectedRequest.priority === 'high' || selectedRequest.priority === 'critical' ? 'destructive' : 'secondary'}>
+                      {selectedRequest.priority}
+                    </Badge>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Budget</label>
-                    <p className="mt-1 text-sm text-gray-900">${getBudgetAmount(selectedRequest).toLocaleString()}</p>
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <p className="text-xs font-medium text-purple-600 uppercase mb-1">Category</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">{selectedRequest.category}</p>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <p className="text-xs font-medium text-green-600 uppercase mb-1">Budget</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">
+                      ${getBudgetAmount(selectedRequest).toLocaleString()}
+                    </p>
                   </div>
                 </div>
-                
-                {selectedRequest.required_completion_date && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Required Completion Date</label>
-                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.required_completion_date)}</p>
+
+                <div className="space-y-6">
+                  {/* Description Section */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.description}</p>
                   </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Created</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.created_at)}</p>
+
+                  {/* Two Column Layout for Details */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left Column */}
+                    <div className="space-y-6">
+                      {/* Timeline */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Calendar className="h-5 w-5 text-blue-600" />
+                          <h3 className="text-lg font-semibold text-gray-900">Timeline</h3>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 uppercase">Created</p>
+                            <p className="text-sm text-gray-900 mt-1">{formatDate(selectedRequest.created_at)}</p>
+                          </div>
+                          {selectedRequest.required_completion_date && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Required Completion</p>
+                              <p className="text-sm text-gray-900 mt-1">{formatDate(selectedRequest.required_completion_date)}</p>
+                            </div>
+                          )}
+                          {selectedRequest.requested_completion_date && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Requested Completion</p>
+                              <p className="text-sm text-gray-900 mt-1">{formatDate(selectedRequest.requested_completion_date)}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Risk & Impact */}
+                      {(selectedRequest.risk_level || selectedRequest.impact_level) && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-6">
+                          <div className="flex items-center gap-2 mb-4">
+                            <TrendingUp className="h-5 w-5 text-orange-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">Risk & Impact</h3>
+                          </div>
+                          <div className="space-y-3">
+                            {selectedRequest.risk_level && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Risk Level</p>
+                                <Badge className="mt-1" variant={
+                                  selectedRequest.risk_level === 'high' ? 'destructive' : 
+                                  selectedRequest.risk_level === 'medium' ? 'secondary' : 'default'
+                                }>
+                                  {selectedRequest.risk_level}
+                                </Badge>
+                              </div>
+                            )}
+                            {selectedRequest.impact_level && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Impact Area</p>
+                                <p className="text-sm text-gray-900 mt-1 capitalize">{selectedRequest.impact_level}</p>
+                              </div>
+                            )}
+                            {selectedRequest.impact_assessment && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Impact Assessment</p>
+                                <p className="text-sm text-gray-700 mt-1 leading-relaxed">{selectedRequest.impact_assessment}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="space-y-6">
+                      {/* Budget & Resources */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <DollarSign className="h-5 w-5 text-green-600" />
+                          <h3 className="text-lg font-semibold text-gray-900">Budget & Resources</h3>
+                        </div>
+                        <div className="space-y-3">
+                          {selectedRequest.budget && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Budget</p>
+                              <p className="text-sm text-gray-900 mt-1">${selectedRequest.budget.toLocaleString()}</p>
+                            </div>
+                          )}
+                          {selectedRequest.estimated_budget && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Estimated Budget</p>
+                              <p className="text-sm text-gray-900 mt-1">${selectedRequest.estimated_budget.toLocaleString()}</p>
+                            </div>
+                          )}
+                          {selectedRequest.estimated_hours && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Estimated Hours</p>
+                              <p className="text-sm text-gray-900 mt-1">{selectedRequest.estimated_hours} hours</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Stakeholders */}
+                      {(selectedRequest.stakeholders || selectedRequest.dependencies) && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-6">
+                          <div className="flex items-center gap-2 mb-4">
+                            <Users className="h-5 w-5 text-purple-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">Stakeholders & Dependencies</h3>
+                          </div>
+                          <div className="space-y-3">
+                            {selectedRequest.stakeholders && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Stakeholders</p>
+                                <p className="text-sm text-gray-700 mt-1">{selectedRequest.stakeholders}</p>
+                              </div>
+                            )}
+                            {selectedRequest.dependencies && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Dependencies</p>
+                                <p className="text-sm text-gray-700 mt-1 leading-relaxed">{selectedRequest.dependencies}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Business Justification - Full Width */}
+                  {selectedRequest.business_justification && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Target className="h-5 w-5 text-blue-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Business Justification</h3>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.business_justification}</p>
+                    </div>
+                  )}
+
+                  {/* Success Criteria - Full Width */}
+                  {selectedRequest.success_criteria && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Success Criteria</h3>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.success_criteria}</p>
+                    </div>
+                  )}
+
+                  {/* Attachments */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <File className="h-5 w-5 text-indigo-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Attachments {selectedRequest.attachments && selectedRequest.attachments.length > 0 && 
+                          <span className="text-sm text-gray-500 font-normal">({selectedRequest.attachments.length})</span>
+                        }
+                      </h3>
+                    </div>
+                    
+                    {selectedRequest.attachments && selectedRequest.attachments.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedRequest.attachments.map((attachment: any) => (
+                          <div key={attachment.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <div className="p-2 bg-blue-100 rounded-lg">
+                                <File className="h-6 w-6 text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{attachment.file_name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {(attachment.file_size / 1024).toFixed(2)} KB • {attachment.file_type}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={async () => {
+                                const { data } = await supabase.storage
+                                  .from('work-request-attachments')
+                                  .createSignedUrl(attachment.file_url, 3600)
+                                if (data?.signedUrl) {
+                                  window.open(data.signedUrl, '_blank')
+                                }
+                              }}
+                            >
+                              Download
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <File className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm">No attachments</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Internal Notes */}
+                  {selectedRequest.internal_notes && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Internal Notes</h3>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.internal_notes}</p>
+                    </div>
+                  )}
                 </div>
-                
-                {selectedRequest.internal_notes && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Internal Notes</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.internal_notes}</p>
-                  </div>
-                )}
               </div>
               
-              <div className="flex justify-end mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsViewModalOpen(false)}
-                >
-                  Close
-                </Button>
+              {/* Footer */}
+              <div className="flex justify-between items-center px-8 py-6 border-t bg-gray-50">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">Request ID:</span> {selectedRequest.id.slice(0, 8)}...
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsViewModalOpen(false)
+                      setSelectedRequest(null)
+                      setIsEditModalOpen(true)
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Request
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsViewModalOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -928,4 +1247,3 @@ export default function WorkRequestsPage() {
     </DashboardLayout>
   )
 }
-

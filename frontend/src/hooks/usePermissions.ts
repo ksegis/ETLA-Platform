@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Import the PURE constants (no hooks) and re-export for compatibility
+// Import the PURE constants (no hooks) and re-export for compatibility.
 import {
   FEATURES,
   PERMISSIONS,

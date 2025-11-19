@@ -22,7 +22,7 @@ interface InviteAcceptanceState {
     invited_by_name?: string
     tenant_name?: string
     role?: string
-    invitation_id?: string // ADDED: The ID of the invitation record
+    invitation_id?: string // ADDED: The ID of the invitation record.
   } | null
 }
 function LoadingFallback() {
