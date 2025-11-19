@@ -49,6 +49,11 @@ interface WorkRequest {
   project_id?: string
   business_justification?: string
   impact_assessment?: string
+  risk_level?: string
+  impact_level?: string
+  dependencies?: string
+  stakeholders?: string
+  success_criteria?: string
 }
 
 interface WorkRequestStats {
