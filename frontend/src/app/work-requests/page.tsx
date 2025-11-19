@@ -1231,7 +1231,12 @@ export default function WorkRequestsPage() {
                             const response = await fetch('/api/work-requests/process', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ work_request_id: selectedRequest.id, action: 'approve' }),
+                              body: JSON.stringify({ 
+                                work_request_id: selectedRequest.id, 
+                                action: 'approve',
+                                user_id: user?.id,
+                                user_role: tenantUser?.role
+                              }),
                             });
                             if (response.ok) {
                               alert('Work request approved successfully!');
@@ -1257,7 +1262,12 @@ export default function WorkRequestsPage() {
                             const response = await fetch('/api/work-requests/process', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ work_request_id: selectedRequest.id, action: 'reject' }),
+                              body: JSON.stringify({ 
+                                work_request_id: selectedRequest.id, 
+                                action: 'reject',
+                                user_id: user?.id,
+                                user_role: tenantUser?.role
+                              }),
                             });
                             if (response.ok) {
                               alert('Work request rejected successfully.');
