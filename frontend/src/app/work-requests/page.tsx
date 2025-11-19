@@ -938,148 +938,302 @@ export default function WorkRequestsPage() {
           onCustomerChange={setSelectedCustomerId}
         />
 
-        {/* View Modal */}
+        {/* View Modal - Redesigned */}
         {isViewModalOpen && selectedRequest && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-              {/* Header - Fixed */}
-              <div className="flex justify-between items-center p-6 border-b">
-                <h2 className="text-xl font-semibold">View Work Request</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsViewModalOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+            <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] flex flex-col">
+              {/* Status-based colored header */}
+              <div className={`px-8 py-6 rounded-t-lg ${
+                selectedRequest.status === 'approved' ? 'bg-green-50 border-b-2 border-green-500' :
+                selectedRequest.status === 'under_review' ? 'bg-yellow-50 border-b-2 border-yellow-500' :
+                selectedRequest.status === 'in_progress' ? 'bg-blue-50 border-b-2 border-blue-500' :
+                selectedRequest.status === 'completed' ? 'bg-green-50 border-b-2 border-green-600' :
+                'bg-gray-50 border-b-2 border-gray-500'
+              }`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedRequest.title}</h2>
+                    <p className="text-sm text-gray-600 mt-1">Work Request Details</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsViewModalOpen(false)}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
               
               {/* Content - Scrollable */}
-              <div className="overflow-y-auto p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Title</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.title}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedRequest.description}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
+              <div className="overflow-y-auto px-8 py-6">
+                {/* Summary Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p className="text-xs font-medium text-blue-600 uppercase mb-1">Status</p>
                     <Badge className="mt-1">{selectedRequest.status}</Badge>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Priority</label>
-                    <Badge className="mt-1">{selectedRequest.priority}</Badge>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.category}</p>
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <p className="text-xs font-medium text-orange-600 uppercase mb-1">Priority</p>
+                    <Badge variant={selectedRequest.priority === 'high' || selectedRequest.priority === 'critical' ? 'destructive' : 'secondary'}>
+                      {selectedRequest.priority}
+                    </Badge>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Budget</label>
-                    <p className="mt-1 text-sm text-gray-900">${getBudgetAmount(selectedRequest).toLocaleString()}</p>
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <p className="text-xs font-medium text-purple-600 uppercase mb-1">Category</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">{selectedRequest.category}</p>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <p className="text-xs font-medium text-green-600 uppercase mb-1">Budget</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">
+                      ${getBudgetAmount(selectedRequest).toLocaleString()}
+                    </p>
                   </div>
                 </div>
-                
-                {selectedRequest.required_completion_date && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Required Completion Date</label>
-                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.required_completion_date)}</p>
-                  </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Created</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(selectedRequest.created_at)}</p>
-                </div>
 
-                {selectedRequest.business_justification && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Business Justification</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.business_justification}</p>
+                <div className="space-y-6">
+                  {/* Description Section */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.description}</p>
                   </div>
-                )}
 
-                {selectedRequest.impact_assessment && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Impact Assessment</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.impact_assessment}</p>
-                  </div>
-                )}
-                
-                {selectedRequest.internal_notes && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Internal Notes</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedRequest.internal_notes}</p>
-                  </div>
-                )}
-
-                {/* Display Attachments */}
-                {selectedRequest.attachments && selectedRequest.attachments.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Attachments ({selectedRequest.attachments.length})
-                    </label>
-                    <div className="space-y-2">
-                      {selectedRequest.attachments.map((attachment: any) => (
-                        <div key={attachment.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center space-x-3">
-                            <svg className="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{attachment.file_name}</p>
-                              <p className="text-xs text-gray-500">
-                                {(attachment.file_size / 1024).toFixed(2)} KB • {attachment.file_type}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              const { data } = await supabase.storage
-                                .from('work-request-attachments')
-                                .createSignedUrl(attachment.file_url, 3600)
-                              if (data?.signedUrl) {
-                                window.open(data.signedUrl, '_blank')
-                              }
-                            }}
-                          >
-                            Download
-                          </Button>
+                  {/* Two Column Layout for Details */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left Column */}
+                    <div className="space-y-6">
+                      {/* Timeline */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Calendar className="h-5 w-5 text-blue-600" />
+                          <h3 className="text-lg font-semibold text-gray-900">Timeline</h3>
                         </div>
-                      ))}
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 uppercase">Created</p>
+                            <p className="text-sm text-gray-900 mt-1">{formatDate(selectedRequest.created_at)}</p>
+                          </div>
+                          {selectedRequest.required_completion_date && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Required Completion</p>
+                              <p className="text-sm text-gray-900 mt-1">{formatDate(selectedRequest.required_completion_date)}</p>
+                            </div>
+                          )}
+                          {selectedRequest.requested_completion_date && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Requested Completion</p>
+                              <p className="text-sm text-gray-900 mt-1">{formatDate(selectedRequest.requested_completion_date)}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Risk & Impact */}
+                      {(selectedRequest.risk_level || selectedRequest.impact_level) && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-6">
+                          <div className="flex items-center gap-2 mb-4">
+                            <TrendingUp className="h-5 w-5 text-orange-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">Risk & Impact</h3>
+                          </div>
+                          <div className="space-y-3">
+                            {selectedRequest.risk_level && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Risk Level</p>
+                                <Badge className="mt-1" variant={
+                                  selectedRequest.risk_level === 'high' ? 'destructive' : 
+                                  selectedRequest.risk_level === 'medium' ? 'secondary' : 'default'
+                                }>
+                                  {selectedRequest.risk_level}
+                                </Badge>
+                              </div>
+                            )}
+                            {selectedRequest.impact_level && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Impact Area</p>
+                                <p className="text-sm text-gray-900 mt-1 capitalize">{selectedRequest.impact_level}</p>
+                              </div>
+                            )}
+                            {selectedRequest.impact_assessment && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Impact Assessment</p>
+                                <p className="text-sm text-gray-700 mt-1 leading-relaxed">{selectedRequest.impact_assessment}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="space-y-6">
+                      {/* Budget & Resources */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <DollarSign className="h-5 w-5 text-green-600" />
+                          <h3 className="text-lg font-semibold text-gray-900">Budget & Resources</h3>
+                        </div>
+                        <div className="space-y-3">
+                          {selectedRequest.budget && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Budget</p>
+                              <p className="text-sm text-gray-900 mt-1">${selectedRequest.budget.toLocaleString()}</p>
+                            </div>
+                          )}
+                          {selectedRequest.estimated_budget && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Estimated Budget</p>
+                              <p className="text-sm text-gray-900 mt-1">${selectedRequest.estimated_budget.toLocaleString()}</p>
+                            </div>
+                          )}
+                          {selectedRequest.estimated_hours && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase">Estimated Hours</p>
+                              <p className="text-sm text-gray-900 mt-1">{selectedRequest.estimated_hours} hours</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Stakeholders */}
+                      {(selectedRequest.stakeholders || selectedRequest.dependencies) && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-6">
+                          <div className="flex items-center gap-2 mb-4">
+                            <Users className="h-5 w-5 text-purple-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">Stakeholders & Dependencies</h3>
+                          </div>
+                          <div className="space-y-3">
+                            {selectedRequest.stakeholders && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Stakeholders</p>
+                                <p className="text-sm text-gray-700 mt-1">{selectedRequest.stakeholders}</p>
+                              </div>
+                            )}
+                            {selectedRequest.dependencies && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase">Dependencies</p>
+                                <p className="text-sm text-gray-700 mt-1 leading-relaxed">{selectedRequest.dependencies}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
 
-                {/* Show message if no attachments */}
-                {(!selectedRequest.attachments || selectedRequest.attachments.length === 0) && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
-                    <div className="text-sm text-gray-500 italic">No attachments</div>
+                  {/* Business Justification - Full Width */}
+                  {selectedRequest.business_justification && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Target className="h-5 w-5 text-blue-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Business Justification</h3>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.business_justification}</p>
+                    </div>
+                  )}
+
+                  {/* Success Criteria - Full Width */}
+                  {selectedRequest.success_criteria && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Success Criteria</h3>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.success_criteria}</p>
+                    </div>
+                  )}
+
+                  {/* Attachments */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <File className="h-5 w-5 text-indigo-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Attachments {selectedRequest.attachments && selectedRequest.attachments.length > 0 && 
+                          <span className="text-sm text-gray-500 font-normal">({selectedRequest.attachments.length})</span>
+                        }
+                      </h3>
+                    </div>
+                    
+                    {selectedRequest.attachments && selectedRequest.attachments.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedRequest.attachments.map((attachment: any) => (
+                          <div key={attachment.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <div className="p-2 bg-blue-100 rounded-lg">
+                                <File className="h-6 w-6 text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{attachment.file_name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {(attachment.file_size / 1024).toFixed(2)} KB • {attachment.file_type}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={async () => {
+                                const { data } = await supabase.storage
+                                  .from('work-request-attachments')
+                                  .createSignedUrl(attachment.file_url, 3600)
+                                if (data?.signedUrl) {
+                                  window.open(data.signedUrl, '_blank')
+                                }
+                              }}
+                            >
+                              Download
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <File className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm">No attachments</p>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Internal Notes */}
+                  {selectedRequest.internal_notes && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Internal Notes</h3>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedRequest.internal_notes}</p>
+                    </div>
+                  )}
+                </div>
               </div>
               
-              {/* Footer - Fixed */}
-              <div className="flex justify-end p-6 border-t bg-gray-50">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsViewModalOpen(false)}
-                >
-                  Close
-                </Button>
+              {/* Footer */}
+              <div className="flex justify-between items-center px-8 py-6 border-t bg-gray-50">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">Request ID:</span> {selectedRequest.id.slice(0, 8)}...
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsViewModalOpen(false)
+                      setSelectedRequest(null)
+                      setIsEditModalOpen(true)
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Request
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsViewModalOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
