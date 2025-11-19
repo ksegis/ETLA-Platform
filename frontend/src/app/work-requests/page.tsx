@@ -1221,6 +1221,63 @@ export default function WorkRequestsPage() {
                   <span className="font-medium">Request ID:</span> {selectedRequest.id.slice(0, 8)}...
                 </div>
                 <div className="flex gap-3">
+                  {/* Approval/Rejection Buttons - Only show for host_admin and submitted/under_review status */}
+                  {currentUserRole === 'host_admin' && (selectedRequest.status === 'submitted' || selectedRequest.status === 'under_review') && (
+                    <>
+                      <Button
+                        onClick={async () => {
+                          if (!confirm('Are you sure you want to approve this work request? This will create a new project.')) return;
+                          try {
+                            const response = await fetch('/api/work-requests/process', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ work_request_id: selectedRequest.id, action: 'approve' }),
+                            });
+                            if (response.ok) {
+                              alert('Work request approved successfully!');
+                              setIsViewModalOpen(false);
+                              fetchWorkRequests(); // Refresh the list
+                            } else {
+                              alert('Failed to approve work request.');
+                            }
+                          } catch (error) {
+                            console.error('Error approving work request:', error);
+                            alert('An error occurred while approving the work request.');
+                          }
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Approve Request
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          if (!confirm('Are you sure you want to reject this work request?')) return;
+                          try {
+                            const response = await fetch('/api/work-requests/process', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ work_request_id: selectedRequest.id, action: 'reject' }),
+                            });
+                            if (response.ok) {
+                              alert('Work request rejected successfully.');
+                              setIsViewModalOpen(false);
+                              fetchWorkRequests(); // Refresh the list
+                            } else {
+                              alert('Failed to reject work request.');
+                            }
+                          } catch (error) {
+                            console.error('Error rejecting work request:', error);
+                            alert('An error occurred while rejecting the work request.');
+                          }
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Reject Request
+                      </Button>
+                    </>
+                  )}
                   <Button
                     variant="outline"
                     onClick={() => {
