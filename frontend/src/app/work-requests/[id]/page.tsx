@@ -261,6 +261,57 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
     }
   }
 
+  const handleProcessRequest = async (action: 'approve' | 'reject') => {
+    if (!request) return;
+
+    // TODO: Replace with actual user data from AuthContext
+    const user_id = 'current_user_id'; 
+    const user_role = 'host_admin'; // Assume host_admin for now
+
+    if (user_role !== 'host_admin') {
+      alert('You do not have permission to approve or reject work requests.');
+      return;
+    }
+
+    if (request.status !== 'submitted' && request.status !== 'under_review') {
+      alert(`Request status is ${request.status}. Cannot ${action}.`);
+      return;
+    }
+
+    setloading(true);
+    try {
+      const response = await fetch('/api/work-requests/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          work_request_id: request.id,
+          action,
+          user_id,
+          user_role,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Work Request ${action}d successfully!`);
+        // Reload the request to show the new status
+        loadWorkRequest(); 
+      } else {
+        setError(result.error || `Failed to ${action} work request.`);
+        alert(`Error: ${result.error || `Failed to ${action} work request.`}`);
+      }
+    } catch (err) {
+      console.error(`Error processing request:`, err);
+      setError(`An unexpected error occurred while processing the request.`);
+      alert(`An unexpected error occurred while processing the request.`);
+    } finally {
+      setloading(false);
+    }
+  };
+
   const handleAddComment = async () => {
     if (!newComment.trim()) return
 
@@ -397,6 +448,29 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Approval/Rejection Buttons */}
+              {request && (request.status === 'submitted' || request.status === 'under_review') && (
+                <div className="flex space-x-3">
+                  <Button 
+                    variant="default" 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleProcessRequest('approve')}
+                    disabled={loading}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {loading ? 'Approving...' : 'Approve Request'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-red-500 text-red-500 hover:bg-red-50"
+                    onClick={() => handleProcessRequest('reject')}
+                    disabled={loading}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    {loading ? 'Rejecting...' : 'Reject Request'}
+                  </Button>
+                </div>
+              )}
               {getStatusDisplay(request)}
               <Button variant="outline" className="flex items-center">
                 <Edit className="w-4 h-4 mr-2" />
@@ -411,6 +485,29 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
           <Card className="mb-6 border-orange-200 bg-orange-50">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
+              {/* Approval/Rejection Buttons */}
+              {request && (request.status === 'submitted' || request.status === 'under_review') && (
+                <div className="flex space-x-3">
+                  <Button 
+                    variant="default" 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleProcessRequest('approve')}
+                    disabled={loading}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {loading ? 'Approving...' : 'Approve Request'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-red-500 text-red-500 hover:bg-red-50"
+                    onClick={() => handleProcessRequest('reject')}
+                    disabled={loading}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    {loading ? 'Rejecting...' : 'Reject Request'}
+                  </Button>
+                </div>
+              )}
                 <AlertTriangle className="h-5 w-5 text-orange-600" />
                 <div>
                   <h4 className="font-medium text-orange-800">Customer Data Issue</h4>
@@ -635,6 +732,29 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                     {request.attachments.map((attachment: any) => (
                       <div key={attachment.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                         <div className="flex items-center space-x-3">
+              {/* Approval/Rejection Buttons */}
+              {request && (request.status === 'submitted' || request.status === 'under_review') && (
+                <div className="flex space-x-3">
+                  <Button 
+                    variant="default" 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleProcessRequest('approve')}
+                    disabled={loading}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {loading ? 'Approving...' : 'Approve Request'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-red-500 text-red-500 hover:bg-red-50"
+                    onClick={() => handleProcessRequest('reject')}
+                    disabled={loading}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    {loading ? 'Rejecting...' : 'Reject Request'}
+                  </Button>
+                </div>
+              )}
                           <div className="flex-shrink-0">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                               <Paperclip className="w-5 h-5 text-blue-600" />
