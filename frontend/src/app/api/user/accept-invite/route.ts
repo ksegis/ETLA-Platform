@@ -100,6 +100,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Add explicit export to satisfy TypeScript module detection
-export default { POST };
