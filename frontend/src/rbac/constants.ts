@@ -141,10 +141,9 @@ export const ROLES = {
   ...R,
   HOST_ADMIN: R.HOST_ADMIN ?? "host_admin",
   CLIENT_ADMIN: R.CLIENT_ADMIN ?? "client_admin",
-  PRIMARY_CLIENT_ADMIN: 'primary_client_admin',
   TENANT_ADMIN: R.TENANT_ADMIN ?? R.CLIENT_ADMIN ?? "client_admin", // alias used by some pages
   PROGRAM_MANAGER: R.PROGRAM_MANAGER ?? "program_manager",
-  PRIMARY_CLIENT_ADMIN: R.PRIMARY_CLIENT_ADMIN ?? "primary_client_admin",  // ADD THIS LINE
+  PRIMARY_CLIENT_ADMIN: R.PRIMARY_CLIENT_ADMIN ?? "primary_client_admin",  
   CLIENT_USER: R.CLIENT_USER ?? "client_user",
   USER: R.USER ?? R.CLIENT_USER ?? "client_user", // alias
 } as const;
