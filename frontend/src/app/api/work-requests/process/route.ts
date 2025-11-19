@@ -84,24 +84,7 @@ export async function POST(request: Request) {
     } else if (action === 'approve') {
       // 2. Handle Approval and Project Creation
       
-      // A. Update Work Request Status to 'approved'
-      const { error: updateError } = await supabaseAdmin
-        .from('work_requests')
-        .update({ 
-          status: 'approved',
-          approved_by: user_id,
-          approved_at: now,
-        })
-        .eq('id', work_request_id);
-
-      if (updateError) {
-        return NextResponse.json({ 
-          success: false, 
-          error: `Failed to approve work request: ${updateError.message}` 
-        }, { status: 500 });
-      }
-
-      // B. Create Project (Project Charter)
+      // A. Create Project (Project Charter) FIRST - only update status if this succeeds
       // Map work request fields to valid project_charters columns only
       const projectData = {
         tenant_id: workRequest.tenant_id,
@@ -131,22 +114,41 @@ export async function POST(request: Request) {
         .single();
 
       if (projectError) {
-        // Log error and potentially revert work request status if project creation fails
+        // Project creation failed - do NOT update work request status
         console.error('Project creation failed:', projectError);
-        // NOTE: For simplicity, we skip transaction rollback, but in production, this should be a transaction.
         return NextResponse.json({ 
           success: false, 
           error: `Failed to create project: ${projectError.message}` 
         }, { status: 500 });
       }
 
+      // B. Project created successfully - NOW update work request status to 'approved' and then 'converted_to_project'
+      const { error: updateError } = await supabaseAdmin
+        .from('work_requests')
+        .update({ 
+          status: 'approved',
+          approved_by: user_id,
+          approved_at: now,
+          project_id: project.id, // Link the created project
+        })
+        .eq('id', work_request_id);
+
+      if (updateError) {
+        console.error('Failed to update work request status after project creation:', updateError);
+        // Project is created but work request status update failed - return success with warning
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Project created successfully, but failed to update work request status.',
+          project_id: project.id,
+          project_code: projectData.project_code
+        });
+      }
+
       // C. Final Update Work Request Status to 'converted_to_project'
       const { error: finalUpdateError } = await supabaseAdmin
         .from('work_requests')
         .update({ 
-          status: 'converted_to_project', // Update work request status
-          // Optionally link project ID back to work request if schema supports it
-          project_id: project.id, 
+          status: 'converted_to_project', // Final status
         })
         .eq('id', work_request_id);
 
@@ -158,7 +160,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         success: true, 
         message: 'Work Request approved and Project created successfully.',
-        project_id: project.id
+        project_id: project.id,
+        project_code: projectData.project_code
       });
 
     } else {

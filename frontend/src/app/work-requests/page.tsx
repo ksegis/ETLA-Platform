@@ -997,6 +997,24 @@ export default function WorkRequestsPage() {
                       ${getBudgetAmount(selectedRequest).toLocaleString()}
                     </p>
                   </div>
+                  
+                  {/* Project Reference Link - Only show if project_id exists */}
+                  {selectedRequest.project_id && (
+                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                      <p className="text-xs font-medium text-indigo-600 uppercase mb-1">Project</p>
+                      <a 
+                        href={`/project-management?project=${selectedRequest.project_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 mt-1"
+                      >
+                        View Project
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-6">
