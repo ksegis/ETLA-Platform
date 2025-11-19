@@ -316,7 +316,7 @@ function AcceptInviteFormContent() {
     )
   }
 
-  // Main invite acceptance form
+  // Main form content
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -324,172 +324,119 @@ function AcceptInviteFormContent() {
           <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             <UserPlus className="h-6 w-6 text-blue-600" />
           </div>
-          <CardTitle className="text-xl text-gray-900">Welcome to ETLA Platform</CardTitle>
+          <CardTitle className="text-2xl text-gray-900">Accept Invitation</CardTitle>
           <CardDescription className="text-gray-600">
-            You've been invited to join as <strong>{state.inviteData?.role || 'a user'}</strong>
-            {state.inviteData?.tenant_name && (
-              <> at <strong>{state.inviteData.tenant_name}</strong></>
-            )}
+            You have been invited to join {state.inviteData?.tenant_name || 'a tenant'} as a {state.inviteData?.role || 'user'}.
+            Set up your account to continue.
           </CardDescription>
         </CardHeader>
-
         <CardContent>
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex items-center">
-              <Mail className="h-4 w-4 text-blue-600 mr-2" />
-              <p className="text-sm text-blue-700">
-                <strong>Email:</strong> {state.email}
-              </p>
-            </div>
-            {state.inviteData?.invited_by_name && (
-              <div className="flex items-center mt-2">
-                <User className="h-4 w-4 text-blue-600 mr-2" />
-                <p className="text-sm text-blue-700">
-                  <strong>Invited by:</strong> {state.inviteData.invited_by_name}
-                </p>
-              </div>
-            )}
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {state.error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <div className="flex items-center">
-                  <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
-                  <p className="text-sm text-red-600">{state.error}</p>
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name <span className="text-gray-400">(optional)</span>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Full Name Field */}
+            <div className="space-y-1">
+              <label htmlFor="fullName" className="text-sm font-medium text-gray-700 flex items-center">
+                <User className="h-4 w-4 mr-2 text-gray-400" />
+                Full Name (Optional)
               </label>
               <input
                 id="fullName"
                 type="text"
                 value={state.fullName}
-                onChange={(e: any) => handleFullNameChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => handleFullNameChange(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter your full name"
-                disabled={state.Loading}
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+            {/* Email Field (Read-only) */}
+            <div className="space-y-1">
+              <label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center">
+                <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={state.email}
+                readOnly
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500"
+              />
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-1">
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                New Password
               </label>
               <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={state.password}
-                  onChange={(e: any) => handlePasswordChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
-                  placeholder="Create a secure password"
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  placeholder="Enter new password"
                   required
-                  disabled={state.Loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.Loading}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
+            {/* Confirm Password Field */}
+            <div className="space-y-1">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                Confirm New Password
               </label>
               <div className="relative">
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={state.confirmPassword}
-                  onChange={(e: any) => handleConfirmPasswordChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
-                  placeholder="Confirm your password"
+                  onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  placeholder="Confirm new password"
                   required
-                  disabled={state.Loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.Loading}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>Password requirements:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>At least 8 characters long</li>
-                <li>Contains uppercase and lowercase letters</li>
-                <li>Contains at least one number</li>
-                <li>Contains at least one special character (!@#$%^&*)</li>
-              </ul>
-            </div>
+            {/* Error Message */}
+            {state.error && (
+              <div className="flex items-center p-3 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                <div>{state.error}</div>
+              </div>
+            )}
 
+            {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full"
-              disabled={state.Loading || !state.password || !state.confirmPassword}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={state.Loading}
             >
               {state.Loading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Setting up your account...
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Setting up account...
                 </>
               ) : (
-                <>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Complete Setup
-                </>
+                'Set Password and Join'
               )}
             </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/login')}
-              className="w-full"
-              disabled={state.Loading}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Sign In
-            </Button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function loadingFallback() {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">loading...</span>
-          </div>
         </CardContent>
       </Card>
     </div>
@@ -503,4 +450,3 @@ export default function AcceptInvitePage() {
     </Suspense>
   )
 }
-
