@@ -1236,7 +1236,7 @@ export default function WorkRequestsPage() {
                             if (response.ok) {
                               alert('Work request approved successfully!');
                               setIsViewModalOpen(false);
-                              fetchWorkRequests(); // Refresh the list
+                              loadWorkRequests(); // Refresh the list
                             } else {
                               alert('Failed to approve work request.');
                             }
@@ -1262,7 +1262,7 @@ export default function WorkRequestsPage() {
                             if (response.ok) {
                               alert('Work request rejected successfully.');
                               setIsViewModalOpen(false);
-                              fetchWorkRequests(); // Refresh the list
+                              loadWorkRequests(); // Refresh the list
                             } else {
                               alert('Failed to reject work request.');
                             }
