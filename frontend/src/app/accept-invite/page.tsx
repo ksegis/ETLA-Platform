@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, ArrowLeft, Mail, User } from 'lucide-react'
+import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, ArrowLeft, Mail, User, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface InviteAcceptanceState {
