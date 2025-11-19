@@ -193,26 +193,41 @@ function AcceptInviteFormContent() {
         }
       }
 
-      // --- NEW LOGIC: Update invitation status via Supabase Edge Function ---
-      // Call refreshSession to ensure the AuthContext picks up the new role from the database
-      await supabase.auth.refreshSession();
-      
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      const tenantId = searchParams.get('tenant_id'); // Assuming tenant_id is passed in the URL
-      
-      if (userId && tenantId) {
-        const functionResponse = await fetch('/functions/v1/accept-invitation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId, tenant_id: tenantId }),
-        });
+      // --- UPDATE INVITATION STATUS: Call database function ---
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      const userEmail = userData.user?.email;
 
-        if (!functionResponse.ok) {
-          console.error('Failed to update invitation status via Edge Function.');
-          // Log error but continue with success state
+      if (userId && userEmail) {
+        // Call the database function to update invitation status
+        const { data: inviteResult, error: inviteError } = await supabase
+          .rpc('accept_user_invitation', {
+            p_user_id: userId,
+            p_email: userEmail
+          });
+
+        if (inviteError) {
+          console.error('Failed to update invitation status:', inviteError);
+        } else if (inviteResult?.success) {
+          // Update user metadata with tenant and role from invitation
+          const { error: metadataError } = await supabase.auth.updateUser({
+            data: {
+              tenant_id: inviteResult.tenant_id,
+              role: inviteResult.role,
+              invite_accepted: true,
+              invite_accepted_at: new Date().toISOString()
+            }
+          });
+
+          if (metadataError) {
+            console.warn('Failed to update user metadata:', metadataError);
+          }
+
+          // Refresh session to ensure role is loaded
+          await supabase.auth.refreshSession();
         }
       }
-      // --- END NEW LOGIC ---
+      // --- END UPDATE ---
 
       setState(prev => ({
         ...prev,
