@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_TOKEN || '';
 
 // Create the server-side Supabase client
-const supabaseAdmin = supabaseUrl && supabaseServiceKey 
+const supabaseAdmin = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey)
   : null;
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { 
+      {
         success: true,
         message: 'Invitation accepted successfully',
         tenantId: invitation.tenant_id,
@@ -92,7 +92,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
-
   } catch (error) {
     console.error('Error accepting invite:', error);
     return NextResponse.json(
@@ -101,3 +100,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Add explicit export to satisfy TypeScript module detection
+export default { POST };
