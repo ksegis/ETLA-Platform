@@ -1222,7 +1222,7 @@ export default function WorkRequestsPage() {
                 </div>
                 <div className="flex gap-3">
                   {/* Approval/Rejection Buttons - Only show for host_admin and submitted/under_review status */}
-                  {currentUserRole === 'host_admin' && (selectedRequest.status === 'submitted' || selectedRequest.status === 'under_review') && (
+                  {tenantUser?.role === 'host_admin' && (selectedRequest.status === 'submitted' || selectedRequest.status === 'under_review') && (
                     <>
                       <Button
                         onClick={async () => {
