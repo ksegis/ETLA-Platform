@@ -164,8 +164,8 @@ const priorityColors = {
   low: 'bg-gray-100 text-gray-800',
   medium: 'bg-blue-100 text-blue-800',
   high: 'bg-orange-100 text-orange-800',
-  urgent: 'bg-red-100 text-red-800',     // ADDED MISSING 'urgent'
-  critical: 'bg-red-100 text-red-800'    // KEPT 'critical' FOR URGENCY
+  urgent: 'bg-red-100 text-red-800',
+  critical: 'bg-red-100 text-red-800'
 }
 
 const roleColors = {
@@ -178,7 +178,7 @@ const roleColors = {
 
 // HELPER FUNCTION TO GET PRIORITY COLOR SAFELY
 const getPriorityColor = (priority: string) => {
-  return priorityColors[priority as keyof typeof priorityColors as keyof typeof priorityColors as keyof typeof priorityColors] || priorityColors.medium
+  return priorityColors[priority as keyof typeof priorityColors] || priorityColors.medium
 }
 
 // NEXT.JS 15 COMPATIBLE COMPONENT WITH ASYNC PARAMS
@@ -222,9 +222,8 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
           if (foundRequest) {
             // MERGE REAL DATA WITH MOCK DATA STRUCTURE TO PRESERVE FUNCTIONALITY
             const enhancedRequest: ExtendedWorkRequest = {
-              ...mockRequest, // Start with mock structure
-              ...foundRequest, // Override with real data
-              // Preserve mock data for features not yet implemented in real data
+              ...mockRequest,
+              ...foundRequest,
               tags: mockRequest.tags,
               attachments: mockRequest.attachments,
               comments: mockRequest.comments,
@@ -262,23 +261,23 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
   }
 
   const handleProcessRequest = async (action: 'approve' | 'reject') => {
-    if (!request) return;
+    if (!request) return
 
     // TODO: Replace with actual user data from AuthContext
-    const user_id = 'current_user_id'; 
-    const user_role = 'host_admin'; // Assume host_admin for now
+    const user_id = 'current_user_id'
+    const user_role = 'host_admin'
 
     if (user_role !== 'host_admin') {
-      alert('You do not have permission to approve or reject work requests.');
-      return;
+      alert('You do not have permission to approve or reject work requests.')
+      return
     }
 
     if (request.status !== 'submitted' && request.status !== 'under_review') {
-      alert(`Request status is ${request.status}. Cannot ${action}.`);
-      return;
+      alert(`Request status is ${request.status}. Cannot ${action}.`)
+      return
     }
 
-    setloading(true);
+    setloading(true)
     try {
       const response = await fetch('/api/work-requests/process', {
         method: 'POST',
@@ -291,33 +290,31 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
           user_id,
           user_role,
         }),
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (result.success) {
-        alert(`Work Request ${action}d successfully!`);
-        // Reload the request to show the new status
-        loadWorkRequest(); 
+        alert(`Work Request ${action}d successfully!`)
+        loadWorkRequest()
       } else {
-        setError(result.error || `Failed to ${action} work request.`);
-        alert(`Error: ${result.error || `Failed to ${action} work request.`}`);
+        setError(result.error || `Failed to ${action} work request.`)
+        alert(`Error: ${result.error || `Failed to ${action} work request.`}`)
       }
     } catch (err) {
-      console.error(`Error processing request:`, err);
-      setError(`An unexpected error occurred while processing the request.`);
-      alert(`An unexpected error occurred while processing the request.`);
+      console.error(`Error processing request:`, err)
+      setError(`An unexpected error occurred while processing the request.`)
+      alert(`An unexpected error occurred while processing the request.`)
     } finally {
-      setloading(false);
+      setloading(false)
     }
-  };
+  }
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return
 
     setIsAddingComment(true)
     try {
-      // TODO: Implement real comment functionality
       const comment: WorkRequestComment = {
         id: Date.now().toString(),
         authorName: 'Current User',
@@ -384,9 +381,8 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
   }
 
   const getStatusDisplay = (request: ExtendedWorkRequest) => {
-    // Use approval_status if available, otherwise use regular status
     const status = request.approval_status || request.status
-    const config = statusConfig[status as keyof typeof statusConfig as keyof typeof statusConfig] || statusConfig.submitted
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted
     const StatusIcon = config.icon
     
     return (
@@ -402,7 +398,7 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">loading work request...</p>
+          <p className="text-gray-600">Loading work request...</p>
         </div>
       </div>
     )
@@ -485,29 +481,6 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
           <Card className="mb-6 border-orange-200 bg-orange-50">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-              {/* Approval/Rejection Buttons */}
-              {request && (request.status === 'submitted' || request.status === 'under_review') && (
-                <div className="flex space-x-3">
-                  <Button 
-                    variant="default" 
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => handleProcessRequest('approve')}
-                    disabled={loading}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    {loading ? 'Approving...' : 'Approve Request'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-red-500 text-red-500 hover:bg-red-50"
-                    onClick={() => handleProcessRequest('reject')}
-                    disabled={loading}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    {loading ? 'Rejecting...' : 'Reject Request'}
-                  </Button>
-                </div>
-              )}
                 <AlertTriangle className="h-5 w-5 text-orange-600" />
                 <div>
                   <h4 className="font-medium text-orange-800">Customer Data Issue</h4>
@@ -732,29 +705,6 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
                     {request.attachments.map((attachment: any) => (
                       <div key={attachment.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                         <div className="flex items-center space-x-3">
-              {/* Approval/Rejection Buttons */}
-              {request && (request.status === 'submitted' || request.status === 'under_review') && (
-                <div className="flex space-x-3">
-                  <Button 
-                    variant="default" 
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => handleProcessRequest('approve')}
-                    disabled={loading}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    {loading ? 'Approving...' : 'Approve Request'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-red-500 text-red-500 hover:bg-red-50"
-                    onClick={() => handleProcessRequest('reject')}
-                    disabled={loading}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    {loading ? 'Rejecting...' : 'Reject Request'}
-                  </Button>
-                </div>
-              )}
                           <div className="flex-shrink-0">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                               <Paperclip className="w-5 h-5 text-blue-600" />
@@ -992,4 +942,3 @@ export default function WorkRequestDetailsPage({ params }: { params: Promise<{ i
     </div>
   )
 }
-
