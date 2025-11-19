@@ -102,23 +102,26 @@ export async function POST(request: Request) {
       }
 
       // B. Create Project (Project Charter)
+      // Map work request fields to valid project_charters columns only
       const projectData = {
         tenant_id: workRequest.tenant_id,
-        project_name: `Project: ${workRequest.title}`,
-        project_title: `Project: ${workRequest.title}`,
-        // description field does not exist in project_charters table
+        project_code: `WR-${workRequest.id.slice(0, 8)}`, // Generate a project code from work request ID
+        project_name: workRequest.title || 'Untitled Project',
+        project_title: workRequest.title,
+        title: workRequest.title,
         priority: workRequest.priority,
         project_category: workRequest.category,
         estimated_budget: workRequest.estimated_budget,
+        budget: workRequest.estimated_budget,
+        planned_end_date: workRequest.required_completion_date,
         end_date: workRequest.required_completion_date,
         work_request_id: workRequest.id,
-        status: 'submitted', // Initial project status
-        created_at: now,
-        updated_at: now,
-        // Map other relevant fields
+        charter_status: 'draft', // Initial charter status
         customer_id: workRequest.customer_id,
         business_case: workRequest.business_justification,
-        // ... other fields as needed
+        created_by: user_id,
+        created_at: now,
+        updated_at: now,
       };
 
       const { data: project, error: projectError } = await supabaseAdmin
@@ -141,9 +144,9 @@ export async function POST(request: Request) {
       const { error: finalUpdateError } = await supabaseAdmin
         .from('work_requests')
         .update({ 
-          status: 'converted_to_project',
+          status: 'converted_to_project', // Update work request status
           // Optionally link project ID back to work request if schema supports it
-          // project_id: project.id, 
+          project_id: project.id, 
         })
         .eq('id', work_request_id);
 
