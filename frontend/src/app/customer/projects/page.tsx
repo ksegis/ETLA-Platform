@@ -18,8 +18,11 @@ import {
   Clock,
   Search,
   ArrowRight,
-  Calendar
+  Calendar,
+  HelpCircle
 } from 'lucide-react'
+import { TourProvider, useTour } from '@/components/tours/TourProvider'
+import { customerProjectsTour } from '@/components/tours/customerProjectsTour'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,7 +43,9 @@ interface Project {
   customer_visible: boolean
 }
 
-export default function CustomerProjectsPage() {
+function CustomerProjectsPageContent() {
+  const { startTour } = useTour()
+  
   const router = useRouter()
   const { user } = useAuth()
   const { selectedTenant } = useTenant()
@@ -128,15 +133,21 @@ export default function CustomerProjectsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Projects</h1>
-          <p className="text-gray-600 mt-1">
-            View and track your active projects
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Projects</h1>
+            <p className="text-gray-600 mt-1">
+              View and track your active projects
+            </p>
+          </div>
+          <Button variant="outline" onClick={startTour}>
+            <HelpCircle className="mr-2 h-4 w-4" />
+            Start Tour
+          </Button>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div id="project-summary-cards" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -180,6 +191,7 @@ export default function CustomerProjectsPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
+                id="project-search"
                 placeholder="Search projects by name or code..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -204,13 +216,13 @@ export default function CustomerProjectsPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredProjects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+            {filteredProjects.map((project, index) => (
+              <Card key={project.id} id={`project-card-${index}`} className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        {getHealthIcon(project.health_status)}
+                        <span id={`health-indicator-${index}`}>{getHealthIcon(project.health_status)}</span>
                         <CardTitle className="text-lg">{project.project_name}</CardTitle>
                       </div>
                       {project.project_code && (
@@ -269,7 +281,7 @@ export default function CustomerProjectsPage() {
 
                     {/* Next Action */}
                     {project.next_customer_action && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div id={`next-action-${index}`} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <p className="text-xs font-medium text-blue-900 mb-1">Your Next Action:</p>
                         <p className="text-sm text-blue-800">{project.next_customer_action}</p>
                       </div>
@@ -292,5 +304,13 @@ export default function CustomerProjectsPage() {
         )}
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function CustomerProjectsPage() {
+  return (
+    <TourProvider tourId="customer-projects" steps={customerProjectsTour}>
+      <CustomerProjectsPageContent />
+    </TourProvider>
   )
 }
