@@ -750,18 +750,37 @@ export default function TenantManagementPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="tenant-type" className="text-right">
-                  Type
+                  Business Type
                 </Label>
                 <div className="col-span-3">
-                  <Input
-                    id="tenant-type"
-                    placeholder="e.g., enterprise, standard"
+                  <Select
                     value={newTenant.tenant_type}
-                    onChange={(e) =>
-                      setNewTenant({ ...newTenant, tenant_type: e.target.value })
+                    onValueChange={(value) =>
+                      setNewTenant({ ...newTenant, tenant_type: value })
                     }
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Optional: Business type or category</p>
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select business type (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="basic">Basic</SelectItem>
+                      <SelectItem value="trial">Trial</SelectItem>
+                      <SelectItem value="retail">Retail</SelectItem>
+                      <SelectItem value="healthcare">Healthcare</SelectItem>
+                      <SelectItem value="education">Education</SelectItem>
+                      <SelectItem value="government">Government</SelectItem>
+                      <SelectItem value="nonprofit">Non-Profit</SelectItem>
+                      <SelectItem value="technology">Technology</SelectItem>
+                      <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                      <SelectItem value="financial">Financial Services</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">Optional: Industry or business category</p>
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
