@@ -97,7 +97,7 @@ export default function TenantManagementPage() {
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [allUsers, setAllUsers] = useState<AuthUser[]>([]);
   const [loading, setloading] = useState(true);
-  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
