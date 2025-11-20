@@ -295,7 +295,7 @@ function CustomerProjectDashboardContent() {
                 <HelpCircle className="mr-2 h-4 w-4" />
                 Start Tour
               </Button>
-              <div className={`px-4 py-2 rounded-full text-sm font-medium border flex items-center gap-2 ${getHealthColor(project.health_status)}`}>
+              <div className={`health-indicator px-4 py-2 rounded-full text-sm font-medium border flex items-center gap-2 ${getHealthColor(project.health_status)}`}>
                 {getHealthIcon(project.health_status)}
                 {project.health_status.toUpperCase()}
               </div>
@@ -304,7 +304,7 @@ function CustomerProjectDashboardContent() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="summary-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -371,7 +371,7 @@ function CustomerProjectDashboardContent() {
 
         {/* Next Action */}
         {project.next_customer_action && (
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="next-action-card border-blue-200 bg-blue-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-blue-900">
                 <Target className="h-5 w-5" />
@@ -386,7 +386,7 @@ function CustomerProjectDashboardContent() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Milestones */}
-          <Card>
+          <Card className="milestones-section">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5" />
@@ -427,7 +427,7 @@ function CustomerProjectDashboardContent() {
           </Card>
 
           {/* Deliverables */}
-          <Card>
+          <Card className="deliverables-section">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
@@ -473,7 +473,7 @@ function CustomerProjectDashboardContent() {
 
           {/* Roadblocks */}
           {roadblocks.length > 0 && (
-            <Card>
+            <Card className="roadblocks-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
@@ -509,7 +509,7 @@ function CustomerProjectDashboardContent() {
           )}
 
           {/* Status Updates */}
-          <Card>
+          <Card className="status-updates-section">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
