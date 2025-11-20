@@ -204,7 +204,7 @@ export default function TenantManagementPage() {
     try {
       setloading(true);
       const { data, error } = await supabase
-        .from("tenant_users")
+        .from("tenant_users_with_email")
         .select(
           `
           id,
@@ -212,7 +212,9 @@ export default function TenantManagementPage() {
           tenant_id,
           role,
           is_active,
-          created_at
+          created_at,
+          email,
+          full_name
         `,
         )
         .eq("tenant_id", tenantId)
@@ -220,13 +222,7 @@ export default function TenantManagementPage() {
 
       if (error) throw error;
 
-      // Map users with user_id as email placeholder (auth.users not directly accessible)
-      const tenantUsersWithEmails = (data || []).map((tu: any) => ({
-        ...tu,
-        email: tu.user_id, // Temporarily using user_id - needs database view or RPC
-      }));
-
-      setUsers(tenantUsersWithEmails);
+      setUsers(data || []);
     } catch (error) {
       console.error("Error loading tenant users:", error);
     } finally {
@@ -594,11 +590,13 @@ export default function TenantManagementPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-medium text-gray-900">
-                              {user.email}
+                              {user.full_name || user.email}
                             </h4>
-                            <p className="text-sm text-gray-500">
-                              User ID: {user.user_id.slice(0, 8)}...
-                            </p>
+                            {user.full_name && (
+                              <p className="text-sm text-gray-500">
+                                {user.email}
+                              </p>
+                            )}
                             <p className="text-sm text-gray-500">
                               Added:{" "}
                               {new Date(user.created_at).toLocaleDateString()}
