@@ -163,6 +163,41 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
         }
       );
 
+      const primaryClientAdmin = buildRole(
+        'primary_client_admin',
+        'Primary Client Admin',
+        'Primary customer administrator with full customer portal access',
+        (feature, permission) => {
+          if (feature === (FEATURES as any).USER_MANAGEMENT) {
+            return permission === PERMISSIONS.MANAGE;
+          }
+          if (feature === (FEATURES as any).ACCESS_CONTROL) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          if (
+            feature === (FEATURES as any).PROJECT_MANAGEMENT ||
+            feature === (FEATURES as any).WORK_REQUESTS ||
+            feature === (FEATURES as any).BENEFITS_MANAGEMENT ||
+            feature === (FEATURES as any).EMPLOYEE_RECORDS
+          ) {
+            return permission === PERMISSIONS.MANAGE;
+          }
+          if (feature === (FEATURES as any).DASHBOARDS) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          if (feature === (FEATURES as any).FILE_UPLOAD) {
+            return permission === PERMISSIONS.CREATE;
+          }
+          if (
+            feature === (FEATURES as any).DATA_VALIDATION ||
+            feature === (FEATURES as any).MIGRATION_WORKBENCH
+          ) {
+            return permission === PERMISSIONS.VIEW;
+          }
+          return false;
+        }
+      );
+
       const clientUser = buildRole(
         'client_user',
         'Client User',
@@ -195,7 +230,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
         }
       );
 
-      setRoles([hostAdmin, clientAdmin, programManager, clientUser]);
+      setRoles([hostAdmin, clientAdmin, primaryClientAdmin, programManager, clientUser]);
     } catch (err) {
       console.error('Error loading roles:', err);
       setError('Failed to load roles data');
