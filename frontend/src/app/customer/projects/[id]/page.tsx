@@ -17,8 +17,11 @@ import {
   MessageSquare,
   ArrowLeft,
   Target,
-  Package
+  Package,
+  HelpCircle
 } from 'lucide-react'
+import { TourProvider, useTour } from '@/components/tours/TourProvider'
+import { customerProjectDashboardTour } from '@/components/tours/customerProjectsTour'
 import { Button } from '@/components/ui/Button'
 
 const supabase = createClient(
@@ -81,7 +84,8 @@ interface Deliverable {
   file_link: string
 }
 
-export default function CustomerProjectDashboard() {
+function CustomerProjectDashboardContent() {
+  const { startTour } = useTour()
   const params = useParams()
   const router = useRouter()
   const projectId = params.id as string
@@ -286,9 +290,15 @@ export default function CustomerProjectDashboard() {
                 </Badge>
               )}
             </div>
-            <div className={`px-4 py-2 rounded-full text-sm font-medium border flex items-center gap-2 ${getHealthColor(project.health_status)}`}>
-              {getHealthIcon(project.health_status)}
-              {project.health_status.toUpperCase()}
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={startTour}>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Start Tour
+              </Button>
+              <div className={`px-4 py-2 rounded-full text-sm font-medium border flex items-center gap-2 ${getHealthColor(project.health_status)}`}>
+                {getHealthIcon(project.health_status)}
+                {project.health_status.toUpperCase()}
+              </div>
             </div>
           </div>
         </div>
@@ -530,5 +540,13 @@ export default function CustomerProjectDashboard() {
         </div>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function CustomerProjectDashboard() {
+  return (
+    <TourProvider tourId="customer-project-dashboard" steps={customerProjectDashboardTour}>
+      <CustomerProjectDashboardContent />
+    </TourProvider>
   )
 }

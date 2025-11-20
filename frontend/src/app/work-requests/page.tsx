@@ -1,7 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List, X, File, DollarSign, Users, Target, TrendingUp } from 'lucide-react'
+import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List, X, File, DollarSign, Users, Target, TrendingUp, HelpCircle } from 'lucide-react'
+import { TourProvider, useTour } from '@/components/tours/TourProvider'
+import { workRequestsTour, hostWorkRequestsTour } from '@/components/tours/workRequestsTour'
+import { usePermissions, ROLES } from '@/hooks/usePermissions'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -85,7 +88,9 @@ const priorityConfig = {
   critical: { color: 'text-red-600', bg: 'bg-red-100', label: 'Critical' }
 }
 
-export default function WorkRequestsPage() {
+function WorkRequestsPageContent() {
+  const { startTour } = useTour()
+  const { currentRole } = usePermissions()
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([])
   const [filteredRequests, setFilteredRequests] = useState<WorkRequest[]>([])
   const [loading, setloading] = useState(true)
@@ -553,10 +558,16 @@ export default function WorkRequestsPage() {
             <h1 className="text-2xl font-bold text-gray-900">Work Requests</h1>
             <p className="text-gray-600">Manage and track your work requests</p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            New Request
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={startTour}>
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Start Tour
+            </Button>
+            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              New Request
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -1330,5 +1341,20 @@ export default function WorkRequestsPage() {
         )}
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function WorkRequestsPage() {
+  const { currentRole } = usePermissions()
+  
+  // Determine which tour to show based on role
+  const tourSteps = currentRole === ROLES.HOST_ADMIN || currentRole === ROLES.PROGRAM_MANAGER
+    ? hostWorkRequestsTour
+    : workRequestsTour
+  
+  return (
+    <TourProvider tourId="work-requests" steps={tourSteps}>
+      <WorkRequestsPageContent />
+    </TourProvider>
   )
 }
