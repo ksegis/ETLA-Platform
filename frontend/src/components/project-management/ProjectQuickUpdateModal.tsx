@@ -107,8 +107,8 @@ export function ProjectQuickUpdateModal({
             </Label>
             <Select
               value={formData.health_status}
-              onValueChange={(value: 'green' | 'yellow' | 'red') =>
-                setFormData({ ...formData, health_status: value })
+              onValueChange={(value) =>
+                setFormData({ ...formData, health_status: value as 'green' | 'yellow' | 'red' })
               }
             >
               <SelectTrigger id="health_status">
