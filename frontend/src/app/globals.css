@@ -2,3 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Compact Design System - Reduce spacing and font sizes globally */
+@layer base {
+  /* Reduce base font size */
+  html {
+    font-size: 14px;
+  }
+  
+  /* Tighter line height */
+  body {
+    @apply leading-snug;
+  }
+}
+
+@layer components {
+  /* Compact card styling */
+  [class*="Card"] {
+    @apply text-sm;
+  }
+  
+  /* Reduce heading sizes */
+  h1, .text-3xl {
+    @apply text-xl;
+  }
+  
+  h2, .text-2xl {
+    @apply text-lg;
+  }
+  
+  h3, .text-xl {
+    @apply text-base;
+  }
+  
+  /* Compact padding for cards and containers */
+  [class*="CardHeader"],
+  [class*="CardContent"],
+  [class*="CardFooter"] {
+    @apply p-3;
+  }
+  
+  /* Reduce button padding */
+  button:not(.p-0):not(.p-1):not(.p-2) {
+    @apply py-1.5 px-3 text-sm;
+  }
+  
+  /* Compact form inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    @apply py-1.5 px-2.5 text-sm;
+  }
+  
+  /* Reduce gap in flex/grid layouts */
+  .gap-6 {
+    @apply gap-4;
+  }
+  
+  .gap-4 {
+    @apply gap-3;
+  }
+  
+  /* Compact table cells */
+  td, th {
+    @apply py-2 px-3 text-sm;
+  }
+  
+  /* Reduce badge/chip padding */
+  [class*="badge"],
+  [class*="Badge"] {
+    @apply text-xs py-0.5 px-2;
+  }
+}
+
+@layer utilities {
+  /* Utility classes for compact spacing */
+  .compact-card {
+    @apply p-3 space-y-2;
+  }
+  
+  .compact-header {
+    @apply py-2 px-3;
+  }
+  
+  .compact-content {
+    @apply p-3 space-y-2;
+  }
+}

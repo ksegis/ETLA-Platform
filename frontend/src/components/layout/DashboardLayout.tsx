@@ -440,7 +440,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <div className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between h-16 px-6">
+          <div className="flex items-center justify-between h-12 md:h-14 px-4 md:px-6">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
