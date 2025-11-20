@@ -709,138 +709,163 @@ export default function TenantManagementPage() {
             <DialogHeader>
               <DialogTitle>Create New Tenant</DialogTitle>
               <DialogDescription>
-                Enter the details for the new tenant.
+                Create a new Primary Customer or Sub-Client. Primary Customers can have their own sub-clients, while Sub-Clients belong to a Primary Customer.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="tenant-name" className="text-right">
-                  Name
+                  Name *
                 </Label>
-                <Input
-                  id="tenant-name"
-                  value={newTenant.name}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, name: e.target.value })
-                  }
-                  className="col-span-3"
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="tenant-name"
+                    placeholder="e.g., Acme Corporation"
+                    value={newTenant.name}
+                    onChange={(e) =>
+                      setNewTenant({ ...newTenant, name: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-gray-500 mt-1">The display name for this tenant</p>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="tenant-code" className="text-right">
-                  Code
+                  Code *
                 </Label>
-                <Input
-                  id="tenant-code"
-                  value={newTenant.code}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, code: e.target.value })
-                  }
-                  className="col-span-3"
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="tenant-code"
+                    placeholder="e.g., acme-corp"
+                    value={newTenant.code}
+                    onChange={(e) =>
+                      setNewTenant({ ...newTenant, code: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Unique identifier (lowercase, no spaces)</p>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="tenant-type" className="text-right">
                   Type
                 </Label>
-                <Input
-                  id="tenant-type"
-                  value={newTenant.tenant_type}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, tenant_type: e.target.value })
-                  }
-                  className="col-span-3"
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="tenant-type"
+                    placeholder="e.g., enterprise, standard"
+                    value={newTenant.tenant_type}
+                    onChange={(e) =>
+                      setNewTenant({ ...newTenant, tenant_type: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Optional: Business type or category</p>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="contact-email" className="text-right">
-                  Contact Email
+                  Contact Email *
                 </Label>
-                <Input
-                  id="contact-email"
-                  type="email"
-                  value={newTenant.contact_email}
-                  onChange={(e) =>
-                    setNewTenant({
-                      ...newTenant,
-                      contact_email: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={newTenant.contact_email}
+                    onChange={(e) =>
+                      setNewTenant({
+                        ...newTenant,
+                        contact_email: e.target.value,
+                      })
+                    }
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Primary contact email for this tenant</p>
+                </div>
               </div>
               {/* Phase 2: Hierarchy fields */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="tenant-tier" className="text-right">
-                  Tier
+                  Tier *
                 </Label>
-                <Select
-                  value={newTenant.tenant_tier.toString()}
-                  onValueChange={(value) =>
-                    setNewTenant({
-                      ...newTenant,
-                      tenant_tier: parseInt(value) as TenantTier,
-                      parent_tenant_id: value === "3" ? newTenant.parent_tenant_id : "",
-                    })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">Primary Customer</SelectItem>
-                    <SelectItem value="3">Sub-Client</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="col-span-3">
+                  <Select
+                    value={newTenant.tenant_tier.toString()}
+                    onValueChange={(value) =>
+                      setNewTenant({
+                        ...newTenant,
+                        tenant_tier: parseInt(value) as TenantTier,
+                        parent_tenant_id: value === "3" ? newTenant.parent_tenant_id : "",
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">Primary Customer (can have sub-clients)</SelectItem>
+                      <SelectItem value="3">Sub-Client (belongs to a Primary Customer)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {newTenant.tenant_tier === 2 
+                      ? "Primary Customers can create and manage up to 50 sub-clients" 
+                      : "Sub-Clients are managed by their Primary Customer"}
+                  </p>
+                </div>
               </div>
               {newTenant.tenant_tier === 3 && (
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="parent-tenant" className="text-right">
-                    Parent Tenant
+                    Parent Tenant *
                   </Label>
-                  <Select
-                    value={newTenant.parent_tenant_id}
-                    onValueChange={(value) =>
-                      setNewTenant({ ...newTenant, parent_tenant_id: value })
-                    }
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select parent tenant" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {parentTenants.map((tenant) => (
-                        <SelectItem key={tenant.id} value={tenant.id}>
-                          {tenant.name} ({tenant.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="col-span-3">
+                    <Select
+                      value={newTenant.parent_tenant_id}
+                      onValueChange={(value) =>
+                        setNewTenant({ ...newTenant, parent_tenant_id: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select parent tenant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {parentTenants.map((tenant) => (
+                          <SelectItem key={tenant.id} value={tenant.id}>
+                            {tenant.name} ({tenant.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">The Primary Customer that will manage this sub-client</p>
+                  </div>
                 </div>
               )}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="template" className="text-right">
-                  Template (Optional)
+                  Template
                 </Label>
-                <Select
-                  value={newTenant.template_id}
-                  onValueChange={(value) =>
-                    setNewTenant({ ...newTenant, template_id: value })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">None</SelectItem>
-                    {templates
-                      .filter((t) => t.tenant_tier === newTenant.tenant_tier)
-                      .map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          {template.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <div className="col-span-3">
+                  <Select
+                    value={newTenant.template_id}
+                    onValueChange={(value) =>
+                      setNewTenant({ ...newTenant, template_id: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="None (use default settings)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None (default settings)</SelectItem>
+                      {templates
+                        .filter((t) => t.tenant_tier === newTenant.tenant_tier)
+                        .map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">Pre-configured settings for users, projects, and features</p>
+                </div>
               </div>
             </div>
             <DialogFooter>
