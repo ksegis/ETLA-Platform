@@ -313,16 +313,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 md:w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">HelixBridge</span>
+              <Building2 className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+              <span className="ml-2 text-lg md:text-xl font-bold text-gray-900">HelixBridge</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -333,19 +333,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Search */}
-          <div className="p-4 border-b border-gray-200 flex-shrink-0">
+          <div className="p-2 md:p-4 border-b border-gray-200 flex-shrink-0">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search navigation..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 md:pl-10 pr-3 md:pr-4 py-1.5 md:py-2 border border-gray-300 rounded-md text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-3 overflow-y-auto">
+          <nav className="flex-1 px-2 md:px-4 py-2 md:py-4 space-y-2 md:space-y-3 overflow-y-auto">
             {filteredNavigationGroups.map((group) => {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
@@ -410,7 +410,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </nav>
 
           {/* User Profile */}
-          <div className="border-t border-gray-200 p-4 flex-shrink-0">
+          <div className="border-t border-gray-200 p-2 md:p-4 flex-shrink-0">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">

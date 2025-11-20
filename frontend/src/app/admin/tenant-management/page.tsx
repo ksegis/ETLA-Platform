@@ -106,7 +106,7 @@ export default function TenantManagementPage() {
     code: "",
     tenant_type: "",
     contact_email: "",
-    parent_tenant_id: "",
+    parent_tenant_id: undefined as string | undefined,
     tenant_tier: 2 as TenantTier, // Default to Primary Customer
     template_id: "",
   });
@@ -815,11 +815,11 @@ export default function TenantManagementPage() {
                   <Select
                     value={newTenant.tenant_tier.toString()}
                     onValueChange={(value) =>
-                      setNewTenant({
-                        ...newTenant,
-                        tenant_tier: parseInt(value) as TenantTier,
-                        parent_tenant_id: value === "3" ? newTenant.parent_tenant_id : "",
-                      })
+                    setNewTenant({
+                      ...newTenant,
+                      tenant_tier: parseInt(value) as TenantTier,
+                      parent_tenant_id: value === "3" ? newTenant.parent_tenant_id : undefined,
+                    })
                     }
                   >
                     <SelectTrigger>
