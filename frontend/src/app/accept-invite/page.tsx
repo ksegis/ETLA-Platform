@@ -206,26 +206,55 @@ function AcceptInviteFormContent() {
             p_email: userEmail
           });
 
+        // CRITICAL: Check for errors and handle them properly
         if (inviteError) {
           console.error('Failed to update invitation status:', inviteError);
-        } else if (inviteResult?.success) {
-          // Update user metadata with tenant and role from invitation
-          const { error: metadataError } = await supabase.auth.updateUser({
-            data: {
-              tenant_id: inviteResult.tenant_id,
-              role: inviteResult.role,
-              invite_accepted: true,
-              invite_accepted_at: new Date().toISOString()
-            }
-          });
-
-          if (metadataError) {
-            console.warn('Failed to update user metadata:', metadataError);
-          }
-
-          // Refresh session to ensure role is loaded
-          await supabase.auth.refreshSession();
+          setState(prev => ({
+            ...prev,
+            Loading: false,
+            error: `Failed to complete invitation acceptance: ${inviteError.message}. Please contact support.`
+          }));
+          return; // Stop execution - don't proceed
         }
+
+        // Check if function returned success
+        if (!inviteResult?.success) {
+          const errorMsg = inviteResult?.error || 'Unknown error';
+          console.error('Invitation acceptance failed:', errorMsg);
+          setState(prev => ({
+            ...prev,
+            Loading: false,
+            error: `Failed to accept invitation: ${errorMsg}. Please contact support.`
+          }));
+          return; // Stop execution - don't proceed
+        }
+
+        // Success! Update user metadata with tenant and role from invitation
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: {
+            tenant_id: inviteResult.tenant_id,
+            role: inviteResult.role,
+            invite_accepted: true,
+            invite_accepted_at: new Date().toISOString()
+          }
+        });
+
+        if (metadataError) {
+          console.warn('Failed to update user metadata:', metadataError);
+          // Don't fail the entire process for metadata update issues
+        }
+
+        // Refresh session to ensure role is loaded
+        await supabase.auth.refreshSession();
+      } else {
+        // No user ID or email - this shouldn't happen
+        console.error('Missing user ID or email after password update');
+        setState(prev => ({
+          ...prev,
+          Loading: false,
+          error: 'Failed to complete account setup. Please contact support.'
+        }));
+        return;
       }
       // --- END UPDATE ---
 
