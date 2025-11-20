@@ -53,7 +53,12 @@ export function TenantProvider({ children }: TenantProviderProps) {
     settings: {},
     tenant_id: '99883779-9517-4ca9-a3f8-7fdc59051f0e',
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    // Phase 1 hierarchy fields
+    tenant_tier: 2, // Primary Customer
+    can_have_children: true,
+    max_child_tenants: 50,
+    current_child_count: 0
   }
 
   // Load available tenants for current user
