@@ -468,9 +468,8 @@ export default function TenantManagementPage() {
           <CardContent>
             <div className="max-h-96 overflow-y-auto">
               <TenantHierarchyTree
-                tenants={tenants}
                 selectedTenantId={selectedTenantId}
-                onSelectTenant={(id) => setSelectedTenantId(id)}
+                onTenantSelect={(tenant) => setSelectedTenantId(tenant.id)}
               />
             </div>
           </CardContent>
