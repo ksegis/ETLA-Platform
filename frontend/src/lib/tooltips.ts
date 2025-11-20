@@ -94,6 +94,24 @@ export const HOST_TOOLTIPS = {
   }
 }
 
+// Unified tooltip content export
+export const TOOLTIP_CONTENT = {
+  host: {
+    quickUpdate: 'Quickly update key project metrics that customers see on their dashboard. Changes are immediately visible to the customer.',
+    healthStatus: HOST_TOOLTIPS.healthStatus.content,
+    completionPercentage: HOST_TOOLTIPS.completionPercentage.content,
+    budgetVariance: HOST_TOOLTIPS.budgetVariance.content,
+    timelineVariance: HOST_TOOLTIPS.timelineVariance.content,
+    nextCustomerAction: HOST_TOOLTIPS.nextCustomerAction.content,
+    roadblocks: 'Track and manage project blockers. High and Critical roadblocks automatically notify customers. Use resolution plans to communicate how issues will be addressed.',
+    milestones: 'Manage project milestones with customer actions and definitions of done. Mark milestones as customer-visible to show them on the customer dashboard.',
+    statusUpdates: 'Post customer-visible updates about project progress. These appear in the customer\'s activity feed and can trigger notifications.',
+    deliverables: 'Track project deliverables and their completion status. Link deliverables to milestones for better visibility.'
+  },
+  customer: CUSTOMER_TOOLTIPS,
+  workRequest: WORK_REQUEST_TOOLTIPS
+}
+
 export const CUSTOMER_TOOLTIPS = {
   projectHealth: {
     title: 'Project Health',
