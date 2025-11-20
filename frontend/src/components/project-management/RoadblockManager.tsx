@@ -204,7 +204,7 @@ export function RoadblockManager({ projectId }: RoadblockManagerProps) {
               Roadblocks ({roadblocks.length})
               <InfoTooltip content={TOOLTIP_CONTENT.host.roadblocks} />
             </CardTitle>
-            <Button onClick={() => setShowAddModal(true)} size="sm">
+            <Button id="add-roadblock-btn" onClick={() => setShowAddModal(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Roadblock
             </Button>

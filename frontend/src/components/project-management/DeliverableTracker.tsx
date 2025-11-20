@@ -253,7 +253,7 @@ export function DeliverableTracker({ projectId, tenantId }: DeliverableTrackerPr
               Deliverables ({deliverables.length})
               <InfoTooltip content={TOOLTIP_CONTENT.host.deliverables} />
             </CardTitle>
-            <Button onClick={() => setIsDialogOpen(true)} size="sm">
+            <Button id="add-deliverable-btn" onClick={() => setIsDialogOpen(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Deliverable
             </Button>

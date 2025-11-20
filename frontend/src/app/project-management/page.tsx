@@ -42,7 +42,9 @@ import { RoadblockManager } from '@/components/project-management/RoadblockManag
 import { MilestoneManager } from '@/components/project-management/MilestoneManager'
 import { StatusUpdateForm } from '@/components/project-management/StatusUpdateForm'
 import { DeliverableTracker } from '@/components/project-management/DeliverableTracker'
-import { Package, MessageSquare } from 'lucide-react'
+import { Package, MessageSquare, HelpCircle } from 'lucide-react'
+import { TourProvider, useTour } from '@/components/tours/TourProvider'
+import { projectManagementTour } from '@/components/tours/projectManagementTour'
 
 // Complete PMBOK interface with all fields
 interface ProjectCharter {
@@ -157,8 +159,9 @@ interface Statistics {
   averageCompletion: number
 }
 
-export default function ProjectManagementPage() {
+function ProjectManagementContent() {
   const { user } = useAuth()
+  const { startTour } = useTour()
   const { selectedTenant } = useTenant()
   const accessibleTenantIds = useAccessibleTenantIds()
   const { isMultiTenant, availableTenants } = useMultiTenantMode()
@@ -899,10 +902,16 @@ export default function ProjectManagementPage() {
             <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
             <p className="text-gray-600 mt-1">Comprehensive project lifecycle management with PMBOK framework</p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={startTour}>
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Start Tour
+            </Button>
+            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
+          </div>
         </div>
 
         {/* Project Selector */}
@@ -1001,9 +1010,10 @@ export default function ProjectManagementPage() {
 
         {/* Tabs */}
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 overflow-x-auto">
+          <nav className="project-tabs -mb-px flex space-x-8 overflow-x-auto">
             {tabs.map((tab: any) => (
               <button
+                id={`tab-${tab.id}`}
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
@@ -7000,3 +7010,11 @@ function ViewCharterModal({
 
 
 
+
+export default function ProjectManagementPage() {
+  return (
+    <TourProvider tourId="project-management" steps={projectManagementTour}>
+      <ProjectManagementContent />
+    </TourProvider>
+  )
+}

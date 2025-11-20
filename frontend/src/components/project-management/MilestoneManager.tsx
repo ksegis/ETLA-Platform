@@ -209,7 +209,7 @@ export function MilestoneManager({ projectId }: MilestoneManagerProps) {
               Milestones ({milestones.length})
               <InfoTooltip content={TOOLTIP_CONTENT.host.milestones} />
             </CardTitle>
-            <Button onClick={() => setIsDialogOpen(true)} size="sm">
+            <Button id="add-milestone-btn" onClick={() => setIsDialogOpen(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Milestone
             </Button>
@@ -388,7 +388,7 @@ export function MilestoneManager({ projectId }: MilestoneManagerProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, customer_visible: e.target.checked })
                 }
-                className="rounded"
+                className="visibility-toggle rounded"
               />
               <Label htmlFor="customer_visible" className="cursor-pointer">
                 Make visible to customer

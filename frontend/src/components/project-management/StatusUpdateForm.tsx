@@ -176,7 +176,7 @@ export function StatusUpdateForm({ projectId, tenantId }: StatusUpdateFormProps)
               Status Updates ({updates.length})
               <InfoTooltip content={TOOLTIP_CONTENT.host.statusUpdates} />
             </CardTitle>
-            <Button onClick={() => setIsDialogOpen(true)} size="sm">
+            <Button id="add-status-update-btn" onClick={() => setIsDialogOpen(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Post Update
             </Button>
