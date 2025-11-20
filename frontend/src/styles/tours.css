@@ -1,0 +1,121 @@
+/* Custom Shepherd.js Tour Styles */
+
+.shepherd-modal-overlay-container {
+  z-index: 9998;
+}
+
+.shepherd-element {
+  z-index: 9999;
+  max-width: 400px;
+}
+
+.shepherd-theme-custom {
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.shepherd-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.25rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.shepherd-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+}
+
+.shepherd-text {
+  padding: 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.shepherd-footer {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.shepherd-button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.shepherd-button-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.shepherd-button-primary:hover {
+  background: #1d4ed8;
+}
+
+.shepherd-button-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.shepherd-button-secondary:hover {
+  background: #e5e7eb;
+}
+
+.shepherd-cancel-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  color: white;
+}
+
+.shepherd-cancel-icon:hover {
+  opacity: 1;
+}
+
+.shepherd-arrow {
+  border-width: 8px;
+}
+
+.shepherd-arrow::before {
+  border-width: 8px;
+}
+
+/* Progress indicator */
+.shepherd-progress {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 1.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .shepherd-element {
+    max-width: 90vw;
+  }
+  
+  .shepherd-text {
+    font-size: 0.875rem;
+  }
+  
+  .shepherd-button {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+}
