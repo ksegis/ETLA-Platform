@@ -60,7 +60,7 @@ export class RBACAdminService {
           user_id,
           role,
           is_active,
-          profiles(
+          profiles!tenant_users_user_id_fkey(
             id,
             email,
             full_name
