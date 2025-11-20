@@ -18,7 +18,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
-import { loadAllRolePermissions } from '@/services/rolePermissionsService';
+import { loadAllRolePermissions } from '@/services/role_permissions_service';
 
 import {
   FEATURES,

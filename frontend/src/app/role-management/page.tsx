@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button'
 import { Shield, Save, RotateCcw, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { loadAllRolePermissions, saveRolePermissions } from '@/services/rolePermissionsService'
+import { loadAllRolePermissions, saveRolePermissions } from '@/services/role_permissions_service'
 
 // Define all features/screens in the system
 const FEATURES = [
