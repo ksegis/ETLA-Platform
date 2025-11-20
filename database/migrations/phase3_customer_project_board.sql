@@ -81,9 +81,7 @@ CREATE POLICY "risks_delete_policy" ON risks
   USING (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager')
   );
-  USING (
-    auth.jwt() ->> 'role' IN ('host_admin', 'program_manager')
-  );
+
 -- Phase 3.2: Customer Project Board Database Schema
 -- Created: 2025-11-20
 -- Description: Tables and functions for customer-facing project dashboards,
