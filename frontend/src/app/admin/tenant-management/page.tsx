@@ -51,6 +51,8 @@ import {
   UserPlus,
   Search,
   AlertCircle,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Tenant, User, TenantTemplate, TenantTier } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -97,6 +99,7 @@ export default function TenantManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
+  const [hierarchyExpanded, setHierarchyExpanded] = useState(false);
   // Phase 2: Hierarchy state
   const [templates, setTemplates] = useState<TenantTemplate[]>([]);
   const [parentTenants, setParentTenants] = useState<ExtendedTenant[]>([]);
@@ -455,27 +458,6 @@ export default function TenantManagementPage() {
           </Button>
         </div>
 
-        {/* Phase 2: Hierarchy Tree Visualization */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              Tenant Hierarchy
-            </CardTitle>
-            <CardDescription>
-              Visual representation of tenant relationships
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="max-h-96 overflow-y-auto">
-              <TenantHierarchyTree
-                selectedTenantId={selectedTenantId}
-                onTenantSelect={(tenant) => setSelectedTenantId(tenant.id)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Tenants List */}
           <Card>
@@ -641,6 +623,41 @@ export default function TenantManagementPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Phase 2: Hierarchy Tree Visualization - Collapsible at bottom */}
+        <Card>
+          <CardHeader 
+            className="cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => setHierarchyExpanded(!hierarchyExpanded)}
+          >
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Tenant Hierarchy
+              </div>
+              <button className="text-gray-500 hover:text-gray-700">
+                {hierarchyExpanded ? (
+                  <ChevronDown className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className="h-5 w-5" />
+                )}
+              </button>
+            </CardTitle>
+            <CardDescription>
+              Visual representation of tenant relationships (click to {hierarchyExpanded ? 'collapse' : 'expand'})
+            </CardDescription>
+          </CardHeader>
+          {hierarchyExpanded && (
+            <CardContent>
+              <div className="max-h-96 overflow-y-auto">
+                <TenantHierarchyTree
+                  selectedTenantId={selectedTenantId}
+                  onTenantSelect={(tenant) => setSelectedTenantId(tenant.id)}
+                />
+              </div>
+            </CardContent>
+          )}
+        </Card>
 
         {/* Add User Modal */}
         <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
