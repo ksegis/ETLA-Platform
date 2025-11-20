@@ -1,192 +1,74 @@
-import type Shepherd from 'shepherd.js'
+import { TourStep } from './TourProvider'
 
-export const customerProjectDashboardTour: Shepherd.Step.StepOptions[] = [
+export const customerProjectDashboardTour: TourStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Your Project Dashboard',
-    text: 'This dashboard gives you a complete view of your project status, milestones, deliverables, and more. Let\'s take a quick tour!',
+    target: 'body',
+    title: '👋 Project Dashboard',
+    content: 'Everything you need to know about this project in one place. Let\'s take a tour.',
+    placement: 'center',
     buttons: [
-      {
-        text: 'Skip',
-        action() {
-          return this.cancel()
-        },
-        secondary: true
-      },
-      {
-        text: 'Next',
-        action() {
-          return this.next()
-        }
-      }
+      { text: 'Skip Tour', action: 'skip', classes: 'shepherd-button-secondary' },
+      { text: 'Start Tour', action: 'next', classes: 'shepherd-button-primary' }
     ]
   },
   {
     id: 'health-status',
-    title: 'Project Health',
-    text: 'The health indicator shows your project status at a glance: Green (on track), Yellow (at risk), or Red (blocked).',
-    attachTo: {
-      element: '.health-indicator',
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action() {
-          return this.back()
-        },
-        secondary: true
-      },
-      {
-        text: 'Next',
-        action() {
-          return this.next()
-        }
-      }
-    ]
+    target: '.health-indicator',
+    title: '🚦 Project Health',
+    content: 'The health indicator shows your project status at a glance: Green (on track), Yellow (at risk), or Red (blocked).',
+    placement: 'bottom'
   },
   {
     id: 'summary-cards',
-    title: 'Project Metrics',
-    text: 'These cards show key project metrics: progress, budget, timeline, and your next required action.',
-    attachTo: {
-      element: '.summary-cards',
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action() {
-          return this.back()
-        },
-        secondary: true
-      },
-      {
-        text: 'Next',
-        action() {
-          return this.next()
-        }
-      }
-    ]
+    target: '.summary-cards',
+    title: '📊 Project Metrics',
+    content: 'These cards show key project metrics: progress, budget, timeline, and your next required action.',
+    placement: 'bottom'
   },
   {
     id: 'next-action',
-    title: 'Your Next Action',
-    text: 'This highlighted section shows what action is needed from you to keep the project moving forward.',
-    attachTo: {
-      element: '.next-action-card',
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action() {
-          return this.back()
-        },
-        secondary: true
-      },
-      {
-        text: 'Next',
-        action() {
-          return this.next()
-        }
-      }
-    ]
+    target: '.next-action-card',
+    title: '⚡ Your Next Action',
+    content: 'This highlighted section shows what action is needed from you to keep the project moving forward.',
+    placement: 'bottom'
   },
   {
     id: 'milestones',
-    title: 'Project Milestones',
-    text: 'Track upcoming milestones, their due dates, and any actions required from you.',
-    attachTo: {
-      element: '.milestones-section',
-      on: 'top'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action() {
-          return this.back()
-        },
-        secondary: true
-      },
-      {
-        text: 'Next',
-        action() {
-          return this.next()
-        }
-      }
-    ]
+    target: '.milestones-section',
+    title: '🎯 Milestones',
+    content: 'Track upcoming milestones, their due dates, and any actions required from you.',
+    placement: 'top'
   },
   {
     id: 'deliverables',
-    title: 'Deliverables',
-    text: 'View project deliverables, their status, and access files when they\'re ready.',
-    attachTo: {
-      element: '.deliverables-section',
-      on: 'top'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action() {
-          return this.back()
-        },
-        secondary: true
-      },
-      {
-        text: 'Next',
-        action() {
-          return this.next()
-        }
-      }
-    ]
+    target: '.deliverables-section',
+    title: '📦 Deliverables',
+    content: 'View project deliverables, their status, and access files when they\'re ready.',
+    placement: 'top'
   },
   {
     id: 'roadblocks',
-    title: 'Active Roadblocks',
-    text: 'See any blockers affecting your project and their resolution plans.',
-    attachTo: {
-      element: '.roadblocks-section',
-      on: 'top'
-    },
-    buttons: [
-      {
-        text: 'Back',
-        action() {
-          return this.back()
-        },
-        secondary: true
-      },
-      {
-        text: 'Next',
-        action() {
-          return this.next()
-        }
-      }
-    ]
+    target: '.roadblocks-section',
+    title: '🚧 Active Roadblocks',
+    content: 'See any blockers affecting your project and their resolution plans.',
+    placement: 'top'
   },
   {
     id: 'status-updates',
-    title: 'Recent Updates',
-    text: 'Stay informed with status updates from your project manager about progress, changes, and important news.',
-    attachTo: {
-      element: '.status-updates-section',
-      on: 'top'
-    },
+    target: '.status-updates-section',
+    title: '📢 Recent Updates',
+    content: 'Stay informed with status updates from your project manager about progress, changes, and important news.',
+    placement: 'top'
+  },
+  {
+    id: 'complete',
+    target: 'body',
+    title: '✅ You\'re Ready!',
+    content: 'You now know how to track your project. Check back regularly for updates and complete your next actions.',
+    placement: 'center',
     buttons: [
-      {
-        text: 'Back',
-        action() {
-          return this.back()
-        },
-        secondary: true
-      },
-      {
-        text: 'Finish',
-        action() {
-          return this.complete()
-        }
-      }
+      { text: 'Finish Tour', action: 'complete', classes: 'shepherd-button-primary' }
     ]
   }
 ]
