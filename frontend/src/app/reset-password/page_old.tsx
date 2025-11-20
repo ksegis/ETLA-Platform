@@ -10,17 +10,15 @@ import { supabase } from '@/lib/supabase'
 interface PasswordResetState {
   password: string
   confirmPassword: string
-  loading: boolean
+  Loading: boolean
   error: string | null
   success: boolean
   isValidSession: boolean
   isCheckingSession: boolean
 }
-
 function LoadingFallback() {
   return <div>Loading…</div>;
 }
-
 function PasswordResetFormContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -30,7 +28,7 @@ function PasswordResetFormContent() {
   const [state, setState] = useState<PasswordResetState>({
     password: '',
     confirmPassword: '',
-    loading: false,
+    Loading: false,
     error: null,
     success: false,
     isValidSession: false,
@@ -41,11 +39,10 @@ function PasswordResetFormContent() {
   useEffect(() => {
     const checkRecoverySession = async () => {
       try {
-        // First, try to get the session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const { data: { session }, error } = await supabase.auth.getSession()
         
-        if (sessionError) {
-          console.error('Session error:', sessionError)
+        if (error) {
+          console.error('Session error:', error)
           setState(prev => ({
             ...prev,
             isValidSession: false,
@@ -55,17 +52,20 @@ function PasswordResetFormContent() {
           return
         }
 
-        // If we have a session, it's valid for password reset
-        // The session exists because the user clicked the magic link from their email
-        if (session?.user) {
-          console.log('Valid session found for password reset')
+        // Check if this is a recovery session
+        // Recovery sessions have a specific type or the user came from a password reset email
+        const isRecoverySession = session?.user?.aud === 'authenticated' && 
+          (searchParams.get('type') === 'recovery' || 
+           searchParams.get('token_hash') || 
+           session?.user?.recovery_sent_at)
+
+        if (isRecoverySession && session?.user) {
           setState(prev => ({
             ...prev,
             isValidSession: true,
             isCheckingSession: false
           }))
         } else {
-          // No session means the link is expired or invalid
           setState(prev => ({
             ...prev,
             isValidSession: false,
@@ -137,7 +137,7 @@ function PasswordResetFormContent() {
       return
     }
 
-    setState(prev => ({ ...prev, loading: true, error: null }))
+    setState(prev => ({ ...prev, Loading: true, error: null }))
 
     try {
       // Update the user's password using the recovery session
@@ -146,18 +146,17 @@ function PasswordResetFormContent() {
       })
 
       if (error) {
-        console.error('Password update error:', error)
         setState(prev => ({
           ...prev,
-          loading: false,
-          error: error.message || 'Failed to update password. Please try again.'
+          Loading: false,
+          error: error.message
         }))
         return
       }
 
       setState(prev => ({
         ...prev,
-        loading: false,
+        Loading: false,
         success: true
       }))
 
@@ -168,10 +167,9 @@ function PasswordResetFormContent() {
       }, 2000)
 
     } catch (err: any) {
-      console.error('Password reset exception:', err)
       setState(prev => ({
         ...prev,
-        loading: false,
+        Loading: false,
         error: err.message || 'Failed to update password. Please try again.'
       }))
     }
@@ -181,7 +179,7 @@ function PasswordResetFormContent() {
     router.push('/login?tab=forgot&message=Please enter your email to request a new password reset.')
   }
 
-  // Loading state while checking session
+  // loading state while checking session
   if (state.isCheckingSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -296,13 +294,13 @@ function PasswordResetFormContent() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Enter your new password"
                   required
-                  disabled={state.loading}
+                  disabled={state.Loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.loading}
+                  disabled={state.Loading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -311,14 +309,11 @@ function PasswordResetFormContent() {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Must be at least 8 characters with uppercase, lowercase, number, and special character
-              </p>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
+                Confirm New Password
               </label>
               <div className="relative">
                 <input
@@ -329,13 +324,13 @@ function PasswordResetFormContent() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Confirm your new password"
                   required
-                  disabled={state.loading}
+                  disabled={state.Loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={state.loading}
+                  disabled={state.Loading}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4 text-gray-400" />
@@ -346,15 +341,25 @@ function PasswordResetFormContent() {
               </div>
             </div>
 
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>Password requirements:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>At least 8 characters long</li>
+                <li>Contains uppercase and lowercase letters</li>
+                <li>Contains at least one number</li>
+                <li>Contains at least one special character (!@#$%^&*)</li>
+              </ul>
+            </div>
+
             <Button
               type="submit"
               className="w-full"
-              disabled={state.loading}
+              disabled={state.Loading || !state.password || !state.confirmPassword}
             >
-              {state.loading ? (
+              {state.Loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Updating Password...
+                  Updating password...
                 </>
               ) : (
                 <>
@@ -364,15 +369,16 @@ function PasswordResetFormContent() {
               )}
             </Button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => router.push('/login')}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                Back to Sign In
-              </button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/login')}
+              className="w-full"
+              disabled={state.Loading}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Sign In
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -380,10 +386,26 @@ function PasswordResetFormContent() {
   )
 }
 
-export default function PasswordResetPage() {
+function loadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">loading...</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function ResetPasswordPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <PasswordResetFormContent />
     </Suspense>
   )
 }
+
