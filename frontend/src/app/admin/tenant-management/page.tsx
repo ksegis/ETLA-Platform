@@ -114,14 +114,25 @@ export default function TenantManagementPage() {
   const hasAdminAccess = checkPermission(FEATURES.TENANT_MANAGEMENT, PERMISSIONS.TENANT_READ);
 
   useEffect(() => {
-    if (isAuthenticated && hasAdminAccess) {
-      loadTenants();
-      // loadAllUsers(); // Temporarily disabled - requires database view or RPC function
-      loadTemplates();
-      loadParentTenants();
-    } else {
-      setloading(false);
-    }
+    const loadInitialData = async () => {
+      if (isAuthenticated && hasAdminAccess) {
+        try {
+          await Promise.all([
+            loadTenants(),
+            loadTemplates(),
+            loadParentTenants()
+          ]);
+        } catch (error) {
+          console.error('Error loading initial data:', error);
+        } finally {
+          setloading(false);
+        }
+      } else {
+        setloading(false);
+      }
+    };
+    
+    loadInitialData();
   }, [isAuthenticated, hasAdminAccess]);
 
   useEffect(() => {
