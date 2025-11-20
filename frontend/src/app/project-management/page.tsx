@@ -37,6 +37,12 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
 import { supabase } from '@/lib/supabase'
+import { ProjectQuickUpdateModal } from '@/components/project-management/ProjectQuickUpdateModal'
+import { RoadblockManager } from '@/components/project-management/RoadblockManager'
+import { MilestoneManager } from '@/components/project-management/MilestoneManager'
+import { StatusUpdateForm } from '@/components/project-management/StatusUpdateForm'
+import { DeliverableTracker } from '@/components/project-management/DeliverableTracker'
+import { Package, MessageSquare } from 'lucide-react'
 
 // Complete PMBOK interface with all fields
 interface ProjectCharter {
@@ -859,6 +865,10 @@ export default function ProjectManagementPage() {
     { id: 'projects', label: 'Projects', count: statistics.totalProjects, icon: Building },
     { id: 'work-requests', label: 'Work Requests', count: statistics.workRequests, icon: FileText },
     { id: 'risks', label: 'Risks', count: risks.length, icon: AlertTriangle },
+    { id: 'milestones', label: 'Milestones', icon: Target },
+    { id: 'deliverables', label: 'Deliverables', icon: Package },
+    { id: 'roadblocks', label: 'Roadblocks', icon: XCircle },
+    { id: 'status-updates', label: 'Status Updates', icon: MessageSquare },
     { id: 'charter', label: 'Charter', icon: FileText },
     { id: 'wbs', label: 'WBS', icon: BarChart3 },
     { id: 'schedule', label: 'Schedule', icon: Calendar },
@@ -3322,6 +3332,41 @@ export default function ProjectManagementPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+        {/* Milestones Tab */}
+        {activeTab === 'milestones' && selectedProject && (
+          <div className="space-y-6">
+            <MilestoneManager projectId={selectedProject.id} />
+          </div>
+        )}
+
+        {/* Deliverables Tab */}
+        {activeTab === 'deliverables' && selectedProject && (
+          <div className="space-y-6">
+            <DeliverableTracker
+              projectId={selectedProject.id}
+              tenantId={selectedProject.tenant_id}
+            />
+          </div>
+        )}
+
+        {/* Roadblocks Tab */}
+        {activeTab === 'roadblocks' && selectedProject && (
+          <div className="space-y-6">
+            <RoadblockManager projectId={selectedProject.id} />
+          </div>
+        )}
+
+        {/* Status Updates Tab */}
+        {activeTab === 'status-updates' && selectedProject && (
+          <div className="space-y-6">
+            <StatusUpdateForm
+              projectId={selectedProject.id}
+              tenantId={selectedProject.tenant_id}
+            />
           </div>
         )}
       </div>
