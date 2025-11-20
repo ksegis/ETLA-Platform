@@ -85,7 +85,8 @@ interface TenantUser {
 interface AuthUser {
   id: string;
   email: string;
-  created_at: string;
+  full_name?: string;
+  created_at?: string;
 }
 
 export default function TenantManagementPage() {
