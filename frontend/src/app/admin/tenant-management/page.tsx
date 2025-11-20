@@ -321,8 +321,11 @@ export default function TenantManagementPage() {
       }
 
       // Phase 2: Manual creation with hierarchy support
+      // Exclude template_id as it's not a column in tenants table
+      const { template_id, ...tenantDataWithoutTemplate } = tenantData;
+      
       const insertData = {
-        ...tenantData,
+        ...tenantDataWithoutTemplate,
         status: "active",
         subscription_plan: "professional",
         max_users: 25,
