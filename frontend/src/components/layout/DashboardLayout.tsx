@@ -179,6 +179,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       requiredPermission: PERMISSIONS.ADMIN_ACCESS,
       items: [
         { name: 'Access Control', href: '/admin/access-control', icon: Shield, requiredPermission: PERMISSIONS.USER_READ },
+        { name: 'Role Management', href: '/role-management', icon: Shield, requiredPermission: PERMISSIONS.ADMIN_ACCESS },
         { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building, requiredPermission: PERMISSIONS.TENANT_READ },
         { name: 'Employee Directory', href: '/employee-directory', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_READ },
         { name: 'Benefits Management', href: '/benefits', icon: Building, requiredPermission: PERMISSIONS.BENEFITS_MANAGE },
@@ -276,6 +277,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (href.startsWith('/api-config')) return FEATURES.API_CONFIG
     if (href.startsWith('/integrations')) return FEATURES.INTEGRATIONS
     if (href.startsWith('/admin/access-control')) return FEATURES.ACCESS_CONTROL
+    if (href.startsWith('/role-management')) return FEATURES.ACCESS_CONTROL
     if (href.startsWith('/admin/tenant-management')) return FEATURES.TENANT_MANAGEMENT
     if (href.startsWith('/benefits')) return FEATURES.BENEFITS_MANAGEMENT
     if (href.startsWith('/payroll')) return FEATURES.PAYROLL_PROCESSING
