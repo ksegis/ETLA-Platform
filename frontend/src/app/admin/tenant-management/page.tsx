@@ -56,9 +56,11 @@ import {
   Search,
   AlertCircle,
 } from "lucide-react";
-import { Tenant, User } from "@/types";
+import { Tenant, User, TenantTemplate, TenantTier } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { FEATURES, PERMISSIONS } from "@/hooks/usePermissions";
+import { TenantHierarchyService } from "@/services/tenant_hierarchy_service";
+import { TenantHierarchyTree } from "@/components/tenant/TenantHierarchyTree";
 
 interface ExtendedTenant extends Tenant {
   code?: string;
@@ -99,6 +101,19 @@ export default function TenantManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
+  // Phase 2: Hierarchy state
+  const [templates, setTemplates] = useState<TenantTemplate[]>([]);
+  const [parentTenants, setParentTenants] = useState<ExtendedTenant[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [newTenant, setNewTenant] = useState({
+    name: "",
+    code: "",
+    tenant_type: "",
+    contact_email: "",
+    parent_tenant_id: "",
+    tenant_tier: 2 as TenantTier, // Default to Primary Customer
+    template_id: "",
+  });
   // RBAC v2 API requires (feature, permission)
   const hasAdminAccess = checkPermission(FEATURES.TENANT_MANAGEMENT, PERMISSIONS.TENANT_READ);
 
@@ -106,6 +121,8 @@ export default function TenantManagementPage() {
     if (isAuthenticated && hasAdminAccess) {
       loadTenants();
       loadAllUsers();
+      loadTemplates();
+      loadParentTenants();
     } else {
       setloading(false);
     }
@@ -152,6 +169,26 @@ export default function TenantManagementPage() {
       console.log("All users loaded successfully:", data);
     } catch (error) {
       console.error("Caught error loading all users:", error);
+    }
+  };
+
+  // Phase 2: Load tenant templates
+  const loadTemplates = async () => {
+    try {
+      const templates = await TenantHierarchyService.getTenantTemplates();
+      setTemplates(templates);
+    } catch (error) {
+      console.error("Error loading templates:", error);
+    }
+  };
+
+  // Phase 2: Load available parent tenants
+  const loadParentTenants = async () => {
+    try {
+      const parents = await TenantHierarchyService.getAvailableParentTenants();
+      setParentTenants(parents as ExtendedTenant[]);
+    } catch (error) {
+      console.error("Error loading parent tenants:", error);
     }
   };
 
@@ -257,11 +294,31 @@ export default function TenantManagementPage() {
     code: string;
     tenant_type: string;
     contact_email: string;
+    parent_tenant_id?: string;
+    tenant_tier?: TenantTier;
+    template_id?: string;
   }) => {
     console.log("=== CREATE TENANT DEBUG START ====");
     console.log("Input tenantData:", tenantData);
 
     try {
+      // Phase 2: Use template if selected
+      if (tenantData.template_id) {
+        console.log("Creating tenant from template:", tenantData.template_id);
+        const newTenant = await TenantHierarchyService.createTenantFromTemplate(
+          tenantData.template_id,
+          tenantData.name,
+          tenantData.code,
+          tenantData.parent_tenant_id
+        );
+        console.log("Tenant created from template:", newTenant);
+        setShowCreateTenantModal(false);
+        await loadTenants();
+        await loadParentTenants();
+        return;
+      }
+
+      // Phase 2: Manual creation with hierarchy support
       const insertData = {
         ...tenantData,
         status: "active",
@@ -269,7 +326,12 @@ export default function TenantManagementPage() {
         max_users: 25,
         max_projects: 50,
         is_active: true,
-        tenant_level: 1,
+        tenant_level: tenantData.tenant_tier || 2,
+        tenant_tier: tenantData.tenant_tier || 2,
+        parent_tenant_id: tenantData.parent_tenant_id || null,
+        can_have_children: tenantData.tenant_tier === 2,
+        max_child_tenants: tenantData.tenant_tier === 2 ? 50 : 0,
+        current_child_count: 0,
         settings: {},
         feature_flags: {},
         usage_quotas: {},
@@ -302,6 +364,7 @@ export default function TenantManagementPage() {
       );
       setShowCreateTenantModal(false);
       await loadTenants();
+      await loadParentTenants(); // Reload parent list
       console.log("=== CREATE TENANT DEBUG END ====");
     } catch (error) {
       console.error("=== CREATE TENANT ERROR ====");
@@ -388,6 +451,28 @@ export default function TenantManagementPage() {
           </Button>
         </div>
 
+        {/* Phase 2: Hierarchy Tree Visualization */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Tenant Hierarchy
+            </CardTitle>
+            <CardDescription>
+              Visual representation of tenant relationships
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-96 overflow-y-auto">
+              <TenantHierarchyTree
+                tenants={tenants}
+                selectedTenantId={selectedTenantId}
+                onSelectTenant={(id) => setSelectedTenantId(id)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Tenants List */}
           <Card>
@@ -433,6 +518,21 @@ export default function TenantManagementPage() {
                         <p className="text-sm text-gray-500">
                           Type: {tenant.tenant_type || "Unknown"}
                         </p>
+                        {/* Phase 2: Show tier and hierarchy info */}
+                        <div className="flex gap-2 mt-1">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            tenant.tenant_tier === 2 ? "bg-blue-100 text-blue-800" : 
+                            tenant.tenant_tier === 3 ? "bg-purple-100 text-purple-800" : 
+                            "bg-gray-100 text-gray-800"
+                          }`}>
+                            {TenantHierarchyService.getTierDisplay(tenant.tenant_tier)}
+                          </span>
+                          {tenant.current_child_count > 0 && (
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              {tenant.current_child_count} sub-client{tenant.current_child_count !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${tenant.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
@@ -668,6 +768,79 @@ export default function TenantManagementPage() {
                   className="col-span-3"
                 />
               </div>
+              {/* Phase 2: Hierarchy fields */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tenant-tier" className="text-right">
+                  Tier
+                </Label>
+                <Select
+                  value={newTenant.tenant_tier.toString()}
+                  onValueChange={(value) =>
+                    setNewTenant({
+                      ...newTenant,
+                      tenant_tier: parseInt(value) as TenantTier,
+                      parent_tenant_id: value === "3" ? newTenant.parent_tenant_id : "",
+                    })
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">Primary Customer</SelectItem>
+                    <SelectItem value="3">Sub-Client</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {newTenant.tenant_tier === 3 && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="parent-tenant" className="text-right">
+                    Parent Tenant
+                  </Label>
+                  <Select
+                    value={newTenant.parent_tenant_id}
+                    onValueChange={(value) =>
+                      setNewTenant({ ...newTenant, parent_tenant_id: value })
+                    }
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select parent tenant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {parentTenants.map((tenant) => (
+                        <SelectItem key={tenant.id} value={tenant.id}>
+                          {tenant.name} ({tenant.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="template" className="text-right">
+                  Template (Optional)
+                </Label>
+                <Select
+                  value={newTenant.template_id}
+                  onValueChange={(value) =>
+                    setNewTenant({ ...newTenant, template_id: value })
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {templates
+                      .filter((t) => t.tenant_tier === newTenant.tenant_tier)
+                      .map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
               <Button onClick={() => createTenant(newTenant)}>
@@ -686,11 +859,4 @@ const setSelectedUserId = (id: string) => {}; // Placeholder for setSelectedUser
 const selectedRole = ""; // Placeholder for selected role
 const setSelectedRole = (role: string) => {}; // Placeholder for setSelectedRole
 
-const newTenant = {
-  name: "",
-  code: "",
-  tenant_type: "",
-  contact_email: "",
-}; // Placeholder for new tenant data
-const setNewTenant = (tenant: any) => {}; // Placeholder for setNewTenant
 
