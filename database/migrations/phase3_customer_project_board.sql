@@ -50,7 +50,8 @@ CREATE INDEX IF NOT EXISTS idx_risks_category ON risks(category);
 -- RLS Policies
 ALTER TABLE risks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "risks_select_policy" ON risks
+DROP POLICY IF EXISTS "risks_select_policy" ON risks;
+CREATE POLICY "risks_select_policy" ON risks
   FOR SELECT
   USING (
     -- Platform Host can see all
@@ -60,20 +61,26 @@ CREATE POLICY IF NOT EXISTS "risks_select_policy" ON risks
     tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
   );
 
-CREATE POLICY IF NOT EXISTS "risks_insert_policy" ON risks
+DROP POLICY IF EXISTS "risks_insert_policy" ON risks;
+CREATE POLICY "risks_insert_policy" ON risks
   FOR INSERT
   WITH CHECK (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager', 'client_admin')
   );
 
-CREATE POLICY IF NOT EXISTS "risks_update_policy" ON risks
+DROP POLICY IF EXISTS "risks_update_policy" ON risks;
+CREATE POLICY "risks_update_policy" ON risks
   FOR UPDATE
   USING (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager', 'client_admin')
   );
 
-CREATE POLICY IF NOT EXISTS "risks_delete_policy" ON risks
+DROP POLICY IF EXISTS "risks_delete_policy" ON risks;
+CREATE POLICY "risks_delete_policy" ON risks
   FOR DELETE
+  USING (
+    auth.jwt() ->> 'role' IN ('host_admin', 'program_manager')
+  );
   USING (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager')
   );
@@ -135,6 +142,7 @@ CREATE INDEX idx_roadblocks_customer_visible ON project_roadblocks(customer_visi
 -- RLS Policies
 ALTER TABLE project_roadblocks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "roadblocks_select_policy" ON project_roadblocks;
 CREATE POLICY "roadblocks_select_policy" ON project_roadblocks
   FOR SELECT
   USING (
@@ -155,12 +163,14 @@ CREATE POLICY "roadblocks_select_policy" ON project_roadblocks
     )
   );
 
+DROP POLICY IF EXISTS "roadblocks_insert_policy" ON project_roadblocks;
 CREATE POLICY "roadblocks_insert_policy" ON project_roadblocks
   FOR INSERT
   WITH CHECK (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager')
   );
 
+DROP POLICY IF EXISTS "roadblocks_update_policy" ON project_roadblocks;
 CREATE POLICY "roadblocks_update_policy" ON project_roadblocks
   FOR UPDATE
   USING (
@@ -217,6 +227,7 @@ CREATE INDEX idx_status_updates_created_at ON project_status_updates(created_at 
 -- RLS Policies
 ALTER TABLE project_status_updates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "status_updates_select_policy" ON project_status_updates;
 CREATE POLICY "status_updates_select_policy" ON project_status_updates
   FOR SELECT
   USING (
@@ -237,6 +248,7 @@ CREATE POLICY "status_updates_select_policy" ON project_status_updates
     )
   );
 
+DROP POLICY IF EXISTS "status_updates_insert_policy" ON project_status_updates;
 CREATE POLICY "status_updates_insert_policy" ON project_status_updates
   FOR INSERT
   WITH CHECK (
@@ -301,6 +313,7 @@ CREATE INDEX idx_deliverables_customer_visible ON project_deliverables(customer_
 -- RLS Policies
 ALTER TABLE project_deliverables ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "deliverables_select_policy" ON project_deliverables;
 CREATE POLICY "deliverables_select_policy" ON project_deliverables
   FOR SELECT
   USING (
@@ -321,12 +334,14 @@ CREATE POLICY "deliverables_select_policy" ON project_deliverables
     )
   );
 
+DROP POLICY IF EXISTS "deliverables_insert_policy" ON project_deliverables;
 CREATE POLICY "deliverables_insert_policy" ON project_deliverables
   FOR INSERT
   WITH CHECK (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager')
   );
 
+DROP POLICY IF EXISTS "deliverables_update_policy" ON project_deliverables;
 CREATE POLICY "deliverables_update_policy" ON project_deliverables
   FOR UPDATE
   USING (
@@ -387,6 +402,7 @@ CREATE INDEX idx_notifications_created_at ON customer_project_notifications(crea
 -- RLS Policies
 ALTER TABLE customer_project_notifications ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "notifications_select_policy" ON customer_project_notifications;
 CREATE POLICY "notifications_select_policy" ON customer_project_notifications
   FOR SELECT
   USING (
@@ -394,6 +410,7 @@ CREATE POLICY "notifications_select_policy" ON customer_project_notifications
     OR tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
   );
 
+DROP POLICY IF EXISTS "notifications_update_policy" ON customer_project_notifications;
 CREATE POLICY "notifications_update_policy" ON customer_project_notifications
   FOR UPDATE
   USING (
@@ -430,6 +447,7 @@ CREATE INDEX idx_tour_progress_tour ON tour_progress(tour_id);
 -- RLS Policies
 ALTER TABLE tour_progress ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "tour_progress_all_policy" ON tour_progress;
 CREATE POLICY "tour_progress_all_policy" ON tour_progress
   FOR ALL
   USING (user_id = (auth.jwt() ->> 'user_id')::uuid);

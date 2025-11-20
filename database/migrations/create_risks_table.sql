@@ -50,7 +50,8 @@ CREATE INDEX IF NOT EXISTS idx_risks_category ON risks(category);
 -- RLS Policies
 ALTER TABLE risks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "risks_select_policy" ON risks
+DROP POLICY IF EXISTS "risks_select_policy" ON risks;
+CREATE POLICY "risks_select_policy" ON risks
   FOR SELECT
   USING (
     -- Platform Host can see all
@@ -60,19 +61,22 @@ CREATE POLICY IF NOT EXISTS "risks_select_policy" ON risks
     tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
   );
 
-CREATE POLICY IF NOT EXISTS "risks_insert_policy" ON risks
+DROP POLICY IF EXISTS "risks_insert_policy" ON risks;
+CREATE POLICY "risks_insert_policy" ON risks
   FOR INSERT
   WITH CHECK (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager', 'client_admin')
   );
 
-CREATE POLICY IF NOT EXISTS "risks_update_policy" ON risks
+DROP POLICY IF EXISTS "risks_update_policy" ON risks;
+CREATE POLICY "risks_update_policy" ON risks
   FOR UPDATE
   USING (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager', 'client_admin')
   );
 
-CREATE POLICY IF NOT EXISTS "risks_delete_policy" ON risks
+DROP POLICY IF EXISTS "risks_delete_policy" ON risks;
+CREATE POLICY "risks_delete_policy" ON risks
   FOR DELETE
   USING (
     auth.jwt() ->> 'role' IN ('host_admin', 'program_manager')
