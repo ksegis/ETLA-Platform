@@ -279,7 +279,7 @@ function AddRoadblockModal({
                 value={formData.severity}
                 onValueChange={(value: any) => setFormData({ ...formData, severity: value })}
               >
-                <SelectTrigger id="severity">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

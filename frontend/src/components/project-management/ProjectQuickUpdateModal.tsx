@@ -111,7 +111,7 @@ export function ProjectQuickUpdateModal({
                 setFormData({ ...formData, health_status: value as 'green' | 'yellow' | 'red' })
               }
             >
-              <SelectTrigger id="health_status">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
