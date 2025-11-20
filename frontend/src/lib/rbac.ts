@@ -123,6 +123,7 @@ export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 export const ROLES = {
   HOST_ADMIN: "host_admin",
   CLIENT_ADMIN: "client_admin",
+  PRIMARY_CLIENT_ADMIN: "primary_client_admin",
   PROGRAM_MANAGER: "program_manager",
   CLIENT_USER: "client_user",
   USER: "user",
@@ -133,6 +134,7 @@ export type Role = typeof ROLES[keyof typeof ROLES];
 export const ALL_ROLES: Role[] = [
   ROLES.HOST_ADMIN,
   ROLES.CLIENT_ADMIN,
+  ROLES.PRIMARY_CLIENT_ADMIN,
   ROLES.PROGRAM_MANAGER,
   ROLES.CLIENT_USER,
   ROLES.USER,
@@ -153,6 +155,11 @@ export const ROLE_PERMISSIONS: RolePermissionMapSimple = {
     PERMISSIONS.UPDATE,
     PERMISSIONS.DELETE,
     PERMISSIONS.MANAGE,
+  ],
+  [ROLES.PRIMARY_CLIENT_ADMIN]: [
+    PERMISSIONS.VIEW,
+    PERMISSIONS.CREATE,
+    PERMISSIONS.UPDATE,
   ],
   [ROLES.PROGRAM_MANAGER]: [
     PERMISSIONS.VIEW,

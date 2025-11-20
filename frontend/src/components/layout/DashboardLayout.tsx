@@ -259,6 +259,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   function featureForHref(href: string) {
     if (href.startsWith('/work-requests')) return FEATURES.WORK_REQUESTS
     if (href.startsWith('/project-management')) return FEATURES.PROJECT_MANAGEMENT
+    if (href.startsWith('/customer/projects')) return FEATURES.PROJECT_MANAGEMENT
+    if (href.startsWith('/customer/portfolio')) return FEATURES.PROJECT_MANAGEMENT
     if (href.startsWith('/reporting') || href.startsWith('/hr-analytics') || href.startsWith('/dashboard'))
       return FEATURES.DASHBOARDS
     if (href.startsWith('/talent')) return FEATURES.USER_MANAGEMENT
