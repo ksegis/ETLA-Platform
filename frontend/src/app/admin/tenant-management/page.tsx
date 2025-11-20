@@ -180,7 +180,7 @@ export default function TenantManagementPage() {
       
       // Get unique users by user_id
       const uniqueUsers = Array.from(
-        new Map(data?.map(u => [u.user_id, { id: u.user_id, email: u.email, full_name: u.full_name }]) || []).values()
+        new Map(data?.map((u: any) => [u.user_id, { id: u.user_id, email: u.email, full_name: u.full_name }]) || []).values()
       );
       
       setAllUsers(uniqueUsers as AuthUser[]);
