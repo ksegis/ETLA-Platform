@@ -34,6 +34,7 @@ import {
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
+import NotificationBell from '@/components/notifications/NotificationBell'
 
 interface NavigationItem {
   name: string
@@ -95,6 +96,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       items: [
         { name: 'Work Requests', href: '/work-requests', icon: FileText, requiredPermission: PERMISSIONS.WORK_REQUEST_READ },
         { name: 'Project Management', href: '/project-management', icon: Calendar, requiredPermission: PERMISSIONS.PROJECT_READ },
+        { name: 'My Projects', href: '/customer/projects', icon: Briefcase, isNew: true },
+        { name: 'Portfolio Overview', href: '/customer/portfolio', icon: PieChart, isNew: true },
+        { name: 'Notifications', href: '/customer/notifications', icon: Bell, isNew: true },
         { name: 'Reporting', href: '/reporting', icon: TrendingUp, requiredPermission: PERMISSIONS.REPORTING_VIEW },
         { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true, requiredPermission: PERMISSIONS.REPORTING_VIEW },
       ],
@@ -449,9 +453,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </button>
 
             <div className="flex items-center space-x-4">
-              <button className="p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
-                <Bell className="h-6 w-6" />
-              </button>
+              <NotificationBell />
               <div className="h-6 w-px bg-gray-300" />
 
               {/* User Profile Dropdown */}
