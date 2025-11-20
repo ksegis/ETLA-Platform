@@ -307,9 +307,12 @@ export default function TenantManagementPage() {
         console.log("Creating tenant from template:", tenantData.template_id);
         const newTenant = await TenantHierarchyService.createTenantFromTemplate(
           tenantData.template_id,
-          tenantData.name,
-          tenantData.code,
-          tenantData.parent_tenant_id
+          {
+            name: tenantData.name,
+            code: tenantData.code,
+            parent_tenant_id: tenantData.parent_tenant_id,
+            contact_email: tenantData.contact_email
+          }
         );
         console.log("Tenant created from template:", newTenant);
         setShowCreateTenantModal(false);
