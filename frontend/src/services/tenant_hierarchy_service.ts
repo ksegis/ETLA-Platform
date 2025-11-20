@@ -32,10 +32,13 @@ export class TenantHierarchyService {
 
   /**
    * Get full tenant hierarchy starting from a root tenant
+   * Pass null or empty string to get all root tenants
    */
-  static async getTenantHierarchy(rootId: string): Promise<any> {
+  static async getTenantHierarchy(rootId?: string | null): Promise<any> {
     const { data, error } = await supabase
-      .rpc('get_tenant_hierarchy', { p_tenant_id: rootId });
+      .rpc('get_tenant_hierarchy', { 
+        p_tenant_id: rootId || null  // Convert empty string to null
+      });
     
     if (error) throw error;
     return data;

@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function TenantHierarchyTree({ rootTenantId, onTenantSelect, selectedTenantId }: Props) {
-  const [hierarchy, setHierarchy] = useState<TenantNode | null>(null);
+  const [hierarchy, setHierarchy] = useState<TenantNode[] | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -29,13 +29,17 @@ export function TenantHierarchyTree({ rootTenantId, onTenantSelect, selectedTena
     try {
       setLoading(true);
       const data = await TenantHierarchyService.getTenantHierarchy(
-        rootTenantId || ''
+        rootTenantId || null
       );
-      setHierarchy(data);
+      
+      // Handle both single object and array responses
+      const hierarchyData = Array.isArray(data) ? data : (data ? [data] : []);
+      setHierarchy(hierarchyData);
       
       // Auto-expand first level
-      if (data && data.children) {
-        setExpandedNodes(new Set([data.id]));
+      if (hierarchyData && hierarchyData.length > 0) {
+        const rootIds = hierarchyData.map(node => node.id);
+        setExpandedNodes(new Set(rootIds));
       }
     } catch (error) {
       console.error('Error loading hierarchy:', error);
@@ -124,7 +128,7 @@ export function TenantHierarchyTree({ rootTenantId, onTenantSelect, selectedTena
     );
   }
 
-  if (!hierarchy) {
+  if (!hierarchy || hierarchy.length === 0) {
     return (
       <div className="text-center p-8 text-gray-500">
         No hierarchy data available
@@ -139,7 +143,7 @@ export function TenantHierarchyTree({ rootTenantId, onTenantSelect, selectedTena
         Tenant Hierarchy
       </h3>
       <div className="max-h-96 overflow-y-auto">
-        {renderNode(hierarchy)}
+        {hierarchy.map(rootNode => renderNode(rootNode))}
       </div>
     </div>
   );

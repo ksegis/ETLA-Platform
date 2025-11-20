@@ -442,15 +442,18 @@ export default function TenantManagementPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
               Tenant Management
             </h1>
-            <p className="text-gray-600">Manage tenants and user assignments</p>
+            <p className="text-sm md:text-base text-gray-600">Manage tenants and user assignments</p>
           </div>
-          <Button onClick={() => setShowCreateTenantModal(true)}>
+          <Button 
+            onClick={() => setShowCreateTenantModal(true)}
+            className="w-full sm:w-auto"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Create Tenant
           </Button>
@@ -716,11 +719,11 @@ export default function TenantManagementPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tenant-name" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+                <Label htmlFor="tenant-name" className="md:text-right">
                   Name *
                 </Label>
-                <div className="col-span-3">
+                <div className="md:col-span-3">
                   <Input
                     id="tenant-name"
                     placeholder="e.g., Acme Corporation"
@@ -732,11 +735,11 @@ export default function TenantManagementPage() {
                   <p className="text-xs text-gray-500 mt-1">The display name for this tenant</p>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tenant-code" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+                <Label htmlFor="tenant-code" className="md:text-right">
                   Code *
                 </Label>
-                <div className="col-span-3">
+                <div className="md:col-span-3">
                   <Input
                     id="tenant-code"
                     placeholder="e.g., acme-corp"
@@ -748,11 +751,11 @@ export default function TenantManagementPage() {
                   <p className="text-xs text-gray-500 mt-1">Unique identifier (lowercase, no spaces)</p>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tenant-type" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+                <Label htmlFor="tenant-type" className="md:text-right">
                   Business Type
                 </Label>
-                <div className="col-span-3">
+                <div className="md:col-span-3">
                   <Select
                     value={newTenant.tenant_type}
                     onValueChange={(value) =>
@@ -783,11 +786,11 @@ export default function TenantManagementPage() {
                   <p className="text-xs text-gray-500 mt-1">Optional: Industry or business category</p>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="contact-email" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+                <Label htmlFor="contact-email" className="md:text-right">
                   Contact Email *
                 </Label>
-                <div className="col-span-3">
+                <div className="md:col-span-3">
                   <Input
                     id="contact-email"
                     type="email"
@@ -804,11 +807,11 @@ export default function TenantManagementPage() {
                 </div>
               </div>
               {/* Phase 2: Hierarchy fields */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tenant-tier" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+                <Label htmlFor="tenant-tier" className="md:text-right">
                   Tier *
                 </Label>
-                <div className="col-span-3">
+                <div className="md:col-span-3">
                   <Select
                     value={newTenant.tenant_tier.toString()}
                     onValueChange={(value) =>
@@ -835,11 +838,11 @@ export default function TenantManagementPage() {
                 </div>
               </div>
               {newTenant.tenant_tier === 3 && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="parent-tenant" className="text-right">
+                <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+                  <Label htmlFor="parent-tenant" className="md:text-right">
                     Parent Tenant *
                   </Label>
-                  <div className="col-span-3">
+                  <div className="md:col-span-3">
                     <Select
                       value={newTenant.parent_tenant_id}
                       onValueChange={(value) =>
@@ -861,11 +864,11 @@ export default function TenantManagementPage() {
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="template" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+                <Label htmlFor="template" className="md:text-right">
                   Template
                 </Label>
-                <div className="col-span-3">
+                <div className="md:col-span-3">
                   <Select
                     value={newTenant.template_id}
                     onValueChange={(value) =>
