@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button'
 import { Shield, Save, RotateCcw, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { loadAllRolePermissions, saveRolePermissions } from '@/services/rolePermissionsService'
 
 // Define all features/screens in the system
 const FEATURES = [
@@ -71,20 +72,45 @@ export default function RoleManagementPage() {
     try {
       setLoading(true)
       
-      // TODO: Load from database
-      // For now, initialize with default permissions
-      const defaultPermissions: RolePermissions = {}
+      // Load permissions from database
+      const dbPermissions = await loadAllRolePermissions()
+      
+      // Convert database format to UI format
+      const uiPermissions: RolePermissions = {}
       
       ROLES.forEach(role => {
-        defaultPermissions[role.id] = {}
+        uiPermissions[role.id] = {}
         FEATURES.forEach(feature => {
-          defaultPermissions[role.id][feature.id] = getDefaultPermission(role.id, feature.id)
+          const dbPerm = dbPermissions[role.id]?.[feature.id]
+          
+          if (dbPerm) {
+            // Use database permissions
+            uiPermissions[role.id][feature.id] = {
+              feature: feature.id,
+              create: dbPerm.can_create,
+              read: dbPerm.can_read,
+              update: dbPerm.can_update,
+              delete: dbPerm.can_delete,
+              enabled: dbPerm.can_read || dbPerm.can_create || dbPerm.can_update || dbPerm.can_delete,
+            }
+          } else {
+            // Feature not in database - disabled by default
+            uiPermissions[role.id][feature.id] = {
+              feature: feature.id,
+              create: false,
+              read: false,
+              update: false,
+              delete: false,
+              enabled: false,
+            }
+          }
         })
       })
       
-      setPermissions(defaultPermissions)
+      setPermissions(uiPermissions)
     } catch (error) {
       console.error('Failed to load permissions:', error)
+      alert('Failed to load permissions from database')
     } finally {
       setLoading(false)
     }
@@ -192,17 +218,29 @@ export default function RoleManagementPage() {
     try {
       setSaving(true)
       
-      // TODO: Save to database
-      console.log('Saving permissions:', permissions)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Save each role's permissions to database
+      for (const role of ROLES) {
+        const rolePerms = permissions[role.id]
+        
+        // Convert UI format to database format
+        const featurePermissions = Object.entries(rolePerms)
+          .filter(([_, perm]) => perm.enabled) // Only save enabled features
+          .map(([featureId, perm]) => ({
+            feature_id: featureId,
+            can_create: perm.create,
+            can_read: perm.read,
+            can_update: perm.update,
+            can_delete: perm.delete,
+          }))
+        
+        await saveRolePermissions(role.id, featurePermissions)
+      }
       
       alert('Permissions saved successfully!')
       setHasChanges(false)
     } catch (error) {
       console.error('Failed to save permissions:', error)
-      alert('Failed to save permissions')
+      alert('Failed to save permissions. Please try again.')
     } finally {
       setSaving(false)
     }

@@ -18,6 +18,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+import { loadAllRolePermissions } from '@/services/rolePermissionsService';
+
 import {
   FEATURES,
   PERMISSIONS,
@@ -118,122 +120,68 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
     setError(null);
 
     try {
-      const hostAdmin = buildRole(
-        'host_admin',
-        'Host Admin',
-        'Full system administrator with all privileges',
-        () => true
-      );
-
-      const clientAdmin = buildRole(
-        'client_admin',
-        'Client Admin',
-        'Tenant administrator with full tenant privileges',
-        (feature) =>
-          feature !== (FEATURES as any).TENANT_MANAGEMENT &&
-          feature !== (FEATURES as any).SYSTEM_SETTINGS
-      );
-
-      const programManager = buildRole(
-        'program_manager',
-        'Program Manager',
-        'Project and program management with team oversight',
-        (feature, permission) => {
-          if (PROJECT_FEATURES.includes(feature)) {
-            return (
-              permission === PERMISSIONS.MANAGE ||
-              permission === PERMISSIONS.VIEW ||
-              permission === PERMISSIONS.CREATE ||
-              permission === PERMISSIONS.UPDATE
-            );
+      // Load permissions from database
+      const dbPermissions = await loadAllRolePermissions();
+      
+      // Define role metadata
+      const roleMetadata: Record<string, { name: string; description: string }> = {
+        host_admin: {
+          name: 'Host Admin',
+          description: 'Full system administrator with all privileges',
+        },
+        client_admin: {
+          name: 'Client Admin',
+          description: 'Tenant administrator with full tenant privileges',
+        },
+        primary_client_admin: {
+          name: 'Primary Client Admin',
+          description: 'Primary customer administrator with full customer portal access',
+        },
+        program_manager: {
+          name: 'Program Manager',
+          description: 'Project and program management with team oversight',
+        },
+        client_user: {
+          name: 'Client User',
+          description: 'Standard user with basic access to work requests and reporting',
+        },
+      };
+      
+      // Convert database permissions to UI format
+      const loadedRoles: UiRole[] = Object.entries(roleMetadata).map(([roleId, meta]) => {
+        const rolePerms = dbPermissions[roleId] || {};
+        
+        // Build permission grant function from database
+        const grant = (feature: Feature, permission: Permission): boolean => {
+          const featurePerm = rolePerms[feature];
+          if (!featurePerm) return false;
+          
+          // Map RBAC permissions to database CRUD permissions
+          switch (permission) {
+            case PERMISSIONS.CREATE:
+              return featurePerm.can_create;
+            case PERMISSIONS.VIEW:
+              return featurePerm.can_read;
+            case PERMISSIONS.UPDATE:
+              return featurePerm.can_update;
+            case PERMISSIONS.DELETE:
+              return featurePerm.can_delete;
+            case PERMISSIONS.MANAGE:
+              // MANAGE means all CRUD permissions
+              return featurePerm.can_create && featurePerm.can_read && 
+                     featurePerm.can_update && featurePerm.can_delete;
+            default:
+              return false;
           }
-          if (REPORTING_FEATURES.includes(feature)) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          if (feature === (FEATURES as any).USER_MANAGEMENT) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          if (
-            feature === (FEATURES as any).MIGRATION_WORKBENCH ||
-            feature === (FEATURES as any).DATA_VALIDATION
-          ) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          return false;
-        }
-      );
-
-      const primaryClientAdmin = buildRole(
-        'primary_client_admin',
-        'Primary Client Admin',
-        'Primary customer administrator with full customer portal access',
-        (feature, permission) => {
-          if (feature === (FEATURES as any).USER_MANAGEMENT) {
-            return permission === PERMISSIONS.MANAGE;
-          }
-          if (feature === (FEATURES as any).ACCESS_CONTROL) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          if (
-            feature === (FEATURES as any).PROJECT_MANAGEMENT ||
-            feature === (FEATURES as any).WORK_REQUESTS ||
-            feature === (FEATURES as any).BENEFITS_MANAGEMENT ||
-            feature === (FEATURES as any).EMPLOYEE_RECORDS
-          ) {
-            return permission === PERMISSIONS.MANAGE;
-          }
-          if (feature === (FEATURES as any).DASHBOARDS) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          if (feature === (FEATURES as any).FILE_UPLOAD) {
-            return permission === PERMISSIONS.CREATE;
-          }
-          if (
-            feature === (FEATURES as any).DATA_VALIDATION ||
-            feature === (FEATURES as any).MIGRATION_WORKBENCH
-          ) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          return false;
-        }
-      );
-
-      const clientUser = buildRole(
-        'client_user',
-        'Client User',
-        'Standard user with basic access to work requests and reporting',
-        (feature, permission) => {
-          if (feature === (FEATURES as any).WORK_REQUESTS) {
-            return (
-              permission === PERMISSIONS.VIEW ||
-              permission === PERMISSIONS.CREATE ||
-              permission === PERMISSIONS.UPDATE
-            );
-          }
-          if (
-            feature === (FEATURES as any).REPORTING ||
-            feature === (FEATURES as any).DASHBOARDS ||
-            feature === (FEATURES as any).BENEFITS_MANAGEMENT
-          ) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          if (feature === (FEATURES as any).FILE_UPLOAD) {
-            return permission === PERMISSIONS.CREATE;
-          }
-          if (
-            feature === (FEATURES as any).ACCESS_CONTROL ||
-            feature === (FEATURES as any).USER_MANAGEMENT
-          ) {
-            return permission === PERMISSIONS.VIEW;
-          }
-          return false;
-        }
-      );
-
-      setRoles([hostAdmin, clientAdmin, primaryClientAdmin, programManager, clientUser]);
+        };
+        
+        return buildRole(roleId, meta.name, meta.description, grant, true);
+      });
+      
+      setRoles(loadedRoles);
     } catch (err) {
       console.error('Error loading roles:', err);
-      setError('Failed to load roles data');
+      setError('Failed to load roles data from database');
     } finally {
       setLoading(false);
     }
