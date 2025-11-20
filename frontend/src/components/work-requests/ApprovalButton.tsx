@@ -22,7 +22,7 @@ export function ApprovalButton({
   onReject,
   className = ''
 }: ApprovalButtonProps) {
-  const { hasPermission, userRole, loading } = usePermissions()
+  const { hasPermission, currentRole, loading } = usePermissions()
   const [isApproving, setIsApproving] = useState(false)
   const [isRejecting, setIsRejecting] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
@@ -30,7 +30,7 @@ export function ApprovalButton({
 
   // Check if user can approve work requests
   const canApprove = hasPermission(FEATURES.WORK_REQUESTS, PERMISSIONS.APPROVE) && 
-                     canApproveWorkRequests(userRole)
+                     canApproveWorkRequests(currentRole || '')
 
   // Don't show buttons if already approved/rejected or if user can't approve
   if (currentStatus === 'approved' || currentStatus === 'rejected') {
@@ -63,7 +63,7 @@ export function ApprovalButton({
             Approve
           </Button>
           <InfoTooltip 
-            content={getApprovalDenialReason(userRole)}
+            content={getApprovalDenialReason(currentRole || '')}
             placement="top"
             className="absolute -top-1 -right-6"
           />
