@@ -563,7 +563,7 @@ function WorkRequestsPageContent() {
               <HelpCircle className="mr-2 h-4 w-4" />
               Start Tour
             </Button>
-            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Button id="create-request-btn" onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               New Request
             </Button>
@@ -661,6 +661,7 @@ function WorkRequestsPageContent() {
                 </div>
               </div>
               <select
+                id="status-filter"
                 value={statusFilter}
                 onChange={(e: any) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -754,7 +755,7 @@ function WorkRequestsPageContent() {
                 )}
               </div>
             ) : viewMode === 'list' ? (
-              <div className="overflow-x-auto">
+              <div id="work-requests-list" className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -792,13 +793,13 @@ function WorkRequestsPageContent() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={request.status === 'approved' ? 'default' : 'secondary'}>
+                            <Badge className="status-badge" variant={request.status === 'approved' ? 'default' : 'secondary'}>
                               <StatusIcon className="w-3 h-3 mr-1" />
                               {statusStyle.label}
                             </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
+                            <Badge className="priority-badge" variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
                               {request.priority || 'medium'}
                             </Badge>
                           </td>
@@ -887,14 +888,14 @@ function WorkRequestsPageContent() {
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Status:</span>
-                            <Badge variant={request.status === 'approved' ? 'default' : 'secondary'}>
+                            <Badge className="status-badge" variant={request.status === 'approved' ? 'default' : 'secondary'}>
                               <StatusIcon className="w-3 h-3 mr-1" />
                               {statusStyle.label}
                             </Badge>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Priority:</span>
-                            <Badge variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
+                            <Badge className="priority-badge" variant={request.priority === 'high' || request.priority === 'critical' ? 'destructive' : 'secondary'}>
                               {request.priority || 'medium'}
                             </Badge>
                           </div>
