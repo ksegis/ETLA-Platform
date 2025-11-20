@@ -237,6 +237,35 @@ export interface Tenant extends BaseEntity {
   settings: Record<string, any>;
   billing_email?: string;
   billing_address?: string;
+  
+  // Hierarchy fields (Phase 1)
+  parent_tenant_id?: string;
+  tenant_tier: number;
+  tenant_path?: string;
+  can_have_children: boolean;
+  max_child_tenants: number;
+  current_child_count: number;
+  
+  // Additional fields from database
+  code?: string;
+  tenant_type?: string;
+  host_customer_id?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  country?: string;
+  max_projects?: number;
+  max_storage_gb?: number;
+  feature_flags?: Record<string, any>;
+  usage_quotas?: Record<string, any>;
+  rbac_settings?: Record<string, any>;
+  ein?: string;
+  tenant_level?: number;
+  root_tenant_id?: string;
+  is_active?: boolean;
 }
 
 export interface ProjectMilestone extends BaseEntity {
@@ -519,6 +548,72 @@ export interface SearchParams {
   page?: number;
   limit?: number;
 }
+
+// ============================================================================
+// TENANT HIERARCHY INTERFACES (Phase 2)
+// ============================================================================
+export interface TenantUser {
+  id: string;
+  user_id: string;
+  tenant_id: string;
+  role: string;
+  permissions?: Record<string, any>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  
+  // Hierarchy and permission scope fields (Phase 1)
+  role_level?: string;
+  can_invite_users?: boolean;
+  can_manage_sub_clients?: boolean;
+  feature_permissions?: Record<string, any>;
+  permission_scope?: 'own' | 'children' | 'descendants' | 'ancestors' | 'siblings';
+  can_view_child_tenants: boolean;
+  is_exclusive_access: boolean;
+  access_granted_by?: string;
+  access_granted_at?: string;
+  
+  // Additional fields
+  last_login_at?: string;
+  mfa_enabled?: boolean;
+  is_primary_tenant?: boolean;
+  requires_password_change?: boolean;
+  status?: string;
+  last_sign_in_at?: string;
+}
+
+export interface TenantTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  tenant_tier: number;
+  default_settings?: Record<string, any>;
+  default_feature_flags?: Record<string, any>;
+  default_usage_quotas?: Record<string, any>;
+  default_rbac_settings?: Record<string, any>;
+  max_users: number;
+  max_projects: number;
+  can_have_children: boolean;
+  max_child_tenants: number;
+  is_active: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface TenantRelationship {
+  id: string;
+  parent_tenant_id: string;
+  child_tenant_id: string;
+  relationship_type: string;
+  created_by?: string;
+  created_at: string;
+  ended_at?: string;
+  notes?: string;
+}
+
+export type TenantTier = 1 | 2 | 3;
+export type PermissionScope = 'own' | 'children' | 'descendants' | 'ancestors' | 'siblings';
 
 
 
