@@ -1,6 +1,6 @@
 // RBAC helper functions for permission checks
 
-import { ROLES, FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
+import { ROLES, FEATURES, PERMISSIONS, type Role } from '@/hooks/usePermissions'
 
 /**
  * Check if user role can approve work requests

@@ -4,9 +4,8 @@ import React, { useState } from 'react'
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
-import { usePermissions } from '@/hooks/usePermissions'
+import { usePermissions, FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
 import { canApproveWorkRequests, getApprovalDenialReason } from '@/lib/rbac-helpers'
-import { FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
 
 interface ApprovalButtonProps {
   workRequestId: string
