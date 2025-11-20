@@ -134,6 +134,10 @@ export const CUSTOMER_TOOLTIPS = {
   demandAnalysis: {
     title: 'Demand Analysis',
     content: 'Shows resource allocation and capacity utilization across all sub-clients. Helps you understand where resources are being deployed and identify capacity constraints.'
+  },
+  portfolio: {
+    title: 'Portfolio Overview',
+    content: 'Consolidated view of all projects across your sub-clients. See overall health, budget status, and progress at a glance. Use filters to drill down into specific sub-clients or project types.'
   }
 }
 
