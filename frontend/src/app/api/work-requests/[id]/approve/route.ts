@@ -6,7 +6,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -58,11 +58,14 @@ export async function POST(
       )
     }
 
+    // Await params in Next.js 15
+    const { id } = await params
+
     // Get work request to verify it exists
     const { data: workRequest, error: fetchError } = await supabase
       .from('work_requests')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError || !workRequest) {
@@ -97,7 +100,7 @@ export async function POST(
         approved_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
