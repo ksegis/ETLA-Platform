@@ -202,12 +202,12 @@ export class RBACAdminService {
       try {
         const { data: overrideData } = await supabase
           .from('user_tenant_permissions')
-          .select('permission_id, effect')
+          .select('permissions, effect')
           .eq('user_id', userId)
           .eq('tenant_id', tenantId)
 
         overrides = overrideData?.map((item: any) => ({
-          permissionId: item.permission_id,
+          permissionId: item.permissions,
           effect: item.effect
         })) || []
       } catch {
