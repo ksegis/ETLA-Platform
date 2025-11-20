@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, createContext, useContext } from 'react'
 import Shepherd from 'shepherd.js'
+import type { Tour } from 'shepherd.js'
 import 'shepherd.js/dist/css/shepherd.css'
 
 export interface TourStep {
@@ -21,7 +22,7 @@ export interface TourButton {
 }
 
 interface TourContextType {
-  tour: Shepherd.Tour | null
+  tour: Tour | null
   startTour: () => void
   isActive: boolean
 }
@@ -49,7 +50,7 @@ export function TourProvider({
   onComplete, 
   onSkip 
 }: TourProviderProps) {
-  const [tour, setTour] = useState<Shepherd.Tour | null>(null)
+  const [tour, setTour] = useState<Tour | null>(null)
   const [isActive, setIsActive] = useState(false)
 
   useEffect(() => {
