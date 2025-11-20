@@ -116,7 +116,7 @@ export default function TenantManagementPage() {
   useEffect(() => {
     if (isAuthenticated && hasAdminAccess) {
       loadTenants();
-      loadAllUsers();
+      // loadAllUsers(); // Temporarily disabled - requires database view or RPC function
       loadTemplates();
       loadParentTenants();
     } else {
@@ -149,24 +149,25 @@ export default function TenantManagementPage() {
     }
   };
 
-  const loadAllUsers = async () => {
-    try {
-      console.log("Attempting to load all users...");
-      const { data, error } = await supabase
-        .from("auth.users")
-        .select("id, email, created_at")
-        .order("email");
-
-      if (error) {
-        console.error("Error loading all users:", error);
-        throw error;
-      }
-      setAllUsers(data || []);
-      console.log("All users loaded successfully:", data);
-    } catch (error) {
-      console.error("Caught error loading all users:", error);
-    }
-  };
+  // Temporarily disabled - requires database view or RPC function to access auth.users
+  // const loadAllUsers = async () => {
+  //   try {
+  //     console.log("Attempting to load all users...");
+  //     const { data, error } = await supabase
+  //       .from("auth.users")
+  //       .select("id, email, created_at")
+  //       .order("email");
+  //
+  //     if (error) {
+  //       console.error("Error loading all users:", error);
+  //       throw error;
+  //     }
+  //     setAllUsers(data || []);
+  //     console.log("All users loaded successfully:", data);
+  //   } catch (error) {
+  //     console.error("Caught error loading all users:", error);
+  //   }
+  // };
 
   // Phase 2: Load tenant templates
   const loadTemplates = async () => {
@@ -208,20 +209,11 @@ export default function TenantManagementPage() {
 
       if (error) throw error;
 
-      const tenantUsersWithEmails = await Promise.all(
-        (data || []).map(async (tu: any) => {
-          const { data: userData } = await supabase
-            .from("auth.users")
-            .select("email")
-            .eq("id", tu.user_id)
-            .single();
-
-          return {
-            ...tu,
-            email: userData?.email || "Unknown",
-          };
-        }),
-      );
+      // Map users with user_id as email placeholder (auth.users not directly accessible)
+      const tenantUsersWithEmails = (data || []).map((tu: any) => ({
+        ...tu,
+        email: tu.user_id, // Temporarily using user_id - needs database view or RPC
+      }));
 
       setUsers(tenantUsersWithEmails);
     } catch (error) {
