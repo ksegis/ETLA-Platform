@@ -1,6 +1,6 @@
-import type { Step } from 'shepherd.js'
+import type Shepherd from 'shepherd.js'
 
-export const customerProjectDashboardTour: Step.StepOptions[] = [
+export const customerProjectDashboardTour: Shepherd.Step.StepOptions[] = [
   {
     id: 'welcome',
     title: 'Welcome to Your Project Dashboard',
