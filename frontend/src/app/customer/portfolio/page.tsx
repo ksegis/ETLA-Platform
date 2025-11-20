@@ -59,7 +59,7 @@ interface ProjectSummary {
 
 export default function CustomerPortfolioPage() {
   const { user } = useAuth()
-  const { currentTenant } = useTenant()
+  const { selectedTenant } = useTenant()
   const [loading, setLoading] = useState(true)
   const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -67,15 +67,15 @@ export default function CustomerPortfolioPage() {
   const [subClientFilter, setSubClientFilter] = useState<string>('all')
 
   useEffect(() => {
-    if (currentTenant?.id) {
+    if (selectedTenant?.id) {
       fetchPortfolioData()
     }
-  }, [currentTenant?.id])
+  }, [selectedTenant?.id])
 
   const fetchPortfolioData = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/customer/portfolio?tenant_id=${currentTenant?.id}`)
+      const response = await fetch(`/api/customer/portfolio?tenant_id=${selectedTenant?.id}`)
       if (!response.ok) throw new Error('Failed to fetch portfolio data')
       
       const data = await response.json()
