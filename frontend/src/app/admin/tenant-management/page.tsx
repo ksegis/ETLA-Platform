@@ -527,7 +527,7 @@ export default function TenantManagementPage() {
                             tenant.tenant_tier === 3 ? "bg-purple-100 text-purple-800" : 
                             "bg-gray-100 text-gray-800"
                           }`}>
-                            {TenantHierarchyService.getTierDisplay(tenant.tenant_tier)}
+                            {TenantHierarchyService.getTierName(tenant.tenant_tier)}
                           </span>
                           {tenant.current_child_count > 0 && (
                             <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
