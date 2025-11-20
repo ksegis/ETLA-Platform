@@ -567,49 +567,51 @@ export default function TenantManagementPage() {
                     users.map((user: any) => (
                       <div
                         key={user.id}
-                        className="p-3 border border-gray-200 rounded-lg"
+                        className="p-2.5 border border-gray-200 rounded-lg space-y-2"
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium text-gray-900">
+                        {/* User info */}
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">
                               {user.full_name || user.email}
                             </h4>
                             {user.full_name && (
-                              <p className="text-sm text-gray-500">
+                              <p className="text-xs text-gray-500 truncate">
                                 {user.email}
                               </p>
                             )}
-                            <p className="text-sm text-gray-500">
-                              Added:{" "}
-                              {new Date(user.created_at).toLocaleDateString()}
+                            <p className="text-xs text-gray-500">
+                              Added: {new Date(user.created_at).toLocaleDateString()}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className={getRoleColor(user.role)}>
-                              {user.role}
-                            </span>
-                            <select
-                              value={user.role}
-                              onChange={(e: any) =>
-                                updateUserRole(user.id, e.target.value)
-                              }
-                              className="text-xs border border-gray-300 rounded px-2 py-1"
-                            >
-                              <option value="host_admin">Host Admin</option>
-                              <option value="program_manager">
-                                Program Manager
-                              </option>
-                              <option value="client_admin">Client Admin</option>
-                              <option value="client_user">Client User</option>
-                            </select>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeUserFromTenant(user.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeUserFromTenant(user.id)}
+                            className="flex-shrink-0"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                          </Button>
+                        </div>
+                        
+                        {/* Role management */}
+                        <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+                          <span className="text-xs text-gray-600">Role:</span>
+                          <span className={`${getRoleColor(user.role)} flex-shrink-0`}>
+                            {user.role}
+                          </span>
+                          <select
+                            value={user.role}
+                            onChange={(e: any) =>
+                              updateUserRole(user.id, e.target.value)
+                            }
+                            className="flex-1 text-xs border border-gray-300 rounded px-2 py-1"
+                          >
+                            <option value="host_admin">Host Admin</option>
+                            <option value="program_manager">Program Manager</option>
+                            <option value="client_admin">Client Admin</option>
+                            <option value="client_user">Client User</option>
+                          </select>
                         </div>
                       </div>
                     ))
