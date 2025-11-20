@@ -158,7 +158,7 @@ export default function CustomerPortfolioPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
             Portfolio Overview
-            <InfoTooltip content={TOOLTIP_CONTENT.customer?.portfolio || 'View all projects across your organization'} />
+            <InfoTooltip content={TOOLTIP_CONTENT.customer?.portfolio?.content || 'View all projects across your organization'} />
           </h1>
           <p className="text-gray-600 mt-1">
             Consolidated view of all projects across your sub-clients
