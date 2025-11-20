@@ -123,7 +123,8 @@ export default function TenantManagementPage() {
           await Promise.all([
             loadTenants(),
             loadTemplates(),
-            loadParentTenants()
+            loadParentTenants(),
+            loadAllUsers()
           ]);
         } catch (error) {
           console.error('Error loading initial data:', error);
@@ -163,25 +164,31 @@ export default function TenantManagementPage() {
     }
   };
 
-  // Temporarily disabled - requires database view or RPC function to access auth.users
-  // const loadAllUsers = async () => {
-  //   try {
-  //     console.log("Attempting to load all users...");
-  //     const { data, error } = await supabase
-  //       .from("auth.users")
-  //       .select("id, email, created_at")
-  //       .order("email");
-  //
-  //     if (error) {
-  //       console.error("Error loading all users:", error);
-  //       throw error;
-  //     }
-  //     setAllUsers(data || []);
-  //     console.log("All users loaded successfully:", data);
-  //   } catch (error) {
-  //     console.error("Caught error loading all users:", error);
-  //   }
-  // };
+  // Load all users from tenant_users_with_email view (gets unique users)
+  const loadAllUsers = async () => {
+    try {
+      console.log("Attempting to load all users...");
+      const { data, error } = await supabase
+        .from("tenant_users_with_email")
+        .select("user_id, email, full_name")
+        .order("email");
+
+      if (error) {
+        console.error("Error loading all users:", error);
+        throw error;
+      }
+      
+      // Get unique users by user_id
+      const uniqueUsers = Array.from(
+        new Map(data?.map(u => [u.user_id, { id: u.user_id, email: u.email, full_name: u.full_name }]) || []).values()
+      );
+      
+      setAllUsers(uniqueUsers as AuthUser[]);
+      console.log("All users loaded successfully:", uniqueUsers);
+    } catch (error) {
+      console.error("Caught error loading all users:", error);
+    }
+  };
 
   // Phase 2: Load tenant templates
   const loadTemplates = async () => {
@@ -672,42 +679,46 @@ export default function TenantManagementPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="user-select" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                <Label htmlFor="user-select" className="md:text-right">
                   User
                 </Label>
-                <Select
-                  value={selectedUserId}
-                  onValueChange={setSelectedUserId}
-                >
-                  <SelectTrigger id="user-select">
-                    <SelectValue placeholder="Select a user" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allUsers.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {u.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="md:col-span-3">
+                  <Select
+                    value={selectedUserId}
+                    onValueChange={setSelectedUserId}
+                  >
+                    <SelectTrigger id="user-select" className="w-full">
+                      <SelectValue placeholder="Select a user" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allUsers.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.full_name ? `${u.full_name} (${u.email})` : u.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role-select" className="text-right">
+              <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                <Label htmlFor="role-select" className="md:text-right">
                   Role
                 </Label>
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
-                  <SelectTrigger id="role-select">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="program_manager">
-                      Program Manager
-                    </SelectItem>
-                    <SelectItem value="client_admin">Client Admin</SelectItem>
-                    <SelectItem value="client_user">Client User</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="md:col-span-3">
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger id="role-select" className="w-full">
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="host_admin">Host Admin</SelectItem>
+                      <SelectItem value="program_manager">Program Manager</SelectItem>
+                      <SelectItem value="client_admin">Client Admin</SelectItem>
+                      <SelectItem value="client_user">Client User</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter>
