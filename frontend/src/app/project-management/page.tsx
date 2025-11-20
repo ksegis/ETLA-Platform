@@ -3369,7 +3369,6 @@ export default function ProjectManagementPage() {
             />
           </div>
         )}
-      </div>
 
       {/* Create Project Modal */}
       {isCreateModalOpen && (
