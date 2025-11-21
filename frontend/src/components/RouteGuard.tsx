@@ -83,6 +83,18 @@ const ROUTE_PERMISSIONS: Record<
     feature: "system_settings",
     permission: PERMISSIONS.TENANT_UPDATE,
   },
+  "/configuration/system-settings": {
+    feature: "system_settings",
+    permission: PERMISSIONS.VIEW,
+  },
+  "/configuration/api-configuration": {
+    feature: "api_config",
+    permission: PERMISSIONS.VIEW,
+  },
+  "/configuration/integration-settings": {
+    feature: "integrations",
+    permission: PERMISSIONS.VIEW,
+  },
   "/audit-logs": {
     feature: "audit_log",
     permission: PERMISSIONS.TENANT_READ,

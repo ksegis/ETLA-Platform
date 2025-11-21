@@ -165,9 +165,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       textColor: 'text-purple-900',
       requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE,
       items: [
-        { name: 'System Settings', href: '/settings', icon: Settings, requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE },
-        { name: 'API Configuration', href: '/api-config', icon: Settings, requiredPermission: PERMISSIONS.API_CONFIG_MANAGE },
-        { name: 'Integration Settings', href: '/integrations', icon: Settings, requiredPermission: PERMISSIONS.INTEGRATION_MANAGE },
+        { name: 'System Settings', href: '/configuration/system-settings', icon: Settings, requiredPermission: PERMISSIONS.VIEW },
+        { name: 'API Configuration', href: '/configuration/api-configuration', icon: Settings, requiredPermission: PERMISSIONS.VIEW },
+        { name: 'Integration Settings', href: '/configuration/integration-settings', icon: Settings, requiredPermission: PERMISSIONS.VIEW },
       ],
     },
     {
@@ -300,6 +300,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (href.startsWith('/validation')) return FEATURES.DATA_VALIDATION
     
     // Configuration
+    if (href.startsWith('/configuration/system-settings')) return FEATURES.SYSTEM_SETTINGS
+    if (href.startsWith('/configuration/api-configuration')) return FEATURES.API_CONFIG
+    if (href.startsWith('/configuration/integration-settings')) return FEATURES.INTEGRATIONS
     if (href.startsWith('/system-health')) return FEATURES.SYSTEM_HEALTH
     if (href.startsWith('/settings')) return FEATURES.SYSTEM_SETTINGS
     if (href.startsWith('/api-config')) return FEATURES.API_CONFIG
