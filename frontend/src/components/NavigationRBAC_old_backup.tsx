@@ -10,7 +10,7 @@ interface NavItem {
   label: string;
   href: string;
   icon?: React.ReactNode;
-  requiredPermission?: string;
+  requiredPermission?: string; // Use requiredPermission directly
   feature?: string;
   children?: NavItem[];
 }
@@ -89,7 +89,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Data Management",
     href: "/data-management",
     icon: "🗄️",
-    requiredPermission: PERMISSIONS.TENANT_UPDATE,
+    requiredPermission: PERMISSIONS.TENANT_UPDATE, // Assuming data management is a high-level permission
     children: [
       {
         id: "migration-workbench",
@@ -116,7 +116,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Benefits & HR",
     href: "/benefits",
     icon: "👥",
-    requiredPermission: PERMISSIONS.USER_READ,
+    requiredPermission: PERMISSIONS.USER_READ, // Assuming benefits viewing requires user read
     children: [
       {
         id: "employee-records",
@@ -137,7 +137,7 @@ const NAVIGATION_ITEMS: NavItem[] = [
     label: "Administration",
     href: "/admin",
     icon: "⚙️",
-    requiredPermission: PERMISSIONS.USER_READ,
+    requiredPermission: PERMISSIONS.USER_READ, // General admin access requires user read
     children: [
       {
         id: "access-control",
@@ -187,85 +187,75 @@ function NavigationItem({
   const pathname = usePathname();
   const { checkPermission, currentUserRole } = usePermissions();
 
-  // Check if user has permission for this item
-  const hasPermission = () => {
-    if (!item.requiredPermission) return true; // No permission required = always accessible
-    return checkPermission(item.feature, item.requiredPermission);
+  // Check if item should be visible based on requiredPermission
+  const isVisible = () => {    if (item.requiredPermission && !checkPermission(item.feature, item.requiredPermission)) {
+      return false;
+    }
+    return true;
   };
 
-  const isAuthorized = hasPermission();
+  if (!isVisible()) return null;
+
   const isActive =
     pathname === item.href || pathname.startsWith(item.href + "/");
   const hasChildren = item.children && item.children.length > 0;
+
+  // Filter visible children
+  const visibleChildren =
+    item.children?.filter((child) => {
+     if (child.requiredPermission && !checkPermission(child.feature, child.requiredPermission)) {
+        return false;
+      }
+      return true;
+    }) || [];
 
   const baseClasses = `
     flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200
     ${level > 0 ? "ml-4" : ""}
   `;
 
-  // Different styling for authorized vs unauthorized items
-  const stateClasses = isAuthorized
-    ? isActive
-      ? "bg-blue-100 text-blue-700 border-r-2 border-blue-500"
-      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-    : "text-gray-300 bg-gray-50 cursor-not-allowed opacity-60";
-
-  // Render as disabled div if not authorized, Link if authorized
-  const content = (
-    <>
-      {item.icon && (
-        <span className="mr-3 text-lg" role="img" aria-label={item.label}>
-          {item.icon}
-        </span>
-      )}
-      {!isCollapsed && (
-        <>
-          <span className="flex-1">{item.label}</span>
-          {!isAuthorized && (
-            <span className="ml-2 text-xs" title="Access restricted">
-              🔒
-            </span>
-          )}
-          {hasChildren && isAuthorized && (
-            <span className="ml-2">{isActive ? "▼" : "▶"}</span>
-          )}
-        </>
-      )}
-    </>
-  );
+  const activeClasses = isActive
+    ? "bg-blue-100 text-blue-700 border-r-2 border-blue-500"
+    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900";
 
   return (
     <div>
-      {isAuthorized ? (
-        <Link
-          href={item.href}
-          className={`${baseClasses} ${stateClasses}`}
-          title={isCollapsed ? item.label : undefined}
-        >
-          {content}
-        </Link>
-      ) : (
-        <div
-          className={`${baseClasses} ${stateClasses}`}
-          title={`Access restricted. Contact your administrator for ${item.label} access.`}
-        >
-          {content}
-        </div>
-      )}
+      <Link
+        href={item.href}
+        className={`${baseClasses} ${activeClasses}`}
+        title={isCollapsed ? item.label : undefined}
+      >
+        {item.icon && (
+          <span className="mr-3 text-lg" role="img" aria-label={item.label}>
+            {item.icon}
+          </span>
+        )}
+        {!isCollapsed && (
+          <>
+            <span className="flex-1">{item.label}</span>
+            {hasChildren && visibleChildren.length > 0 && (
+              <span className="ml-2">{isActive ? "▼" : "▶"}</span>
+            )}
+          </>
+        )}
+      </Link>
 
-      {/* Render children if expanded, has children, and is active */}
-      {!isCollapsed && hasChildren && isActive && isAuthorized && (
-        <div className="mt-1 space-y-1">
-          {item.children!.map((child) => (
-            <NavigationItem
-              key={child.id}
-              item={child}
-              level={level + 1}
-              isCollapsed={isCollapsed}
-            />
-          ))}
-        </div>
-      )}
+      {/* Render children if expanded and has visible children */}
+      {!isCollapsed &&
+        hasChildren &&
+        visibleChildren.length > 0 &&
+        isActive && (
+          <div className="mt-1 space-y-1">
+            {visibleChildren.map((child) => (
+              <NavigationItem
+                key={child.id}
+                item={child}
+                level={level + 1}
+                isCollapsed={isCollapsed}
+              />
+            ))}
+          </div>
+        )}
     </div>
   );
 }
@@ -300,12 +290,12 @@ export function NavigationRBAC({
         <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-200 mb-4">
           <div className="flex items-center justify-between">
             <span>Role: {currentUserRole}</span>
-            <span className="text-xs text-gray-400">🔒 = Restricted</span>
+            {/* Admin/Host Admin badges can be derived from currentUserRole if needed */}
           </div>
         </div>
       )}
 
-      {/* Navigation items - ALL items are shown */}
+      {/* Navigation items */}
       {NAVIGATION_ITEMS.map((item) => (
         <NavigationItem key={item.id} item={item} isCollapsed={isCollapsed} />
       ))}
@@ -403,7 +393,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "Upload File",
     href: "/file-upload",
     icon: "📁",
-    requiredPermission: PERMISSIONS.TENANT_UPDATE,
+    requiredPermission: PERMISSIONS.TENANT_UPDATE, // Assuming file upload is a high-level permission
     className: "bg-purple-600 hover:bg-purple-700 text-white",
   },
 ];
@@ -442,3 +432,4 @@ export function QuickActionsRBAC({ className = "" }: { className?: string }) {
 }
 
 export default NavigationRBAC;
+
