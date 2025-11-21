@@ -197,21 +197,27 @@ export class RBACAdminService {
         throw new Error(`User ${userId} is not a member of tenant ${tenantId}`)
       }
 
-      // Get user overrides (if table exists)
+      // Get user overrides from new role_permission_overrides table
       let overrides: Array<{ permissionId: string; effect: 'allow' | 'deny' }> = []
       try {
         const { data: overrideData } = await supabase
-          .from('user_tenant_permissions')
-          .select('permissions, effect')
+          .from('role_permission_overrides')
+          .select('feature_key, can_create, can_read, can_update, can_delete')
           .eq('user_id', userId)
           .eq('tenant_id', tenantId)
 
-        overrides = overrideData?.map((item: any) => ({
-          permissionId: item.permissions,
-          effect: item.effect
-        })) || []
-      } catch {
-        // Table might not exist yet, ignore error
+        // Convert new format to old format for compatibility
+        overrides = overrideData?.flatMap((item: any) => {
+          const perms = []
+          if (item.can_create) perms.push({ permissionId: `${item.feature_key}:create`, effect: 'allow' as const })
+          if (item.can_read) perms.push({ permissionId: `${item.feature_key}:read`, effect: 'allow' as const })
+          if (item.can_update) perms.push({ permissionId: `${item.feature_key}:update`, effect: 'allow' as const })
+          if (item.can_delete) perms.push({ permissionId: `${item.feature_key}:delete`, effect: 'allow' as const })
+          return perms
+        }) || []
+      } catch (err) {
+        // Table might not exist yet or query failed, ignore error
+        console.warn('Failed to load permission overrides:', err)
       }
 
       return {
