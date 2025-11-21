@@ -31,6 +31,86 @@ export class RBACAdminService {
   }
 
   /**
+   * List ALL users across ALL tenants (for host admins)
+   */
+  static async listAllUsers(
+    options: {
+      page?: number;
+      limit?: number;
+      search?: string;
+    } = {}
+  ): Promise<{
+    users: Array<{
+      userId: string;
+      email: string;
+      display_name?: string;
+      role: string;
+      is_active: boolean;
+      tenant_id: string;
+      tenant_name: string;
+    }>;
+    total: number;
+  }> {
+    try {
+      const { page = 1, limit = 200, search } = options
+      const offset = (page - 1) * limit
+
+      let query = supabase
+        .from('tenant_users')
+        .select(`
+          user_id,
+          tenant_id,
+          role,
+          is_active,
+          profiles!tenant_users_user_id_fkey(
+            id,
+            email,
+            full_name
+          ),
+          tenants!tenant_users_tenant_id_fkey(
+            id,
+            name
+          )
+        `)
+
+      // Add search filter if provided
+      if (search) {
+        query = query.or(`profiles.email.ilike.%${search}%,profiles.full_name.ilike.%${search}%,tenants.name.ilike.%${search}%`)
+      }
+
+      // Get total count
+      const { count } = await supabase
+        .from('tenant_users')
+        .select('*', { count: 'exact', head: true })
+
+      // Get paginated results
+      const { data, error } = await query
+        .range(offset, offset + limit - 1)
+        .order('profiles(email)')
+
+      if (error) throw error
+
+      const users = data?.map((item: any) => ({
+        userId: item.user_id,
+        email: item.profiles?.email || 'unknown@example.com',
+        display_name: item.profiles?.full_name || item.profiles?.email || 'Unknown User',
+        role: item.role,
+        is_active: item.is_active,
+        tenant_id: item.tenant_id,
+        tenant_name: item.tenants?.name || 'Unknown Tenant'
+      })) || []
+
+      return {
+        users,
+        total: count || 0
+      }
+    } catch (error) {
+      console.error('Error listing all users:', error)
+      throw error
+    }
+  }
+
+  /**
    * List users for a specific tenant with pagination and search.
    */
   static async listTenantUsers(

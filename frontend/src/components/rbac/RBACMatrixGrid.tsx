@@ -129,6 +129,22 @@ export default function RBACMatrixGrid({
       })
     )
 
+    // Tenant column
+    cols.push(
+      columnHelper.accessor('tenant_name' as any, {
+        id: 'tenant',
+        header: 'Tenant',
+        size: 150,
+        cell: ({ row }) => (
+          <div className="p-3">
+            <div className="text-sm text-gray-900 truncate">
+              {(row.original as any).tenant_name || 'N/A'}
+            </div>
+          </div>
+        )
+      })
+    )
+
     // Permission group columns
     permissionGroups.forEach((group: any) => {
       const isExpanded = expandedGroups.has(group.resource)

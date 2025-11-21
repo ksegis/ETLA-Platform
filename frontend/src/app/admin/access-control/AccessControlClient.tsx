@@ -162,43 +162,43 @@ export default function AccessControlClient() {
     })();
   }, [selectedTenant]);
 
-  // Load users
+  // Load users - now loads ALL users across all tenants
   useEffect(() => {
-    if (!selectedTenant) return;
+    if (!isAuthenticated || !currentUserId) return;
     setLoading(true);
     (async () => {
       try {
-        // Get tenant users
-        const result = await RBACAdminService.listTenantUsers(selectedTenant.id, {
-          search: searchQuery,
-          limit: 100
-        });
+        // Get ALL users across all tenants (or filter by selected tenant)
+        const result = selectedTenant 
+          ? await RBACAdminService.listTenantUsers(selectedTenant.id, {
+              search: searchQuery,
+              limit: 200
+            })
+          : await RBACAdminService.listAllUsers({
+              search: searchQuery,
+              limit: 200
+            });
 
-        const tenantUsers = result?.users || [];
+        const allUsers = result?.users || [];
 
-        if (tenantUsers.length === 0) {
+        if (allUsers.length === 0) {
           if (mounted.current) {
             setUsers([]);
           }
           return;
         }
 
-        // Get user IDs
-        const userIds = tenantUsers.map(u => u.userId);
-
-        // Get effective permissions for all users
-        const effectivePermissions = await RBACAdminService.getEffectivePermissions(selectedTenant.id, userIds);
-
-        // Build matrix users
-        const matrixUsers: RBACMatrixRowUser[] = tenantUsers.map(user => {
-          const userPerms = effectivePermissions.get(user.userId) || [];
+        // Build matrix users with tenant info
+        const matrixUsers: RBACMatrixRowUser[] = allUsers.map(user => {
           return {
             userId: user.userId,
             email: user.email,
             display_name: user.display_name || user.email,
             role: user.role,
             is_active: user.is_active,
-            cells: userPerms
+            tenant_id: (user as any).tenant_id,
+            tenant_name: (user as any).tenant_name,
+            cells: [] // Permissions will be loaded on demand when user clicks
           };
         });
 
@@ -214,7 +214,7 @@ export default function AccessControlClient() {
         mounted.current && setLoading(false);
       }
     })();
-  }, [selectedTenant, searchQuery]);
+  }, [isAuthenticated, currentUserId, selectedTenant, searchQuery]);
 
   // Load user detail when selected
   useEffect(() => {
@@ -355,17 +355,18 @@ export default function AccessControlClient() {
             className="w-[200px]"
           />
           <Select
-            value={selectedTenant?.id || ''}
+            value={selectedTenant?.id || 'all'}
             onValueChange={(tenantId) => {
-              const t = tenants.find(x => x.id === tenantId) || null;
+              const t = tenantId === 'all' ? null : tenants.find(x => x.id === tenantId) || null;
               setSelectedTenant(t);
               setSelectedUserId(null);
             }}
           >
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select Tenant" />
+              <SelectValue placeholder="All Tenants" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Tenants</SelectItem>
               {tenants.map(t => (
                 <SelectItem key={t.id} value={t.id}>
                   {t.name}
@@ -393,23 +394,16 @@ export default function AccessControlClient() {
               </TabsList>
 
               <TabsContent value="users" className="space-y-4">
-                {selectedTenant && (
-                  <div className="overflow-x-auto">
-                    <RBACMatrixGrid
-                      users={users}
-                      permissionCatalog={permissionCatalog}
-                      onCellClick={handleCellClick}
-                      onUserClick={handleUserClick}
-                      loading={loading}
-                      draftChanges={draftChanges}
-                    />
-                  </div>
-                )}
-                {!selectedTenant && (
-                  <div className="text-center py-8 text-gray-500">
-                    Please select a tenant to view users
-                  </div>
-                )}
+                <div className="overflow-x-auto">
+                  <RBACMatrixGrid
+                    users={users}
+                    permissionCatalog={permissionCatalog}
+                    onCellClick={handleCellClick}
+                    onUserClick={handleUserClick}
+                    loading={loading}
+                    draftChanges={draftChanges}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="roles" className="space-y-4">
