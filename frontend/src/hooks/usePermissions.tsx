@@ -1,6 +1,7 @@
-// src/hooks/usePermissions.tsx
+'use client'
 import { useEffect, useState, ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 /* =========================
  * Features
@@ -200,11 +201,88 @@ export function usePermissions() {
       setIsLoading(false)
       return
     }
-    const role = (tenantUser.role ?? ROLES.CLIENT_USER) as Role
-    const rolePermissions =
-      DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER]
-    setUserPermissions(rolePermissions.permissions)
-    setIsLoading(false)
+
+    // Load permissions from database
+    async function loadPermissionsFromDatabase() {
+      try {
+        const role = (tenantUser.role ?? ROLES.CLIENT_USER) as Role
+
+        // Get role_id from role_definitions
+        const { data: roleData, error: roleError } = await supabase
+          .from('role_definitions')
+          .select('id')
+          .eq('role_key', role)
+          .maybeSingle()
+
+        if (roleError) {
+          console.error('Error loading role:', roleError)
+          // Fallback to hardcoded permissions
+          const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER]
+          setUserPermissions(rolePermissions.permissions)
+          setIsLoading(false)
+          return
+        }
+
+        if (!roleData) {
+          console.warn('Role not found in database, using hardcoded permissions')
+          const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER]
+          setUserPermissions(rolePermissions.permissions)
+          setIsLoading(false)
+          return
+        }
+
+        // Load feature permissions for this role
+        const { data: permissions, error: permError } = await supabase
+          .from('role_feature_permissions')
+          .select('feature_key, can_create, can_read, can_update, can_delete, can_manage')
+          .eq('role_id', roleData.id)
+
+        if (permError) {
+          console.error('Error loading permissions:', permError)
+          // Fallback to hardcoded permissions
+          const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER]
+          setUserPermissions(rolePermissions.permissions)
+          setIsLoading(false)
+          return
+        }
+
+        // Convert database permissions to RolePermissionEntry format
+        const permissionEntries: RolePermissionEntry[] = []
+        permissions?.forEach((perm) => {
+          const feature = perm.feature_key as Feature
+          
+          // Add each CRUD permission as a separate entry
+          if (perm.can_create) {
+            permissionEntries.push({ feature, permission: CORE.CREATE })
+          }
+          if (perm.can_read) {
+            permissionEntries.push({ feature, permission: CORE.VIEW })
+          }
+          if (perm.can_update) {
+            permissionEntries.push({ feature, permission: CORE.UPDATE })
+          }
+          if (perm.can_delete) {
+            permissionEntries.push({ feature, permission: CORE.DELETE })
+          }
+          if (perm.can_manage) {
+            permissionEntries.push({ feature, permission: CORE.MANAGE })
+          }
+        })
+
+        console.log('📊 Loaded permissions from database:', permissionEntries)
+        setUserPermissions(permissionEntries)
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Error loading permissions from database:', error)
+        // Fallback to hardcoded permissions
+        const role = (tenantUser.role ?? ROLES.CLIENT_USER) as Role
+        const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER]
+        setUserPermissions(rolePermissions.permissions)
+        setIsLoading(false)
+      }
+    }
+
+    loadPermissionsFromDatabase()
   }, [isAuthenticated, tenantUser])
 
   function normalizePermission(p: Permission): Permission {
