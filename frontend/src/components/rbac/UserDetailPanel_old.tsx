@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { supabase } from '@/lib/supabase';
 
 interface UserDetailPanelProps {
   userId: string;
@@ -10,7 +9,6 @@ interface UserDetailPanelProps {
   loading: boolean;
   isHostAdmin: boolean;
   isAdmin: boolean;
-  onUserUpdated?: () => void; // Callback to refresh user list
 }
 
 export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({ 
@@ -20,65 +18,8 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
   userDetail, 
   loading,
   isHostAdmin,
-  isAdmin,
-  onUserUpdated
+  isAdmin 
 }) => {
-  const [actionLoading, setActionLoading] = useState(false);
-
-  const handleEditUser = () => {
-    // TODO: Open edit user modal
-    alert('Edit User modal will be implemented. For now, you can edit users in the database directly.');
-  };
-
-  const handleResetPassword = async () => {
-    if (!confirm(`Send password reset email to ${userDetail.email}?`)) {
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      // Use Supabase auth to send password reset email
-      const { error } = await supabase.auth.resetPasswordForEmail(userDetail.email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
-
-      if (error) throw error;
-
-      alert(`Password reset email sent to ${userDetail.email}`);
-    } catch (error: any) {
-      console.error('Error sending password reset:', error);
-      alert(`Failed to send password reset email: ${error.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDeactivateUser = async () => {
-    if (!confirm(`Are you sure you want to deactivate ${userDetail.email}?`)) {
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const { error } = await supabase
-        .from('tenant_users')
-        .update({ is_active: false, updated_at: new Date().toISOString() })
-        .eq('user_id', userId)
-        .eq('tenant_id', tenantId);
-
-      if (error) throw error;
-
-      alert(`User ${userDetail.email} has been deactivated`);
-      onUserUpdated?.(); // Refresh the user list
-      onClose(); // Close the detail panel
-    } catch (error: any) {
-      console.error('Error deactivating user:', error);
-      alert(`Failed to deactivate user: ${error.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="border-t bg-gray-50 p-6">
@@ -152,7 +93,7 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
           <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">Role & Permissions</h3>
           <div>
             <label className="text-xs text-gray-500 uppercase block">Role</label>
-            <p className="text-sm font-medium mt-1 capitalize">{userDetail.role?.replace(/_/g, ' ') || 'N/A'}</p>
+            <p className="text-sm font-medium mt-1 capitalize">{userDetail.role?.replace('_', ' ') || 'N/A'}</p>
           </div>
           <div>
             <label className="text-xs text-gray-500 uppercase block">Permission Scope</label>
@@ -213,32 +154,14 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">Actions</h3>
             <div className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                size="sm"
-                onClick={handleEditUser}
-                disabled={actionLoading}
-              >
+              <Button variant="outline" className="w-full" size="sm">
                 Edit User
               </Button>
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                size="sm"
-                onClick={handleResetPassword}
-                disabled={actionLoading}
-              >
+              <Button variant="outline" className="w-full" size="sm">
                 Reset Password
               </Button>
-              {isHostAdmin && userDetail.is_active && (
-                <Button 
-                  variant="destructive" 
-                  className="w-full" 
-                  size="sm"
-                  onClick={handleDeactivateUser}
-                  disabled={actionLoading}
-                >
+              {isHostAdmin && (
+                <Button variant="destructive" className="w-full" size="sm">
                   Deactivate User
                 </Button>
               )}
@@ -249,3 +172,4 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
     </div>
   );
 };
+
