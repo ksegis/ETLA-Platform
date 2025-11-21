@@ -22,6 +22,7 @@ export const FEATURES = {
 
   SYSTEM_SETTINGS: "system-settings",
   API_CONFIG: "api-config",
+  API_CONFIGURATION: "api-configuration",
   INTEGRATIONS: "integrations",
   SYSTEM_HEALTH: "system-health",
 

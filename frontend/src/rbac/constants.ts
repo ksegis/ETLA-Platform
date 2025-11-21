@@ -64,6 +64,7 @@ export const FEATURES = {
   AUDIT: F.AUDIT ?? "audit",
   SYSTEM_HEALTH: F.SYSTEM_HEALTH ?? "system-health",
   API_CONFIG: F.API_CONFIG ?? "api-config",
+  API_CONFIGURATION: F.API_CONFIGURATION ?? "api-configuration",
   INTEGRATIONS: F.INTEGRATIONS ?? "integrations",
 
   // Directory / HR
