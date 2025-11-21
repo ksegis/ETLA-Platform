@@ -220,18 +220,32 @@ export class RBACAdminService {
         console.warn('Failed to load permission overrides:', err)
       }
 
+      // Get tenant information
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('id, name, tenant_type')
+        .eq('id', tenantId)
+        .maybeSingle()
+
+      // Return flat structure that matches UserDetailPanel expectations
       return {
+        userId: userId,
+        email: profile?.email || 'unknown@example.com',
         profile: {
-          ...(profile || { id: userId, email: 'unknown@example.com' }),
-          role: membership.role as any // Cast to UserRole type
+          id: userId,
+          email: profile?.email || 'unknown@example.com',
+          full_name: profile?.full_name || null,
+          first_name: profile?.first_name || null,
+          last_name: profile?.last_name || null,
+          phone: profile?.phone || null
         },
-        membership: {
-          role: membership.role,
-          is_active: membership.is_active,
-          tenant_id: membership.tenant_id
-        },
+        role: membership.role,
+        is_active: membership.is_active,
+        tenant: tenant || null,
+        permission_scope: 'tenant_scope',
+        permissions: overrides,
         overrides,
-        roles: [membership.role] // For now, users have single role
+        roles: [membership.role]
       }
     } catch (error) {
       console.error('Error getting user detail:', error)
