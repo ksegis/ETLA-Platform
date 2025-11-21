@@ -70,7 +70,9 @@ export const FEATURES = {
   EMPLOYEES: F.EMPLOYEES ?? F.EMPLOYEE_RECORDS ?? "employee-records",
   EMPLOYEE_RECORDS: F.EMPLOYEE_RECORDS ?? "employee-records",
   BENEFITS_MANAGEMENT: F.BENEFITS_MANAGEMENT ?? "benefits-management",
+  BENEFITS: F.BENEFITS ?? F.BENEFITS_MANAGEMENT ?? "benefits-management", // alias
   PAYROLL_PROCESSING: F.PAYROLL_PROCESSING ?? "payroll-processing",
+  PAYROLL: F.PAYROLL ?? F.PAYROLL_PROCESSING ?? "payroll-processing", // alias
 
   // Talent Management
   TALENT_DASHBOARD: F.TALENT_DASHBOARD ?? "talent-dashboard",
