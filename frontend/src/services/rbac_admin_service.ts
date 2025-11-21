@@ -234,10 +234,10 @@ export class RBACAdminService {
         profile: {
           id: userId,
           email: profile?.email || 'unknown@example.com',
-          full_name: profile?.full_name || null,
-          first_name: profile?.first_name || null,
-          last_name: profile?.last_name || null,
-          phone: profile?.phone || null
+          full_name: (profile as any)?.full_name || null,
+          first_name: (profile as any)?.first_name || null,
+          last_name: (profile as any)?.last_name || null,
+          phone: (profile as any)?.phone || null
         },
         role: membership.role,
         is_active: membership.is_active,
@@ -246,7 +246,7 @@ export class RBACAdminService {
         permissions: overrides,
         overrides,
         roles: [membership.role]
-      }
+      } as any
     } catch (error) {
       console.error('Error getting user detail:', error)
       throw error
