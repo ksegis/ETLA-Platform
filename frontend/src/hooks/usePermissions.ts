@@ -278,13 +278,12 @@ export function usePermissions() {
     
     // Check 1: Does user's role have permission for this feature?
     const roleHasPermission = userPermissions.some((p) => p.feature === feature);
-    if (!roleHasPermission) return false;
     
-    // Check 2: Does user's tenant have subscription for this feature?
+    // Check 2: Does user's tenant have subscription override for this feature?
     const tenantHasFeature = tenantFeatures.includes(feature);
-    if (!tenantHasFeature) return false;
     
-    return true;
+    // User can access if EITHER role has permission OR tenant has subscription override
+    return roleHasPermission || tenantHasFeature;
   }
 
   function getPermissionLevel(feature: Feature): Permission[] {
