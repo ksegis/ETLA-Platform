@@ -709,7 +709,6 @@ export default function APIConfigurationPage() {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
-                disabled={saving}
                 className="bg-red-600 hover:bg-red-700"
               >
                 {saving ? 'Deleting...' : 'Delete'}
