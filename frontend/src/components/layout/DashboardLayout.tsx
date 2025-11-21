@@ -181,6 +181,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'Access Control', href: '/admin/access-control', icon: Shield, requiredPermission: PERMISSIONS.USER_READ },
         { name: 'Role Management', href: '/role-management', icon: Shield, requiredPermission: PERMISSIONS.ADMIN_ACCESS },
         { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building, requiredPermission: PERMISSIONS.TENANT_READ },
+        { name: 'Tenant Features', href: '/tenant-features', icon: Settings, requiredPermission: PERMISSIONS.ADMIN_ACCESS },
         { name: 'Employee Directory', href: '/employee-directory', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_READ },
         { name: 'Benefits Management', href: '/benefits', icon: Building, requiredPermission: PERMISSIONS.BENEFITS_MANAGE },
         { name: 'Payroll Management', href: '/payroll', icon: DollarSign, requiredPermission: PERMISSIONS.PAYROLL_MANAGE },
