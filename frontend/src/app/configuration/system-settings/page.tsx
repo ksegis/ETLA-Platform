@@ -1,83 +1,78 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { FEATURES, PERMISSIONS } from '@/rbac/constants';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/Card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Settings,
-  Mail,
-  Bell,
-  Flag,
-  Save,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle2,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { FEATURES, PERMISSIONS } from '@/rbac/constants';
+import { Settings, Mail, Bell, Flag, Save, RotateCcw } from 'lucide-react';
 
-interface SystemSetting {
-  id: string;
-  category: string;
-  key: string;
-  value: string | boolean | number;
-  description: string;
-  is_sensitive: boolean;
-  created_at: string;
-  updated_at: string;
+interface SystemSettings {
+  email: {
+    smtp_host: string;
+    smtp_port: string;
+    smtp_username: string;
+    from_email: string;
+    from_name: string;
+  };
+  notifications: {
+    email_enabled: boolean;
+    sync_notifications: boolean;
+    error_notifications: boolean;
+  };
+  features: {
+    auto_sync_enabled: boolean;
+    field_mapping_enabled: boolean;
+    audit_logging_enabled: boolean;
+  };
 }
 
-interface SettingsByCategory {
-  [category: string]: SystemSetting[];
-}
+const defaultSettings: SystemSettings = {
+  email: {
+    smtp_host: '',
+    smtp_port: '587',
+    smtp_username: '',
+    from_email: '',
+    from_name: 'HelixBridge',
+  },
+  notifications: {
+    email_enabled: true,
+    sync_notifications: true,
+    error_notifications: true,
+  },
+  features: {
+    auto_sync_enabled: false,
+    field_mapping_enabled: true,
+    audit_logging_enabled: true,
+  },
+};
 
 export default function SystemSettingsPage() {
   const router = useRouter();
-  const { tenantUser, isAuthenticated, loading: authLoading } = useAuth();
-  const { checkPermission, isLoading: permissionsLoading } = usePermissions();
-
-  const [settings, setSettings] = useState<SystemSetting[]>([]);
-  const [settingsByCategory, setSettingsByCategory] = useState<SettingsByCategory>({});
+  const { user, tenantUser, loading: authLoading } = useAuth();
+  const { checkPermission } = usePermissions();
+  
+  const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
+  const [configId, setConfigId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('email');
 
-  // Check permissions
+  // Permission check
   useEffect(() => {
-    if (authLoading || permissionsLoading) return;
-
-    if (!isAuthenticated || !tenantUser) {
-      router.push('/unauthorized');
+    if (authLoading) return;
+    
+    if (!user || !tenantUser) {
+      router.push('/login');
       return;
     }
 
@@ -86,55 +81,38 @@ export default function SystemSettingsPage() {
       router.push('/unauthorized');
       return;
     }
-  }, [isAuthenticated, tenantUser, authLoading, permissionsLoading, checkPermission, router]);
 
-  // Load settings
-  useEffect(() => {
-    if (!isAuthenticated || !tenantUser) return;
     loadSettings();
-  }, [isAuthenticated, tenantUser]);
+  }, [user, tenantUser, authLoading]);
 
   const loadSettings = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Query system settings - for now we'll create them if they don't exist
       const { data, error: fetchError } = await supabase
         .from('integration_configs')
         .select('*')
         .eq('tenant_id', tenantUser?.tenant_id)
-        .eq('integration_type', 'system_settings');
+        .eq('integration_type', 'system_settings')
+        .single();
 
-      if (fetchError) throw fetchError;
-
-      // If no settings exist, initialize default settings
-      if (!data || data.length === 0) {
-        await initializeDefaultSettings();
-        return;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
       }
 
-      // Group settings by category
-      const grouped: SettingsByCategory = {};
-      data.forEach((setting: any) => {
-        const category = setting.environment || 'general';
-        if (!grouped[category]) {
-          grouped[category] = [];
-        }
-        grouped[category].push({
-          id: setting.id,
-          category,
-          key: setting.name || '',
-          value: setting.config_data?.value || '',
-          description: setting.description || '',
-          is_sensitive: false,
-          created_at: setting.created_at,
-          updated_at: setting.updated_at,
+      if (data) {
+        setConfigId(data.id);
+        const metadata = data.configuration_metadata || {};
+        setSettings({
+          email: metadata.email || defaultSettings.email,
+          notifications: metadata.notifications || defaultSettings.notifications,
+          features: metadata.features || defaultSettings.features,
         });
-      });
-
-      setSettings(data);
-      setSettingsByCategory(grouped);
+      } else {
+        // Create default settings
+        await createDefaultSettings();
+      }
     } catch (err: any) {
       console.error('Error loading settings:', err);
       setError(err.message || 'Failed to load settings');
@@ -143,153 +121,56 @@ export default function SystemSettingsPage() {
     }
   };
 
-  const initializeDefaultSettings = async () => {
+  const createDefaultSettings = async () => {
     try {
-      const defaultSettings = [
-        // Email Settings
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'smtp_host',
-          environment: 'email',
-          description: 'SMTP server hostname',
-          config_data: { value: '' },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'smtp_port',
-          environment: 'email',
-          description: 'SMTP server port',
-          config_data: { value: '587' },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'smtp_username',
-          environment: 'email',
-          description: 'SMTP username',
-          config_data: { value: '' },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'from_email',
-          environment: 'email',
-          description: 'Default from email address',
-          config_data: { value: '' },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'from_name',
-          environment: 'email',
-          description: 'Default from name',
-          config_data: { value: 'HelixBridge' },
-          status: 'active',
-        },
-        // Notification Settings
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'enable_email_notifications',
-          environment: 'notifications',
-          description: 'Enable email notifications',
-          config_data: { value: true },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'enable_sync_notifications',
-          environment: 'notifications',
-          description: 'Notify on sync completion',
-          config_data: { value: true },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'enable_error_notifications',
-          environment: 'notifications',
-          description: 'Notify on sync errors',
-          config_data: { value: true },
-          status: 'active',
-        },
-        // Feature Flags
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'enable_auto_sync',
-          environment: 'features',
-          description: 'Enable automatic data synchronization',
-          config_data: { value: false },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'enable_field_mapping',
-          environment: 'features',
-          description: 'Enable custom field mapping',
-          config_data: { value: true },
-          status: 'active',
-        },
-        {
-          tenant_id: tenantUser?.tenant_id,
-          integration_type: 'system_settings',
-          name: 'enable_audit_logging',
-          environment: 'features',
-          description: 'Enable detailed audit logging',
-          config_data: { value: true },
-          status: 'active',
-        },
-      ];
-
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('integration_configs')
-        .insert(defaultSettings);
+        .insert({
+          tenant_id: tenantUser?.tenant_id,
+          integration_type: 'system_settings',
+          integration_name: 'System Settings',
+          environment: 'production',
+          is_active: true,
+          configuration_metadata: defaultSettings,
+          created_by: user?.id,
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
 
-      // Reload settings
-      await loadSettings();
+      if (data) {
+        setConfigId(data.id);
+        setSettings(defaultSettings);
+      }
     } catch (err: any) {
-      console.error('Error initializing settings:', err);
-      setError(err.message || 'Failed to initialize settings');
+      console.error('Error creating default settings:', err);
+      setError(err.message || 'Failed to create default settings');
     }
   };
 
-  const handleSaveSettings = async (category: string) => {
+  const saveSettings = async (category: keyof SystemSettings) => {
     try {
       setSaving(true);
       setError(null);
       setSuccess(null);
 
-      const categorySettings = settingsByCategory[category] || [];
+      const updatedMetadata = {
+        ...settings,
+      };
 
-      for (const setting of categorySettings) {
-        const { error: updateError } = await supabase
-          .from('integration_configs')
-          .update({
-            config_data: { value: setting.value },
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', setting.id);
+      const { error: updateError } = await supabase
+        .from('integration_configs')
+        .update({
+          configuration_metadata: updatedMetadata,
+          updated_at: new Date().toISOString(),
+          updated_by: user?.id,
+        })
+        .eq('id', configId);
 
-        if (updateError) throw updateError;
-      }
+      if (updateError) throw updateError;
 
-      setSuccess(`${category.charAt(0).toUpperCase() + category.slice(1)} settings saved successfully`);
-      
-      // Reload settings to get updated data
-      await loadSettings();
-
-      // Clear success message after 3 seconds
+      setSuccess(`${category.charAt(0).toUpperCase() + category.slice(1)} settings saved successfully!`);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       console.error('Error saving settings:', err);
@@ -299,55 +180,21 @@ export default function SystemSettingsPage() {
     }
   };
 
-  const handleSettingChange = (category: string, key: string, value: any) => {
-    setSettingsByCategory((prev) => {
-      const updated = { ...prev };
-      if (updated[category]) {
-        updated[category] = updated[category].map((setting) =>
-          setting.key === key ? { ...setting, value } : setting
-        );
-      }
-      return updated;
-    });
+  const resetSettings = (category: keyof SystemSettings) => {
+    setSettings((prev) => ({
+      ...prev,
+      [category]: defaultSettings[category],
+    }));
   };
 
-  const handleResetSettings = async (category: string) => {
-    if (!confirm(`Are you sure you want to reset ${category} settings to defaults?`)) {
-      return;
-    }
-
-    try {
-      setSaving(true);
-      setError(null);
-
-      // Delete existing settings for this category
-      const { error: deleteError } = await supabase
-        .from('integration_configs')
-        .delete()
-        .eq('tenant_id', tenantUser?.tenant_id)
-        .eq('integration_type', 'system_settings')
-        .eq('environment', category);
-
-      if (deleteError) throw deleteError;
-
-      // Reinitialize
-      await initializeDefaultSettings();
-
-      setSuccess(`${category.charAt(0).toUpperCase() + category.slice(1)} settings reset to defaults`);
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      console.error('Error resetting settings:', err);
-      setError(err.message || 'Failed to reset settings');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (authLoading || permissionsLoading || loading) {
+  if (loading || authLoading) {
     return (
       <DashboardLayout>
-        <div className="flex h-full items-center justify-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading system settings...</p>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -359,34 +206,31 @@ export default function SystemSettingsPage() {
         {/* Header */}
         <div className="border-b border-gray-200 bg-white px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Configure platform-wide settings and preferences
-              </p>
+            <div className="flex items-center space-x-3">
+              <Settings className="h-6 w-6 text-purple-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
+                <p className="text-sm text-gray-600">Configure platform-wide settings and preferences</p>
+              </div>
             </div>
-            <Settings className="h-8 w-8 text-gray-400" />
           </div>
         </div>
 
+        {/* Messages */}
+        {error && (
+          <div className="mx-6 mt-4 rounded-md bg-red-50 p-4">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
+        {success && (
+          <div className="mx-6 mt-4 rounded-md bg-green-50 p-4">
+            <p className="text-sm text-green-800">{success}</p>
+          </div>
+        )}
+
         {/* Content */}
         <div className="flex-1 overflow-auto p-6">
-          {/* Error/Success Messages */}
-          {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-800">
-              <AlertCircle className="h-5 w-5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-800">
-              <CheckCircle2 className="h-5 w-5" />
-              <span>{success}</span>
-            </div>
-          )}
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue="email" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
@@ -403,174 +247,227 @@ export default function SystemSettingsPage() {
             </TabsList>
 
             {/* Email Settings Tab */}
-            <TabsContent value="email" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Email Configuration</CardTitle>
-                  <CardDescription>
-                    Configure SMTP settings for sending emails from the platform
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {settingsByCategory.email?.map((setting) => (
-                    <div key={setting.id} className="space-y-2">
-                      <Label htmlFor={setting.key}>{setting.description}</Label>
-                      {setting.key.includes('password') || setting.key.includes('secret') ? (
-                        <Input
-                          id={setting.key}
-                          type="password"
-                          value={setting.value as string}
-                          onChange={(e) =>
-                            handleSettingChange('email', setting.key, e.target.value)
-                          }
-                          placeholder={setting.description}
-                        />
-                      ) : (
-                        <Input
-                          id={setting.key}
-                          type="text"
-                          value={setting.value as string}
-                          onChange={(e) =>
-                            handleSettingChange('email', setting.key, e.target.value)
-                          }
-                          placeholder={setting.description}
-                        />
-                      )}
-                      <p className="text-xs text-gray-500">{setting.description}</p>
-                    </div>
-                  ))}
-
-                  <div className="flex justify-between pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleResetSettings('email')}
-                      disabled={saving}
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Reset to Defaults
-                    </Button>
-                    <Button
-                      onClick={() => handleSaveSettings('email')}
-                      disabled={saving}
-                    >
-                      {saving ? (
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Save className="mr-2 h-4 w-4" />
-                      )}
-                      Save Email Settings
-                    </Button>
+            <TabsContent value="email" className="mt-6 space-y-6">
+              <div className="rounded-lg border border-gray-200 bg-white p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Configuration</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="smtp_host">SMTP Host</Label>
+                    <Input
+                      id="smtp_host"
+                      value={settings.email.smtp_host}
+                      onChange={(e) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          email: { ...prev.email, smtp_host: e.target.value },
+                        }))
+                      }
+                      placeholder="smtp.example.com"
+                    />
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <Label htmlFor="smtp_port">SMTP Port</Label>
+                    <Input
+                      id="smtp_port"
+                      value={settings.email.smtp_port}
+                      onChange={(e) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          email: { ...prev.email, smtp_port: e.target.value },
+                        }))
+                      }
+                      placeholder="587"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="smtp_username">SMTP Username</Label>
+                    <Input
+                      id="smtp_username"
+                      value={settings.email.smtp_username}
+                      onChange={(e) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          email: { ...prev.email, smtp_username: e.target.value },
+                        }))
+                      }
+                      placeholder="username@example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="from_email">From Email</Label>
+                    <Input
+                      id="from_email"
+                      type="email"
+                      value={settings.email.from_email}
+                      onChange={(e) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          email: { ...prev.email, from_email: e.target.value },
+                        }))
+                      }
+                      placeholder="noreply@helixbridge.cloud"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="from_name">From Name</Label>
+                    <Input
+                      id="from_name"
+                      value={settings.email.from_name}
+                      onChange={(e) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          email: { ...prev.email, from_name: e.target.value },
+                        }))
+                      }
+                      placeholder="HelixBridge"
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <Button onClick={() => saveSettings('email')} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? 'Saving...' : 'Save Email Settings'}
+                  </Button>
+                  <Button variant="outline" onClick={() => resetSettings('email')}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset to Defaults
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Notifications Tab */}
-            <TabsContent value="notifications" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notification Preferences</CardTitle>
-                  <CardDescription>
-                    Control when and how you receive notifications
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {settingsByCategory.notifications?.map((setting) => (
-                    <div
-                      key={setting.id}
-                      className="flex items-center justify-between space-x-2"
-                    >
-                      <div className="space-y-0.5">
-                        <Label htmlFor={setting.key}>{setting.description}</Label>
-                        <p className="text-xs text-gray-500">{setting.description}</p>
-                      </div>
-                      <Switch
-                        id={setting.key}
-                        checked={setting.value as boolean}
-                        onCheckedChange={(checked) =>
-                          handleSettingChange('notifications', setting.key, checked)
-                        }
-                      />
+            <TabsContent value="notifications" className="mt-6 space-y-6">
+              <div className="rounded-lg border border-gray-200 bg-white p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Notification Preferences</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="email_enabled">Email Notifications</Label>
+                      <p className="text-sm text-gray-500">Enable email notifications for system events</p>
                     </div>
-                  ))}
-
-                  <div className="flex justify-between pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleResetSettings('notifications')}
-                      disabled={saving}
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Reset to Defaults
-                    </Button>
-                    <Button
-                      onClick={() => handleSaveSettings('notifications')}
-                      disabled={saving}
-                    >
-                      {saving ? (
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Save className="mr-2 h-4 w-4" />
-                      )}
-                      Save Notification Settings
-                    </Button>
+                    <Switch
+                      id="email_enabled"
+                      checked={settings.notifications.email_enabled}
+                      onCheckedChange={(checked) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          notifications: { ...prev.notifications, email_enabled: checked },
+                        }))
+                      }
+                    />
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="sync_notifications">Sync Notifications</Label>
+                      <p className="text-sm text-gray-500">Notify when data synchronization completes</p>
+                    </div>
+                    <Switch
+                      id="sync_notifications"
+                      checked={settings.notifications.sync_notifications}
+                      onCheckedChange={(checked) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          notifications: { ...prev.notifications, sync_notifications: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="error_notifications">Error Notifications</Label>
+                      <p className="text-sm text-gray-500">Notify when sync errors occur</p>
+                    </div>
+                    <Switch
+                      id="error_notifications"
+                      checked={settings.notifications.error_notifications}
+                      onCheckedChange={(checked) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          notifications: { ...prev.notifications, error_notifications: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <Button onClick={() => saveSettings('notifications')} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? 'Saving...' : 'Save Notification Settings'}
+                  </Button>
+                  <Button variant="outline" onClick={() => resetSettings('notifications')}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset to Defaults
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Feature Flags Tab */}
-            <TabsContent value="features" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Feature Flags</CardTitle>
-                  <CardDescription>
-                    Enable or disable platform features
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {settingsByCategory.features?.map((setting) => (
-                    <div
-                      key={setting.id}
-                      className="flex items-center justify-between space-x-2"
-                    >
-                      <div className="space-y-0.5">
-                        <Label htmlFor={setting.key}>{setting.description}</Label>
-                        <p className="text-xs text-gray-500">{setting.description}</p>
-                      </div>
-                      <Switch
-                        id={setting.key}
-                        checked={setting.value as boolean}
-                        onCheckedChange={(checked) =>
-                          handleSettingChange('features', setting.key, checked)
-                        }
-                      />
+            <TabsContent value="features" className="mt-6 space-y-6">
+              <div className="rounded-lg border border-gray-200 bg-white p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Flags</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="auto_sync_enabled">Auto-Sync</Label>
+                      <p className="text-sm text-gray-500">Enable automatic data synchronization</p>
                     </div>
-                  ))}
-
-                  <div className="flex justify-between pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleResetSettings('features')}
-                      disabled={saving}
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Reset to Defaults
-                    </Button>
-                    <Button
-                      onClick={() => handleSaveSettings('features')}
-                      disabled={saving}
-                    >
-                      {saving ? (
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Save className="mr-2 h-4 w-4" />
-                      )}
-                      Save Feature Flags
-                    </Button>
+                    <Switch
+                      id="auto_sync_enabled"
+                      checked={settings.features.auto_sync_enabled}
+                      onCheckedChange={(checked) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          features: { ...prev.features, auto_sync_enabled: checked },
+                        }))
+                      }
+                    />
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="field_mapping_enabled">Field Mapping</Label>
+                      <p className="text-sm text-gray-500">Enable custom field mapping for integrations</p>
+                    </div>
+                    <Switch
+                      id="field_mapping_enabled"
+                      checked={settings.features.field_mapping_enabled}
+                      onCheckedChange={(checked) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          features: { ...prev.features, field_mapping_enabled: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="audit_logging_enabled">Audit Logging</Label>
+                      <p className="text-sm text-gray-500">Enable detailed audit logging for compliance</p>
+                    </div>
+                    <Switch
+                      id="audit_logging_enabled"
+                      checked={settings.features.audit_logging_enabled}
+                      onCheckedChange={(checked) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          features: { ...prev.features, audit_logging_enabled: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <Button onClick={() => saveSettings('features')} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? 'Saving...' : 'Save Feature Flags'}
+                  </Button>
+                  <Button variant="outline" onClick={() => resetSettings('features')}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset to Defaults
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
