@@ -109,6 +109,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, { role: Role; permissions: RolePerm
 export function usePermissions() {
   const { user, tenantUser, isAuthenticated, isDemoMode } = useAuth();
   const [userPermissions, setUserPermissions] = useState<RolePermissionEntry[]>([]);
+  const [tenantFeatures, setTenantFeatures] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -162,6 +163,12 @@ export function usePermissions() {
           
           console.log(`✅ Loaded ${permissions.length} permissions from database for role: ${role}`);
           setUserPermissions(permissions);
+          
+          // Load tenant feature subscriptions
+          const { getTenantEnabledFeatures } = await import('@/services/tenant_feature_service');
+          const enabledFeatures = await getTenantEnabledFeatures(tenantUser.tenant_id);
+          console.log(`📊 Loaded ${enabledFeatures.length} tenant features for tenant: ${tenantUser.tenant_id}`);
+          setTenantFeatures(enabledFeatures);
         } else {
           // Fallback to hardcoded defaults if database load fails
           console.warn(`⚠️ No database permissions found for role: ${role}, using defaults`);
@@ -268,7 +275,16 @@ export function usePermissions() {
     if (isDemoMode) return true;
     if (!isAuthenticated || !tenantUser) return false;
     if (String(tenantUser.role).toLowerCase() === ROLES.HOST_ADMIN) return true;
-    return userPermissions.some((p) => p.feature === feature);
+    
+    // Check 1: Does user's role have permission for this feature?
+    const roleHasPermission = userPermissions.some((p) => p.feature === feature);
+    if (!roleHasPermission) return false;
+    
+    // Check 2: Does user's tenant have subscription for this feature?
+    const tenantHasFeature = tenantFeatures.includes(feature);
+    if (!tenantHasFeature) return false;
+    
+    return true;
   }
 
   function getPermissionLevel(feature: Feature): Permission[] {
