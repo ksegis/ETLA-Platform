@@ -117,7 +117,7 @@ export default function APIConfigurationPage() {
           .in('integration_config_id', configIds);
 
         if (!credsError && credsData) {
-          credentialsMap = credsData.reduce((acc, cred) => {
+          credentialsMap = credsData.reduce((acc: Record<string, any>, cred: any) => {
             acc[cred.integration_config_id] = {
               id: cred.id,
               credential_type: cred.credential_type,
