@@ -428,14 +428,10 @@ export default function AccessControlClient() {
               </TabsContent>
 
               <TabsContent value="invitations" className="space-y-4">
-                {selectedTenant && (
-                  <InvitationsTab selectedTenantId={selectedTenant.id} />
-                )}
-                {!selectedTenant && (
-                  <div className="text-center py-8 text-gray-500">
-                    Please select a tenant to view invitations
-                  </div>
-                )}
+                <InvitationsTab 
+                  selectedTenantId={selectedTenant?.id || null} 
+                  isHostAdmin={isHostAdmin}
+                />
               </TabsContent>
 
               <TabsContent value="notifications" className="space-y-4">

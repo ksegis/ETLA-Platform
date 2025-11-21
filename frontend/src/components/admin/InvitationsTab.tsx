@@ -15,13 +15,15 @@ interface Invitation {
   expires_at: string;
   status: string;
   custom_message?: string;
+  tenant_name?: string;
 }
 
 interface InvitationsTabProps {
-  selectedTenantId: string;
+  selectedTenantId: string | null;
+  isHostAdmin?: boolean;
 }
 
-export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId }) => {
+export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId, isHostAdmin = false }) => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,12 +36,29 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
   const fetchInvitations = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Build query with tenant name join
+      let query = supabase
         .from('user_invitations')
-        .select('*')
-        .eq('tenant_id', selectedTenantId)
+        .select(`
+          *,
+          tenants:tenant_id (name)
+        `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
+      
+      // Only filter by tenant if a specific tenant is selected
+      if (selectedTenantId) {
+        query = query.eq('tenant_id', selectedTenantId);
+      }
+      
+      const { data, error } = await query;
+      
+      // Transform data to include tenant_name
+      const transformedData = data?.map((inv: any) => ({
+        ...inv,
+        tenant_name: inv.tenants?.name || 'Unknown Tenant'
+      })) || [];
 
       if (error) {
         console.error('Error fetching invitations:', error);
@@ -49,7 +68,7 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
       
       setError(null);
 
-      setInvitations(data || []);
+      setInvitations(transformedData);
     } catch (error: any) {
       console.error('Error fetching invitations:', error);
       setError(error.message || 'An unexpected error occurred');
@@ -203,6 +222,11 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
+              {!selectedTenantId && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tenant
+                </th>
+              )}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
@@ -228,6 +252,11 @@ export const InvitationsTab: React.FC<InvitationsTabProps> = ({ selectedTenantId
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{invitation.email}</div>
                   </td>
+                  {!selectedTenantId && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{invitation.tenant_name}</div>
+                    </td>
+                  )}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 capitalize">
                       {invitation.role.replace('_', ' ')}
