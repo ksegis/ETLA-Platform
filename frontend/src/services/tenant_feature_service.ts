@@ -51,7 +51,7 @@ export async function getTenantEnabledFeatures(tenantId: string): Promise<string
       return [];
     }
 
-    return data?.map(item => item.feature_key) || [];
+    return data?.map((item: { feature_key: string }) => item.feature_key) || [];
   } catch (error) {
     console.error('Exception loading tenant features:', error);
     return [];
