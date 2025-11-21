@@ -46,7 +46,7 @@ interface APICredentials {
 export default function APIConfigurationPage() {
   const router = useRouter();
   const { user, tenant } = useAuth();
-  const { hasFeatureAccess, hasPermission } = usePermissions();
+  const { canAccessFeature, hasPermission } = usePermissions();
 
   const [configs, setConfigs] = useState<APIConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,10 +80,10 @@ export default function APIConfigurationPage() {
 
   // Check permissions
   useEffect(() => {
-    if (!hasFeatureAccess(FEATURES.API_CONFIGURATION)) {
+    if (!canAccessFeature(FEATURES.API_CONFIGURATION)) {
       router.push('/dashboard');
     }
-  }, [hasFeatureAccess, router]);
+  }, [canAccessFeature, router]);
 
   // Load API configurations
   useEffect(() => {
