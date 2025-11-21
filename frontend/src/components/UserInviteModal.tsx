@@ -129,7 +129,7 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
 
   const getDefaultMessage = () => {
     const selectedTenant = tenants.find((t: any) => t.id === formData.tenant_id)
-    return `You have been invited to join ${selectedTenant?.name || 'our organization'} on the ETLA Platform. Please click the link below to accept your invitation and set up your account.`
+    return `You have been invited to join ${selectedTenant?.name || 'our organization'} on the HelixBridge Platform. Please click the link below to accept your invitation and set up your account.`
   }
 
   if (!isOpen) return null
