@@ -374,7 +374,7 @@ export default function APIConfigurationPage() {
     }
   };
 
-  const canWrite = hasPermission(FEATURES.API_CONFIGURATION, PERMISSIONS.WRITE);
+  const canWrite = hasPermission(FEATURES.API_CONFIGURATION, PERMISSIONS.MANAGE);
 
   return (
     <DashboardLayout>
