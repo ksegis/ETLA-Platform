@@ -73,6 +73,23 @@ export default function CandidatesImportPage() {
     router.push('/talent-import');
   };
 
+  const handleDownloadTemplate = () => {
+    // Create CSV template
+    const template = `first_name,last_name,email,mobile_phone,home_phone,work_phone,street,city,state,zip,country,candidate_id,linkedin_url,github_url,portfolio_url,current_title,current_company,years_experience
+John,Doe,john.doe@example.com,+1-555-123-4567,+1-555-987-6543,,123 Main St,San Francisco,CA,94102,USA,CAN-001,https://linkedin.com/in/johndoe,https://github.com/johndoe,https://johndoe.com,Senior Software Engineer,Tech Corp,8
+Jane,Smith,jane.smith@example.com,+1-555-234-5678,,,456 Oak Ave,New York,NY,10001,USA,CAN-002,https://linkedin.com/in/janesmith,,https://janesmith.dev,Product Manager,Startup Inc,5`;
+
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'candidates_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -121,6 +138,7 @@ export default function CandidatesImportPage() {
 
             <button
               data-tour="template-download"
+              onClick={handleDownloadTemplate}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors whitespace-nowrap"
             >
               <Download className="w-4 h-4" />

@@ -82,6 +82,52 @@ export default function TalentImportPage() {
     router.push(route);
   };
 
+  const downloadCandidatesTemplate = () => {
+    const template = `first_name,last_name,email,mobile_phone,home_phone,work_phone,street,city,state,zip,country,candidate_id,linkedin_url,github_url,portfolio_url,current_title,current_company,years_experience
+John,Doe,john.doe@example.com,+1-555-123-4567,+1-555-987-6543,,123 Main St,San Francisco,CA,94102,USA,CAN-001,https://linkedin.com/in/johndoe,https://github.com/johndoe,https://johndoe.com,Senior Software Engineer,Tech Corp,8
+Jane,Smith,jane.smith@example.com,+1-555-234-5678,,,456 Oak Ave,New York,NY,10001,USA,CAN-002,https://linkedin.com/in/janesmith,,https://janesmith.dev,Product Manager,Startup Inc,5`;
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'candidates_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const downloadJobsTemplate = () => {
+    const template = `job_id,title,department,location,employment_type,salary_min,salary_max,description,requirements,posted_date,closing_date,status
+JOB-001,Senior Software Engineer,Engineering,San Francisco,Full-time,120000,180000,"We are seeking an experienced software engineer...","5+ years of experience, Bachelor's degree",2024-01-15,2024-02-15,open
+JOB-002,Product Manager,Product,Remote,Full-time,100000,150000,"Join our product team...","3+ years in product management",2024-01-20,2024-02-20,open`;
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'jobs_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const downloadApplicationsTemplate = () => {
+    const template = `application_id,candidate_email,job_id,status,applied_date,source,notes
+APP-001,john.doe@example.com,JOB-001,applied,2024-01-15,LinkedIn,Strong technical background
+APP-002,jane.smith@example.com,JOB-001,screening,2024-01-16,Company Website,Excellent communication skills
+APP-003,john.doe@example.com,JOB-002,interview,2024-01-20,Referral,Referred by current employee`;
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'applications_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   const getColorClasses = (color: string) => {
     const colors = {
       blue: {
@@ -221,32 +267,29 @@ export default function TalentImportPage() {
         <div className="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-200">
           <h3 className="font-semibold text-gray-900 mb-3">📋 Quick Links</h3>
           <div className="flex flex-wrap gap-3">
-            <a
-              href="/templates/candidates_import_template.csv"
-              download
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            <button
+              onClick={downloadCandidatesTemplate}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
             >
               Download Candidates Template
-            </a>
+            </button>
             <span className="text-gray-300">|</span>
-            <a
-              href="/templates/jobs_import_template.csv"
-              download
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            <button
+              onClick={downloadJobsTemplate}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
             >
               Download Jobs Template
-            </a>
+            </button>
             <span className="text-gray-300">|</span>
-            <a
-              href="/templates/applications_import_template.csv"
-              download
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            <button
+              onClick={downloadApplicationsTemplate}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
             >
               Download Applications Template
-            </a>
+            </button>
             <span className="text-gray-300">|</span>
             <a
-              href="/docs/talent-import-guide.pdf"
+              href="https://help.manus.im"
               target="_blank"
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
