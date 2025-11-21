@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Users, FileText, AlertTriangle, CheckCircle2, HelpCircle } from 'lucide-react';
 import ProgressStepper, { Step } from '@/components/ProgressStepper';
 import TourOverlay, { useTour, TourStep } from '@/components/TourOverlay';
+import TenantConfirmation from '@/components/TenantConfirmation';
+import FinalConfirmationModal from '@/components/FinalConfirmationModal';
 
 const steps: Step[] = [
   { id: 1, title: 'Upload Data', shortTitle: 'Upload' },
@@ -68,19 +70,46 @@ export default function ReviewConfigurePage() {
   const { isTourOpen, startTour, closeTour } = useTour('talent-import-review');
   
   const [selectedTenant, setSelectedTenant] = useState('');
+  const [selectedTenantName, setSelectedTenantName] = useState('');
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [updateExisting, setUpdateExisting] = useState(false);
   const [validateEmails, setValidateEmails] = useState(true);
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const [showFinalModal, setShowFinalModal] = useState(false);
 
   const candidateCount = 150;
   const documentCount = 285;
   const errors = mockValidation.filter(v => v.type === 'error');
   const warnings = mockValidation.filter(v => v.type === 'warning');
 
-  const canProceed = selectedTenant && errors.length === 0;
+  const canProceed = selectedTenant && errors.length === 0 && reviewConfirmed;
+
+  const handleTenantChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedTenant(value);
+    // Extract tenant name from option text
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    setSelectedTenantName(selectedOption.text);
+    // Reset confirmation when tenant changes
+    setReviewConfirmed(false);
+  };
 
   const handleStartImport = () => {
-    if (!canProceed) return;
+    if (!canProceed) {
+      if (!selectedTenant) {
+        alert('Please select a target tenant');
+      } else if (!reviewConfirmed) {
+        alert('Please confirm the tenant selection before proceeding');
+      }
+      return;
+    }
+    // Show final confirmation modal
+    setShowFinalModal(true);
+  };
+
+  const handleFinalConfirm = () => {
+    // TODO: Log all confirmations to database
+    setShowFinalModal(false);
     router.push('/talent-import/candidates/progress');
   };
 
@@ -163,7 +192,7 @@ export default function ReviewConfigurePage() {
 
           <select
             value={selectedTenant}
-            onChange={(e) => setSelectedTenant(e.target.value)}
+            onChange={handleTenantChange}
             className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">Select a tenant...</option>
@@ -179,6 +208,21 @@ export default function ReviewConfigurePage() {
             </p>
           )}
         </div>
+
+        {/* Tenant Confirmation - Stage 2 */}
+        {selectedTenant && (
+          <TenantConfirmation
+            stage="review"
+            selectedTenant={{
+              id: selectedTenant,
+              name: selectedTenantName
+            }}
+            onConfirm={setReviewConfirmed}
+            isConfirmed={reviewConfirmed}
+            recordCount={candidateCount}
+            documentCount={documentCount}
+          />
+        )}
 
         {/* Import Options */}
         <div data-tour="import-options" className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
@@ -331,6 +375,20 @@ export default function ReviewConfigurePage() {
         isOpen={isTourOpen}
         onClose={closeTour}
         tourKey="talent-import-review"
+      />
+
+      {/* Final Confirmation Modal - Stage 3 */}
+      <FinalConfirmationModal
+        isOpen={showFinalModal}
+        onClose={() => setShowFinalModal(false)}
+        onConfirm={handleFinalConfirm}
+        tenant={{
+          id: selectedTenant,
+          name: selectedTenantName
+        }}
+        importType="candidates"
+        recordCount={candidateCount}
+        documentCount={documentCount}
       />
     </div>
   );

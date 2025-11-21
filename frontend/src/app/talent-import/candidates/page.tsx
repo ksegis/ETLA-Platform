@@ -6,6 +6,7 @@ import { Download, HelpCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import ProgressStepper, { Step } from '@/components/ProgressStepper';
 import FileUpload from '@/components/FileUpload';
 import TourOverlay, { useTour, TourStep } from '@/components/TourOverlay';
+import TenantConfirmation from '@/components/TenantConfirmation';
 
 const steps: Step[] = [
   { id: 1, title: 'Upload Data', shortTitle: 'Upload' },
@@ -49,6 +50,7 @@ export default function CandidatesImportPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [dataFile, setDataFile] = useState<File | null>(null);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
+  const [uploadConfirmed, setUploadConfirmed] = useState(false);
 
   const handleDataFileSelected = (files: File[]) => {
     if (files.length > 0) {
@@ -65,7 +67,11 @@ export default function CandidatesImportPage() {
       alert('Please upload a candidate data file to continue');
       return;
     }
-    // TODO: Navigate to mapping step
+    if (!uploadConfirmed) {
+      alert('Please confirm that you understand the tenant assignment process before continuing');
+      return;
+    }
+    // TODO: Log confirmation to database
     router.push('/talent-import/candidates/map');
   };
 
@@ -234,6 +240,14 @@ Jane,Smith,jane.smith@example.com,+1-555-234-5678,,,456 Oak Ave,New York,NY,1000
             </div>
           </div>
         </div>
+
+        {/* Tenant Confirmation - Stage 1 */}
+        <TenantConfirmation
+          stage="upload"
+          selectedTenant={null}
+          onConfirm={setUploadConfirmed}
+          isConfirmed={uploadConfirmed}
+        />
 
         {/* Navigation Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
