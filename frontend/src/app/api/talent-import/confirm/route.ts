@@ -2,11 +2,15 @@
 // Purpose: Log tenant confirmation actions to database for audit trail
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Create Supabase client with service role for admin operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -150,7 +154,11 @@ export async function POST(request: NextRequest) {
 // GET endpoint to retrieve confirmation status
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Create Supabase client with service role for admin operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
