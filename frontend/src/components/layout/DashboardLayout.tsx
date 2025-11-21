@@ -258,30 +258,57 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Feature mapper for routes
   // -----------------------------
   function featureForHref(href: string) {
+    // Work Requests
     if (href.startsWith('/work-requests')) return FEATURES.WORK_REQUESTS
+    
+    // Project Management
     if (href.startsWith('/project-management')) return FEATURES.PROJECT_MANAGEMENT
-    if (href.startsWith('/customer/projects')) return FEATURES.PROJECT_MANAGEMENT
-    if (href.startsWith('/customer/portfolio')) return FEATURES.PROJECT_MANAGEMENT
-    if (href.startsWith('/reporting') || href.startsWith('/hr-analytics') || href.startsWith('/dashboard'))
-      return FEATURES.DASHBOARDS
-    if (href.startsWith('/talent')) return FEATURES.USER_MANAGEMENT
-    if (href.startsWith('/employees') || href.startsWith('/employee-directory'))
-      return FEATURES.EMPLOYEE_RECORDS
+    
+    // Customer Portal
+    if (href.startsWith('/customer/projects')) return FEATURES.CUSTOMER_PROJECTS
+    if (href.startsWith('/customer/portfolio')) return FEATURES.CUSTOMER_PORTFOLIO
+    if (href.startsWith('/customer/notifications')) return FEATURES.CUSTOMER_NOTIFICATIONS
+    
+    // Reporting & Analytics
+    if (href.startsWith('/reporting')) return FEATURES.REPORTING
+    if (href.startsWith('/hr-analytics')) return FEATURES.HR_ANALYTICS
+    if (href.startsWith('/analytics')) return FEATURES.ANALYTICS
+    
+    // Talent Management
+    if (href === '/talent') return FEATURES.TALENT_DASHBOARD
+    if (href.startsWith('/talent/jobs')) return FEATURES.TALENT_JOBS
+    if (href.startsWith('/talent/candidates')) return FEATURES.TALENT_CANDIDATES
+    if (href.startsWith('/talent/pipeline')) return FEATURES.TALENT_PIPELINE
+    if (href.startsWith('/talent/interviews')) return FEATURES.TALENT_INTERVIEWS
+    if (href.startsWith('/talent/offers')) return FEATURES.TALENT_OFFERS
+    
+    // ETL Cockpit
+    if (href === '/dashboard') return FEATURES.ETL_DASHBOARD
+    if (href.startsWith('/jobs')) return FEATURES.ETL_JOBS
+    if (href.startsWith('/audit')) return FEATURES.AUDIT_LOG
+    
+    // Employee Management
+    if (href.startsWith('/employees')) return FEATURES.EMPLOYEE_RECORDS
+    if (href.startsWith('/employee-directory')) return FEATURES.EMPLOYEE_RECORDS
+    
+    // Data Management
     if (href.startsWith('/upload')) return FEATURES.FILE_UPLOAD
     if (href.startsWith('/validation')) return FEATURES.DATA_VALIDATION
-    if (href.startsWith('/analytics')) return FEATURES.ANALYTICS
-    if (href.startsWith('/audit')) return FEATURES.AUDIT
-    if (href.startsWith('/jobs')) return FEATURES.PROJECT_MANAGEMENT
+    
+    // Configuration
     if (href.startsWith('/system-health')) return FEATURES.SYSTEM_HEALTH
     if (href.startsWith('/settings')) return FEATURES.SYSTEM_SETTINGS
     if (href.startsWith('/api-config')) return FEATURES.API_CONFIG
     if (href.startsWith('/integrations')) return FEATURES.INTEGRATIONS
+    
+    // Administration
     if (href.startsWith('/admin/access-control')) return FEATURES.ACCESS_CONTROL
     if (href.startsWith('/role-management')) return FEATURES.ACCESS_CONTROL
     if (href.startsWith('/admin/tenant-management')) return FEATURES.TENANT_MANAGEMENT
-    if (href.startsWith('/benefits')) return FEATURES.BENEFITS_MANAGEMENT
-    if (href.startsWith('/payroll')) return FEATURES.PAYROLL_PROCESSING
-    // sensible default
+    if (href.startsWith('/benefits')) return FEATURES.BENEFITS
+    if (href.startsWith('/payroll')) return FEATURES.PAYROLL
+    
+    // Default fallback
     return FEATURES.WORK_REQUESTS
   }
 

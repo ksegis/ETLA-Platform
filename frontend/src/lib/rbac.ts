@@ -36,6 +36,7 @@ export const FEATURES = {
   CANDIDATES: "candidates",
   INTERVIEWS: "interviews",
   OFFERS: "offers",
+  PIPELINE: "pipeline",
   
   // Talent Management features
   TALENT_DASHBOARD: "talent-dashboard",
@@ -43,7 +44,21 @@ export const FEATURES = {
   TALENT_CANDIDATES: "candidates",
   TALENT_INTERVIEWS: "interviews",
   TALENT_OFFERS: "offers",
+  TALENT_PIPELINE: "pipeline",
   USER_MANAGEMENT: "user-management",
+  
+  // Customer Portal features
+  CUSTOMER_NOTIFICATIONS: "customer-notifications",
+  CUSTOMER_PROJECTS: "customer-projects",
+  CUSTOMER_PORTFOLIO: "customer-portfolio",
+  
+  // ETL features
+  ETL_DASHBOARD: "etl-dashboard",
+  ETL_JOBS: "etl-jobs",
+  AUDIT_LOG: "audit-log",
+  
+  // HR Analytics
+  HR_ANALYTICS: "hr-analytics",
 } as const;
 
 export type Feature = typeof FEATURES[keyof typeof FEATURES];
