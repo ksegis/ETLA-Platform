@@ -292,10 +292,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     // Return all groups with all items - we'll handle authorization in rendering
     return navigationGroups.map((group) => ({
       ...group,
-      items: group.items.map((item) => ({
-        ...item,
-        isAuthorized: canAccessFeature(featureForHref(item.href))
-      }))
+      items: group.items.map((item) => {
+        const feature = featureForHref(item.href)
+        const isAuthorized = canAccessFeature(feature)
+        console.log(`🔍 Navigation check: ${item.name} (${item.href}) → feature: "${feature}" → authorized: ${isAuthorized}`)
+        return {
+          ...item,
+          isAuthorized
+        }
+      })
     }))
   }, [permissionsloading, canAccessFeature]) // nav config is static
 
