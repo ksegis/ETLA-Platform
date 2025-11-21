@@ -72,11 +72,31 @@ export const FEATURES = {
   BENEFITS_MANAGEMENT: F.BENEFITS_MANAGEMENT ?? "benefits-management",
   PAYROLL_PROCESSING: F.PAYROLL_PROCESSING ?? "payroll-processing",
 
-  // Talent (to satisfy DashboardLayout/guards)
-  TALENT_JOBS: F.TALENT_JOBS ?? "talent-jobs",
-  TALENT_CANDIDATES: F.TALENT_CANDIDATES ?? "talent-candidates",
-  TALENT_INTERVIEWS: F.TALENT_INTERVIEWS ?? "talent-interviews",
-  TALENT_OFFERS: F.TALENT_OFFERS ?? "talent-offers",
+  // Talent Management
+  TALENT_DASHBOARD: F.TALENT_DASHBOARD ?? "talent-dashboard",
+  TALENT_JOBS: F.TALENT_JOBS ?? F.JOBS ?? "job-management",
+  TALENT_CANDIDATES: F.TALENT_CANDIDATES ?? F.CANDIDATES ?? "candidates",
+  TALENT_INTERVIEWS: F.TALENT_INTERVIEWS ?? F.INTERVIEWS ?? "interviews",
+  TALENT_OFFERS: F.TALENT_OFFERS ?? F.OFFERS ?? "offers",
+  TALENT_PIPELINE: F.TALENT_PIPELINE ?? F.PIPELINE ?? "pipeline",
+  JOBS: F.JOBS ?? "job-management",
+  CANDIDATES: F.CANDIDATES ?? "candidates",
+  INTERVIEWS: F.INTERVIEWS ?? "interviews",
+  OFFERS: F.OFFERS ?? "offers",
+  PIPELINE: F.PIPELINE ?? "pipeline",
+  
+  // Customer Portal
+  CUSTOMER_NOTIFICATIONS: F.CUSTOMER_NOTIFICATIONS ?? "customer-notifications",
+  CUSTOMER_PROJECTS: F.CUSTOMER_PROJECTS ?? "customer-projects",
+  CUSTOMER_PORTFOLIO: F.CUSTOMER_PORTFOLIO ?? "customer-portfolio",
+  
+  // ETL Features
+  ETL_DASHBOARD: F.ETL_DASHBOARD ?? "etl-dashboard",
+  ETL_JOBS: F.ETL_JOBS ?? "etl-jobs",
+  AUDIT_LOG: F.AUDIT_LOG ?? "audit-log",
+  
+  // HR Analytics
+  HR_ANALYTICS: F.HR_ANALYTICS ?? "hr-analytics",
 } as const;
 
 // -----------------------------
