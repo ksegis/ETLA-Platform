@@ -340,7 +340,8 @@ export default function AccessControlClient() {
   }));
 
   return (
-    <div className="flex h-full flex-col">
+    <DashboardLayout>
+      <div className="flex h-full flex-col">
       {/* Fixed Header */}
       <div className="bg-white border-b p-6 space-y-4">
         <div className="flex justify-between items-center">
