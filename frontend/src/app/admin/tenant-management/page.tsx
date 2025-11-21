@@ -53,6 +53,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
+  Briefcase,
 } from "lucide-react";
 import { Tenant, User, TenantTemplate, TenantTier } from "@/types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -100,6 +101,7 @@ export default function TenantManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
+  const [creationType, setCreationType] = useState<'primary' | 'sub'>('primary');
   const [hierarchyExpanded, setHierarchyExpanded] = useState(false);
   // Phase 2: Hierarchy state
   const [templates, setTemplates] = useState<TenantTemplate[]>([]);
@@ -392,6 +394,21 @@ export default function TenantManagementPage() {
     }
   };
 
+  // Helper function to open create modal with specific type
+  const openCreateModal = (type: 'primary' | 'sub') => {
+    setCreationType(type);
+    setNewTenant({
+      name: "",
+      code: "",
+      tenant_type: "",
+      contact_email: "",
+      parent_tenant_id: type === 'primary' ? undefined : newTenant.parent_tenant_id,
+      tenant_tier: type === 'primary' ? 2 : 3,
+      template_id: "",
+    });
+    setShowCreateTenantModal(true);
+  };
+
   const filteredTenants = tenants.filter(
     (tenant: any) =>
       tenant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -457,13 +474,23 @@ export default function TenantManagementPage() {
             </h1>
             <p className="text-sm md:text-base text-gray-600">Manage tenants and user assignments</p>
           </div>
-          <Button 
-            onClick={() => setShowCreateTenantModal(true)}
-            className="w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Tenant
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={() => openCreateModal('primary')}
+              className="w-full sm:w-auto"
+            >
+              <Building className="h-4 w-4 mr-2" />
+              Create Primary Client
+            </Button>
+            <Button 
+              onClick={() => openCreateModal('sub')}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <Briefcase className="h-4 w-4 mr-2" />
+              Create Sub-Client
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -742,9 +769,15 @@ export default function TenantManagementPage() {
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Tenant</DialogTitle>
+              <DialogTitle>
+                {creationType === 'primary' 
+                  ? 'Create New Primary Client (Customer Organization)'
+                  : 'Create New Sub-Client (Department/Division)'}
+              </DialogTitle>
               <DialogDescription>
-                Create a new Primary Customer or Sub-Client. Primary Customers can have their own sub-clients, while Sub-Clients belong to a Primary Customer.
+                {creationType === 'primary'
+                  ? 'Primary clients are top-level customer organizations that can have multiple sub-clients (departments, divisions, etc.)'
+                  : 'Sub-clients are departments or divisions under a primary client. They inherit settings from their parent organization.'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -835,41 +868,11 @@ export default function TenantManagementPage() {
                   <p className="text-xs text-gray-500 mt-1">Primary contact email for this tenant</p>
                 </div>
               </div>
-              {/* Phase 2: Hierarchy fields */}
-              <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
-                <Label htmlFor="tenant-tier" className="md:text-right">
-                  Tier *
-                </Label>
-                <div className="md:col-span-3">
-                  <Select
-                    value={newTenant.tenant_tier.toString()}
-                    onValueChange={(value) =>
-                    setNewTenant({
-                      ...newTenant,
-                      tenant_tier: parseInt(value) as TenantTier,
-                      parent_tenant_id: value === "3" ? newTenant.parent_tenant_id : undefined,
-                    })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2">Primary Customer (can have sub-clients)</SelectItem>
-                      <SelectItem value="3">Sub-Client (belongs to a Primary Customer)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {newTenant.tenant_tier === 2 
-                      ? "Primary Customers can create and manage up to 50 sub-clients" 
-                      : "Sub-Clients are managed by their Primary Customer"}
-                  </p>
-                </div>
-              </div>
-              {newTenant.tenant_tier === 3 && (
+              {/* Phase 2: Parent selection - only show for sub-clients */}
+              {creationType === 'sub' && (
                 <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
                   <Label htmlFor="parent-tenant" className="md:text-right">
-                    Parent Tenant *
+                    Parent Primary Client *
                   </Label>
                   <div className="md:col-span-3">
                     <Select
@@ -879,7 +882,7 @@ export default function TenantManagementPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select parent tenant" />
+                        <SelectValue placeholder="Select parent primary client" />
                       </SelectTrigger>
                       <SelectContent>
                         {parentTenants.map((tenant) => (
@@ -889,7 +892,7 @@ export default function TenantManagementPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-gray-500 mt-1">The Primary Customer that will manage this sub-client</p>
+                    <p className="text-xs text-gray-500 mt-1">Select which primary client will manage this sub-client</p>
                   </div>
                 </div>
               )}
@@ -924,7 +927,7 @@ export default function TenantManagementPage() {
             </div>
             <DialogFooter>
               <Button onClick={() => createTenant(newTenant)}>
-                Create Tenant
+                {creationType === 'primary' ? 'Create Primary Client' : 'Create Sub-Client'}
               </Button>
             </DialogFooter>
           </DialogContent>
