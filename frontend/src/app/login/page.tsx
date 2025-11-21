@@ -78,10 +78,29 @@ function LoginFormContent() {
       } else {
         console.log('Login successful, waiting for auth state to stabilize...')
         // Wait a moment for auth state to stabilize before redirecting
-        setTimeout(() => {
-          console.log('Redirecting to work-requests...')
+        setTimeout(async () => {
           setState(prev => ({ ...prev, Loading: false }))
-          router.push('/work-requests')
+          
+          // Check if user has completed their profile
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name, full_name')
+              .eq('id', user.id)
+              .single()
+            
+            // If profile is incomplete (no first/last name), redirect to profile page
+            if (!profile?.first_name || !profile?.last_name) {
+              console.log('Profile incomplete, redirecting to profile page...')
+              router.push('/profile')
+            } else {
+              console.log('Redirecting to work-requests...')
+              router.push('/work-requests')
+            }
+          } else {
+            router.push('/work-requests')
+          }
         }, 1000)
       }
     } catch (err: any) {
