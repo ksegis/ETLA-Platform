@@ -113,9 +113,16 @@ export function usePermissions() {
 
   useEffect(() => {
     async function loadPermissionsFromDatabase() {
-      if (!isAuthenticated || !tenantUser) {
+      // Keep loading until we have authentication state
+      if (!isAuthenticated) {
         setUserPermissions([]);
         setIsLoading(false);
+        return;
+      }
+      
+      // If authenticated but tenantUser not loaded yet, keep loading
+      if (!tenantUser) {
+        setIsLoading(true);
         return;
       }
 
