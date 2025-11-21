@@ -87,7 +87,8 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
         throw new Error('Please enter at least one valid email address')
       }
 
-      if (!formData.tenant_id) {
+      // Tenant is optional for host admins (they have access to all tenants)
+      if (!formData.tenant_id && formData.role_level !== 'host') {
         throw new Error('Please select a tenant')
       }
 
@@ -227,21 +228,27 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <Building className="h-4 w-4 inline mr-1" />
-                    Tenant *
+                    Tenant {formData.role_level !== 'host' && '*'}
                   </label>
                   <select
-                    required
+                    required={formData.role_level !== 'host'}
                     value={formData.tenant_id}
                     onChange={(e: any) => handleInputChange('tenant_id', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={formData.role_level === 'host'}
                   >
-                    <option value="">Select Tenant</option>
+                    <option value="">{formData.role_level === 'host' ? 'All Tenants (Host Admin)' : 'Select Tenant'}</option>
                     {tenants.map((tenant: any) => (
                       <option key={tenant.id} value={tenant.id}>
                         {tenant.name} ({tenant.tenant_type})
                       </option>
                     ))}
                   </select>
+                  {formData.role_level === 'host' && (
+                    <p className="text-xs text-blue-600 mt-1">
+                      Host admins have access to all tenants and don't need a specific tenant assignment.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -285,14 +292,21 @@ export default function UserInviteModal({ isOpen, onClose, onSuccess, tenants }:
             </div>
 
             {/* Preview */}
-            {emailCount > 0 && formData.tenant_id && (
+            {emailCount > 0 && (formData.tenant_id || formData.role_level === 'host') && (
               <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                 <h4 className="text-sm font-medium text-blue-900 mb-2">
                   <Users className="h-4 w-4 inline mr-1" />
                   Invitation Preview
                 </h4>
                 <div className="text-sm text-blue-800">
-                  <p><strong>{emailCount}</strong> user{emailCount > 1 ? 's' : ''} will be invited as <strong>{formData.role}</strong> ({formData.role_level}) to <strong>{tenants.find((t) => t.id === formData.tenant_id)?.name}</strong></p>
+                  <p>
+                    <strong>{emailCount}</strong> user{emailCount > 1 ? 's' : ''} will be invited as <strong>{formData.role}</strong> ({formData.role_level}) to{' '}
+                    <strong>
+                      {formData.role_level === 'host' 
+                        ? 'All Tenants (Host Admin)' 
+                        : tenants.find((t) => t.id === formData.tenant_id)?.name}
+                    </strong>
+                  </p>
                   <p className="mt-1">Invitations will expire in <strong>{formData.expires_in_days} day{formData.expires_in_days > 1 ? 's' : ''}</strong></p>
                 </div>
               </div>

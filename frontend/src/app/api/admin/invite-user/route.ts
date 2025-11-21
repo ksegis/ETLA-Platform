@@ -54,14 +54,33 @@ export async function POST(request: Request) {
     const invitations = [];
     const errors = [];
 
-    // Fetch tenant name
-    const { data: tenant, error: tenantError } = await supabaseAdmin
-      .from('tenants')
-      .select('name, type')
-      .eq('id', invitationData.tenant_id)
-      .single();
+    // For host admins, if no tenant_id provided, use the first available tenant
+    // (Host admins have access to all tenants via RLS policies)
+    let effectiveTenantId = invitationData.tenant_id;
+    
+    if (!effectiveTenantId && invitationData.role_level === 'host') {
+      const { data: firstTenant } = await supabaseAdmin
+        .from('tenants')
+        .select('id')
+        .limit(1)
+        .single();
+      
+      if (firstTenant) {
+        effectiveTenantId = firstTenant.id;
+        console.log(`API: Host admin invitation - using first tenant ${effectiveTenantId}`);
+      }
+    }
 
-    const tenantName = tenant?.name || 'the organization';
+    // Fetch tenant name
+    const { data: tenant, error: tenantError } = effectiveTenantId
+      ? await supabaseAdmin
+          .from('tenants')
+          .select('name, type')
+          .eq('id', effectiveTenantId)
+          .single()
+      : { data: null, error: null };
+
+    const tenantName = tenant?.name || 'HelixBridge';
     const tenantType = tenant?.type || 'organization';
 
     for (const email of invitationData.emails) {
@@ -73,7 +92,7 @@ export async function POST(request: Request) {
             email,
             role: invitationData.role,
             role_level: invitationData.role_level,
-            tenant_id: invitationData.tenant_id,
+            tenant_id: effectiveTenantId,
             message: invitationData.message,
             invited_by: user.id, // Add the current user's ID
             expires_at: new Date(Date.now() + invitationData.expires_in_days * 24 * 60 * 60 * 1000).toISOString(),
@@ -96,11 +115,12 @@ export async function POST(request: Request) {
             data: {
               role: invitationData.role,
               role_level: invitationData.role_level,
-              tenant_id: invitationData.tenant_id,
+              tenant_id: effectiveTenantId,
               tenant_name: tenantName,
               tenant_type: tenantType,
               invitation_id: invitation.id,
-              custom_message: invitationData.message
+              custom_message: invitationData.message,
+              is_host_admin: invitationData.role_level === 'host'
             },
             redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.helixbridge.cloud'}/auth/set-password`
           }
