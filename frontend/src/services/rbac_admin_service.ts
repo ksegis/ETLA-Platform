@@ -85,8 +85,8 @@ export class RBACAdminService {
           .in('id', tenantIds)
         
         // Create lookup maps
-        const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
-        const tenantMap = new Map(tenants?.map(t => [t.id, t]) || [])
+        const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
+        const tenantMap = new Map(tenants?.map((t: any) => [t.id, t]) || [])
         
         const users = tuData?.map((item: any) => {
           const profile = profileMap.get(item.user_id)
