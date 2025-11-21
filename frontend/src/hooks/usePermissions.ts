@@ -112,15 +112,66 @@ export function usePermissions() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated || !tenantUser) {
-      setUserPermissions([]);
-      setIsLoading(false);
-      return;
+    async function loadPermissionsFromDatabase() {
+      if (!isAuthenticated || !tenantUser) {
+        setUserPermissions([]);
+        setIsLoading(false);
+        return;
+      }
+
+      const role = (tenantUser.role ?? ROLES.CLIENT_USER) as Role;
+      
+      try {
+        // Import the service dynamically to avoid circular dependencies
+        const { getRoleWithPermissions } = await import('@/services/role_permissions_service');
+        
+        // Load permissions from database
+        const roleData = await getRoleWithPermissions(role);
+        
+        if (roleData && roleData.permissions) {
+          // Convert database permissions to RolePermissionEntry format
+          const permissions: RolePermissionEntry[] = [];
+          
+          roleData.permissions.forEach((perm) => {
+            // Add permission entries based on what's enabled in the database
+            if (perm.can_manage) {
+              permissions.push({ feature: perm.feature_key as Feature, permission: CORE_PERMISSIONS.MANAGE });
+            } else {
+              // Add specific CRUD permissions
+              if (perm.can_create) {
+                permissions.push({ feature: perm.feature_key as Feature, permission: CORE_PERMISSIONS.CREATE });
+              }
+              if (perm.can_read) {
+                permissions.push({ feature: perm.feature_key as Feature, permission: CORE_PERMISSIONS.VIEW });
+              }
+              if (perm.can_update) {
+                permissions.push({ feature: perm.feature_key as Feature, permission: CORE_PERMISSIONS.UPDATE });
+              }
+              if (perm.can_delete) {
+                permissions.push({ feature: perm.feature_key as Feature, permission: CORE_PERMISSIONS.DELETE });
+              }
+            }
+          });
+          
+          console.log(`✅ Loaded ${permissions.length} permissions from database for role: ${role}`);
+          setUserPermissions(permissions);
+        } else {
+          // Fallback to hardcoded defaults if database load fails
+          console.warn(`⚠️ No database permissions found for role: ${role}, using defaults`);
+          const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER];
+          setUserPermissions(rolePermissions.permissions);
+        }
+      } catch (error) {
+        console.error('Error loading permissions from database:', error);
+        // Fallback to hardcoded defaults on error
+        const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER];
+        setUserPermissions(rolePermissions.permissions);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    const role = (tenantUser.role ?? ROLES.CLIENT_USER) as Role;
-    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] ?? DEFAULT_ROLE_PERMISSIONS[ROLES.CLIENT_USER];
-    setUserPermissions(rolePermissions.permissions);
-    setIsLoading(false);
+
+    loadPermissionsFromDatabase();
   }, [isAuthenticated, tenantUser]);
 
   // Map aliases to core
