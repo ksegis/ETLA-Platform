@@ -2,40 +2,48 @@
 
 // --- Features (broad + aliases used around the app) ---
 export const FEATURES = {
-  ACCESS_CONTROL: "access_control",
-  TENANT_MANAGEMENT: "tenant",
-  WORK_REQUESTS: "work_request",
-  PROJECTS: "project",
-  PROJECT_MANAGEMENT: "project", // alias
-  RISK_MANAGEMENT: "risk_management",
+  ACCESS_CONTROL: "access-control",
+  TENANT_MANAGEMENT: "tenant-management",
+  WORK_REQUESTS: "work-requests",
+  PROJECTS: "project-management",
+  PROJECT_MANAGEMENT: "project-management", // alias
+  RISK_MANAGEMENT: "risk-management",
 
-  EMPLOYEES: "employee_records",
-  EMPLOYEE_RECORDS: "employee_records",
-  EMPLOYEE_DIRECTORY: "employee_directory",
+  EMPLOYEES: "employee-records",
+  EMPLOYEE_RECORDS: "employee-records",
+  EMPLOYEE_DIRECTORY: "employee-directory",
   PROFILES: "profiles",
   TIMEKEEPING: "timekeeping",
 
   REPORTING: "reporting",
-  DASHBOARDS: "reporting", // alias to reporting
+  DASHBOARDS: "dashboard", // singular to match database
   ANALYTICS: "analytics",
-  AUDIT_LOGS: "audit_log",
+  AUDIT_LOGS: "audit-log",
 
-  SYSTEM_SETTINGS: "system_settings",
-  API_CONFIG: "api_config",
+  SYSTEM_SETTINGS: "system-settings",
+  API_CONFIG: "api-config",
   INTEGRATIONS: "integrations",
-  SYSTEM_HEALTH: "system_health",
+  SYSTEM_HEALTH: "system-health",
 
-  DATA_MANAGEMENT: "data_management",
-  FILE_UPLOAD: "data_management",     // page lives under data mgmt
-  DATA_VALIDATION: "data_management", // page lives under data mgmt
+  DATA_MANAGEMENT: "data-management",
+  FILE_UPLOAD: "file-upload",
+  DATA_VALIDATION: "data-validation",
 
-  PAYROLL: "payroll",
-  BENEFITS: "benefits",
+  PAYROLL: "payroll-processing",
+  BENEFITS: "benefits-management",
 
-  JOBS: "jobs",
+  JOBS: "job-management",
   CANDIDATES: "candidates",
   INTERVIEWS: "interviews",
   OFFERS: "offers",
+  
+  // Talent Management features
+  TALENT_DASHBOARD: "talent-dashboard",
+  TALENT_JOBS: "job-management",
+  TALENT_CANDIDATES: "candidates",
+  TALENT_INTERVIEWS: "interviews",
+  TALENT_OFFERS: "offers",
+  USER_MANAGEMENT: "user-management",
 } as const;
 
 export type Feature = typeof FEATURES[keyof typeof FEATURES];
