@@ -129,7 +129,7 @@ export default function APIConfigurationPage() {
       }
 
       // Merge configs with credentials info
-      const enrichedConfigs = (configsData || []).map(config => ({
+      const enrichedConfigs = (configsData || []).map((config: any) => ({
         ...config,
         credentials: credentialsMap[config.id] || null,
       }));
