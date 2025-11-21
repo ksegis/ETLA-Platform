@@ -107,7 +107,7 @@ export default function APIConfigurationPage() {
       if (configsError) throw configsError;
 
       // Load credentials info (without decrypting)
-      const configIds = configsData?.map(c => c.id) || [];
+      const configIds = configsData?.map((c: any) => c.id) || [];
       let credentialsMap: Record<string, any> = {};
 
       if (configIds.length > 0) {
