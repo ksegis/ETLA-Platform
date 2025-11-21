@@ -48,13 +48,13 @@ export default function JobsUploadPage() {
   const [dataFile, setDataFile] = useState<File | null>(null);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
 
-  const handleDataFileChange = (files: File[]) => {
+  const handleDataFileSelected = (files: File[]) => {
     if (files.length > 0) {
       setDataFile(files[0]);
     }
   };
 
-  const handleDocumentFilesChange = (files: File[]) => {
+  const handleDocumentFilesSelected = (files: File[]) => {
     setDocumentFiles(files);
   };
 
@@ -144,7 +144,7 @@ JOB-002,Product Manager,Product,Remote,Full-time,100000,150000,"Join our product
             accept=".csv,.xlsx,.xls"
             maxSize={10}
             multiple={false}
-            onFilesChange={handleDataFileChange}
+            onFilesSelected={handleDataFileSelected}
           />
 
           {dataFile && (
@@ -169,7 +169,7 @@ JOB-002,Product Manager,Product,Remote,Full-time,100000,150000,"Join our product
             accept=".pdf,.doc,.docx,.txt"
             maxSize={5}
             multiple={true}
-            onFilesChange={handleDocumentFilesChange}
+            onFilesSelected={handleDocumentFilesSelected}
           />
 
           {documentFiles.length > 0 && (

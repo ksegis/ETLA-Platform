@@ -47,7 +47,7 @@ export default function ApplicationsUploadPage() {
   
   const [dataFile, setDataFile] = useState<File | null>(null);
 
-  const handleDataFileChange = (files: File[]) => {
+  const handleDataFileSelected = (files: File[]) => {
     if (files.length > 0) {
       setDataFile(files[0]);
     }
@@ -140,7 +140,7 @@ APP-003,john.doe@example.com,JOB-002,interview,2024-01-20,Referral,Referred by c
             accept=".csv,.xlsx,.xls"
             maxSize={10}
             multiple={false}
-            onFilesChange={handleDataFileChange}
+            onFilesSelected={handleDataFileSelected}
           />
 
           {dataFile && (
