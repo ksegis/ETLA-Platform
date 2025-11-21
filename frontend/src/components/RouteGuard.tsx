@@ -63,11 +63,19 @@ const ROUTE_PERMISSIONS: Record<
     feature: "access_control",
     permission: PERMISSIONS.USER_READ,
   },
+  "/admin/access-control": {
+    feature: "access_control",
+    permission: PERMISSIONS.USER_READ,
+  },
   "/user-management": {
     feature: "user",
     permission: PERMISSIONS.USER_READ,
   },
   "/tenant-management": {
+    feature: "tenant",
+    permission: PERMISSIONS.TENANT_READ,
+  },
+  "/admin/tenant-management": {
     feature: "tenant",
     permission: PERMISSIONS.TENANT_READ,
   },
@@ -93,6 +101,10 @@ const ROUTE_PERMISSIONS: Record<
 
   // Data Management Routes
   "/migration-workbench": {
+    feature: "data_management",
+    permission: PERMISSIONS.TENANT_UPDATE,
+  },
+  "/talent-import": {
     feature: "data_management",
     permission: PERMISSIONS.TENANT_UPDATE,
   },

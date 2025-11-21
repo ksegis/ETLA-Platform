@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { FEATURES, PERMISSIONS, ROLES } from '@/rbac/constants';
 import { RBACAdminService } from '@/services/rbac_admin_service';
 
@@ -488,6 +489,7 @@ export default function AccessControlClient() {
         onSuccess={handleCreateSuccess}
         tenants={tenantsForModal}
       />
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

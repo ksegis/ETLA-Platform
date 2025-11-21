@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Briefcase, FileText, HelpCircle } from 'lucide-react';
 import TourOverlay, { useTour, TourStep } from '@/components/TourOverlay';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface ImportType {
   id: string;
@@ -156,7 +157,8 @@ APP-003,john.doe@example.com,JOB-002,interview,2024-01-20,Referral,Referred by c
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <DashboardLayout>
+      <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
@@ -306,6 +308,7 @@ APP-003,john.doe@example.com,JOB-002,interview,2024-01-20,Referral,Referred by c
         onClose={closeTour}
         tourKey="talent-import-main"
       />
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
