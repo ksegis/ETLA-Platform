@@ -73,7 +73,7 @@ type TabKey = 'users' | 'roles' | 'invitations' | 'notifications';
 export default function AccessControlClient() {
   const router = useRouter();
 
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, tenantUser } = useAuth();
   const { checkPermission, currentUserRole, loading: permissionsLoading } = usePermissions();
 
   const [activeTab, setActiveTab] = useState<TabKey>('users');
@@ -120,14 +120,24 @@ export default function AccessControlClient() {
 
   // Check permission to access this page
   useEffect(() => {
+    // Wait for permissions to load
     if (permissionsLoading) return;
+    
+    // If authenticated, wait for tenantUser to load before checking permissions
+    if (isAuthenticated && !tenantUser) {
+      console.log('⏳ Access Control: Waiting for tenantUser to load...');
+      return;
+    }
     
     const canAccess = checkPermission(FEATURES.ACCESS_CONTROL, PERMISSIONS.VIEW);
     
     if (!canAccess) {
+      console.log('❌ Access Control: Permission denied, redirecting to /unauthorized');
       router.push('/unauthorized');
+    } else {
+      console.log('✅ Access Control: Permission granted');
     }
-  }, [checkPermission, permissionsLoading, router]);
+  }, [checkPermission, permissionsLoading, router, isAuthenticated, tenantUser]);
 
   // Load tenants
   useEffect(() => {
