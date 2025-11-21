@@ -86,12 +86,12 @@ function LoginFormContent() {
           if (user) {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('first_name, last_name, full_name')
+              .select('full_name')
               .eq('id', user.id)
               .single()
             
-            // If profile is incomplete (no first/last name), redirect to profile page
-            if (!profile?.first_name || !profile?.last_name) {
+            // If profile is incomplete (no full_name or just email), redirect to profile page
+            if (!profile?.full_name || profile.full_name === user.email) {
               console.log('Profile incomplete, redirecting to profile page...')
               router.push('/profile')
             } else {

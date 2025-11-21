@@ -55,50 +55,68 @@ export class RBACAdminService {
       const { page = 1, limit = 200, search } = options
       const offset = (page - 1) * limit
 
-      let query = supabase
-        .from('tenant_users')
-        .select(`
-          user_id,
-          tenant_id,
-          role,
-          is_active,
-          profiles!tenant_users_user_id_fkey(
-            id,
-            email,
-            full_name
-          ),
-          tenants!tenant_users_tenant_id_fkey(
-            id,
-            name
-          )
-        `)
+      // Use RPC function for better join support
+      let query = supabase.rpc('list_all_users_with_tenants')
 
-      // Add search filter if provided
-      if (search) {
-        query = query.or(`profiles.email.ilike.%${search}%,profiles.full_name.ilike.%${search}%,tenants.name.ilike.%${search}%`)
+      // Fallback to direct query if RPC doesn't exist
+      const { data: rpcData, error: rpcError } = await query
+      
+      if (rpcError) {
+        // Fallback: use direct query with manual join
+        const { data: tuData, error: tuError } = await supabase
+          .from('tenant_users')
+          .select('user_id, tenant_id, role, is_active')
+          .range(offset, offset + limit - 1)
+        
+        if (tuError) throw tuError
+        
+        // Manually fetch related data
+        const userIds = tuData?.map(tu => tu.user_id) || []
+        const tenantIds = tuData?.map(tu => tu.tenant_id) || []
+        
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .in('id', userIds)
+        
+        const { data: tenants } = await supabase
+          .from('tenants')
+          .select('id, name')
+          .in('id', tenantIds)
+        
+        // Create lookup maps
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
+        const tenantMap = new Map(tenants?.map(t => [t.id, t]) || [])
+        
+        const users = tuData?.map((item: any) => {
+          const profile = profileMap.get(item.user_id)
+          const tenant = tenantMap.get(item.tenant_id)
+          return {
+            userId: item.user_id,
+            email: profile?.email || 'unknown@example.com',
+            display_name: profile?.full_name || profile?.email || 'Unknown User',
+            role: item.role,
+            is_active: item.is_active,
+            tenant_id: item.tenant_id,
+            tenant_name: tenant?.name || 'Unknown Tenant'
+          }
+        }) || []
+        
+        const { count } = await supabase
+          .from('tenant_users')
+          .select('*', { count: 'exact', head: true })
+        
+        return {
+          users,
+          total: count || 0
+        }
       }
-
-      // Get total count
+      
+      const users = rpcData || []
+      
       const { count } = await supabase
         .from('tenant_users')
         .select('*', { count: 'exact', head: true })
-
-      // Get paginated results
-      const { data, error } = await query
-        .range(offset, offset + limit - 1)
-        .order('profiles(email)')
-
-      if (error) throw error
-
-      const users = data?.map((item: any) => ({
-        userId: item.user_id,
-        email: item.profiles?.email || 'unknown@example.com',
-        display_name: item.profiles?.full_name || item.profiles?.email || 'Unknown User',
-        role: item.role,
-        is_active: item.is_active,
-        tenant_id: item.tenant_id,
-        tenant_name: item.tenants?.name || 'Unknown Tenant'
-      })) || []
 
       return {
         users,

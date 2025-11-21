@@ -20,14 +20,12 @@ export default function ProfilePage() {
   const [error, setError] = useState('')
   
   const [profileData, setProfileData] = useState({
-    first_name: '',
-    last_name: '',
     full_name: '',
     email: '',
     phone: '',
     department: '',
     job_title: '',
-    profile_picture_url: ''
+    avatar_url: ''
   })
   
   const [editData, setEditData] = useState({ ...profileData })
@@ -58,18 +56,16 @@ export default function ProfilePage() {
         
         if (data) {
           const profile = {
-            first_name: data.first_name || '',
-            last_name: data.last_name || '',
-            full_name: data.full_name || data.email || '',
+            full_name: data.full_name || '',
             email: data.email || user.email || '',
             phone: data.phone || '',
             department: data.department || '',
             job_title: data.job_title || '',
-            profile_picture_url: data.profile_picture_url || ''
+            avatar_url: data.avatar_url || ''
           }
           setProfileData(profile)
           setEditData(profile)
-          setProfileImagePreview(profile.profile_picture_url || null)
+          setProfileImagePreview(profile.avatar_url || null)
         }
       } catch (err) {
         console.error('Error loading profile:', err)
@@ -102,26 +98,26 @@ export default function ProfilePage() {
     setSuccess(false)
     
     try {
-      let profile_picture_url = profileData.profile_picture_url
+      let avatar_url = profileData.avatar_url
 
       // Upload new profile image if selected
       if (profileImage) {
         const fileExt = profileImage.name.split('.').pop()
         const fileName = `${user.id}-${Date.now()}.${fileExt}`
-        const filePath = `profile-pictures/${fileName}`
+        const filePath = `avatars/${fileName}`
 
         const { error: uploadError } = await supabase.storage
           .from('public')
           .upload(filePath, profileImage)
 
         if (uploadError) {
-          console.error('Error uploading profile picture:', uploadError)
-          setError('Failed to upload profile picture')
+          console.error('Error uploading avatar:', uploadError)
+          // Continue with update even if upload fails
         } else {
           const { data: { publicUrl } } = supabase.storage
             .from('public')
             .getPublicUrl(filePath)
-          profile_picture_url = publicUrl
+          avatar_url = publicUrl
         }
       }
 
@@ -129,13 +125,11 @@ export default function ProfilePage() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          first_name: editData.first_name,
-          last_name: editData.last_name,
-          full_name: `${editData.first_name} ${editData.last_name}`.trim() || editData.email,
+          full_name: editData.full_name || editData.email,
           phone: editData.phone || null,
           department: editData.department || null,
           job_title: editData.job_title || null,
-          profile_picture_url: profile_picture_url,
+          avatar_url: avatar_url || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
@@ -145,11 +139,10 @@ export default function ProfilePage() {
       // Update local state
       const updatedProfile = {
         ...editData,
-        full_name: `${editData.first_name} ${editData.last_name}`.trim() || editData.email,
-        profile_picture_url
+        avatar_url
       }
       setProfileData(updatedProfile)
-      setProfileImagePreview(profile_picture_url || null)
+      setProfileImagePreview(avatar_url || null)
       setProfileImage(null)
       setIsEditing(false)
       setSuccess(true)
@@ -166,7 +159,7 @@ export default function ProfilePage() {
   const handleCancel = () => {
     setEditData({ ...profileData })
     setProfileImage(null)
-    setProfileImagePreview(profileData.profile_picture_url || null)
+    setProfileImagePreview(profileData.avatar_url || null)
     setIsEditing(false)
     setError('')
   }
@@ -270,40 +263,21 @@ export default function ProfilePage() {
 
             {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
+                  Full Name
                 </label>
                 {isEditing ? (
                   <Input
                     type="text"
-                    value={editData.first_name}
-                    onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
-                    placeholder="John"
+                    value={editData.full_name}
+                    onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                    placeholder="John Doe"
                   />
                 ) : (
                   <div className="flex items-center p-3 bg-gray-50 rounded-md">
                     <User className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>{profileData.first_name || 'Not set'}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name
-                </label>
-                {isEditing ? (
-                  <Input
-                    type="text"
-                    value={editData.last_name}
-                    onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
-                    placeholder="Doe"
-                  />
-                ) : (
-                  <div className="flex items-center p-3 bg-gray-50 rounded-md">
-                    <User className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>{profileData.last_name || 'Not set'}</span>
+                    <span>{profileData.full_name || 'Not set'}</span>
                   </div>
                 )}
               </div>
