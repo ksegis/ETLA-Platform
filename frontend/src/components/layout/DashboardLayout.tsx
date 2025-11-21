@@ -285,18 +285,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return FEATURES.WORK_REQUESTS
   }
 
-  // Filter groups/items by *feature access* to avoid permission-only false negatives
+  // Show ALL groups/items, but mark unauthorized ones for grayed-out display
   const filteredNavigationGroups = useMemo(() => {
     if (permissionsloading) return []
 
-    return navigationGroups
-      .map((group) => {
-        const items = group.items.filter((item) =>
-          canAccessFeature(featureForHref(item.href))
-        )
-        return { ...group, items }
-      })
-      .filter((g) => g.items.length > 0)
+    // Return all groups with all items - we'll handle authorization in rendering
+    return navigationGroups.map((group) => ({
+      ...group,
+      items: group.items.map((item) => ({
+        ...item,
+        isAuthorized: canAccessFeature(featureForHref(item.href))
+      }))
+    }))
   }, [permissionsloading, canAccessFeature]) // nav config is static
 
   if (permissionsloading) {
@@ -381,9 +381,42 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     }`}
                   >
                     <div className="ml-4 pl-4 border-l-2 border-gray-100 space-y-1 pt-2">
-                      {group.items.map((item) => {
+                      {group.items.map((item: any) => {
                         const ItemIcon = item.icon
                         const isActive = isActiveItem(item.href)
+                        const isAuthorized = item.isAuthorized !== false
+
+                        const content = (
+                          <>
+                            <ItemIcon className="h-4 w-4 mr-3" />
+                            <span className="flex-1">{item.name}</span>
+                            {!isAuthorized && (
+                              <span className="ml-2 text-xs" title="Access restricted">🔒</span>
+                            )}
+                            {item.isNew && isAuthorized && (
+                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                New
+                              </span>
+                            )}
+                            {item.badge && isAuthorized && (
+                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                {item.badge}
+                              </span>
+                            )}
+                          </>
+                        )
+
+                        if (!isAuthorized) {
+                          return (
+                            <div
+                              key={item.name}
+                              className="flex items-center px-3 py-2 text-sm rounded-md text-gray-300 bg-gray-50 cursor-not-allowed opacity-60"
+                              title={`Access restricted. Contact your administrator for ${item.name} access.`}
+                            >
+                              {content}
+                            </div>
+                          )
+                        }
 
                         return (
                           <Link
@@ -395,18 +428,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                 : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                             }`}
                           >
-                            <ItemIcon className="h-4 w-4 mr-3" />
-                            <span className="flex-1">{item.name}</span>
-                            {item.isNew && (
-                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                New
-                              </span>
-                            )}
-                            {item.badge && (
-                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                                {item.badge}
-                              </span>
-                            )}
+                            {content}
                           </Link>
                         )
                       })}
