@@ -5,7 +5,7 @@
  * Provides CRUD operations for role definitions and feature permissions.
  */
 
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export type RoleDefinition = {
   id: string;
@@ -49,7 +49,6 @@ export type PermissionUpdate = {
  * Get all role definitions
  */
 export async function getAllRoles(): Promise<RoleDefinition[]> {
-  const supabase = createClient();
   
   const { data, error } = await supabase
     .from('role_definitions')
@@ -69,7 +68,6 @@ export async function getAllRoles(): Promise<RoleDefinition[]> {
  * Get a specific role by role_key
  */
 export async function getRoleByKey(roleKey: string): Promise<RoleDefinition | null> {
-  const supabase = createClient();
   
   const { data, error } = await supabase
     .from('role_definitions')
@@ -93,7 +91,6 @@ export async function getRoleByKey(roleKey: string): Promise<RoleDefinition | nu
  * Get permissions for a specific role
  */
 export async function getRolePermissions(roleId: string): Promise<RoleFeaturePermission[]> {
-  const supabase = createClient();
   
   const { data, error } = await supabase
     .from('role_feature_permissions')
@@ -151,7 +148,6 @@ export async function updateRolePermissions(
   roleKey: string,
   permissions: PermissionUpdate[]
 ): Promise<void> {
-  const supabase = createClient();
   
   // Get role ID
   const role = await getRoleByKey(roleKey);
@@ -205,7 +201,6 @@ export async function createRole(
   description: string,
   tenantId: string | null = null
 ): Promise<RoleDefinition> {
-  const supabase = createClient();
   
   const { data, error } = await supabase
     .from('role_definitions')
@@ -232,7 +227,6 @@ export async function createRole(
  * Delete a custom role (system roles cannot be deleted)
  */
 export async function deleteRole(roleKey: string): Promise<void> {
-  const supabase = createClient();
   
   // Check if it's a system role
   const role = await getRoleByKey(roleKey);
@@ -259,7 +253,6 @@ export async function deleteRole(roleKey: string): Promise<void> {
  * Get user count for a role
  */
 export async function getRoleUserCount(roleKey: string): Promise<number> {
-  const supabase = createClient();
   
   const { count, error } = await supabase
     .from('tenant_users')
@@ -284,7 +277,6 @@ export async function getCurrentUserPermissions(tenantId: string): Promise<Recor
   can_delete: boolean;
   can_manage: boolean;
 }>> {
-  const supabase = createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -311,6 +303,97 @@ export async function getCurrentUserPermissions(tenantId: string): Promise<Recor
       can_update: perm.can_update,
       can_delete: perm.can_delete,
       can_manage: perm.can_manage,
+    };
+  });
+
+  return permissionsMap;
+}
+
+/**
+ * Load all role permissions (wrapper for UI compatibility)
+ * Returns permissions organized by role_key and feature_key
+ */
+export async function loadAllRolePermissions(): Promise<Record<string, Record<string, {
+  can_create: boolean;
+  can_read: boolean;
+  can_update: boolean;
+  can_delete: boolean;
+}>>> {
+  const rolesWithPermissions = await getAllRolesWithPermissions();
+  
+  const result: Record<string, Record<string, any>> = {};
+  
+  rolesWithPermissions.forEach(role => {
+    result[role.role_key] = {};
+    role.permissions.forEach(perm => {
+      result[role.role_key][perm.feature_key] = {
+        can_create: perm.can_create,
+        can_read: perm.can_read,
+        can_update: perm.can_update,
+        can_delete: perm.can_delete,
+      };
+    });
+  });
+  
+  return result;
+}
+
+/**
+ * Save role permissions (wrapper for UI compatibility)
+ */
+export async function saveRolePermissions(
+  roleKey: string,
+  permissions: Array<{
+    feature_id: string;
+    can_create: boolean;
+    can_read: boolean;
+    can_update: boolean;
+    can_delete: boolean;
+  }>
+): Promise<void> {
+  const permissionUpdates: PermissionUpdate[] = permissions.map(p => ({
+    feature_key: p.feature_id,
+    can_create: p.can_create,
+    can_read: p.can_read,
+    can_update: p.can_update,
+    can_delete: p.can_delete,
+    can_manage: p.can_create && p.can_read && p.can_update && p.can_delete,
+  }));
+  
+  await updateRolePermissions(roleKey, permissionUpdates);
+}
+
+/**
+ * Get user effective permissions (wrapper for UI compatibility)
+ */
+export async function getUserEffectivePermissions(
+  userId: string,
+  tenantId: string
+): Promise<Record<string, {
+  can_create: boolean;
+  can_read: boolean;
+  can_update: boolean;
+  can_delete: boolean;
+}>> {
+  const { data, error } = await supabase
+    .rpc('get_user_permissions', {
+      p_user_id: userId,
+      p_tenant_id: tenantId,
+    });
+
+  if (error) {
+    console.error('Error fetching user permissions:', error);
+    throw new Error(`Failed to fetch user permissions: ${error.message}`);
+  }
+
+  // Convert array to object keyed by feature_key
+  const permissionsMap: Record<string, any> = {};
+  (data || []).forEach((perm: any) => {
+    permissionsMap[perm.feature_key] = {
+      can_create: perm.can_create,
+      can_read: perm.can_read,
+      can_update: perm.can_update,
+      can_delete: perm.can_delete,
     };
   });
 
