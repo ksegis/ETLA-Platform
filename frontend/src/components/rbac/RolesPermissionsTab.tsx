@@ -122,6 +122,7 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
     try {
       // Load permissions from database
       const dbPermissions = await loadAllRolePermissions();
+      console.log('📊 Database permissions loaded:', dbPermissions);
       
       // Define role metadata
       const roleMetadata: Record<string, { name: string; description: string }> = {
@@ -154,7 +155,12 @@ export const RolesPermissionsTab: React.FC<RolesPermissionsTabProps> = ({
         // Build permission grant function from database
         const grant = (feature: Feature, permission: Permission): boolean => {
           const featurePerm = rolePerms[feature];
-          if (!featurePerm) return false;
+          if (!featurePerm) {
+            if (roleId === 'primary_client_admin') {
+              console.log(`❌ No permission found for ${roleId} -> ${feature}`);
+            }
+            return false;
+          }
           
           // Map RBAC permissions to database CRUD permissions
           switch (permission) {
