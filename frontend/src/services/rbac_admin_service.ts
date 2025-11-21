@@ -71,8 +71,8 @@ export class RBACAdminService {
         if (tuError) throw tuError
         
         // Manually fetch related data
-        const userIds = tuData?.map(tu => tu.user_id) || []
-        const tenantIds = tuData?.map(tu => tu.tenant_id) || []
+        const userIds = tuData?.map((tu: any) => tu.user_id) || []
+        const tenantIds = tuData?.map((tu: any) => tu.tenant_id) || []
         
         const { data: profiles } = await supabase
           .from('profiles')
