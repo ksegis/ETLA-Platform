@@ -89,8 +89,8 @@ export class RBACAdminService {
         const tenantMap = new Map(tenants?.map((t: any) => [t.id, t]) || [])
         
         const users = tuData?.map((item: any) => {
-          const profile = profileMap.get(item.user_id)
-          const tenant = tenantMap.get(item.tenant_id)
+          const profile = profileMap.get(item.user_id) as any
+          const tenant = tenantMap.get(item.tenant_id) as any
           return {
             userId: item.user_id,
             email: profile?.email || 'unknown@example.com',
