@@ -193,56 +193,51 @@ function AcceptInviteFormContent() {
         }
       }
 
-      // --- UPDATE INVITATION STATUS: Call database function ---
+      // --- UPDATE INVITATION STATUS: Call API endpoint ---
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       const userEmail = userData.user?.email;
 
       if (userId && userEmail) {
-        // Call the database function to update invitation status
-        const { data: inviteResult, error: inviteError } = await supabase
-          .rpc('accept_user_invitation', {
-            p_user_id: userId,
-            p_email: userEmail
-          });
-
-        // CRITICAL: Check for errors and handle them properly
-        if (inviteError) {
-          console.error('Failed to update invitation status:', inviteError);
+        // Get auth token for API call
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.error('No session found');
           setState(prev => ({
             ...prev,
             Loading: false,
-            error: `Failed to complete invitation acceptance: ${inviteError.message}. Please contact support.`
+            error: 'Authentication error. Please try logging in again.'
           }));
-          return; // Stop execution - don't proceed
+          return;
         }
 
-        // Check if function returned success
-        if (!inviteResult?.success) {
-          const errorMsg = inviteResult?.error || 'Unknown error';
-          console.error('Invitation acceptance failed:', errorMsg);
-          setState(prev => ({
-            ...prev,
-            Loading: false,
-            error: `Failed to accept invitation: ${errorMsg}. Please contact support.`
-          }));
-          return; // Stop execution - don't proceed
-        }
-
-        // Success! Update user metadata with tenant and role from invitation
-        const { error: metadataError } = await supabase.auth.updateUser({
-          data: {
-            tenant_id: inviteResult.tenant_id,
-            role: inviteResult.role,
-            invite_accepted: true,
-            invite_accepted_at: new Date().toISOString()
-          }
+        // Call API endpoint to accept invitation and create tenant_users record
+        const response = await fetch('/api/invitations/accept', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            userId,
+            email: userEmail
+          })
         });
 
-        if (metadataError) {
-          console.warn('Failed to update user metadata:', metadataError);
-          // Don't fail the entire process for metadata update issues
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          console.error('Failed to accept invitation:', result.error);
+          setState(prev => ({
+            ...prev,
+            Loading: false,
+            error: `Failed to complete invitation acceptance: ${result.error || 'Unknown error'}. Please contact support.`
+          }));
+          return;
         }
+
+        console.log('Invitation accepted successfully:', result.data);
 
         // Refresh session to ensure role is loaded
         await supabase.auth.refreshSession();
@@ -264,11 +259,10 @@ function AcceptInviteFormContent() {
         success: true
       }))
 
-      // Sign out the invite session and redirect after a brief delay
-      setTimeout(async () => {
-        await supabase.auth.signOut()
-        router.push('/login?message=Account setup completed successfully. Please sign in with your new password.')
-      }, 2000)
+      // Redirect to profile onboarding after a brief delay
+      setTimeout(() => {
+        router.push('/onboarding/profile')
+      }, 1500)
 
     } catch (err: any) {
       setState(prev => ({
