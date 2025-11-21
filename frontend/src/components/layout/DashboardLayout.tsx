@@ -417,6 +417,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         const ItemIcon = item.icon
                         const isActive = isActiveItem(item.href)
                         const isAuthorized = item.isAuthorized !== false
+                        
+                        // Debug logging for payroll
+                        if (item.name === 'Payroll Management') {
+                          console.log('🔧 Rendering Payroll Management:', {
+                            itemName: item.name,
+                            itemIsAuthorized: item.isAuthorized,
+                            computedIsAuthorized: isAuthorized,
+                            href: item.href
+                          })
+                        }
 
                         const content = (
                           <>
