@@ -287,7 +287,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     
     // ETL Cockpit
     if (href === '/dashboard') return FEATURES.ETL_DASHBOARD
-    if (href.startsWith('/talent-import')) return FEATURES.DATA_PROCESS
+    if (href.startsWith('/talent-import')) return FEATURES.ETL_DASHBOARD
     if (href.startsWith('/jobs')) return FEATURES.ETL_JOBS
     if (href.startsWith('/audit')) return FEATURES.AUDIT_LOG
     
