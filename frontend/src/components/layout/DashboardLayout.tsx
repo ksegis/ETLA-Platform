@@ -9,6 +9,7 @@ import {
   Users,
   FileText,
   Upload,
+  Download,
   BarChart3,
   Settings,
   LogOut,
@@ -132,6 +133,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       requiredPermission: PERMISSIONS.DATA_PROCESS,
       items: [
         { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3, requiredPermission: PERMISSIONS.DATA_PROCESS },
+        { name: 'Talent Data Import', href: '/talent-import', icon: Download, requiredPermission: PERMISSIONS.DATA_PROCESS },
         { name: 'Job Management', href: '/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
         { name: 'Employee Data Processing', href: '/employees', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_PROCESS },
         { name: 'Data Analytics', href: '/analytics', icon: Database, requiredPermission: PERMISSIONS.DATA_ANALYZE },
@@ -285,6 +287,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     
     // ETL Cockpit
     if (href === '/dashboard') return FEATURES.ETL_DASHBOARD
+    if (href.startsWith('/talent-import')) return FEATURES.DATA_PROCESS
     if (href.startsWith('/jobs')) return FEATURES.ETL_JOBS
     if (href.startsWith('/audit')) return FEATURES.AUDIT_LOG
     
