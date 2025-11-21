@@ -7,26 +7,49 @@ import { Shield, Save, RotateCcw, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { loadAllRolePermissions, saveRolePermissions } from '@/services/role_permissions_service'
 
-// Define all features/screens in the system
+// Define all features/screens in the system (matches navigation exactly)
 const FEATURES = [
-  { id: 'dashboard', name: 'Dashboard', category: 'Core' },
+  // Operations
   { id: 'work-requests', name: 'Work Requests', category: 'Operations' },
   { id: 'project-management', name: 'Project Management', category: 'Operations' },
+  { id: 'customer-projects', name: 'My Projects (Customer)', category: 'Operations' },
+  { id: 'customer-portfolio', name: 'Portfolio Overview (Customer)', category: 'Operations' },
+  { id: 'customer-notifications', name: 'Notifications (Customer)', category: 'Operations' },
   { id: 'reporting', name: 'Reporting', category: 'Operations' },
+  { id: 'hr-analytics', name: 'HR Analytics Dashboard', category: 'Operations' },
+  
+  // Talent Management
   { id: 'talent-dashboard', name: 'Talent Dashboard', category: 'Talent Management' },
   { id: 'job-management', name: 'Job Management', category: 'Talent Management' },
   { id: 'candidates', name: 'Candidates', category: 'Talent Management' },
   { id: 'pipeline', name: 'Pipeline', category: 'Talent Management' },
   { id: 'interviews', name: 'Interviews', category: 'Talent Management' },
   { id: 'offers', name: 'Offers', category: 'Talent Management' },
+  
+  // ETL Cockpit
   { id: 'etl-dashboard', name: 'ETL Dashboard', category: 'ETL Cockpit' },
-  { id: 'etl-job-management', name: 'ETL Job Management', category: 'ETL Cockpit' },
-  { id: 'hr-analytics', name: 'HR Analytics Dashboard', category: 'Analytics' },
-  { id: 'customer-projects', name: 'My Projects', category: 'Customer Portal' },
-  { id: 'customer-portfolio', name: 'Portfolio Overview', category: 'Customer Portal' },
-  { id: 'user-management', name: 'User Management', category: 'Administration' },
-  { id: 'access-control', name: 'Access Control & Security', category: 'Administration' },
-  { id: 'role-management', name: 'Role Management', category: 'Administration' },
+  { id: 'etl-jobs', name: 'ETL Job Management', category: 'ETL Cockpit' },
+  { id: 'employee-records', name: 'Employee Data Processing', category: 'ETL Cockpit' },
+  { id: 'analytics', name: 'Data Analytics', category: 'ETL Cockpit' },
+  { id: 'audit-log', name: 'Audit Trail', category: 'ETL Cockpit' },
+  
+  // Data Management
+  { id: 'file-upload', name: 'File Upload', category: 'Data Management' },
+  { id: 'data-validation', name: 'Data Validation', category: 'Data Management' },
+  { id: 'system-health', name: 'System Health', category: 'Data Management' },
+  
+  // Configuration
+  { id: 'system-settings', name: 'System Settings', category: 'Configuration' },
+  { id: 'api-config', name: 'API Configuration', category: 'Configuration' },
+  { id: 'integrations', name: 'Integration Settings', category: 'Configuration' },
+  
+  // Administration
+  { id: 'access-control', name: 'Access Control', category: 'Administration' },
+  { id: 'user-management', name: 'Role Management', category: 'Administration' },
+  { id: 'tenant-management', name: 'Tenant Management', category: 'Administration' },
+  { id: 'employee-directory', name: 'Employee Directory', category: 'Administration' },
+  { id: 'benefits-management', name: 'Benefits Management', category: 'Administration' },
+  { id: 'payroll-processing', name: 'Payroll Management', category: 'Administration' },
 ]
 
 // Define all roles
