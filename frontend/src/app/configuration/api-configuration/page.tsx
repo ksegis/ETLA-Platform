@@ -304,7 +304,6 @@ export default function APIConfigurationPage() {
       }
 
       // Reload configs
-      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
       await loadConfigs(tenantId);
 
       // Close modals

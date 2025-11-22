@@ -327,7 +327,6 @@ export default function IntegrationSettingsPage() {
         }
       }
 
-      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
       await loadIntegrationConfig(tenantId);
       alert('Connection settings saved successfully!');
     } catch (error) {
@@ -390,6 +389,7 @@ export default function IntegrationSettingsPage() {
     if (!integrationConfig) return;
 
     try {
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
       const existingConfig = syncConfigs.find(sc => sc.endpoint_name === endpointName);
 
       if (existingConfig) {
@@ -418,7 +418,6 @@ export default function IntegrationSettingsPage() {
         if (error) throw error;
       }
 
-      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
       await loadIntegrationConfig(tenantId);
     } catch (error) {
       console.error('Error toggling endpoint:', error);
