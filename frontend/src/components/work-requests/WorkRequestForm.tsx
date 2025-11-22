@@ -64,6 +64,7 @@ interface WorkRequest {
   ongoingSupportNeeded?: string
   expectedFrequency?: string
   integrationComplexity?: string
+  helixBridgeAccess?: string
   // Current system fields
   currentPayrollSystem?: string
   currentHRIS?: string
