@@ -33,7 +33,9 @@ import {
   Users2,
   User,
   Wand2,
-  Clock
+  Clock,
+  Layers,
+  Zap
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
@@ -45,7 +47,11 @@ interface NavigationItem {
   icon: any
   badge?: string
   isNew?: boolean
-  requiredPermission?: string // kept, but we gate by feature below
+}
+
+interface NavigationSubGroup {
+  title: string
+  items: NavigationItem[]
 }
 
 interface NavigationGroup {
@@ -57,8 +63,8 @@ interface NavigationGroup {
   hoverColor: string
   textColor: string
   defaultExpanded?: boolean
-  items: NavigationItem[]
-  requiredPermission?: string
+  subGroups?: NavigationSubGroup[]
+  items?: NavigationItem[]
 }
 
 interface DashboardLayoutProps {
@@ -71,110 +77,139 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [user, setUser] = useState<any>(null)
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
     'operations',
-    'talent-management',
-    'etl-cockpit',
+    'etl-platform',
   ])
+  const [expandedSubGroups, setExpandedSubGroups] = useState<string[]>([])
 
   const router = useRouter()
   const pathname = usePathname()
 
-  // usePermissions helpers – we’ll gate by feature access, not by “permission-only” strings
   const {
     canAccessFeature,
-    loading: permissionsloading,
+    loading: permissionsLoading,
   } = usePermissions()
 
-  // -----------------------------
-  // Navigation config (unchanged)
-  // -----------------------------
+  // ============================================================================
+  // REDESIGNED NAVIGATION STRUCTURE
+  // ============================================================================
   const navigationGroups: NavigationGroup[] = [
+    // -------------------------------------------------------------------------
+    // 1. OPERATIONS & PROJECTS
+    // -------------------------------------------------------------------------
     {
       id: 'operations',
-      title: 'Operations',
+      title: 'Operations & Projects',
       icon: Briefcase,
       color: 'text-blue-600',
       bgColor: 'bg-blue-600',
       hoverColor: 'hover:bg-blue-50',
       textColor: 'text-blue-900',
-      items: [
-        { name: 'Work Requests', href: '/work-requests', icon: FileText, requiredPermission: PERMISSIONS.WORK_REQUEST_READ },
-        { name: 'Project Management', href: '/project-management', icon: Calendar, requiredPermission: PERMISSIONS.PROJECT_READ },
-        { name: 'My Projects', href: '/customer/projects', icon: Briefcase, isNew: true },
-        { name: 'Portfolio Overview', href: '/customer/portfolio', icon: PieChart, isNew: true },
-        { name: 'Notifications', href: '/customer/notifications', icon: Bell, isNew: true },
-        { name: 'Reporting', href: '/reporting', icon: TrendingUp, requiredPermission: PERMISSIONS.REPORTING_VIEW },
-        { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true, requiredPermission: PERMISSIONS.REPORTING_VIEW },
+      defaultExpanded: true,
+      subGroups: [
+        {
+          title: 'Work Management',
+          items: [
+            { name: 'Work Requests', href: '/work-requests', icon: FileText },
+            { name: 'Project Management', href: '/project-management', icon: Calendar },
+            { name: 'My Projects', href: '/customer/projects', icon: Briefcase, isNew: true },
+            { name: 'Portfolio Overview', href: '/customer/portfolio', icon: PieChart, isNew: true },
+          ],
+        },
+        {
+          title: 'Reporting & Analytics',
+          items: [
+            { name: 'Reporting', href: '/reporting', icon: TrendingUp },
+            { name: 'HR Analytics Dashboard', href: '/hr-analytics', icon: PieChart, isNew: true },
+          ],
+        },
       ],
     },
+
+    // -------------------------------------------------------------------------
+    // 2. TALENT & RECRUITMENT
+    // -------------------------------------------------------------------------
     {
-      id: 'talent-management',
-      title: 'Talent Management',
+      id: 'talent',
+      title: 'Talent & Recruitment',
       icon: Users2,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-600',
       hoverColor: 'hover:bg-emerald-50',
       textColor: 'text-emerald-900',
-      requiredPermission: PERMISSIONS.USER_READ,
       items: [
-        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3, requiredPermission: PERMISSIONS.USER_READ },
-        { name: 'Job Management', href: '/talent/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
-        { name: 'Candidates', href: '/talent/candidates', icon: Users, requiredPermission: PERMISSIONS.CANDIDATE_READ },
-        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp, requiredPermission: PERMISSIONS.CANDIDATE_READ },
-        { name: 'Interviews', href: '/talent/interviews', icon: Calendar, requiredPermission: PERMISSIONS.INTERVIEW_MANAGE },
-        { name: 'Offers', href: '/talent/offers', icon: FileText, requiredPermission: PERMISSIONS.OFFER_MANAGE },
+        { name: 'Talent Dashboard', href: '/talent', icon: BarChart3 },
+        { name: 'Job Postings', href: '/talent/jobs', icon: Briefcase },
+        { name: 'Candidates', href: '/talent/candidates', icon: Users },
+        { name: 'Pipeline', href: '/talent/pipeline', icon: TrendingUp },
+        { name: 'Interviews', href: '/talent/interviews', icon: Calendar },
+        { name: 'Offers', href: '/talent/offers', icon: FileText },
       ],
     },
+
+    // -------------------------------------------------------------------------
+    // 3. ETL & DATA PLATFORM
+    // -------------------------------------------------------------------------
     {
-      id: 'etl-cockpit',
-      title: 'ETL Cockpit',
+      id: 'etl-platform',
+      title: 'ETL & Data Platform',
       icon: Database,
       color: 'text-green-600',
       bgColor: 'bg-green-600',
       hoverColor: 'hover:bg-green-50',
       textColor: 'text-green-900',
-      requiredPermission: PERMISSIONS.DATA_PROCESS,
-      items: [
-        { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3, requiredPermission: PERMISSIONS.DATA_PROCESS },
-        { name: 'Talent Data Import', href: '/talent-import', icon: Download, requiredPermission: PERMISSIONS.DATA_PROCESS },
-        { name: 'Job Management', href: '/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
-        { name: 'Employee Data Processing', href: '/employees', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_PROCESS },
-        { name: 'Scheduling', href: '/scheduling', icon: Clock, requiredPermission: PERMISSIONS.DATA_PROCESS },
-        { name: 'Progress Monitor', href: '/progress', icon: Activity, requiredPermission: PERMISSIONS.DATA_PROCESS },
-        { name: 'Data Analytics', href: '/analytics', icon: Database, requiredPermission: PERMISSIONS.DATA_ANALYZE },
-        { name: 'Audit Trail', href: '/audit', icon: Eye, requiredPermission: PERMISSIONS.AUDIT_VIEW },
+      defaultExpanded: true,
+      subGroups: [
+        {
+          title: 'Monitoring & Insights',
+          items: [
+            { name: 'ETL Dashboard', href: '/dashboard', icon: BarChart3 },
+            { name: 'Progress Monitor', href: '/progress', icon: Activity, isNew: true },
+            { name: 'Audit Trail', href: '/audit', icon: Eye },
+            { name: 'System Health', href: '/system-health', icon: Activity },
+          ],
+        },
+        {
+          title: 'Data Processing',
+          items: [
+            { name: 'Talent Data Import', href: '/talent-import', icon: Download, isNew: true },
+            { name: 'Employee Data Processing', href: '/employees', icon: Users },
+            { name: 'Job Management', href: '/jobs', icon: Briefcase },
+            { name: 'File Upload', href: '/upload', icon: Upload },
+          ],
+        },
+        {
+          title: 'Configuration & Tools',
+          items: [
+            { name: 'Scheduling', href: '/scheduling', icon: Clock, isNew: true },
+            { name: 'Transformations', href: '/transformations', icon: Wand2, isNew: true },
+            { name: 'Data Validation', href: '/validation', icon: CheckCircle, isNew: true },
+            { name: 'Data Analytics', href: '/analytics', icon: Database },
+          ],
+        },
       ],
     },
-    {
-      id: 'data-management',
-      title: 'Data Management',
-      icon: Database,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-600',
-      hoverColor: 'hover:bg-indigo-50',
-      textColor: 'text-indigo-900',
-      requiredPermission: PERMISSIONS.DATA_MANAGE,
-      items: [
-        { name: 'File Upload', href: '/upload', icon: Upload, requiredPermission: PERMISSIONS.FILE_UPLOAD },
-        { name: 'Data Validation', href: '/validation', icon: CheckCircle, requiredPermission: PERMISSIONS.DATA_VALIDATE },
-        { name: 'Transformations', href: '/transformations', icon: Wand2, requiredPermission: PERMISSIONS.DATA_PROCESS },
-        { name: 'System Health', href: '/system-health', icon: Activity, requiredPermission: PERMISSIONS.SYSTEM_HEALTH_VIEW },
-      ],
-    },
+
+    // -------------------------------------------------------------------------
+    // 4. SYSTEM CONFIGURATION
+    // -------------------------------------------------------------------------
     {
       id: 'configuration',
-      title: 'Configuration',
+      title: 'System Configuration',
       icon: Settings,
       color: 'text-purple-600',
       bgColor: 'bg-purple-600',
       hoverColor: 'hover:bg-purple-50',
       textColor: 'text-purple-900',
-      requiredPermission: PERMISSIONS.SYSTEM_SETTINGS_MANAGE,
       items: [
-        { name: 'System Settings', href: '/configuration/system-settings', icon: Settings, requiredPermission: PERMISSIONS.VIEW },
-        { name: 'API Configuration', href: '/configuration/api-configuration', icon: Settings, requiredPermission: PERMISSIONS.VIEW },
-        { name: 'Integration Settings', href: '/configuration/integration-settings', icon: Settings, requiredPermission: PERMISSIONS.VIEW },
+        { name: 'System Settings', href: '/configuration/system-settings', icon: Settings },
+        { name: 'API Configuration', href: '/configuration/api-configuration', icon: Zap },
+        { name: 'Integration Settings', href: '/configuration/integration-settings', icon: Layers },
       ],
     },
+
+    // -------------------------------------------------------------------------
+    // 5. ADMINISTRATION
+    // -------------------------------------------------------------------------
     {
       id: 'administration',
       title: 'Administration',
@@ -183,22 +218,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       bgColor: 'bg-orange-600',
       hoverColor: 'hover:bg-orange-50',
       textColor: 'text-orange-900',
-      requiredPermission: PERMISSIONS.ADMIN_ACCESS,
-      items: [
-        { name: 'Access Control', href: '/admin/access-control', icon: Shield, requiredPermission: PERMISSIONS.USER_READ },
-        { name: 'Role Management', href: '/role-management', icon: Shield, requiredPermission: PERMISSIONS.ADMIN_ACCESS },
-        { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building, requiredPermission: PERMISSIONS.TENANT_READ },
-        { name: 'Tenant Features', href: '/tenant-features', icon: Settings, requiredPermission: PERMISSIONS.ADMIN_ACCESS },
-        { name: 'Employee Directory', href: '/employee-directory', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_READ },
-        { name: 'Benefits Management', href: '/benefits', icon: Building, requiredPermission: PERMISSIONS.BENEFITS_MANAGE },
-        { name: 'Payroll Management', href: '/payroll', icon: DollarSign, requiredPermission: PERMISSIONS.PAYROLL_MANAGE },
+      subGroups: [
+        {
+          title: 'Access & Security',
+          items: [
+            { name: 'Access Control', href: '/admin/access-control', icon: Shield },
+            { name: 'Role Management', href: '/role-management', icon: Shield, isNew: true },
+            { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
+            { name: 'Tenant Features', href: '/tenant-features', icon: Settings, isNew: true },
+          ],
+        },
+        {
+          title: 'HR & Payroll',
+          items: [
+            { name: 'Employee Directory', href: '/employee-directory', icon: Users },
+            { name: 'Benefits Management', href: '/benefits', icon: Building },
+            { name: 'Payroll Management', href: '/payroll', icon: DollarSign },
+          ],
+        },
       ],
     },
   ]
 
-  // -----------------------------
-  // Supabase user (best-effort)
-  // -----------------------------
+  // ============================================================================
+  // USER & AUTH
+  // ============================================================================
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
@@ -239,9 +283,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }
 
+  // ============================================================================
+  // NAVIGATION HELPERS
+  // ============================================================================
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev =>
       prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
+    )
+  }
+
+  const toggleSubGroup = (subGroupKey: string) => {
+    setExpandedSubGroups(prev =>
+      prev.includes(subGroupKey) ? prev.filter(key => key !== subGroupKey) : [...prev, subGroupKey]
     )
   }
 
@@ -249,7 +302,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const getActiveGroup = () => {
     for (const group of navigationGroups) {
-      if (group.items.some((item) => item.href === pathname)) return group.id
+      if (group.items?.some((item) => item.href === pathname)) return group.id
+      if (group.subGroups?.some(sg => sg.items.some(item => item.href === pathname))) return group.id
     }
     return null
   }
@@ -260,12 +314,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (activeGroup && !expandedGroups.includes(activeGroup)) {
       setExpandedGroups(prev => [...prev, activeGroup])
     }
+
+    // Auto-expand sub-group containing current page
+    navigationGroups.forEach(group => {
+      group.subGroups?.forEach((subGroup, idx) => {
+        if (subGroup.items.some(item => item.href === pathname)) {
+          const subGroupKey = `${group.id}-subgroup-${idx}`
+          if (!expandedSubGroups.includes(subGroupKey)) {
+            setExpandedSubGroups(prev => [...prev, subGroupKey])
+          }
+        }
+      })
+    })
   }, [pathname])
 
-  // -----------------------------
-  // Feature mapper for routes
-  // -----------------------------
-  function featureForHref(href: string) {
+  // ============================================================================
+  // FEATURE MAPPER
+  // ============================================================================
+  function featureForHref(href: string): string {
     // Work Requests
     if (href.startsWith('/work-requests')) return FEATURES.WORK_REQUESTS
     
@@ -290,11 +356,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (href.startsWith('/talent/interviews')) return FEATURES.TALENT_INTERVIEWS
     if (href.startsWith('/talent/offers')) return FEATURES.TALENT_OFFERS
     
-    // ETL Cockpit
+    // ETL Platform
     if (href === '/dashboard') return FEATURES.ETL_DASHBOARD
-    if (href.startsWith('/talent-import')) return FEATURES.ETL_DASHBOARD
+    if (href.startsWith('/progress')) return FEATURES.ETL_PROGRESS_MONITOR
+    if (href.startsWith('/talent-import')) return FEATURES.TALENT_DATA_IMPORT
     if (href.startsWith('/jobs')) return FEATURES.ETL_JOBS
     if (href.startsWith('/audit')) return FEATURES.AUDIT_LOG
+    if (href.startsWith('/scheduling')) return FEATURES.ETL_SCHEDULING
+    if (href.startsWith('/transformations')) return FEATURES.DATA_TRANSFORMATIONS
+    if (href.startsWith('/validation')) return FEATURES.DATA_VALIDATION
     
     // Employee Management
     if (href.startsWith('/employees')) return FEATURES.EMPLOYEE_RECORDS
@@ -302,21 +372,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     
     // Data Management
     if (href.startsWith('/upload')) return FEATURES.FILE_UPLOAD
-    if (href.startsWith('/validation')) return FEATURES.DATA_VALIDATION
     
     // Configuration
     if (href.startsWith('/configuration/system-settings')) return FEATURES.SYSTEM_SETTINGS
     if (href.startsWith('/configuration/api-configuration')) return FEATURES.API_CONFIG
     if (href.startsWith('/configuration/integration-settings')) return FEATURES.INTEGRATIONS
     if (href.startsWith('/system-health')) return FEATURES.SYSTEM_HEALTH
-    if (href.startsWith('/settings')) return FEATURES.SYSTEM_SETTINGS
-    if (href.startsWith('/api-config')) return FEATURES.API_CONFIG
-    if (href.startsWith('/integrations')) return FEATURES.INTEGRATIONS
     
     // Administration
     if (href.startsWith('/admin/access-control')) return FEATURES.ACCESS_CONTROL
-    if (href.startsWith('/role-management')) return FEATURES.ACCESS_CONTROL
+    if (href.startsWith('/role-management')) return FEATURES.ROLE_MANAGEMENT
     if (href.startsWith('/admin/tenant-management')) return FEATURES.TENANT_MANAGEMENT
+    if (href.startsWith('/tenant-features')) return FEATURES.TENANT_FEATURES
     if (href.startsWith('/benefits')) return FEATURES.BENEFITS
     if (href.startsWith('/payroll')) return FEATURES.PAYROLL
     
@@ -324,33 +391,101 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return FEATURES.WORK_REQUESTS
   }
 
-  // Show ALL groups/items, but mark unauthorized ones for grayed-out display
+  // ============================================================================
+  // FILTER NAVIGATION WITH RBAC
+  // ============================================================================
   const filteredNavigationGroups = useMemo(() => {
-    if (permissionsloading) return []
+    if (permissionsLoading) return []
 
-    // Return all groups with all items - we'll handle authorization in rendering
-    return navigationGroups.map((group) => ({
-      ...group,
-      items: group.items.map((item) => {
+    return navigationGroups.map((group) => {
+      // Handle flat items
+      const filteredItems = group.items?.map((item) => {
         const feature = featureForHref(item.href)
         const isAuthorized = canAccessFeature(feature)
-        console.log(`🔍 Navigation check: ${item.name} (${item.href}) → feature: "${feature}" → authorized: ${isAuthorized}`)
-        return {
-          ...item,
-          isAuthorized
-        }
+        return { ...item, isAuthorized }
       })
-    }))
-  }, [permissionsloading, canAccessFeature]) // nav config is static
 
-  if (permissionsloading) {
+      // Handle sub-groups
+      const filteredSubGroups = group.subGroups?.map((subGroup) => ({
+        ...subGroup,
+        items: subGroup.items.map((item) => {
+          const feature = featureForHref(item.href)
+          const isAuthorized = canAccessFeature(feature)
+          return { ...item, isAuthorized }
+        })
+      }))
+
+      return {
+        ...group,
+        items: filteredItems,
+        subGroups: filteredSubGroups,
+      }
+    })
+  }, [permissionsLoading, canAccessFeature])
+
+  if (permissionsLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">loading permissions...</p>
+          <p className="text-gray-600">Loading permissions...</p>
         </div>
       </div>
+    )
+  }
+
+  // ============================================================================
+  // RENDER NAVIGATION ITEM
+  // ============================================================================
+  const renderNavigationItem = (item: any, group: NavigationGroup) => {
+    const ItemIcon = item.icon
+    const isActive = isActiveItem(item.href)
+    const isAuthorized = item.isAuthorized !== false
+
+    const content = (
+      <>
+        <ItemIcon className="h-4 w-4 mr-3 flex-shrink-0" />
+        <span className="flex-1 truncate">{item.name}</span>
+        {!isAuthorized && (
+          <span className="ml-2 text-xs" title="Access restricted">🔒</span>
+        )}
+        {item.isNew && isAuthorized && (
+          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+            New
+          </span>
+        )}
+        {item.badge && isAuthorized && (
+          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+            {item.badge}
+          </span>
+        )}
+      </>
+    )
+
+    if (!isAuthorized) {
+      return (
+        <div
+          key={item.name}
+          className="flex items-center px-3 py-2 text-sm rounded-md text-gray-300 bg-gray-50 cursor-not-allowed opacity-60"
+          title={`Access restricted. Contact your administrator for ${item.name} access.`}
+        >
+          {content}
+        </div>
+      )
+    }
+
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 ${
+          isActive
+            ? `${group.bgColor} text-white shadow-md`
+            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+        }`}
+      >
+        {content}
+      </Link>
     )
   }
 
@@ -365,7 +500,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 md:w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 md:w-56 lg:w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -397,7 +532,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-2 md:px-4 py-2 md:py-4 space-y-2 md:space-y-3 overflow-y-auto">
+          <nav className="flex-1 px-2 md:px-4 py-2 md:py-4 space-y-2 overflow-y-auto">
             {filteredNavigationGroups.map((group) => {
               const isExpanded = expandedGroups.includes(group.id)
               const GroupIcon = group.icon
@@ -407,83 +542,60 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   {/* Group Header */}
                   <button
                     onClick={() => toggleGroup(group.id)}
-                    className={`w-full flex items-center justify-between px-3 py-3 text-sm font-bold rounded-lg transition-all duration-200 ${group.color} ${group.hoverColor} border border-gray-100 shadow-sm`}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 ${group.color} ${group.hoverColor} border border-gray-100 shadow-sm`}
                   >
                     <div className="flex items-center">
                       <GroupIcon className="h-5 w-5 mr-3" />
-                      <span className="font-semibold">{group.title}</span>
+                      <span className="font-semibold text-sm">{group.title}</span>
                     </div>
                     <div className="transition-transform duration-200">
                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </div>
                   </button>
 
-                  {/* Group Items */}
+                  {/* Group Content */}
                   <div
                     className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                      isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                      isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
                   >
-                    <div className="ml-4 pl-4 border-l-2 border-gray-100 space-y-1 pt-2">
-                      {group.items.map((item: any) => {
-                        const ItemIcon = item.icon
-                        const isActive = isActiveItem(item.href)
-                        const isAuthorized = item.isAuthorized !== false
-                        
-                        // Debug logging for payroll
-                        if (item.name === 'Payroll Management') {
-                          console.log('🔧 Rendering Payroll Management:', {
-                            itemName: item.name,
-                            itemIsAuthorized: item.isAuthorized,
-                            computedIsAuthorized: isAuthorized,
-                            href: item.href
-                          })
-                        }
+                    <div className="ml-2 pl-3 border-l-2 border-gray-100 space-y-1 pt-2">
+                      {/* Flat Items */}
+                      {group.items?.map((item) => renderNavigationItem(item, group))}
 
-                        const content = (
-                          <>
-                            <ItemIcon className="h-4 w-4 mr-3" />
-                            <span className="flex-1">{item.name}</span>
-                            {!isAuthorized && (
-                              <span className="ml-2 text-xs" title="Access restricted">🔒</span>
-                            )}
-                            {item.isNew && isAuthorized && (
-                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                New
-                              </span>
-                            )}
-                            {item.badge && isAuthorized && (
-                              <span className="ml-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                                {item.badge}
-                              </span>
-                            )}
-                          </>
-                        )
-
-                        if (!isAuthorized) {
-                          return (
-                            <div
-                              key={item.name}
-                              className="flex items-center px-3 py-2 text-sm rounded-md text-gray-300 bg-gray-50 cursor-not-allowed opacity-60"
-                              title={`Access restricted. Contact your administrator for ${item.name} access.`}
-                            >
-                              {content}
-                            </div>
-                          )
-                        }
+                      {/* Sub-Groups */}
+                      {group.subGroups?.map((subGroup, idx) => {
+                        const subGroupKey = `${group.id}-subgroup-${idx}`
+                        const isSubGroupExpanded = expandedSubGroups.includes(subGroupKey)
 
                         return (
-                          <Link
-                            key={item.name}
-                            href={item.href}
-                            className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 ${
-                              isActive
-                                ? `${group.bgColor} text-white shadow-md`
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
-                            }`}
-                          >
-                            {content}
-                          </Link>
+                          <div key={subGroupKey} className="space-y-1 mt-2">
+                            {/* Sub-Group Header */}
+                            <button
+                              onClick={() => toggleSubGroup(subGroupKey)}
+                              className="w-full flex items-center justify-between px-2 py-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-all"
+                            >
+                              <span>{subGroup.title}</span>
+                              <div className="transition-transform duration-200">
+                                {isSubGroupExpanded ? (
+                                  <ChevronDown className="h-3 w-3" />
+                                ) : (
+                                  <ChevronRight className="h-3 w-3" />
+                                )}
+                              </div>
+                            </button>
+
+                            {/* Sub-Group Items */}
+                            <div
+                              className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                                isSubGroupExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                              }`}
+                            >
+                              <div className="ml-2 pl-2 border-l border-gray-200 space-y-1">
+                                {subGroup.items.map((item) => renderNavigationItem(item, group))}
+                              </div>
+                            </div>
+                          </div>
                         )
                       })}
                     </div>
@@ -520,76 +632,60 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <div className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between h-12 md:h-14 px-4 md:px-6">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <header className="bg-white shadow-sm z-10 flex-shrink-0">
+          <div className="flex items-center justify-between h-14 md:h-16 px-4 md:px-6">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
             >
               <Menu className="h-6 w-6" />
             </button>
 
+            <div className="flex-1 lg:flex-none" />
+
             <div className="flex items-center space-x-4">
               <NotificationBell />
-              <div className="h-6 w-px bg-gray-300" />
-
-              {/* User Profile Dropdown */}
-              <div className="relative">
+              
+              <div className="relative profile-dropdown">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 hover:border-gray-300"
+                  className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100"
                 >
                   <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs text-gray-500 uppercase tracking-wide">Profile</span>
-                    <span className="text-sm font-medium text-gray-900 truncate max-w-32">
-                      {user?.email || 'demo@company.com'}
+                    <span className="text-sm font-medium text-white">
+                      {user?.email?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-gray-400 ml-2" />
                 </button>
 
                 {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 profile-dropdown">
-                    <div className="py-1">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {user?.email || 'demo@company.com'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {user?.user_metadata?.full_name || 'User Account'}
-                        </p>
-                      </div>
-
-                      <Link
-                        href="/profile"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        onClick={() => setProfileDropdownOpen(false)}
-                      >
-                        <Settings className="h-4 w-4 mr-3 text-gray-400" />
-                        Settings
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <LogOut className="h-4 w-4 mr-3 text-gray-400" />
-                        Sign out
-                      </button>
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {user?.email || 'demo@company.com'}
+                      </p>
                     </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          {children}
+        </main>
       </div>
     </div>
   )
