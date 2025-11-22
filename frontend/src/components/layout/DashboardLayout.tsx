@@ -35,7 +35,8 @@ import {
   Wand2,
   Clock,
   Layers,
-  Zap
+  Zap,
+  HardDrive
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
@@ -237,6 +238,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             { name: 'Role Management', href: '/role-management', icon: Shield, isNew: true },
             { name: 'Tenant Management', href: '/admin/tenant-management', icon: Building },
             { name: 'Tenant Features', href: '/tenant-features', icon: Settings, isNew: true },
+            { name: 'Tenant Storage', href: '/tenant-storage', icon: HardDrive, isNew: true },
           ],
         },
         {
