@@ -18,6 +18,21 @@ interface WorkRequestFormData {
   complianceRelated: string
   specificRequirements: string
   required_completion_date: string
+  // Scope estimation fields
+  estimatedDocumentCount: string
+  estimatedDataVolume: string
+  longTermStorageRequired: string
+  ongoingApiMonitoring: string
+  ongoingSupportNeeded: string
+  expectedFrequency: string
+  integrationComplexity: string
+  // Current system fields
+  currentPayrollSystem?: string
+  currentHRIS?: string
+  currentVersion?: string
+  currentIntegrationCount?: string
+  dataMigrationNeeded?: string
+  currentPainPoints?: string
 }
 
 interface WorkRequest {
@@ -38,6 +53,21 @@ interface WorkRequest {
   complianceRelated?: string
   specificRequirements?: string
   required_completion_date?: string
+  // Scope estimation fields
+  estimatedDocumentCount?: string
+  estimatedDataVolume?: string
+  longTermStorageRequired?: string
+  ongoingApiMonitoring?: string
+  ongoingSupportNeeded?: string
+  expectedFrequency?: string
+  integrationComplexity?: string
+  // Current system fields
+  currentPayrollSystem?: string
+  currentHRIS?: string
+  currentVersion?: string
+  currentIntegrationCount?: string
+  dataMigrationNeeded?: string
+  currentPainPoints?: string
 }
 
 interface WorkRequestAttachment {
@@ -92,12 +122,47 @@ const systemOptions = [
 ]
 
 const employeeImpactOptions = [
-  { value: '1-10', label: '1-10 employees' },
-  { value: '11-50', label: '11-50 employees' },
+  { value: '1-50', label: '1-50 employees' },
   { value: '51-100', label: '51-100 employees' },
   { value: '101-500', label: '101-500 employees' },
-  { value: '500+', label: '500+ employees' },
+  { value: '501-1000', label: '501-1,000 employees' },
+  { value: '1001-5000', label: '1,001-5,000 employees' },
+  { value: '5001-10000', label: '5,001-10,000 employees' },
+  { value: '10000+', label: '10,000+ employees' },
   { value: 'all', label: 'All employees' }
+]
+
+const documentCountOptions = [
+  { value: '0-100', label: '0-100 documents' },
+  { value: '101-500', label: '101-500 documents' },
+  { value: '501-1000', label: '501-1,000 documents' },
+  { value: '1001-5000', label: '1,001-5,000 documents' },
+  { value: '5001-10000', label: '5,001-10,000 documents' },
+  { value: '10000+', label: '10,000+ documents' }
+]
+
+const dataVolumeOptions = [
+  { value: '0-1000', label: '0-1,000 records' },
+  { value: '1001-10000', label: '1,001-10,000 records' },
+  { value: '10001-50000', label: '10,001-50,000 records' },
+  { value: '50001-100000', label: '50,001-100,000 records' },
+  { value: '100001-500000', label: '100,001-500,000 records' },
+  { value: '500000+', label: '500,000+ records' }
+]
+
+const frequencyOptions = [
+  { value: 'one-time', label: 'One-time project' },
+  { value: 'monthly', label: 'Monthly recurring' },
+  { value: 'quarterly', label: 'Quarterly recurring' },
+  { value: 'annually', label: 'Annual recurring' },
+  { value: 'ongoing', label: 'Ongoing/Continuous' }
+]
+
+const integrationComplexityOptions = [
+  { value: 'simple', label: 'Simple (1-2 systems)' },
+  { value: 'moderate', label: 'Moderate (3-4 systems)' },
+  { value: 'complex', label: 'Complex (5-7 systems)' },
+  { value: 'very-complex', label: 'Very Complex (8+ systems)' }
 ]
 
 const WorkRequestForm: React.FC<WorkRequestFormProps> = ({ 
@@ -122,7 +187,20 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     estimatedEmployeeImpact: '',
     complianceRelated: '',
     specificRequirements: '',
-    required_completion_date: ''
+    required_completion_date: '',
+    estimatedDocumentCount: '',
+    estimatedDataVolume: '',
+    longTermStorageRequired: '',
+    ongoingApiMonitoring: '',
+    ongoingSupportNeeded: '',
+    expectedFrequency: '',
+    integrationComplexity: '',
+    currentPayrollSystem: '',
+    currentHRIS: '',
+    currentVersion: '',
+    currentIntegrationCount: '',
+    dataMigrationNeeded: '',
+    currentPainPoints: ''
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -144,7 +222,20 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         estimatedEmployeeImpact: request.estimatedEmployeeImpact || '',
         complianceRelated: request.complianceRelated || '',
         specificRequirements: request.specificRequirements || '',
-        required_completion_date: request.required_completion_date || ''
+        required_completion_date: request.required_completion_date || '',
+        estimatedDocumentCount: request.estimatedDocumentCount || '',
+        estimatedDataVolume: request.estimatedDataVolume || '',
+        longTermStorageRequired: request.longTermStorageRequired || '',
+        ongoingApiMonitoring: request.ongoingApiMonitoring || '',
+        ongoingSupportNeeded: request.ongoingSupportNeeded || '',
+        expectedFrequency: request.expectedFrequency || '',
+        integrationComplexity: request.integrationComplexity || '',
+        currentPayrollSystem: request.currentPayrollSystem || '',
+        currentHRIS: request.currentHRIS || '',
+        currentVersion: request.currentVersion || '',
+        currentIntegrationCount: request.currentIntegrationCount || '',
+        dataMigrationNeeded: request.dataMigrationNeeded || '',
+        currentPainPoints: request.currentPainPoints || ''
       })
       setExistingAttachments(request.attachments || [])
     } else {
@@ -159,7 +250,20 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         estimatedEmployeeImpact: '',
         complianceRelated: '',
         specificRequirements: '',
-        required_completion_date: ''
+        required_completion_date: '',
+        estimatedDocumentCount: '',
+        estimatedDataVolume: '',
+        longTermStorageRequired: '',
+        ongoingApiMonitoring: '',
+        ongoingSupportNeeded: '',
+        expectedFrequency: '',
+        integrationComplexity: '',
+        currentPayrollSystem: '',
+        currentHRIS: '',
+        currentVersion: '',
+        currentIntegrationCount: '',
+        dataMigrationNeeded: '',
+        currentPainPoints: ''
       })
       setExistingAttachments([])
     }
@@ -264,7 +368,20 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       estimatedEmployeeImpact: formData.estimatedEmployeeImpact || undefined,
       complianceRelated: formData.complianceRelated || undefined,
       specificRequirements: formData.specificRequirements?.trim() || undefined,
-      required_completion_date: formData.required_completion_date || undefined
+      required_completion_date: formData.required_completion_date || undefined,
+      estimatedDocumentCount: formData.estimatedDocumentCount || undefined,
+      estimatedDataVolume: formData.estimatedDataVolume || undefined,
+      longTermStorageRequired: formData.longTermStorageRequired || undefined,
+      ongoingApiMonitoring: formData.ongoingApiMonitoring || undefined,
+      ongoingSupportNeeded: formData.ongoingSupportNeeded || undefined,
+      expectedFrequency: formData.expectedFrequency || undefined,
+      integrationComplexity: formData.integrationComplexity || undefined,
+      currentPayrollSystem: formData.currentPayrollSystem?.trim() || undefined,
+      currentHRIS: formData.currentHRIS?.trim() || undefined,
+      currentVersion: formData.currentVersion?.trim() || undefined,
+      currentIntegrationCount: formData.currentIntegrationCount || undefined,
+      dataMigrationNeeded: formData.dataMigrationNeeded || undefined,
+      currentPainPoints: formData.currentPainPoints?.trim() || undefined
     }
 
     if (request && deletedAttachmentIds.length > 0) {
@@ -558,7 +675,277 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
               </div>
             </div>
 
-            {/* Section 4: Attachments */}
+            {/* Section 4: Current System Environment */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-3">Current System Environment</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Current Payroll System */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Payroll System
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.currentPayrollSystem || ''}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, currentPayrollSystem: e.target.value }))}
+                    placeholder="e.g., ADP, Paychex, Workday"
+                    spellCheck={true}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Current HRIS/HCM */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current HRIS/HCM System
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.currentHRIS || ''}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, currentHRIS: e.target.value }))}
+                    placeholder="e.g., Workday, SAP SuccessFactors"
+                    spellCheck={true}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Current Version */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Version/Release
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.currentVersion || ''}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, currentVersion: e.target.value }))}
+                    placeholder="e.g., 2024 R1, Version 8.5"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Number of Current Integrations */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Number of Current Integrations
+                  </label>
+                  <select
+                    value={formData.currentIntegrationCount || ''}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, currentIntegrationCount: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select count</option>
+                    <option value="0">None</option>
+                    <option value="1-2">1-2 integrations</option>
+                    <option value="3-5">3-5 integrations</option>
+                    <option value="6-10">6-10 integrations</option>
+                    <option value="10+">10+ integrations</option>
+                  </select>
+                </div>
+
+                {/* Data Migration Needed */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Data Migration Required?
+                  </label>
+                  <select
+                    value={formData.dataMigrationNeeded || ''}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, dataMigrationNeeded: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select option</option>
+                    <option value="no">No</option>
+                    <option value="partial">Partial migration</option>
+                    <option value="full">Full migration</option>
+                  </select>
+                </div>
+
+                {/* Current Pain Points */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Pain Points
+                  </label>
+                  <textarea
+                    value={formData.currentPainPoints || ''}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, currentPainPoints: e.target.value }))}
+                    placeholder="Describe issues with current system"
+                    rows={2}
+                    spellCheck={true}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: Scope Estimation */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-3">Scope Estimation</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Document Count */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estimated Document Count
+                  </label>
+                  <select
+                    value={formData.estimatedDocumentCount}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, estimatedDocumentCount: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select range</option>
+                    {documentCountOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Data Volume */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estimated Data Volume
+                  </label>
+                  <select
+                    value={formData.estimatedDataVolume}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, estimatedDataVolume: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select range</option>
+                    {dataVolumeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Long-term Storage */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Long-term Storage Required?
+                  </label>
+                  <div className="flex gap-4 mt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="storage"
+                        value="yes"
+                        checked={formData.longTermStorageRequired === 'yes'}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, longTermStorageRequired: e.target.value }))}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Yes</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="storage"
+                        value="no"
+                        checked={formData.longTermStorageRequired === 'no'}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, longTermStorageRequired: e.target.value }))}
+                        className="rounded"
+                      />
+                      <span className="text-sm">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Ongoing API Monitoring */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ongoing API Monitoring Required?
+                  </label>
+                  <div className="flex gap-4 mt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="apiMonitoring"
+                        value="yes"
+                        checked={formData.ongoingApiMonitoring === 'yes'}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, ongoingApiMonitoring: e.target.value }))}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Yes</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="apiMonitoring"
+                        value="no"
+                        checked={formData.ongoingApiMonitoring === 'no'}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, ongoingApiMonitoring: e.target.value }))}
+                        className="rounded"
+                      />
+                      <span className="text-sm">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Ongoing Support Needed */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ongoing Support Needed?
+                  </label>
+                  <div className="flex gap-4 mt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="ongoingSupport"
+                        value="yes"
+                        checked={formData.ongoingSupportNeeded === 'yes'}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, ongoingSupportNeeded: e.target.value }))}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Yes</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="ongoingSupport"
+                        value="no"
+                        checked={formData.ongoingSupportNeeded === 'no'}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, ongoingSupportNeeded: e.target.value }))}
+                        className="rounded"
+                      />
+                      <span className="text-sm">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Expected Frequency */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Expected Frequency
+                  </label>
+                  <select
+                    value={formData.expectedFrequency}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, expectedFrequency: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select frequency</option>
+                    {frequencyOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Integration Complexity */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Integration Complexity
+                  </label>
+                  <select
+                    value={formData.integrationComplexity}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, integrationComplexity: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select complexity</option>
+                    {integrationComplexityOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 6: Attachments */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <h3 className="text-base font-semibold text-gray-900 mb-3">Supporting Documents</h3>
               
