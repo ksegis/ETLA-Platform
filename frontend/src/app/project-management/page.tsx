@@ -518,7 +518,7 @@ function ProjectManagementContent() {
     }
   }
 
-  // Calculate statistics
+  // Calculate statistics based on filtered data
   useEffect(() => {
     // If a project is selected, show project-specific statistics
     if (selectedProject) {
@@ -554,13 +554,30 @@ function ProjectManagementContent() {
         averageCompletion
       })
     } else {
-      // If no project selected, show overall statistics
-      const totalProjects = projects.length
-      const activeProjects = projects.filter((p: any) => 
+      // If no project selected, calculate from filtered projects
+      // Apply all filters to projects
+      const filteredProjectsForStats = projects.filter((project: any) => {
+        const matchesSearch = !searchTerm || 
+          (project.title || project.project_name || project.project_title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (project.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (project.project_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (project.assigned_team_lead || project.team_lead || project.manager || '').toLowerCase().includes(searchTerm.toLowerCase())
+        
+        const matchesStatus = statusFilter === 'all' || project.charter_status === statusFilter
+        const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter
+        const matchesDepartment = departmentFilter === 'all' || project.department === departmentFilter
+        const matchesProjectType = projectTypeFilter === 'all' || project.project_type === projectTypeFilter
+        const matchesTenant = !tenantFilter || project.tenant_id === tenantFilter
+        
+        return matchesSearch && matchesStatus && matchesPriority && matchesDepartment && matchesProjectType && matchesTenant
+      })
+      
+      const totalProjects = filteredProjectsForStats.length
+      const activeProjects = filteredProjectsForStats.filter((p: any) => 
         p.charter_status !== 'completed' && p.charter_status !== 'cancelled'
       ).length
-      const completedProjects = projects.filter((p: any) => p.charter_status === 'completed').length
-      const onHoldProjects = projects.filter((p: any) => p.charter_status === 'on_hold').length
+      const completedProjects = filteredProjectsForStats.filter((p: any) => p.charter_status === 'completed').length
+      const onHoldProjects = filteredProjectsForStats.filter((p: any) => p.charter_status === 'on_hold').length
       
       const totalWorkRequests = workRequests.length
       const pendingWorkRequests = workRequests.filter((wr: any) => wr.status === 'pending').length
@@ -570,9 +587,9 @@ function ProjectManagementContent() {
         r.risk_level === 'high' || r.level === 'high' || r.severity === 'high'
       ).length
       
-      const totalBudget = projects.reduce((sum: any, p) => sum + (p.budget || p.estimated_budget || 0), 0)
-      const averageCompletion = projects.length > 0 
-        ? projects.reduce((sum: any, p) => sum + (p.completion_percentage || 0), 0) / projects.length 
+      const totalBudget = filteredProjectsForStats.reduce((sum: any, p) => sum + (p.budget || p.estimated_budget || 0), 0)
+      const averageCompletion = filteredProjectsForStats.length > 0 
+        ? filteredProjectsForStats.reduce((sum: any, p) => sum + (p.completion_percentage || 0), 0) / filteredProjectsForStats.length 
         : 0
 
       setStatistics({
@@ -588,7 +605,7 @@ function ProjectManagementContent() {
         averageCompletion
       })
     }
-  }, [projects, workRequests, risks, selectedProject])
+  }, [projects, workRequests, risks, selectedProject, searchTerm, statusFilter, priorityFilter, departmentFilter, projectTypeFilter, tenantFilter])
 
   // Create new project
   const handleCreateProject = async (projectData: Partial<ProjectCharter>) => {
