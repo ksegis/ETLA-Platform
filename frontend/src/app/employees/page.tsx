@@ -32,7 +32,7 @@ interface EmployeeSync {
 export default function EmployeesPage() {
   const router = useRouter();
   const { user, tenant } = useAuth();
-  const { canAccessFeature, canPerformAction, isHostAdmin } = usePermissions();
+  const { canAccessFeature, hasPermission, isHostAdmin } = usePermissions();
 
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -161,7 +161,7 @@ export default function EmployeesPage() {
       return;
     }
 
-    if (!canPerformAction(PERMISSIONS.DATA_PROCESS)) {
+    if (!hasPermission(FEATURES.ETL_DASHBOARD, PERMISSIONS.MANAGE)) {
       alert('You do not have permission to start ETL jobs');
       return;
     }
@@ -390,7 +390,7 @@ export default function EmployeesPage() {
                 <div className="mt-6">
                   <Button 
                     onClick={startManualSync} 
-                    disabled={syncing || !canPerformAction(PERMISSIONS.DATA_PROCESS)}
+                    disabled={syncing || !hasPermission(FEATURES.ETL_DASHBOARD, PERMISSIONS.MANAGE)}
                     className="flex items-center gap-2"
                   >
                     {syncing ? (
