@@ -9,7 +9,8 @@ import { FEATURES, PERMISSIONS } from '@/rbac/constants';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Label } from '@/components/ui/label';
-import { Clock, CheckCircle, XCircle, AlertCircle, Play, Pause } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertCircle, Play, Pause, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 interface SyncJob {
   id: string;
@@ -22,6 +23,10 @@ interface SyncJob {
   completed_at: string | null;
   error_message: string | null;
   integration_name?: string;
+  retry_count?: number;
+  max_retries?: number;
+  retry_at?: string | null;
+  is_retry?: boolean;
 }
 
 interface JobMetrics {
@@ -116,28 +121,40 @@ export default function JobsPage() {
       if (configIds.length > 0) {
         const { data: historyData, error: historyError } = await supabase
           .from('integration_sync_history')
-          .select('*')
+          .select('id, integration_config_id, integration_sync_config_id, endpoint_name, sync_started_at, sync_completed_at, duration_seconds, status, records_synced, records_failed, records_skipped, error_message, error_details, triggered_by, retry_count, max_retries, retry_at, is_retry, created_at')
           .in('integration_config_id', configIds)
-          .order('started_at', { ascending: false })
+          .order('sync_started_at', { ascending: false })
           .limit(50);
 
         if (historyError) throw historyError;
         syncHistory = historyData || [];
       }
 
-      // Add integration names to jobs
+      // Add integration names to jobs and map column names
       const jobsWithNames = syncHistory.map((job: any) => ({
-        ...job,
+        id: job.id,
+        integration_config_id: job.integration_config_id,
+        endpoint_name: job.endpoint_name,
+        sync_status: job.status,
+        records_processed: job.records_synced || 0,
+        records_failed: job.records_failed || 0,
+        started_at: job.sync_started_at,
+        completed_at: job.sync_completed_at,
+        error_message: job.error_message,
         integration_name: configMap[job.integration_config_id] || 'Unknown',
+        retry_count: job.retry_count || 0,
+        max_retries: job.max_retries || 3,
+        retry_at: job.retry_at,
+        is_retry: job.is_retry || false,
       }));
 
       setJobs(jobsWithNames);
 
       // Calculate metrics
       const total = syncHistory.length;
-      const successful = syncHistory.filter((j: any) => j.sync_status === 'success').length;
-      const failed = syncHistory.filter((j: any) => j.sync_status === 'error' || j.sync_status === 'failed').length;
-      const running = syncHistory.filter((j: any) => j.sync_status === 'running' || j.sync_status === 'in_progress').length;
+      const successful = syncHistory.filter((j: any) => j.status === 'success').length;
+      const failed = syncHistory.filter((j: any) => j.status === 'error' || j.status === 'failed').length;
+      const running = syncHistory.filter((j: any) => j.status === 'running' || j.status === 'in_progress').length;
 
       setMetrics({ total, successful, failed, running });
 
@@ -179,6 +196,32 @@ export default function JobsPage() {
         {badge.label}
       </span>
     );
+  };
+
+  const retryJob = async (jobId: string) => {
+    try {
+      // Call the database function to schedule retry
+      const { data, error } = await supabase.rpc('schedule_sync_retry', {
+        sync_id: jobId,
+        max_retry_attempts: 3
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        alert('Job retry scheduled successfully!');
+        // Reload jobs to show updated retry info
+        const tenantId = isHostAdmin() ? selectedTenantId : tenant?.id;
+        if (tenantId) {
+          loadJobs(tenantId);
+        }
+      } else {
+        alert('Maximum retry attempts reached for this job.');
+      }
+    } catch (error) {
+      console.error('Error scheduling retry:', error);
+      alert('Failed to schedule retry. Please try again.');
+    }
   };
 
   const formatDuration = (startedAt: string, completedAt: string | null) => {
@@ -318,6 +361,11 @@ export default function JobsPage() {
                                 {job.integration_name} - {job.endpoint_name}
                               </h4>
                               {getStatusBadge(job.sync_status)}
+                              {job.is_retry && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                                  Retry {job.retry_count}/{job.max_retries}
+                                </span>
+                              )}
                             </div>
                             <p className="text-xs text-gray-500">
                               Started: {formatDateTime(job.started_at)} | 
@@ -333,6 +381,20 @@ export default function JobsPage() {
                               </p>
                             )}
                           </div>
+                          {(job.sync_status === 'failed' || job.sync_status === 'error') && 
+                           (job.retry_count || 0) < (job.max_retries || 3) && (
+                            <div className="ml-4">
+                              <Button
+                                onClick={() => retryJob(job.id)}
+                                size="sm"
+                                variant="outline"
+                                className="flex items-center gap-1"
+                              >
+                                <RefreshCw className="h-3 w-3" />
+                                Retry
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
