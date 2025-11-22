@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Clock, Calendar, Play, Pause, Edit, Trash2, Plus, CheckCircle } from 'lucide-react'
 
 interface Schedule {

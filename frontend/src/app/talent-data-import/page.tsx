@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Upload, FileText, CheckCircle, AlertCircle, ArrowRight, Download, Table } from 'lucide-react'
 
 interface FieldMapping {
