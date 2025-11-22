@@ -58,6 +58,7 @@ const FEATURES = [
   { id: 'role-management', name: 'Role Management', category: 'Administration', subCategory: 'Access & Security' },
   { id: 'tenant-management', name: 'Tenant Management', category: 'Administration', subCategory: 'Access & Security' },
   { id: 'tenant-features', name: 'Tenant Features', category: 'Administration', subCategory: 'Access & Security' },
+  { id: 'tenant-storage', name: 'Tenant Storage', category: 'Administration', subCategory: 'Access & Security' },
   
   // HR & Payroll Sub-Group
   { id: 'employee-directory', name: 'Employee Directory', category: 'Administration', subCategory: 'HR & Payroll' },
