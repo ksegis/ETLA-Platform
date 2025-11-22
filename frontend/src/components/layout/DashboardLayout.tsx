@@ -99,11 +99,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const { isOpen: searchOpen, open: openSearch, close: closeSearch } = useNavigationSearch()
   const { favorites, toggleFavorite, isFavorite, reorderFavorites } = useFavorites()
-  const { showHint, setShowHint } = useKeyboardNavigation({
-    items: searchItems,
-    currentPath: pathname,
-    enabled: !searchOpen,
-  })
 
   // ============================================================================
   // REDESIGNED NAVIGATION STRUCTURE
@@ -491,6 +486,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const favoriteItems = useMemo(() => {
     return searchItems.filter(item => favorites.includes(item.href))
   }, [searchItems, favorites])
+
+  // ============================================================================
+  // KEYBOARD NAVIGATION
+  // ============================================================================
+  const { showHint, setShowHint } = useKeyboardNavigation({
+    items: searchItems,
+    currentPath: pathname,
+    enabled: !searchOpen,
+  })
 
   if (permissionsLoading) {
     return (
