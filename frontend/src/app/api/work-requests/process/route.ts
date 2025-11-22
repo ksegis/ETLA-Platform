@@ -167,13 +167,18 @@ export async function POST(request: Request) {
       }
       const assumptions = assumptionParts.join('; ');
       
+      // Merge enhanced description into business_case since description column doesn't exist
+      const businessCase = [
+        workRequest.business_justification || '',
+        enhancedDescription ? `\n\n**Description:**\n${enhancedDescription}` : ''
+      ].filter(Boolean).join('');
+      
       const projectData = {
         tenant_id: workRequest.tenant_id,
         project_code: `WR-${workRequest.id.slice(0, 8)}-${timestamp}`, // Unique project code with timestamp
         project_name: workRequest.title || 'Untitled Project',
         project_title: workRequest.title,
         title: workRequest.title,
-        description: enhancedDescription,
         priority: workRequest.priority,
         project_category: Array.isArray(workRequest.category) ? workRequest.category.join(', ') : workRequest.category,
         estimated_budget: workRequest.estimated_budget,
@@ -183,7 +188,7 @@ export async function POST(request: Request) {
         work_request_id: workRequest.id,
         charter_status: 'draft', // Initial charter status
         customer_id: workRequest.customer_id,
-        business_case: workRequest.business_justification,
+        business_case: businessCase || undefined,
         project_scope: projectScope || undefined,
         risk_assessment: riskAssessment || undefined,
         constraints: constraints || undefined,
