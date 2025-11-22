@@ -40,6 +40,8 @@ import {
 import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
 import NotificationBell from '@/components/notifications/NotificationBell'
+import NavigationSearch from '@/components/navigation/NavigationSearch'
+import { useNavigationSearch } from '@/hooks/useNavigationSearch'
 
 interface NavigationItem {
   name: string
@@ -88,6 +90,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     canAccessFeature,
     loading: permissionsLoading,
   } = usePermissions()
+
+  const { isOpen: searchOpen, open: openSearch, close: closeSearch } = useNavigationSearch()
 
   // ============================================================================
   // REDESIGNED NAVIGATION STRUCTURE
@@ -423,6 +427,52 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     })
   }, [permissionsLoading, canAccessFeature])
 
+  // ============================================================================
+  // PREPARE SEARCH ITEMS
+  // ============================================================================
+  const searchItems = useMemo(() => {
+    const items: any[] = []
+    
+    filteredNavigationGroups.forEach(group => {
+      // Add flat items
+      group.items?.forEach(item => {
+        if (item.isAuthorized !== false) {
+          items.push({
+            id: item.href,
+            name: item.name,
+            href: item.href,
+            category: group.title,
+            icon: item.icon,
+            keywords: [group.title.toLowerCase(), item.name.toLowerCase()]
+          })
+        }
+      })
+      
+      // Add sub-group items
+      group.subGroups?.forEach(subGroup => {
+        subGroup.items.forEach(item => {
+          if (item.isAuthorized !== false) {
+            items.push({
+              id: item.href,
+              name: item.name,
+              href: item.href,
+              category: group.title,
+              subCategory: subGroup.title,
+              icon: item.icon,
+              keywords: [
+                group.title.toLowerCase(),
+                subGroup.title.toLowerCase(),
+                item.name.toLowerCase()
+              ]
+            })
+          }
+        })
+      })
+    })
+    
+    return items
+  }, [filteredNavigationGroups])
+
   if (permissionsLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
@@ -521,14 +571,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Search */}
           <div className="p-2 md:p-4 border-b border-gray-200 flex-shrink-0">
-            <div className="relative">
-              <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search navigation..."
-                className="w-full pl-8 md:pl-10 pr-3 md:pr-4 py-1.5 md:py-2 border border-gray-300 rounded-md text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <button
+              onClick={openSearch}
+              className="w-full flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+            >
+              <Search className="h-4 w-4 text-gray-400" />
+              <span className="flex-1 text-left">Search navigation...</span>
+              <kbd className="hidden md:inline-block px-2 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">
+                ⌘K
+              </kbd>
+            </button>
           </div>
 
           {/* Navigation */}
@@ -687,6 +739,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Global Navigation Search */}
+      <NavigationSearch
+        items={searchItems}
+        isOpen={searchOpen}
+        onClose={closeSearch}
+      />
     </div>
   )
 }
