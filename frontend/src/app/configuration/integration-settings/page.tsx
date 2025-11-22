@@ -49,6 +49,10 @@ interface SyncConfig {
   last_sync_at: string | null;
   last_sync_status: string | null;
   next_sync_at: string | null;
+  sync_mode?: string;
+  last_sync_timestamp?: string | null;
+  incremental_key?: string | null;
+  watermark_value?: string | null;
 }
 
 interface SyncHistory {
@@ -444,6 +448,36 @@ export default function IntegrationSettingsPage() {
     }
   };
 
+  const updateSyncMode = async (syncConfigId: string, syncMode: string) => {
+    try {
+      const { error } = await supabase
+        .from('integration_sync_configs')
+        .update({ sync_mode: syncMode })
+        .eq('id', syncConfigId);
+
+      if (error) throw error;
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadIntegrationConfig(tenantId);
+    } catch (error) {
+      console.error('Error updating sync mode:', error);
+    }
+  };
+
+  const updateIncrementalKey = async (syncConfigId: string, incrementalKey: string) => {
+    try {
+      const { error } = await supabase
+        .from('integration_sync_configs')
+        .update({ incremental_key: incrementalKey })
+        .eq('id', syncConfigId);
+
+      if (error) throw error;
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadIntegrationConfig(tenantId);
+    } catch (error) {
+      console.error('Error updating incremental key:', error);
+    }
+  };
+
   const saveFieldMappings = async () => {
     if (!integrationConfig) return;
 
@@ -732,26 +766,79 @@ export default function IntegrationSettingsPage() {
                   const isEnabled = syncConfig?.is_enabled || false;
 
                   return (
-                    <div key={endpoint.name} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <Switch
-                          checked={isEnabled}
-                          onCheckedChange={(checked) => toggleEndpoint(endpoint.name, checked)}
-                          disabled={!canWrite || !integrationConfig}
-                        />
-                        <div>
-                          <h4 className="font-medium text-gray-900">{endpoint.display}</h4>
-                          <p className="text-sm text-gray-600">{endpoint.description}</p>
+                    <div key={endpoint.name} className="border rounded-lg">
+                      <div className="flex items-center justify-between p-4">
+                        <div className="flex items-center gap-4">
+                          <Switch
+                            checked={isEnabled}
+                            onCheckedChange={(checked) => toggleEndpoint(endpoint.name, checked)}
+                            disabled={!canWrite || !integrationConfig}
+                          />
+                          <div>
+                            <h4 className="font-medium text-gray-900">{endpoint.display}</h4>
+                            <p className="text-sm text-gray-600">{endpoint.description}</p>
+                          </div>
                         </div>
+                        {syncConfig && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            {syncConfig.last_sync_at && (
+                              <>
+                                {getStatusIcon(syncConfig.last_sync_status || 'not_configured')}
+                                <span>Last sync: {new Date(syncConfig.last_sync_at).toLocaleString()}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {syncConfig && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          {syncConfig.last_sync_at && (
-                            <>
-                              {getStatusIcon(syncConfig.last_sync_status || 'not_configured')}
-                              <span>Last sync: {new Date(syncConfig.last_sync_at).toLocaleString()}</span>
-                            </>
-                          )}
+                      
+                      {/* Incremental Sync Settings (shown when enabled) */}
+                      {isEnabled && syncConfig && (
+                        <div className="px-4 pb-4 pt-2 border-t bg-gray-50">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor={`sync-mode-${endpoint.name}`} className="text-xs font-medium text-gray-700">Sync Mode</Label>
+                              <select
+                                id={`sync-mode-${endpoint.name}`}
+                                value={syncConfig.sync_mode || 'full'}
+                                onChange={(e) => updateSyncMode(syncConfig.id, e.target.value)}
+                                disabled={!canWrite}
+                                className="mt-1 w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="full">Full Sync (All Records)</option>
+                                <option value="incremental">Incremental (Changed Only)</option>
+                                <option value="delta">Delta (New Only)</option>
+                              </select>
+                            </div>
+                            
+                            {(syncConfig.sync_mode === 'incremental' || syncConfig.sync_mode === 'delta') && (
+                              <div>
+                                <Label htmlFor={`incremental-key-${endpoint.name}`} className="text-xs font-medium text-gray-700">Incremental Key Field</Label>
+                                <Input
+                                  id={`incremental-key-${endpoint.name}`}
+                                  type="text"
+                                  value={syncConfig.incremental_key || ''}
+                                  onChange={(e) => updateIncrementalKey(syncConfig.id, e.target.value)}
+                                  disabled={!canWrite}
+                                  placeholder="e.g., updated_at, modified_date"
+                                  className="mt-1 text-sm"
+                                />
+                              </div>
+                            )}
+                            
+                            {syncConfig.last_sync_timestamp && (
+                              <div>
+                                <Label className="text-xs font-medium text-gray-700">Last Sync Timestamp</Label>
+                                <p className="mt-1 text-xs text-gray-600">{new Date(syncConfig.last_sync_timestamp).toLocaleString()}</p>
+                              </div>
+                            )}
+                            
+                            {syncConfig.watermark_value && (
+                              <div>
+                                <Label className="text-xs font-medium text-gray-700">Watermark Value</Label>
+                                <p className="mt-1 text-xs text-gray-600 font-mono">{syncConfig.watermark_value}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
