@@ -199,12 +199,12 @@ USING (
     SELECT 1 FROM integration_configs ic
     WHERE ic.id = integration_alert_history.integration_config_id
     AND ic.tenant_id IN (
-      SELECT tenant_id FROM user_profiles WHERE user_id = auth.uid()
+      SELECT tenant_id FROM tenant_users WHERE user_id = auth.uid()
     )
   )
   OR
   EXISTS (
-    SELECT 1 FROM user_profiles
+    SELECT 1 FROM tenant_users
     WHERE user_id = auth.uid()
     AND role IN ('host_admin', 'super_admin')
   )
@@ -215,7 +215,7 @@ CREATE POLICY alert_history_insert_policy ON integration_alert_history
 FOR INSERT
 WITH CHECK (
   EXISTS (
-    SELECT 1 FROM user_profiles
+    SELECT 1 FROM tenant_users
     WHERE user_id = auth.uid()
     AND role IN ('host_admin', 'super_admin', 'tenant_admin')
   )
