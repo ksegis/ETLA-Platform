@@ -37,6 +37,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
 import { supabase } from '@/lib/supabase'
+import { useFormPersist } from '@/hooks/useFormPersist'
 import { ProjectQuickUpdateModal } from '@/components/project-management/ProjectQuickUpdateModal'
 import { RoadblockManager } from '@/components/project-management/RoadblockManager'
 import { MilestoneManager } from '@/components/project-management/MilestoneManager'
@@ -3816,8 +3817,26 @@ function CreateProjectModal({
     billing_type: 'fixed'
   })
 
+  // Auto-save form data
+  const { clearPersistedData, getPersistedData } = useFormPersist(
+    'create_project_form',
+    formData,
+    isOpen
+  )
+
+  // Restore persisted data on open
+  useEffect(() => {
+    if (isOpen) {
+      const persistedData = getPersistedData()
+      if (persistedData) {
+        setFormData(persistedData)
+      }
+    }
+  }, [isOpen])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    clearPersistedData()
     onSubmit(formData)
   }
 
@@ -4094,12 +4113,28 @@ function EditProjectModal({
 }) {
   const [formData, setFormData] = useState<Partial<ProjectCharter>>(project)
 
+  // Auto-save form data
+  const { clearPersistedData, getPersistedData } = useFormPersist(
+    'edit_project_form',
+    formData,
+    isOpen,
+    project.id
+  )
+
   useEffect(() => {
-    setFormData(project)
-  }, [project])
+    if (isOpen) {
+      const persistedData = getPersistedData()
+      if (persistedData) {
+        setFormData(persistedData)
+      } else {
+        setFormData(project)
+      }
+    }
+  }, [project, isOpen])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    clearPersistedData()
     onSubmit(formData)
   }
 
@@ -6959,9 +6994,29 @@ function EditCharterModal({
 }) {
   const [formData, setFormData] = useState<any>(project || {})
 
+  // Auto-save form data
+  const { clearPersistedData, getPersistedData } = useFormPersist(
+    'edit_charter_form',
+    formData,
+    isOpen,
+    project?.id
+  )
+
+  useEffect(() => {
+    if (isOpen) {
+      const persistedData = getPersistedData()
+      if (persistedData) {
+        setFormData(persistedData)
+      } else {
+        setFormData(project || {})
+      }
+    }
+  }, [project, isOpen])
+
   if (!isOpen) return null
 
   const handleSave = () => {
+    clearPersistedData()
     onSave(formData)
     onClose()
   }

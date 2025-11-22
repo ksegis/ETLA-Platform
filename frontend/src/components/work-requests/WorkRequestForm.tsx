@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { X, Upload, File, Trash2, AlertCircle, Info, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { useFormPersist } from '@/hooks/useFormPersist'
 
 // Types matching the database schema with HR/Payroll focus
 interface WorkRequestFormData {
@@ -263,68 +264,60 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   const [existingAttachments, setExistingAttachments] = useState<WorkRequestAttachment[]>([])
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([])
 
+  // Auto-save form data to localStorage
+  const { clearPersistedData, getPersistedData } = useFormPersist(
+    'work_request_form',
+    formData,
+    isOpen,
+    request?.id
+  )
+
   // Reset form when modal opens/closes or request changes
   useEffect(() => {
-    if (request) {
-      setFormData({
-        title: request.title || '',
-        description: request.description || '',
-        category: Array.isArray(request.category) ? request.category : (request.category ? [request.category] : []),
-        categoryOther: request.categoryOther || '',
-        priority: (request.priority as any) || 'medium',
-        urgency: (request.urgency as any) || 'medium',
-        status: (request.status as any) || 'submitted',
-        affectedSystems: request.affectedSystems || [],
-        estimatedEmployeeImpact: request.estimatedEmployeeImpact || '',
-        complianceRelated: request.complianceRelated || '',
-        specificRequirements: request.specificRequirements || '',
-        required_completion_date: request.required_completion_date || '',
-        estimatedDocumentCount: request.estimatedDocumentCount || '',
-        estimatedDataVolume: request.estimatedDataVolume || '',
-        longTermStorageRequired: request.longTermStorageRequired || '',
-        ongoingApiMonitoring: request.ongoingApiMonitoring || '',
-        ongoingSupportNeeded: request.ongoingSupportNeeded || '',
-        expectedFrequency: request.expectedFrequency || '',
-        integrationComplexity: request.integrationComplexity || '',
-        helixBridgeAccess: request.helixBridgeAccess || '',
-        currentPayrollSystem: request.currentPayrollSystem || '',
-        currentHRIS: request.currentHRIS || '',
-        currentVersion: request.currentVersion || '',
-        currentIntegrationCount: request.currentIntegrationCount || '',
-        dataMigrationNeeded: request.dataMigrationNeeded || '',
-        currentPainPoints: request.currentPainPoints || ''
-      })
-      setExistingAttachments(request.attachments || [])
-    } else {
-      setFormData({
-        title: '',
-        description: '',
-        category: [],
-        categoryOther: '',
-        priority: 'medium',
-        urgency: 'medium',
-        status: 'submitted',
-        affectedSystems: [],
-        estimatedEmployeeImpact: '',
-        complianceRelated: '',
-        specificRequirements: '',
-        required_completion_date: '',
-        estimatedDocumentCount: '',
-        estimatedDataVolume: '',
-        longTermStorageRequired: '',
-        ongoingApiMonitoring: '',
-        ongoingSupportNeeded: '',
-        expectedFrequency: '',
-        integrationComplexity: '',
-        helixBridgeAccess: '',
-        currentPayrollSystem: '',
-        currentHRIS: '',
-        currentVersion: '',
-        currentIntegrationCount: '',
-        dataMigrationNeeded: '',
-        currentPainPoints: ''
-      })
-      setExistingAttachments([])
+    if (isOpen) {
+      // Try to restore persisted data first
+      const persistedData = getPersistedData()
+      
+      if (persistedData) {
+        // Restore from localStorage if available
+        setFormData(persistedData)
+      } else if (request) {
+        // Otherwise load from request data
+        setFormData({
+          title: request.title || '',
+          description: request.description || '',
+          category: Array.isArray(request.category) ? request.category : (request.category ? [request.category] : []),
+          categoryOther: request.categoryOther || '',
+          priority: (request.priority as any) || 'medium',
+          urgency: (request.urgency as any) || 'medium',
+          status: (request.status as any) || 'submitted',
+          affectedSystems: request.affectedSystems || [],
+          estimatedEmployeeImpact: request.estimatedEmployeeImpact || '',
+          complianceRelated: request.complianceRelated || '',
+          specificRequirements: request.specificRequirements || '',
+          required_completion_date: request.required_completion_date || '',
+          estimatedDocumentCount: request.estimatedDocumentCount || '',
+          estimatedDataVolume: request.estimatedDataVolume || '',
+          longTermStorageRequired: request.longTermStorageRequired || '',
+          ongoingApiMonitoring: request.ongoingApiMonitoring || '',
+          ongoingSupportNeeded: request.ongoingSupportNeeded || '',
+          expectedFrequency: request.expectedFrequency || '',
+          integrationComplexity: request.integrationComplexity || '',
+          helixBridgeAccess: request.helixBridgeAccess || '',
+          currentPayrollSystem: request.currentPayrollSystem || '',
+          currentHRIS: request.currentHRIS || '',
+          currentVersion: request.currentVersion || '',
+          currentIntegrationCount: request.currentIntegrationCount || '',
+          dataMigrationNeeded: request.dataMigrationNeeded || '',
+          currentPainPoints: request.currentPainPoints || ''
+        })
+      }
+      
+      if (request) {
+        setExistingAttachments(request.attachments || [])
+      } else {
+        setExistingAttachments([])
+      }
     }
     setErrors({})
     setUploadedFiles([])
@@ -463,6 +456,10 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     }
     
     const files = uploadedFiles.map(uf => uf.file)
+    
+    // Clear persisted data after successful save
+    clearPersistedData()
+    
     onSave(submitData, files)
   }
 
