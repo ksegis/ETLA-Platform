@@ -61,6 +61,7 @@ export const FEATURES = {
   ROLE_MANAGEMENT: F.ROLE_MANAGEMENT ?? "role-management",
   TENANT_MANAGEMENT: F.TENANT_MANAGEMENT ?? F.TENANT ?? "tenant-management",
   TENANT_FEATURES: F.TENANT_FEATURES ?? "tenant-features",
+  TENANT_STORAGE: F.TENANT_STORAGE ?? "tenant-storage",
   SYSTEM_SETTINGS: F.SYSTEM_SETTINGS ?? "system-settings",
   AUDIT_LOGS: F.AUDIT_LOGS ?? "audit-logs",
   AUDIT: F.AUDIT ?? "audit",
@@ -76,6 +77,7 @@ export const FEATURES = {
   BENEFITS: F.BENEFITS ?? F.BENEFITS_MANAGEMENT ?? "benefits-management", // alias
   PAYROLL_PROCESSING: F.PAYROLL_PROCESSING ?? "payroll-processing",
   PAYROLL: F.PAYROLL ?? F.PAYROLL_PROCESSING ?? "payroll-processing", // alias
+  EMPLOYEE_DIRECTORY: F.EMPLOYEE_DIRECTORY ?? "employee-directory",
 
   // Talent Management
   TALENT_DASHBOARD: F.TALENT_DASHBOARD ?? "talent-dashboard",
@@ -157,6 +159,9 @@ export const PERMISSIONS = {
   // Administration-specific permissions
   ROLE_MANAGE: CORE_PERMISSIONS.MANAGE,
   TENANT_FEATURES_MANAGE: CORE_PERMISSIONS.MANAGE,
+  TENANT_STORAGE_VIEW: CORE_PERMISSIONS.VIEW,
+  TENANT_STORAGE_MANAGE: CORE_PERMISSIONS.MANAGE,
+  EMPLOYEE_DIRECTORY_VIEW: CORE_PERMISSIONS.VIEW,
 
   // misc / RouteGuard helpers
   TENANT_READ: CORE_PERMISSIONS.VIEW,
