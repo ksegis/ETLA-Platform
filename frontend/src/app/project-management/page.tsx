@@ -579,11 +579,29 @@ function ProjectManagementContent() {
       const completedProjects = filteredProjectsForStats.filter((p: any) => p.charter_status === 'completed').length
       const onHoldProjects = filteredProjectsForStats.filter((p: any) => p.charter_status === 'on_hold').length
       
-      const totalWorkRequests = workRequests.length
-      const pendingWorkRequests = workRequests.filter((wr: any) => wr.status === 'pending').length
-      const approvedWorkRequests = workRequests.filter((wr: any) => wr.status === 'approved').length
+      // Filter work requests by tenant to match filtered projects
+      const filteredWorkRequests = workRequests.filter((wr: any) => {
+        // If tenant filter is active, only show work requests for that tenant
+        if (tenantFilter) {
+          return wr.tenant_id === tenantFilter
+        }
+        return true
+      })
       
-      const highRisks = risks.filter((r: any) => 
+      const totalWorkRequests = filteredWorkRequests.length
+      const pendingWorkRequests = filteredWorkRequests.filter((wr: any) => wr.status === 'pending').length
+      const approvedWorkRequests = filteredWorkRequests.filter((wr: any) => wr.status === 'approved').length
+      
+      // Filter risks by tenant to match filtered projects
+      const filteredRisks = risks.filter((r: any) => {
+        // If tenant filter is active, only show risks for that tenant
+        if (tenantFilter) {
+          return r.tenant_id === tenantFilter
+        }
+        return true
+      })
+      
+      const highRisks = filteredRisks.filter((r: any) => 
         r.risk_level === 'high' || r.level === 'high' || r.severity === 'high'
       ).length
       
