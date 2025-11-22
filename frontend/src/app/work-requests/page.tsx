@@ -21,7 +21,8 @@ interface WorkRequest {
   tenant_id: string
   title: string
   description: string
-  category: string
+  category: string | string[]
+  categoryOther?: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   urgency: 'low' | 'medium' | 'high' | 'urgent'
   status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
