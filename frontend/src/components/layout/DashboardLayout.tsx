@@ -137,6 +137,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         { name: 'Talent Data Import', href: '/talent-import', icon: Download, requiredPermission: PERMISSIONS.DATA_PROCESS },
         { name: 'Job Management', href: '/jobs', icon: Briefcase, requiredPermission: PERMISSIONS.JOB_MANAGE },
         { name: 'Employee Data Processing', href: '/employees', icon: Users, requiredPermission: PERMISSIONS.EMPLOYEE_PROCESS },
+        { name: 'Scheduling', href: '/scheduling', icon: Clock, requiredPermission: PERMISSIONS.DATA_PROCESS },
         { name: 'Data Analytics', href: '/analytics', icon: Database, requiredPermission: PERMISSIONS.DATA_ANALYZE },
         { name: 'Audit Trail', href: '/audit', icon: Eye, requiredPermission: PERMISSIONS.AUDIT_VIEW },
       ],
