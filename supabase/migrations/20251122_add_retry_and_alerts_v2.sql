@@ -1,9 +1,10 @@
 -- ============================================================================
--- Migration: Add Retry Tracking and Alert Configuration
+-- Migration: Add Retry Tracking and Alert Configuration (v2 - Schema Verified)
 -- ============================================================================
 -- Description: Adds fields for retry logic, email alerts, and incremental sync
 -- Date: 2025-11-22
 -- Version: 1.1
+-- Based on actual schema verification
 -- ============================================================================
 
 -- ============================================================================
@@ -46,7 +47,7 @@ COMMENT ON COLUMN integration_configs.alert_webhook_url IS 'Webhook URL to call 
 
 
 -- ============================================================================
--- 3. Add incremental sync tracking
+-- 3. Add incremental sync tracking to integration_sync_configs
 -- ============================================================================
 
 ALTER TABLE integration_sync_configs
@@ -89,9 +90,9 @@ CREATE TABLE IF NOT EXISTS integration_alert_history (
 );
 
 -- Create indexes
-CREATE INDEX idx_alert_history_config ON integration_alert_history(integration_config_id, sent_at DESC);
-CREATE INDEX idx_alert_history_sync ON integration_alert_history(sync_history_id);
-CREATE INDEX idx_alert_history_status ON integration_alert_history(delivery_status);
+CREATE INDEX IF NOT EXISTS idx_alert_history_config ON integration_alert_history(integration_config_id, sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alert_history_sync ON integration_alert_history(sync_history_id);
+CREATE INDEX IF NOT EXISTS idx_alert_history_status ON integration_alert_history(delivery_status);
 
 COMMENT ON TABLE integration_alert_history IS 'History of all alerts sent for sync events';
 
@@ -107,10 +108,12 @@ CREATE OR REPLACE FUNCTION calculate_next_retry(
 RETURNS TIMESTAMP AS $$
 BEGIN
   -- Exponential backoff: base_delay * 2^retry_count
-  -- Max delay capped at 1 hour
+  -- Max delay capped at 1 hour (3600 seconds)
   RETURN NOW() + (LEAST(base_delay_seconds * POWER(2, retry_count), 3600) || ' seconds')::INTERVAL;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
+
+GRANT EXECUTE ON FUNCTION calculate_next_retry TO authenticated;
 
 COMMENT ON FUNCTION calculate_next_retry IS 'Calculates next retry timestamp using exponential backoff';
 
@@ -185,7 +188,7 @@ COMMENT ON FUNCTION update_sync_watermark IS 'Updates watermark value after succ
 -- 8. Add RLS policies for new tables
 -- ============================================================================
 
--- Enable RLS
+-- Enable RLS on alert_history table
 ALTER TABLE integration_alert_history ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view alerts for their tenant's integrations
@@ -195,7 +198,9 @@ USING (
   EXISTS (
     SELECT 1 FROM integration_configs ic
     WHERE ic.id = integration_alert_history.integration_config_id
-    AND ic.tenant_id = (SELECT tenant_id FROM user_profiles WHERE user_id = auth.uid())
+    AND ic.tenant_id IN (
+      SELECT tenant_id FROM user_profiles WHERE user_id = auth.uid()
+    )
   )
   OR
   EXISTS (
@@ -242,11 +247,4 @@ ORDER BY sh.retry_at ASC;
 
 COMMENT ON VIEW pending_sync_retries IS 'View of failed syncs that are ready for retry';
 
-
--- ============================================================================
--- 10. Grant permissions
--- ============================================================================
-
 GRANT SELECT ON pending_sync_retries TO authenticated;
-GRANT EXECUTE ON FUNCTION calculate_next_retry TO authenticated;
-
