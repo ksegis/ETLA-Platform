@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { usePermissions, FEATURES, PERMISSIONS } from '@/hooks/usePermissions'
 import { canApproveWorkRequests, getApprovalDenialReason } from '@/lib/rbac-helpers'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase'
 
 interface ApprovalButtonProps {
   workRequestId: string
@@ -64,7 +64,6 @@ export function ApprovalButton({
 
   const loadApprovalData = async () => {
     setLoadingData(true)
-    const supabase = createClient()
     
     try {
       // Load tenants
