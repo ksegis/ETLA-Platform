@@ -327,7 +327,8 @@ export default function IntegrationSettingsPage() {
         }
       }
 
-      await loadIntegrationConfig();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadIntegrationConfig(tenantId);
       alert('Connection settings saved successfully!');
     } catch (error) {
       console.error('Error saving connection settings:', error);
@@ -369,7 +370,8 @@ export default function IntegrationSettingsPage() {
         })
         .eq('id', integrationConfig.id);
 
-      await loadIntegrationConfig();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadIntegrationConfig(tenantId);
 
       if (success) {
         alert('Connection test successful!');
@@ -416,7 +418,8 @@ export default function IntegrationSettingsPage() {
         if (error) throw error;
       }
 
-      await loadIntegrationConfig();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadIntegrationConfig(tenantId);
     } catch (error) {
       console.error('Error toggling endpoint:', error);
     }
@@ -433,7 +436,8 @@ export default function IntegrationSettingsPage() {
         .eq('id', syncConfig.id);
 
       if (error) throw error;
-      await loadIntegrationConfig();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadIntegrationConfig(tenantId);
     } catch (error) {
       console.error('Error updating sync frequency:', error);
     }
@@ -482,7 +486,8 @@ export default function IntegrationSettingsPage() {
 
       if (error) throw error;
 
-      await loadIntegrationConfig();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadIntegrationConfig(tenantId);
       alert('Advanced settings saved successfully!');
     } catch (error) {
       console.error('Error saving advanced settings:', error);

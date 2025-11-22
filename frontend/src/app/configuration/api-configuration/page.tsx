@@ -304,7 +304,8 @@ export default function APIConfigurationPage() {
       }
 
       // Reload configs
-      await loadConfigs();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadConfigs(tenantId);
 
       // Close modals
       setIsCreateModalOpen(false);
@@ -333,7 +334,8 @@ export default function APIConfigurationPage() {
       if (error) throw error;
 
       // Reload configs
-      await loadConfigs();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadConfigs(tenantId);
 
       // Close dialog
       setIsDeleteDialogOpen(false);
@@ -374,7 +376,8 @@ export default function APIConfigurationPage() {
         .eq('id', config.id);
 
       // Reload configs
-      await loadConfigs();
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
+      await loadConfigs(tenantId);
     } catch (error) {
       console.error('Error testing connection:', error);
     } finally {
