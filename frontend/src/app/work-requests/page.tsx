@@ -195,16 +195,7 @@ function WorkRequestsPageContent() {
       
       setWorkRequests(dataWithAttachments)
       setFilteredRequests(dataWithAttachments)
-
-      const requestStats = {
-        total: data?.length || 0,
-        submitted: data?.filter((r: any) => r.status === 'submitted').length || 0,
-        under_review: data?.filter((r: any) => r.status === 'under_review').length || 0,
-        approved: data?.filter((r: any) => r.status === 'approved').length || 0,
-        in_progress: data?.filter((r: any) => r.status === 'in_progress').length || 0,
-        completed: data?.filter((r: any) => r.status === 'completed').length || 0
-      }
-      setStats(requestStats)
+      // Stats will be calculated by the useEffect that watches filteredRequests
 
     } catch (err) {
       console.error('Error loading work requests:', err)
@@ -511,6 +502,19 @@ function WorkRequestsPageContent() {
 
     setFilteredRequests(filtered)
   }, [workRequests, searchTerm, statusFilter, priorityFilter, tenantFilter])
+
+  // Update stats based on filtered requests
+  useEffect(() => {
+    const requestStats = {
+      total: filteredRequests.length,
+      submitted: filteredRequests.filter((r: any) => r.status === 'submitted').length,
+      under_review: filteredRequests.filter((r: any) => r.status === 'under_review').length,
+      approved: filteredRequests.filter((r: any) => r.status === 'approved').length,
+      in_progress: filteredRequests.filter((r: any) => r.status === 'in_progress').length,
+      completed: filteredRequests.filter((r: any) => r.status === 'completed').length
+    }
+    setStats(requestStats)
+  }, [filteredRequests])
 
   // Load data
   useEffect(() => {
