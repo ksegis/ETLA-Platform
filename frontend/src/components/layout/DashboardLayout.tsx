@@ -32,7 +32,8 @@ import {
   PieChart,
   Users2,
   User,
-  Wand2
+  Wand2,
+  Clock
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
