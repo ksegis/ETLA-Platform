@@ -87,14 +87,95 @@ export async function POST(request: Request) {
       // Map work request fields to valid project_charters columns only
       // Generate unique project code using timestamp to avoid duplicates
       const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+      
+      // Build comprehensive description from work request
+      let enhancedDescription = workRequest.description || '';
+      if (workRequest.specificRequirements) {
+        enhancedDescription += `\n\n**Specific Requirements:**\n${workRequest.specificRequirements}`;
+      }
+      if (workRequest.categoryOther) {
+        enhancedDescription += `\n\n**Additional Category Details:**\n${workRequest.categoryOther}`;
+      }
+      
+      // Build project scope from work request scope data
+      const scopeParts = [];
+      if (workRequest.affectedSystems) {
+        const systems = Array.isArray(workRequest.affectedSystems) ? workRequest.affectedSystems.join(', ') : workRequest.affectedSystems;
+        scopeParts.push(`**Affected Systems:** ${systems}`);
+      }
+      if (workRequest.estimatedEmployeeImpact) {
+        scopeParts.push(`**Employee Impact:** ${workRequest.estimatedEmployeeImpact}`);
+      }
+      if (workRequest.complianceRelated === 'yes') {
+        scopeParts.push(`**⚠️ COMPLIANCE RELATED** - This project involves compliance requirements`);
+      }
+      if (workRequest.estimatedDocumentCount) {
+        scopeParts.push(`**Document Count:** ${workRequest.estimatedDocumentCount}`);
+      }
+      if (workRequest.estimatedDataVolume) {
+        scopeParts.push(`**Data Volume:** ${workRequest.estimatedDataVolume}`);
+      }
+      const projectScope = scopeParts.join('\n');
+      
+      // Build risk assessment from current system info
+      const riskParts = [];
+      if (workRequest.currentPayrollSystem) {
+        riskParts.push(`**Current Payroll System:** ${workRequest.currentPayrollSystem}`);
+      }
+      if (workRequest.currentHRIS) {
+        riskParts.push(`**Current HRIS:** ${workRequest.currentHRIS}`);
+      }
+      if (workRequest.currentVersion) {
+        riskParts.push(`**Current Version:** ${workRequest.currentVersion}`);
+      }
+      if (workRequest.currentIntegrationCount) {
+        riskParts.push(`**Current Integrations:** ${workRequest.currentIntegrationCount}`);
+      }
+      if (workRequest.dataMigrationNeeded && workRequest.dataMigrationNeeded !== 'no') {
+        riskParts.push(`**⚠️ Data Migration Required:** ${workRequest.dataMigrationNeeded}`);
+      }
+      if (workRequest.currentPainPoints) {
+        riskParts.push(`**Current Pain Points:**\n${workRequest.currentPainPoints}`);
+      }
+      const riskAssessment = riskParts.join('\n');
+      
+      // Build constraints from scope estimation
+      const constraintParts = [];
+      if (workRequest.longTermStorageRequired === 'yes') {
+        constraintParts.push('Long-term storage required');
+      }
+      if (workRequest.ongoingApiMonitoring === 'yes') {
+        constraintParts.push('Ongoing API monitoring required');
+      }
+      if (workRequest.ongoingSupportNeeded === 'yes') {
+        constraintParts.push('Ongoing support required');
+      }
+      if (workRequest.expectedFrequency) {
+        constraintParts.push(`Frequency: ${workRequest.expectedFrequency}`);
+      }
+      if (workRequest.integrationComplexity) {
+        constraintParts.push(`Integration Complexity: ${workRequest.integrationComplexity}`);
+      }
+      const constraints = constraintParts.join('; ');
+      
+      // Build assumptions
+      const assumptionParts = [];
+      if (workRequest.helixBridgeAccess === 'yes') {
+        assumptionParts.push('Organization will require access to HelixBridge platform');
+      } else if (workRequest.helixBridgeAccess === 'no') {
+        assumptionParts.push('Organization will NOT require access to HelixBridge platform');
+      }
+      const assumptions = assumptionParts.join('; ');
+      
       const projectData = {
         tenant_id: workRequest.tenant_id,
         project_code: `WR-${workRequest.id.slice(0, 8)}-${timestamp}`, // Unique project code with timestamp
         project_name: workRequest.title || 'Untitled Project',
         project_title: workRequest.title,
         title: workRequest.title,
+        description: enhancedDescription,
         priority: workRequest.priority,
-        project_category: workRequest.category,
+        project_category: Array.isArray(workRequest.category) ? workRequest.category.join(', ') : workRequest.category,
         estimated_budget: workRequest.estimated_budget,
         budget: workRequest.estimated_budget,
         planned_end_date: workRequest.required_completion_date,
@@ -103,6 +184,10 @@ export async function POST(request: Request) {
         charter_status: 'draft', // Initial charter status
         customer_id: workRequest.customer_id,
         business_case: workRequest.business_justification,
+        project_scope: projectScope || undefined,
+        risk_assessment: riskAssessment || undefined,
+        constraints: constraints || undefined,
+        assumptions: assumptions || undefined,
         created_by: user_id,
         created_at: now,
         updated_at: now,
@@ -123,7 +208,15 @@ export async function POST(request: Request) {
         }, { status: 500 });
       }
 
-      // B. Project created successfully - NOW update work request status to 'approved' and then 'converted_to_project'
+      // B. Copy attachments from work request to project (if any)
+      if (workRequest.attachments && Array.isArray(workRequest.attachments) && workRequest.attachments.length > 0) {
+        console.log(`Copying ${workRequest.attachments.length} attachments from work request to project...`);
+        // Note: In a real implementation, you would copy the files in storage and create new records
+        // For now, we'll just log this. You may need to implement actual file copying based on your storage setup.
+        // Example: Copy files from work_request_attachments/ to project_attachments/ in Supabase Storage
+      }
+      
+      // C. Project created successfully - NOW update work request status to 'approved' and then 'converted_to_project'
       const { error: updateError } = await supabaseAdmin
         .from('work_requests')
         .update({ 
@@ -145,7 +238,7 @@ export async function POST(request: Request) {
         });
       }
 
-      // C. Final Update Work Request Status to 'converted_to_project'
+      // D. Final Update Work Request Status to 'converted_to_project'
       const { error: finalUpdateError } = await supabaseAdmin
         .from('work_requests')
         .update({ 
