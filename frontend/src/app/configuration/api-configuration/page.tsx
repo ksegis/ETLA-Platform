@@ -46,12 +46,16 @@ interface APICredentials {
 export default function APIConfigurationPage() {
   const router = useRouter();
   const { user, tenant } = useAuth();
-  const { canAccessFeature, hasPermission } = usePermissions();
+  const { canAccessFeature, hasPermission, isHostAdmin } = usePermissions();
 
   const [configs, setConfigs] = useState<APIConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
+
+  // Tenant selector for host admins
+  const [availableTenants, setAvailableTenants] = useState<any[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('');
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -85,14 +89,43 @@ export default function APIConfigurationPage() {
     }
   }, [canAccessFeature, router]);
 
+  // Load tenants for host admins
+  useEffect(() => {
+    if (user && isHostAdmin()) {
+      loadTenants();
+    }
+  }, [user, isHostAdmin]);
+
   // Load API configurations
   useEffect(() => {
-    if (user && tenant?.id) {
-      loadConfigs();
+    const tenantId = isHostAdmin() ? selectedTenantId : tenant?.id;
+    if (user && tenantId) {
+      loadConfigs(tenantId);
+    } else if (user && !isHostAdmin() && !tenant?.id) {
+      setLoading(false);
     }
-  }, [user, tenant]);
+  }, [user, tenant, selectedTenantId, isHostAdmin]);
 
-  const loadConfigs = async () => {
+  const loadTenants = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setAvailableTenants(data || []);
+      
+      // Auto-select first tenant
+      if (data && data.length > 0 && !selectedTenantId) {
+        setSelectedTenantId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading tenants:', error);
+    }
+  };
+
+  const loadConfigs = async (tenantId: string) => {
     try {
       setLoading(true);
 
@@ -100,7 +133,7 @@ export default function APIConfigurationPage() {
       const { data: configsData, error: configsError } = await supabase
         .from('integration_configs')
         .select('*')
-        .eq('tenant_id', tenant!.id)
+        .eq('tenant_id', tenantId)
         .eq('integration_type', 'api')
         .order('created_at', { ascending: false });
 
@@ -188,8 +221,9 @@ export default function APIConfigurationPage() {
     try {
       setSaving(true);
 
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
       const configPayload = {
-        tenant_id: tenant!.id,
+        tenant_id: tenantId,
         integration_type: formData.integration_type,
         integration_name: formData.integration_name,
         environment: formData.environment,
@@ -390,10 +424,26 @@ export default function APIConfigurationPage() {
               <p className="text-sm text-gray-600">Manage external API integrations and credentials</p>
             </div>
           </div>
-          {canWrite && (
-            <Button onClick={handleCreate} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add API Configuration
+          <div className="flex items-center gap-3">
+            {isHostAdmin() && availableTenants.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="tenant-select" className="text-sm font-medium text-gray-700">Tenant:</Label>
+                <select
+                  id="tenant-select"
+                  value={selectedTenantId}
+                  onChange={(e) => setSelectedTenantId(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {availableTenants.map((t: any) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {canWrite && (
+              <Button onClick={handleCreate} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add API Configuration
             </Button>
           )}
         </div>

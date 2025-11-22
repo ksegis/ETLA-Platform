@@ -67,12 +67,16 @@ interface SyncHistory {
 export default function IntegrationSettingsPage() {
   const router = useRouter();
   const { user, tenant } = useAuth();
-  const { canAccessFeature, hasPermission } = usePermissions();
+  const { canAccessFeature, hasPermission, isHostAdmin } = usePermissions();
 
   const [activeTab, setActiveTab] = useState('connection');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+
+  // Tenant selector for host admins
+  const [availableTenants, setAvailableTenants] = useState<any[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('');
 
   // Integration config state
   const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig | null>(null);
@@ -132,14 +136,43 @@ export default function IntegrationSettingsPage() {
     }
   }, [canAccessFeature, router]);
 
+  // Load tenants for host admins
+  useEffect(() => {
+    if (user && isHostAdmin()) {
+      loadTenants();
+    }
+  }, [user, isHostAdmin]);
+
   // Load integration configuration
   useEffect(() => {
-    if (user && tenant?.id) {
-      loadIntegrationConfig();
+    const tenantId = isHostAdmin() ? selectedTenantId : tenant?.id;
+    if (user && tenantId) {
+      loadIntegrationConfig(tenantId);
+    } else if (user && !isHostAdmin() && !tenant?.id) {
+      setLoading(false);
     }
-  }, [user, tenant]);
+  }, [user, tenant, selectedTenantId, isHostAdmin]);
 
-  const loadIntegrationConfig = async () => {
+  const loadTenants = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setAvailableTenants(data || []);
+      
+      // Auto-select first tenant
+      if (data && data.length > 0 && !selectedTenantId) {
+        setSelectedTenantId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading tenants:', error);
+    }
+  };
+
+  const loadIntegrationConfig = async (tenantId: string) => {
     try {
       setLoading(true);
 
@@ -147,7 +180,7 @@ export default function IntegrationSettingsPage() {
       const { data: configData, error: configError } = await supabase
         .from('integration_configs')
         .select('*')
-        .eq('tenant_id', tenant!.id)
+        .eq('tenant_id', tenantId)
         .eq('integration_type', 'paycom')
         .single();
 
@@ -221,8 +254,9 @@ export default function IntegrationSettingsPage() {
     try {
       setSaving(true);
 
+      const tenantId = isHostAdmin() ? selectedTenantId : tenant!.id;
       const configPayload = {
-        tenant_id: tenant!.id,
+        tenant_id: tenantId,
         integration_type: 'paycom',
         integration_name: connectionForm.integration_name,
         environment: connectionForm.environment,
@@ -502,16 +536,33 @@ export default function IntegrationSettingsPage() {
               <p className="text-sm text-gray-600">Configure Paycom integration and data synchronization</p>
             </div>
           </div>
-          {integrationConfig && (
-            <div className="flex items-center gap-2">
-              {getStatusIcon(integrationConfig.connection_status)}
-              <span className="text-sm font-medium text-gray-700">
-                {integrationConfig.connection_status === 'connected' ? 'Connected' : 
-                 integrationConfig.connection_status === 'failed' ? 'Connection Failed' : 
-                 integrationConfig.connection_status === 'testing' ? 'Testing...' : 'Not Configured'}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {isHostAdmin() && availableTenants.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="tenant-select" className="text-sm font-medium text-gray-700">Tenant:</Label>
+                <select
+                  id="tenant-select"
+                  value={selectedTenantId}
+                  onChange={(e) => setSelectedTenantId(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {availableTenants.map((t: any) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {integrationConfig && (
+              <div className="flex items-center gap-2">
+                {getStatusIcon(integrationConfig.connection_status)}
+                <span className="text-sm font-medium text-gray-700">
+                  {integrationConfig.connection_status === 'connected' ? 'Connected' : 
+                   integrationConfig.connection_status === 'failed' ? 'Connection Failed' : 
+                   integrationConfig.connection_status === 'testing' ? 'Testing...' : 'Not Configured'}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
