@@ -53,6 +53,11 @@ interface SyncConfig {
   last_sync_timestamp?: string | null;
   incremental_key?: string | null;
   watermark_value?: string | null;
+  validation_rules?: any[];
+  validation_enabled?: boolean;
+  validation_action?: string;
+  required_fields?: string[];
+  unique_fields?: string[];
 }
 
 interface SyncHistory {
