@@ -43,6 +43,7 @@ import NotificationBell from '@/components/notifications/NotificationBell'
 import NavigationSearch from '@/components/navigation/NavigationSearch'
 import FavoritesPanel from '@/components/navigation/FavoritesPanel'
 import FavoriteButton from '@/components/navigation/FavoriteButton'
+import Breadcrumbs from '@/components/navigation/Breadcrumbs'
 import { useNavigationSearch } from '@/hooks/useNavigationSearch'
 import { useFavorites } from '@/hooks/useFavorites'
 
@@ -759,7 +760,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          {children}
+          {/* Breadcrumbs */}
+          <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3">
+            <Breadcrumbs navigationItems={searchItems} />
+          </div>
+          
+          {/* Page Content */}
+          <div>
+            {children}
+          </div>
         </main>
       </div>
 
