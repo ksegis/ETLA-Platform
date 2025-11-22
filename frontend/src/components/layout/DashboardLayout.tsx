@@ -31,7 +31,8 @@ import {
   Activity,
   PieChart,
   Users2,
-  User
+  User,
+  Wand2
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
@@ -152,6 +153,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       items: [
         { name: 'File Upload', href: '/upload', icon: Upload, requiredPermission: PERMISSIONS.FILE_UPLOAD },
         { name: 'Data Validation', href: '/validation', icon: CheckCircle, requiredPermission: PERMISSIONS.DATA_VALIDATE },
+        { name: 'Transformations', href: '/transformations', icon: Wand2, requiredPermission: PERMISSIONS.DATA_PROCESS },
         { name: 'System Health', href: '/system-health', icon: Activity, requiredPermission: PERMISSIONS.SYSTEM_HEALTH_VIEW },
       ],
     },
