@@ -141,7 +141,8 @@ export default function IntegrationSettingsPage() {
     if (user && isHostAdmin()) {
       loadTenants();
     }
-  }, [user, isHostAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Load integration configuration
   useEffect(() => {
@@ -151,7 +152,8 @@ export default function IntegrationSettingsPage() {
     } else if (user && !isHostAdmin() && !tenant?.id) {
       setLoading(false);
     }
-  }, [user, tenant, selectedTenantId, isHostAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, tenant, selectedTenantId]);
 
   const loadTenants = async () => {
     try {

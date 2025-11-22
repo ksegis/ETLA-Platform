@@ -94,7 +94,8 @@ export default function APIConfigurationPage() {
     if (user && isHostAdmin()) {
       loadTenants();
     }
-  }, [user, isHostAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Load API configurations
   useEffect(() => {
@@ -104,7 +105,8 @@ export default function APIConfigurationPage() {
     } else if (user && !isHostAdmin() && !tenant?.id) {
       setLoading(false);
     }
-  }, [user, tenant, selectedTenantId, isHostAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, tenant, selectedTenantId]);
 
   const loadTenants = async () => {
     try {
