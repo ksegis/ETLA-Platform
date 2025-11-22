@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Upload, FileText, CheckCircle, AlertCircle, ArrowRight, Download, Table } from 'lucide-react'
 
@@ -118,7 +119,8 @@ export default function TalentDataImport() {
   const canProceed = mappingStatus.mapped === mappingStatus.total
 
   return (
-    <div className="p-6 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -382,6 +384,7 @@ export default function TalentDataImport() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }

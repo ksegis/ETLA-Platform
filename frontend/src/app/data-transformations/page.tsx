@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Wand2, Plus, Trash2, Eye, Save, Code, ArrowRight } from 'lucide-react'
 
@@ -135,7 +136,8 @@ export default function DataTransformations() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -426,6 +428,7 @@ export default function DataTransformations() {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }

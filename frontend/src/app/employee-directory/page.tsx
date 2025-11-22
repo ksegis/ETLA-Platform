@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Search, Mail, Phone, MapPin, Building, User, Filter, Download } from 'lucide-react'
 
@@ -172,7 +173,8 @@ export default function EmployeeDirectory() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -365,6 +367,7 @@ export default function EmployeeDirectory() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }

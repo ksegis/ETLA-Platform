@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Activity, CheckCircle, XCircle, AlertTriangle, Database, Server, Zap, Clock, TrendingUp, TrendingDown } from 'lucide-react'
 
@@ -194,7 +195,8 @@ export default function SystemHealth() {
   const downCount = services.filter(s => s.status === 'down').length
 
   return (
-    <div className="p-6 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">System Health</h1>
@@ -395,6 +397,7 @@ export default function SystemHealth() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
