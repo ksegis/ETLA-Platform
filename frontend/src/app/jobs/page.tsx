@@ -105,7 +105,7 @@ export default function JobsPage() {
 
       if (configsError) throw configsError;
 
-      const configIds = configs?.map(c => c.id) || [];
+      const configIds = configs?.map((c: any) => c.id) || [];
       const configMap = configs?.reduce((acc: any, c: any) => {
         acc[c.id] = c.integration_name;
         return acc;

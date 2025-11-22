@@ -115,7 +115,7 @@ export default function DashboardPage() {
 
       if (configsError) throw configsError;
 
-      const configIds = configs?.map(c => c.id) || [];
+      const configIds = configs?.map((c: any) => c.id) || [];
 
       // Load sync history
       let syncHistory: any[] = [];
