@@ -286,7 +286,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         expectedFrequency: request.expectedFrequency || '',
         integrationComplexity: request.integrationComplexity || '',
         helixBridgeAccess: request.helixBridgeAccess || '',
-        currentPayrollSystem: request.currentPayrollSystem || ''
+        currentPayrollSystem: request.currentPayrollSystem || '',
         currentHRIS: request.currentHRIS || '',
         currentVersion: request.currentVersion || '',
         currentIntegrationCount: request.currentIntegrationCount || '',
