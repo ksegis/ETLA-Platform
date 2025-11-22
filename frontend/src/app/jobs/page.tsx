@@ -135,9 +135,9 @@ export default function JobsPage() {
 
       // Calculate metrics
       const total = syncHistory.length;
-      const successful = syncHistory.filter(j => j.sync_status === 'success').length;
-      const failed = syncHistory.filter(j => j.sync_status === 'error' || j.sync_status === 'failed').length;
-      const running = syncHistory.filter(j => j.sync_status === 'running' || j.sync_status === 'in_progress').length;
+      const successful = syncHistory.filter((j: any) => j.sync_status === 'success').length;
+      const failed = syncHistory.filter((j: any) => j.sync_status === 'error' || j.sync_status === 'failed').length;
+      const running = syncHistory.filter((j: any) => j.sync_status === 'running' || j.sync_status === 'in_progress').length;
 
       setMetrics({ total, successful, failed, running });
 

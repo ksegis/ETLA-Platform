@@ -132,11 +132,11 @@ export default function DashboardPage() {
 
       // Calculate metrics
       const totalSyncs = syncHistory.length;
-      const successfulSyncs = syncHistory.filter(s => s.sync_status === 'success').length;
-      const failedSyncs = syncHistory.filter(s => s.sync_status === 'error' || s.sync_status === 'failed').length;
+      const successfulSyncs = syncHistory.filter((s: any) => s.sync_status === 'success').length;
+      const failedSyncs = syncHistory.filter((s: any) => s.sync_status === 'error' || s.sync_status === 'failed').length;
       const successRate = totalSyncs > 0 ? (successfulSyncs / totalSyncs) * 100 : 0;
-      const activeIntegrations = configs?.filter(c => c.is_active).length || 0;
-      const totalRecordsProcessed = syncHistory.reduce((sum, s) => sum + (s.records_processed || 0), 0);
+      const activeIntegrations = configs?.filter((c: any) => c.is_active).length || 0;
+      const totalRecordsProcessed = syncHistory.reduce((sum: number, s: any) => sum + (s.records_processed || 0), 0);
 
       setMetrics({
         totalSyncs,
