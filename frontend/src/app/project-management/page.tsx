@@ -42,6 +42,7 @@ import { RoadblockManager } from '@/components/project-management/RoadblockManag
 import { MilestoneManager } from '@/components/project-management/MilestoneManager'
 import { StatusUpdateForm } from '@/components/project-management/StatusUpdateForm'
 import { DeliverableTracker } from '@/components/project-management/DeliverableTracker'
+import { ViewProjectModal as ViewProjectModalComponent } from '@/components/project-management/ViewProjectModal'
 import { Package, MessageSquare, HelpCircle } from 'lucide-react'
 import { TourProvider, useTour } from '@/components/tours/TourProvider'
 import { projectManagementTour } from '@/components/tours/projectManagementTour'
@@ -111,6 +112,34 @@ interface ProjectCharter {
   objectives?: string
   scope?: string
   team_members?: string
+  
+  // Comprehensive work request fields
+  category?: string[]
+  category_other?: string
+  affected_systems?: string[]
+  estimated_employee_impact?: string
+  compliance_related?: string
+  specific_requirements?: string
+  urgency?: string
+  required_completion_date?: string
+  
+  // Scope estimation fields
+  estimated_document_count?: string
+  estimated_data_volume?: string
+  long_term_storage_required?: string
+  ongoing_api_monitoring?: string
+  ongoing_support_needed?: string
+  expected_frequency?: string
+  integration_complexity?: string
+  helix_bridge_access?: string
+  
+  // Current system environment fields
+  current_payroll_system?: string
+  current_hris?: string
+  current_version?: string
+  current_integration_count?: string
+  data_migration_needed?: string
+  current_pain_points?: string
   
   // Timestamps
   created_at?: string
@@ -3441,7 +3470,7 @@ function ProjectManagementContent() {
 
       {/* View Project Modal */}
       {isViewModalOpen && selectedProject && (
-        <ViewProjectModal
+        <ViewProjectModalComponent
           isOpen={isViewModalOpen}
           onClose={() => {
             setIsViewModalOpen(false)
@@ -4261,8 +4290,10 @@ function EditProjectModal({
   )
 }
 
-// View Project Modal Component
-function ViewProjectModal({ 
+// ViewProjectModal is now imported from @/components/project-management/ViewProjectModal
+
+// ViewWorkRequestModal Component - keeping old one for reference
+function ViewProjectModalOld({ 
   isOpen, 
   onClose, 
   project 

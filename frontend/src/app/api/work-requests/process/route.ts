@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { work_request_id, action, user_id, user_role } = await request.json();
+    const { work_request_id, action, user_id, user_role, tenant_id, project_manager_id } = await request.json();
 
     if (!work_request_id || !action || !user_id || !user_role) {
       return NextResponse.json({ 
@@ -174,17 +174,19 @@ export async function POST(request: Request) {
       ].filter(Boolean).join('');
       
       const projectData = {
-        tenant_id: workRequest.tenant_id,
+        tenant_id: tenant_id || workRequest.tenant_id, // Use provided tenant_id or fall back to work request's tenant
         project_code: `WR-${workRequest.id.slice(0, 8)}-${timestamp}`, // Unique project code with timestamp
         project_name: workRequest.title || 'Untitled Project',
         project_title: workRequest.title,
         title: workRequest.title,
         priority: workRequest.priority,
+        urgency: workRequest.urgency,
         project_category: Array.isArray(workRequest.category) ? workRequest.category.join(', ') : workRequest.category,
         estimated_budget: workRequest.estimated_budget,
         budget: workRequest.estimated_budget,
         planned_end_date: workRequest.required_completion_date,
         end_date: workRequest.required_completion_date,
+        required_completion_date: workRequest.required_completion_date,
         work_request_id: workRequest.id,
         charter_status: 'draft', // Initial charter status
         customer_id: workRequest.customer_id,
@@ -194,6 +196,34 @@ export async function POST(request: Request) {
         constraints: constraints || undefined,
         assumptions: assumptions || undefined,
         created_by: user_id,
+        project_manager_id: project_manager_id || undefined, // Assign PM if provided
+        
+        // Comprehensive work request fields
+        category: workRequest.category,
+        category_other: workRequest.categoryOther,
+        affected_systems: workRequest.affectedSystems,
+        estimated_employee_impact: workRequest.estimatedEmployeeImpact,
+        compliance_related: workRequest.complianceRelated,
+        specific_requirements: workRequest.specificRequirements,
+        
+        // Scope estimation fields
+        estimated_document_count: workRequest.estimatedDocumentCount,
+        estimated_data_volume: workRequest.estimatedDataVolume,
+        long_term_storage_required: workRequest.longTermStorageRequired,
+        ongoing_api_monitoring: workRequest.ongoingApiMonitoring,
+        ongoing_support_needed: workRequest.ongoingSupportNeeded,
+        expected_frequency: workRequest.expectedFrequency,
+        integration_complexity: workRequest.integrationComplexity,
+        helix_bridge_access: workRequest.helixBridgeAccess,
+        
+        // Current system environment fields
+        current_payroll_system: workRequest.currentPayrollSystem,
+        current_hris: workRequest.currentHRIS,
+        current_version: workRequest.currentVersion,
+        current_integration_count: workRequest.currentIntegrationCount,
+        data_migration_needed: workRequest.dataMigrationNeeded,
+        current_pain_points: workRequest.currentPainPoints,
+        
         created_at: now,
         updated_at: now,
       };

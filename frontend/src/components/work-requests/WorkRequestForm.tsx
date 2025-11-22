@@ -1113,11 +1113,14 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   id="file-upload-modal"
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg"
                 />
-                <label htmlFor="file-upload-modal" className="cursor-pointer">
-                  <Button type="button" variant="outline" size="sm">
-                    Choose Files
-                  </Button>
-                </label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => document.getElementById('file-upload-modal')?.click()}
+                >
+                  Choose Files
+                </Button>
                 <p className="text-xs text-gray-500 mt-2">
                   PDF, DOC, DOCX, XLS, XLSX, CSV, PNG, JPG (Max 10MB each)
                 </p>
