@@ -444,8 +444,9 @@ export default function APIConfigurationPage() {
               <Button onClick={handleCreate} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Add API Configuration
-            </Button>
-          )}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* API Configurations Table */}
