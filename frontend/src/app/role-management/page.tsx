@@ -7,49 +7,62 @@ import { Shield, Save, RotateCcw, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { loadAllRolePermissions, saveRolePermissions } from '@/services/role_permissions_service'
 
-// Define all features/screens in the system (matches navigation exactly)
+// Define all features/screens in the system (matches new navigation structure)
 const FEATURES = [
-  // Operations
-  { id: 'work-requests', name: 'Work Requests', category: 'Operations' },
-  { id: 'project-management', name: 'Project Management', category: 'Operations' },
-  { id: 'customer-projects', name: 'My Projects (Customer)', category: 'Operations' },
-  { id: 'customer-portfolio', name: 'Portfolio Overview (Customer)', category: 'Operations' },
-  { id: 'customer-notifications', name: 'Notifications (Customer)', category: 'Operations' },
-  { id: 'reporting', name: 'Reporting', category: 'Operations' },
-  { id: 'hr-analytics', name: 'HR Analytics Dashboard', category: 'Operations' },
+  // ===== OPERATIONS & PROJECTS =====
+  // Work Management Sub-Group
+  { id: 'work-requests', name: 'Work Requests', category: 'Operations & Projects', subCategory: 'Work Management' },
+  { id: 'project-management', name: 'Project Management', category: 'Operations & Projects', subCategory: 'Work Management' },
+  { id: 'customer-projects', name: 'My Projects', category: 'Operations & Projects', subCategory: 'Work Management' },
+  { id: 'customer-portfolio', name: 'Portfolio Overview', category: 'Operations & Projects', subCategory: 'Work Management' },
   
-  // Talent Management
-  { id: 'talent-dashboard', name: 'Talent Dashboard', category: 'Talent Management' },
-  { id: 'job-management', name: 'Job Management', category: 'Talent Management' },
-  { id: 'candidates', name: 'Candidates', category: 'Talent Management' },
-  { id: 'pipeline', name: 'Pipeline', category: 'Talent Management' },
-  { id: 'interviews', name: 'Interviews', category: 'Talent Management' },
-  { id: 'offers', name: 'Offers', category: 'Talent Management' },
+  // Reporting & Analytics Sub-Group
+  { id: 'reporting', name: 'Reporting', category: 'Operations & Projects', subCategory: 'Reporting & Analytics' },
+  { id: 'hr-analytics', name: 'HR Analytics Dashboard', category: 'Operations & Projects', subCategory: 'Reporting & Analytics' },
   
-  // ETL Cockpit
-  { id: 'etl-dashboard', name: 'ETL Dashboard', category: 'ETL Cockpit' },
-  { id: 'etl-jobs', name: 'ETL Job Management', category: 'ETL Cockpit' },
-  { id: 'employee-records', name: 'Employee Data Processing', category: 'ETL Cockpit' },
-  { id: 'analytics', name: 'Data Analytics', category: 'ETL Cockpit' },
-  { id: 'audit-log', name: 'Audit Trail', category: 'ETL Cockpit' },
+  // ===== TALENT & RECRUITMENT =====
+  { id: 'talent-dashboard', name: 'Talent Dashboard', category: 'Talent & Recruitment' },
+  { id: 'job-management', name: 'Job Postings', category: 'Talent & Recruitment' },
+  { id: 'candidates', name: 'Candidates', category: 'Talent & Recruitment' },
+  { id: 'pipeline', name: 'Pipeline', category: 'Talent & Recruitment' },
+  { id: 'interviews', name: 'Interviews', category: 'Talent & Recruitment' },
+  { id: 'offers', name: 'Offers', category: 'Talent & Recruitment' },
   
-  // Data Management
-  { id: 'file-upload', name: 'File Upload', category: 'Data Management' },
-  { id: 'data-validation', name: 'Data Validation', category: 'Data Management' },
-  { id: 'system-health', name: 'System Health', category: 'Data Management' },
+  // ===== ETL & DATA PLATFORM =====
+  // Monitoring & Insights Sub-Group
+  { id: 'etl-dashboard', name: 'ETL Dashboard', category: 'ETL & Data Platform', subCategory: 'Monitoring & Insights' },
+  { id: 'etl-progress-monitor', name: 'Progress Monitor', category: 'ETL & Data Platform', subCategory: 'Monitoring & Insights' },
+  { id: 'audit-log', name: 'Audit Trail', category: 'ETL & Data Platform', subCategory: 'Monitoring & Insights' },
+  { id: 'system-health', name: 'System Health', category: 'ETL & Data Platform', subCategory: 'Monitoring & Insights' },
   
-  // Configuration
-  { id: 'system-settings', name: 'System Settings', category: 'Configuration' },
-  { id: 'api-config', name: 'API Configuration', category: 'Configuration' },
-  { id: 'integrations', name: 'Integration Settings', category: 'Configuration' },
+  // Data Processing Sub-Group
+  { id: 'talent-data-import', name: 'Talent Data Import', category: 'ETL & Data Platform', subCategory: 'Data Processing' },
+  { id: 'employee-records', name: 'Employee Data Processing', category: 'ETL & Data Platform', subCategory: 'Data Processing' },
+  { id: 'etl-jobs', name: 'Job Management (ETL)', category: 'ETL & Data Platform', subCategory: 'Data Processing' },
+  { id: 'file-upload', name: 'File Upload', category: 'ETL & Data Platform', subCategory: 'Data Processing' },
   
-  // Administration
-  { id: 'access-control', name: 'Access Control', category: 'Administration' },
-  { id: 'user-management', name: 'Role Management', category: 'Administration' },
-  { id: 'tenant-management', name: 'Tenant Management', category: 'Administration' },
-  { id: 'employee-directory', name: 'Employee Directory', category: 'Administration' },
-  { id: 'benefits-management', name: 'Benefits Management', category: 'Administration' },
-  { id: 'payroll-processing', name: 'Payroll Management', category: 'Administration' },
+  // Configuration & Tools Sub-Group
+  { id: 'etl-scheduling', name: 'Scheduling', category: 'ETL & Data Platform', subCategory: 'Configuration & Tools' },
+  { id: 'data-transformations', name: 'Transformations', category: 'ETL & Data Platform', subCategory: 'Configuration & Tools' },
+  { id: 'data-validation', name: 'Data Validation', category: 'ETL & Data Platform', subCategory: 'Configuration & Tools' },
+  { id: 'analytics', name: 'Data Analytics', category: 'ETL & Data Platform', subCategory: 'Configuration & Tools' },
+  
+  // ===== SYSTEM CONFIGURATION =====
+  { id: 'system-settings', name: 'System Settings', category: 'System Configuration' },
+  { id: 'api-config', name: 'API Configuration', category: 'System Configuration' },
+  { id: 'integrations', name: 'Integration Settings', category: 'System Configuration' },
+  
+  // ===== ADMINISTRATION =====
+  // Access & Security Sub-Group
+  { id: 'access-control', name: 'Access Control', category: 'Administration', subCategory: 'Access & Security' },
+  { id: 'role-management', name: 'Role Management', category: 'Administration', subCategory: 'Access & Security' },
+  { id: 'tenant-management', name: 'Tenant Management', category: 'Administration', subCategory: 'Access & Security' },
+  { id: 'tenant-features', name: 'Tenant Features', category: 'Administration', subCategory: 'Access & Security' },
+  
+  // HR & Payroll Sub-Group
+  { id: 'employee-directory', name: 'Employee Directory', category: 'Administration', subCategory: 'HR & Payroll' },
+  { id: 'benefits-management', name: 'Benefits Management', category: 'Administration', subCategory: 'HR & Payroll' },
+  { id: 'payroll-processing', name: 'Payroll Management', category: 'Administration', subCategory: 'HR & Payroll' },
 ]
 
 // Define all roles
@@ -279,7 +292,7 @@ export default function RoleManagementPage() {
   const selectedRoleData = ROLES.find(r => r.id === selectedRole)
   const selectedPermissions = permissions[selectedRole] || {}
 
-  // Group features by category
+  // Group features by category and sub-category
   const featuresByCategory = FEATURES.reduce((acc, feature) => {
     if (!acc[feature.category]) {
       acc[feature.category] = []
@@ -287,6 +300,27 @@ export default function RoleManagementPage() {
     acc[feature.category].push(feature)
     return acc
   }, {} as Record<string, typeof FEATURES>)
+
+  // Group by sub-category within each category
+  const featuresGrouped = Object.entries(featuresByCategory).map(([category, features]) => {
+    const withSubCategories = features.filter(f => f.subCategory)
+    const withoutSubCategories = features.filter(f => !f.subCategory)
+    
+    const subCategoryGroups = withSubCategories.reduce((acc, feature) => {
+      const subCat = feature.subCategory!
+      if (!acc[subCat]) {
+        acc[subCat] = []
+      }
+      acc[subCat].push(feature)
+      return acc
+    }, {} as Record<string, typeof FEATURES>)
+    
+    return {
+      category,
+      subCategories: subCategoryGroups,
+      flatFeatures: withoutSubCategories
+    }
+  })
 
   if (loading) {
     return (
@@ -377,69 +411,139 @@ export default function RoleManagementPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {Object.entries(featuresByCategory).map(([category, features]) => (
+          <div className="space-y-8">
+            {featuresGrouped.map(({ category, subCategories, flatFeatures }) => (
               <div key={category}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-300">
                   {category}
                 </h3>
-                <div className="space-y-2">
-                  {features.map(feature => {
-                    const perm = selectedPermissions[feature.id]
-                    if (!perm) return null
+                
+                {/* Sub-Categories */}
+                {Object.entries(subCategories).map(([subCategory, features]) => (
+                  <div key={subCategory} className="mb-6">
+                    <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 ml-4">
+                      {subCategory}
+                    </h4>
+                    <div className="space-y-2 ml-4">
+                      {features.map(feature => {
+                        const perm = selectedPermissions[feature.id]
+                        if (!perm) return null
 
-                    return (
-                      <div
-                        key={feature.id}
-                        className={`p-4 rounded-lg border ${
-                          perm.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            {/* Feature Toggle */}
-                            <button
-                              onClick={() => toggleFeature(selectedRole, feature.id)}
-                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                perm.enabled ? 'bg-green-600' : 'bg-gray-300'
-                              }`}
-                            >
-                              <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                  perm.enabled ? 'translate-x-6' : 'translate-x-1'
-                                }`}
-                              />
-                            </button>
+                        return (
+                          <div
+                            key={feature.id}
+                            className={`p-4 rounded-lg border ${
+                              perm.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4 flex-1">
+                                {/* Feature Toggle */}
+                                <button
+                                  onClick={() => toggleFeature(selectedRole, feature.id)}
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    perm.enabled ? 'bg-green-600' : 'bg-gray-300'
+                                  }`}
+                                >
+                                  <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                      perm.enabled ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                  />
+                                </button>
 
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900">{feature.name}</div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900">{feature.name}</div>
+                                </div>
+                              </div>
+
+                              {/* CRUD Permissions */}
+                              {perm.enabled && (
+                                <div className="flex gap-2">
+                                  {CRUD_PERMISSIONS.map(crud => (
+                                    <button
+                                      key={crud}
+                                      onClick={() => toggleCRUD(selectedRole, feature.id, crud)}
+                                      className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                                        perm[crud as keyof Permission]
+                                          ? 'bg-blue-600 text-white'
+                                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                      }`}
+                                      title={crud.charAt(0).toUpperCase() + crud.slice(1)}
+                                    >
+                                      {crud.charAt(0).toUpperCase()}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Flat Features (no sub-category) */}
+                {flatFeatures.length > 0 && (
+                  <div className="space-y-2">
+                    {flatFeatures.map(feature => {
+                      const perm = selectedPermissions[feature.id]
+                      if (!perm) return null
 
-                          {/* CRUD Permissions */}
-                          {perm.enabled && (
-                            <div className="flex gap-2">
-                              {CRUD_PERMISSIONS.map(crud => (
-                                <button
-                                  key={crud}
-                                  onClick={() => toggleCRUD(selectedRole, feature.id, crud)}
-                                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                                    perm[crud as keyof Permission]
-                                      ? 'bg-blue-600 text-white'
-                                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                      return (
+                        <div
+                          key={feature.id}
+                          className={`p-4 rounded-lg border ${
+                            perm.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 flex-1">
+                              {/* Feature Toggle */}
+                              <button
+                                onClick={() => toggleFeature(selectedRole, feature.id)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                  perm.enabled ? 'bg-green-600' : 'bg-gray-300'
+                                }`}
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    perm.enabled ? 'translate-x-6' : 'translate-x-1'
                                   }`}
-                                  title={crud.charAt(0).toUpperCase() + crud.slice(1)}
-                                >
-                                  {crud.charAt(0).toUpperCase()}
-                                </button>
-                              ))}
+                                />
+                              </button>
+
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{feature.name}</div>
+                              </div>
                             </div>
-                          )}
+
+                            {/* CRUD Permissions */}
+                            {perm.enabled && (
+                              <div className="flex gap-2">
+                                {CRUD_PERMISSIONS.map(crud => (
+                                  <button
+                                    key={crud}
+                                    onClick={() => toggleCRUD(selectedRole, feature.id, crud)}
+                                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                                      perm[crud as keyof Permission]
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                    }`}
+                                    title={crud.charAt(0).toUpperCase() + crud.slice(1)}
+                                  >
+                                    {crud.charAt(0).toUpperCase()}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             ))}
           </div>
