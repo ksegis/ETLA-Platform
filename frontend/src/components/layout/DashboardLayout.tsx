@@ -44,8 +44,10 @@ import NavigationSearch from '@/components/navigation/NavigationSearch'
 import FavoritesPanel from '@/components/navigation/FavoritesPanel'
 import FavoriteButton from '@/components/navigation/FavoriteButton'
 import Breadcrumbs from '@/components/navigation/Breadcrumbs'
+import KeyboardShortcutsHelp from '@/components/navigation/KeyboardShortcutsHelp'
 import { useNavigationSearch } from '@/hooks/useNavigationSearch'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation'
 
 interface NavigationItem {
   name: string
@@ -97,6 +99,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const { isOpen: searchOpen, open: openSearch, close: closeSearch } = useNavigationSearch()
   const { favorites, toggleFavorite, isFavorite, reorderFavorites } = useFavorites()
+  const { showHint, setShowHint } = useKeyboardNavigation({
+    items: searchItems,
+    currentPath: pathname,
+    enabled: !searchOpen,
+  })
 
   // ============================================================================
   // REDESIGNED NAVIGATION STRUCTURE
@@ -779,6 +786,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         onClose={closeSearch}
         favoriteItems={favorites}
       />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp
+        isOpen={showHint}
+        onClose={() => setShowHint(false)}
+      />
+
+      {/* Keyboard Navigation Hint */}
+      {showHint && (
+        <div className="fixed bottom-4 right-4 z-40 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-fade-in">
+          Press <kbd className="px-1.5 py-0.5 bg-gray-700 rounded mx-1">?</kbd> for keyboard shortcuts
+        </div>
+      )}
     </div>
   )
 }
