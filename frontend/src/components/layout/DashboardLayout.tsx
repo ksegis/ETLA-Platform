@@ -41,7 +41,10 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { FEATURES, PERMISSIONS } from '@/rbac/constants'
 import NotificationBell from '@/components/notifications/NotificationBell'
 import NavigationSearch from '@/components/navigation/NavigationSearch'
+import FavoritesPanel from '@/components/navigation/FavoritesPanel'
+import FavoriteButton from '@/components/navigation/FavoriteButton'
 import { useNavigationSearch } from '@/hooks/useNavigationSearch'
+import { useFavorites } from '@/hooks/useFavorites'
 
 interface NavigationItem {
   name: string
@@ -92,6 +95,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   } = usePermissions()
 
   const { isOpen: searchOpen, open: openSearch, close: closeSearch } = useNavigationSearch()
+  const { favorites, toggleFavorite, isFavorite, reorderFavorites } = useFavorites()
 
   // ============================================================================
   // REDESIGNED NAVIGATION STRUCTURE
@@ -473,6 +477,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return items
   }, [filteredNavigationGroups])
 
+  // ============================================================================
+  // PREPARE FAVORITES ITEMS
+  // ============================================================================
+  const favoriteItems = useMemo(() => {
+    return searchItems.filter(item => favorites.includes(item.href))
+  }, [searchItems, favorites])
+
   if (permissionsLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-gray-50">
@@ -582,6 +593,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </kbd>
             </button>
           </div>
+
+          {/* Favorites */}
+          {favoriteItems.length > 0 && (
+            <div className="border-b border-gray-200">
+              <FavoritesPanel
+                favorites={favoriteItems}
+                onRemove={toggleFavorite}
+                onReorder={reorderFavorites}
+              />
+            </div>
+          )}
 
           {/* Navigation */}
           <nav className="flex-1 px-2 md:px-4 py-2 md:py-4 space-y-2 overflow-y-auto">
@@ -699,6 +721,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex-1 lg:flex-none" />
 
             <div className="flex items-center space-x-4">
+              <FavoriteButton />
               <NotificationBell />
               
               <div className="relative profile-dropdown">
@@ -745,6 +768,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         items={searchItems}
         isOpen={searchOpen}
         onClose={closeSearch}
+        favoriteItems={favorites}
       />
     </div>
   )
