@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Trash2, Calendar, LayoutGrid, List, X, File, DollarSign, Users, Target, TrendingUp, HelpCircle } from 'lucide-react'
+import { Plus, Search, Clock, CheckCircle, XCircle, AlertCircle, Eye, Edit, Copy, Trash2, Calendar, LayoutGrid, List, X, File, DollarSign, Users, Target, TrendingUp, HelpCircle } from 'lucide-react'
 import { TourProvider, useTour } from '@/components/tours/TourProvider'
 import { workRequestsTour, hostWorkRequestsTour } from '@/components/tours/workRequestsTour'
 import { usePermissions, ROLES } from '@/hooks/usePermissions'
@@ -834,6 +834,26 @@ function WorkRequestsPageContent() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
+                                onClick={() => {
+                                  // Create a copy with new ID and reset status
+                                  const copiedRequest = {
+                                    ...request,
+                                    id: undefined,
+                                    title: `Copy of ${request.title}`,
+                                    status: 'submitted' as const,
+                                    created_at: undefined,
+                                    updated_at: undefined
+                                  }
+                                  setSelectedRequest(copiedRequest as any)
+                                  setIsEditModalOpen(true)
+                                }}
+                                title="Copy this work request"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
                                 onClick={() => handleDeleteRequest(request.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -880,6 +900,25 @@ function WorkRequestsPageContent() {
                               }}
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                const copiedRequest = {
+                                  ...request,
+                                  id: undefined,
+                                  title: `Copy of ${request.title}`,
+                                  status: 'submitted' as const,
+                                  created_at: undefined,
+                                  updated_at: undefined
+                                }
+                                setSelectedRequest(copiedRequest as any)
+                                setIsEditModalOpen(true)
+                              }}
+                              title="Copy this work request"
+                            >
+                              <Copy className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>

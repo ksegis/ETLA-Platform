@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, Upload, File, Trash2, AlertCircle } from 'lucide-react'
+import { X, Upload, File, Trash2, AlertCircle, Info, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/Input'
 interface WorkRequestFormData {
   title: string
   description: string
-  category: string
+  category: string[]
+  categoryOther: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   urgency: 'low' | 'medium' | 'high' | 'urgent'
   status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
@@ -39,7 +40,8 @@ interface WorkRequest {
   id: string
   title: string
   description: string
-  category: string
+  category: string | string[]
+  categoryOther?: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   urgency: 'low' | 'medium' | 'high' | 'urgent'
   status: 'submitted' | 'under_review' | 'approved' | 'rejected' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
@@ -165,6 +167,54 @@ const integrationComplexityOptions = [
   { value: 'very-complex', label: 'Very Complex (8+ systems)' }
 ]
 
+// Tooltip component
+const Tooltip: React.FC<{ text: string }> = ({ text }) => {
+  const [show, setShow] = useState(false)
+  return (
+    <div className="relative inline-block ml-1">
+      <Info 
+        className="h-4 w-4 text-gray-400 hover:text-blue-600 cursor-help inline"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+      />
+      {show && (
+        <div className="absolute z-50 w-64 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -top-2 left-6">
+          {text}
+          <div className="absolute w-2 h-2 bg-gray-900 transform rotate-45 -left-1 top-3"></div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Field tooltips
+const fieldTooltips = {
+  title: "Brief, descriptive title for the work request (e.g., 'Configure Q4 2024 payroll tax updates')",
+  description: "Detailed description of what needs to be done, including background and context",
+  category: "Select one or more categories that best describe this request. Choose 'Other' to specify a custom category.",
+  employeeImpact: "Estimated number of employees affected by this request",
+  status: "Current status of the work request",
+  completionDate: "Target date by which this work should be completed",
+  specificRequirements: "Any technical requirements, constraints, or special considerations",
+  affectedSystems: "Select all systems that will be impacted by this work",
+  complianceRelated: "Indicate if this request involves compliance, regulatory, or legal requirements",
+  priority: "Business priority level - how important is this to operations?",
+  urgency: "Time sensitivity - how quickly does this need to be completed?",
+  currentPayroll: "Name of your current payroll system (e.g., ADP Workforce Now, Paychex Flex)",
+  currentHRIS: "Name of your current HR management system (e.g., Workday, SAP SuccessFactors)",
+  currentVersion: "Current version or release of your system (e.g., 2024 R1, Version 8.5)",
+  currentIntegrations: "Number of systems currently integrated with your payroll/HR system",
+  dataMigration: "Will data need to be migrated from another system?",
+  painPoints: "Describe current issues or limitations with your existing system",
+  documentCount: "Estimated number of documents to be processed, stored, or managed",
+  dataVolume: "Estimated number of records to be processed (e.g., employee records, transactions)",
+  longTermStorage: "Will this data need to be stored long-term for compliance or historical purposes?",
+  apiMonitoring: "Will ongoing API monitoring and management be required?",
+  ongoingSupport: "Will ongoing support be needed after initial implementation?",
+  frequency: "Is this a one-time project or recurring work?",
+  integrationComplexity: "Number of systems that need to be integrated"
+}
+
 const WorkRequestForm: React.FC<WorkRequestFormProps> = ({ 
   isOpen, 
   onClose, 
@@ -179,7 +229,8 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   const [formData, setFormData] = useState<WorkRequestFormData>({
     title: '',
     description: '',
-    category: '',
+    category: [],
+    categoryOther: '',
     priority: 'medium',
     urgency: 'medium',
     status: 'submitted',
@@ -214,7 +265,8 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       setFormData({
         title: request.title || '',
         description: request.description || '',
-        category: request.category || '',
+        category: Array.isArray(request.category) ? request.category : (request.category ? [request.category] : []),
+        categoryOther: request.categoryOther || '',
         priority: (request.priority as any) || 'medium',
         urgency: (request.urgency as any) || 'medium',
         status: (request.status as any) || 'submitted',
@@ -242,7 +294,8 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       setFormData({
         title: '',
         description: '',
-        category: '',
+        category: [],
+        categoryOther: '',
         priority: 'medium',
         urgency: 'medium',
         status: 'submitted',
@@ -278,6 +331,15 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       affectedSystems: prev.affectedSystems.includes(system)
         ? prev.affectedSystems.filter(s => s !== system)
         : [...prev.affectedSystems, system]
+    }))
+  }
+
+  const toggleCategory = (category: string) => {
+    setFormData(prev => ({
+      ...prev,
+      category: prev.category.includes(category)
+        ? prev.category.filter(c => c !== category)
+        : [...prev.category, category]
     }))
   }
 
@@ -331,8 +393,12 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       newErrors.description = 'Description is required'
     }
 
-    if (!formData.category.trim()) {
-      newErrors.category = 'Category is required'
+    if (formData.category.length === 0) {
+      newErrors.category = 'Select at least one category'
+    }
+
+    if (formData.category.includes('other') && !formData.categoryOther.trim()) {
+      newErrors.categoryOther = 'Please specify the other category'
     }
 
     if (formData.affectedSystems.length === 0) {
@@ -360,7 +426,8 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     const submitData: Partial<WorkRequest> = {
       title: formData.title.trim(),
       description: formData.description.trim(),
-      category: formData.category.trim(),
+      category: formData.category,
+      categoryOther: formData.category.includes('other') ? formData.categoryOther.trim() : undefined,
       priority: formData.priority,
       urgency: formData.urgency,
       status: formData.status,
@@ -424,6 +491,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Title <span className="text-red-500">*</span>
+                    <Tooltip text={fieldTooltips.title} />
                   </label>
                   <Input
                     value={formData.title}
@@ -457,30 +525,54 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   </div>
                 )}
 
+                {/* Category - Multi-select */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category <span className="text-red-500">*</span>
+                    <Tooltip text={fieldTooltips.category} />
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {categories.map((cat) => (
+                      <label key={cat.value} className="flex items-center gap-2 p-2 border border-gray-200 rounded-md hover:bg-blue-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.category.includes(cat.value)}
+                          onChange={() => toggleCategory(cat.value)}
+                          className="rounded text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">{cat.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+                  
+                  {/* Other Category Text Field */}
+                  {formData.category.includes('other') && (
+                    <div className="mt-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Please specify <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.categoryOther}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, categoryOther: e.target.value }))}
+                        placeholder="Describe the other category"
+                        spellCheck={true}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.categoryOther ? 'border-red-500' : ''}`}
+                      />
+                      {errors.categoryOther && <p className="text-red-500 text-xs mt-1">{errors.categoryOther}</p>}
+                    </div>
+                  )}
+                </div>
+
                 {/* Two Column Layout */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Category */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e: any) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.category ? 'border-red-500' : ''}`}
-                    >
-                      <option value="">Select category</option>
-                      {categories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
-                    </select>
-                    {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-                  </div>
 
                   {/* Employee Impact */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Employee Impact
+                      <Tooltip text={fieldTooltips.employeeImpact} />
                     </label>
                     <select
                       value={formData.estimatedEmployeeImpact}
@@ -498,6 +590,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Status
+                      <Tooltip text={fieldTooltips.status} />
                     </label>
                     <select
                       value={formData.status}
@@ -519,6 +612,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Required Completion Date
+                      <Tooltip text={fieldTooltips.completionDate} />
                     </label>
                     <input
                       type="date"
@@ -533,6 +627,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description <span className="text-red-500">*</span>
+                    <Tooltip text={fieldTooltips.description} />
                   </label>
                   <textarea
                     value={formData.description}
@@ -549,6 +644,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Specific Requirements
+                    <Tooltip text={fieldTooltips.specificRequirements} />
                   </label>
                   <textarea
                     value={formData.specificRequirements}
@@ -571,6 +667,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Affected Systems <span className="text-red-500">*</span>
+                    <Tooltip text={fieldTooltips.affectedSystems} />
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {systemOptions.map((system) => (
@@ -597,6 +694,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Is this compliance-related?
+                    <Tooltip text={fieldTooltips.complianceRelated} />
                   </label>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -643,6 +741,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Priority <span className="text-red-500">*</span>
+                    <Tooltip text={fieldTooltips.priority} />
                   </label>
                   <select
                     value={formData.priority}
@@ -660,6 +759,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Urgency <span className="text-red-500">*</span>
+                    <Tooltip text={fieldTooltips.urgency} />
                   </label>
                   <select
                     value={formData.urgency}
@@ -684,6 +784,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Current Payroll System
+                    <Tooltip text={fieldTooltips.currentPayroll} />
                   </label>
                   <input
                     type="text"
@@ -699,6 +800,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Current HRIS/HCM System
+                    <Tooltip text={fieldTooltips.currentHRIS} />
                   </label>
                   <input
                     type="text"
@@ -714,6 +816,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Current Version/Release
+                    <Tooltip text={fieldTooltips.currentVersion} />
                   </label>
                   <input
                     type="text"
@@ -728,6 +831,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Number of Current Integrations
+                    <Tooltip text={fieldTooltips.currentIntegrations} />
                   </label>
                   <select
                     value={formData.currentIntegrationCount || ''}
@@ -747,6 +851,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Data Migration Required?
+                    <Tooltip text={fieldTooltips.dataMigration} />
                   </label>
                   <select
                     value={formData.dataMigrationNeeded || ''}
@@ -764,6 +869,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Current Pain Points
+                    <Tooltip text={fieldTooltips.painPoints} />
                   </label>
                   <textarea
                     value={formData.currentPainPoints || ''}
@@ -786,6 +892,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Estimated Document Count
+                    <Tooltip text={fieldTooltips.documentCount} />
                   </label>
                   <select
                     value={formData.estimatedDocumentCount}
@@ -803,6 +910,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Estimated Data Volume
+                    <Tooltip text={fieldTooltips.dataVolume} />
                   </label>
                   <select
                     value={formData.estimatedDataVolume}
@@ -820,6 +928,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Long-term Storage Required?
+                    <Tooltip text={fieldTooltips.longTermStorage} />
                   </label>
                   <div className="flex gap-4 mt-2">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -851,6 +960,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Ongoing API Monitoring Required?
+                    <Tooltip text={fieldTooltips.apiMonitoring} />
                   </label>
                   <div className="flex gap-4 mt-2">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -882,6 +992,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Ongoing Support Needed?
+                    <Tooltip text={fieldTooltips.ongoingSupport} />
                   </label>
                   <div className="flex gap-4 mt-2">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -913,6 +1024,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Expected Frequency
+                    <Tooltip text={fieldTooltips.frequency} />
                   </label>
                   <select
                     value={formData.expectedFrequency}
@@ -930,6 +1042,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Integration Complexity
+                    <Tooltip text={fieldTooltips.integrationComplexity} />
                   </label>
                   <select
                     value={formData.integrationComplexity}
