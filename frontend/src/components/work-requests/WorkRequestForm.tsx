@@ -27,6 +27,7 @@ interface WorkRequestFormData {
   ongoingSupportNeeded: string
   expectedFrequency: string
   integrationComplexity: string
+  helixBridgeAccess: string
   // Current system fields
   currentPayrollSystem?: string
   currentHRIS?: string
@@ -212,7 +213,8 @@ const fieldTooltips = {
   apiMonitoring: "Will ongoing API monitoring and management be required?",
   ongoingSupport: "Will ongoing support be needed after initial implementation?",
   frequency: "Is this a one-time project or recurring work?",
-  integrationComplexity: "Number of systems that need to be integrated"
+  integrationComplexity: "Number of systems that need to be integrated",
+  helixBridgeAccess: "Will the organization need access to the HelixBridge platform for self-service or reporting?"
 }
 
 const WorkRequestForm: React.FC<WorkRequestFormProps> = ({ 
@@ -246,6 +248,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     ongoingSupportNeeded: '',
     expectedFrequency: '',
     integrationComplexity: '',
+    helixBridgeAccess: '',
     currentPayrollSystem: '',
     currentHRIS: '',
     currentVersion: '',
@@ -282,7 +285,8 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         ongoingSupportNeeded: request.ongoingSupportNeeded || '',
         expectedFrequency: request.expectedFrequency || '',
         integrationComplexity: request.integrationComplexity || '',
-        currentPayrollSystem: request.currentPayrollSystem || '',
+        helixBridgeAccess: request.helixBridgeAccess || '',
+        currentPayrollSystem: request.currentPayrollSystem || ''
         currentHRIS: request.currentHRIS || '',
         currentVersion: request.currentVersion || '',
         currentIntegrationCount: request.currentIntegrationCount || '',
@@ -311,6 +315,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
         ongoingSupportNeeded: '',
         expectedFrequency: '',
         integrationComplexity: '',
+        helixBridgeAccess: '',
         currentPayrollSystem: '',
         currentHRIS: '',
         currentVersion: '',
@@ -443,6 +448,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       ongoingSupportNeeded: formData.ongoingSupportNeeded || undefined,
       expectedFrequency: formData.expectedFrequency || undefined,
       integrationComplexity: formData.integrationComplexity || undefined,
+      helixBridgeAccess: formData.helixBridgeAccess || undefined,
       currentPayrollSystem: formData.currentPayrollSystem?.trim() || undefined,
       currentHRIS: formData.currentHRIS?.trim() || undefined,
       currentVersion: formData.currentVersion?.trim() || undefined,
@@ -1054,6 +1060,38 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              {/* HelixBridge Access */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Will organization require access to HelixBridge?
+                  <Tooltip text={fieldTooltips.helixBridgeAccess} />
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="helixBridgeAccess"
+                      value="yes"
+                      checked={formData.helixBridgeAccess === 'yes'}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, helixBridgeAccess: e.target.value }))}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Yes - Platform access needed</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="helixBridgeAccess"
+                      value="no"
+                      checked={formData.helixBridgeAccess === 'no'}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, helixBridgeAccess: e.target.value }))}
+                      className="rounded"
+                    />
+                    <span className="text-sm">No</span>
+                  </label>
                 </div>
               </div>
             </div>
