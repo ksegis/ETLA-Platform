@@ -25,7 +25,7 @@ interface SystemMetric {
 export default function SystemHealth() {
   const [services, setServices] = useState<ServiceStatus[]>([
     {
-      name: 'Database (Supabase)',
+      name: 'Database',
       status: 'healthy',
       responseTime: 45,
       uptime: 99.98,
