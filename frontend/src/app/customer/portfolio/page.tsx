@@ -67,15 +67,15 @@ export default function CustomerPortfolioPage() {
   const [subClientFilter, setSubClientFilter] = useState<string>('all')
 
   useEffect(() => {
-    if (selectedTenant?.id) {
+    if (user) {
       fetchPortfolioData()
     }
-  }, [selectedTenant?.id])
+  }, [user])
 
   const fetchPortfolioData = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/customer/portfolio?tenant_id=${selectedTenant?.id}`)
+      const response = await fetch('/api/customer/portfolio')
       if (!response.ok) throw new Error('Failed to fetch portfolio data')
       
       const data = await response.json()

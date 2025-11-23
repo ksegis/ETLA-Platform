@@ -19,7 +19,8 @@ import {
   Search,
   ArrowRight,
   Calendar,
-  HelpCircle
+  HelpCircle,
+  Building
 } from 'lucide-react'
 import { TourProvider, useTour } from '@/components/tours/TourProvider'
 import { customerProjectsTour } from '@/components/tours/customerProjectsTour'
@@ -41,6 +42,11 @@ interface Project {
   end_date: string
   next_customer_action: string
   customer_visible: boolean
+  tenant_id: string
+  tenants?: {
+    id: string
+    name: string
+  }
 }
 
 function CustomerProjectsPageContent() {
@@ -51,25 +57,57 @@ function CustomerProjectsPageContent() {
   const { selectedTenant } = useTenant()
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState<Project[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
+  const [tenants, setTenants] = useState<any[]>([])
+  const [searchTerm, setSearchTerm('')
 
   useEffect(() => {
-    if (selectedTenant?.id) {
-      fetchProjects()
+    if (user) {
+      fetchProjectsForAllTenants()
     }
-  }, [selectedTenant?.id])
+  }, [user])
 
-  const fetchProjects = async () => {
+  const fetchProjectsForAllTenants = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      // First, get all tenants the user has access to
+      const { data: tenantUsers, error: tenantError } = await supabase
+        .from('tenant_users')
+        .select('tenant_id, tenants(id, name)')
+        .eq('user_id', user?.id)
+
+      if (tenantError) throw tenantError
+
+      const userTenantIds = tenantUsers?.map(tu => tu.tenant_id) || []
+      
+      if (userTenantIds.length === 0) {
+        setProjects([])
+        setTenants([])
+        setLoading(false)
+        return
+      }
+
+      // Fetch all projects for these tenants
+      const { data: projectData, error: projectError } = await supabase
         .from('project_charters')
-        .select('*')
-        .eq('tenant_id', selectedTenant?.id)
+        .select(`
+          *,
+          tenants(id, name)
+        `)
+        .in('tenant_id', userTenantIds)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
-      setProjects(data || [])
+      if (projectError) throw projectError
+
+      setProjects(projectData || [])
+      
+      // Extract unique tenants from tenant_users
+      const uniqueTenants = tenantUsers
+        ?.map(tu => tu.tenants)
+        .filter((t, index, self) => 
+          t && self.findIndex(s => s?.id === t?.id) === index
+        ) || []
+      setTenants(uniqueTenants)
+
     } catch (error) {
       console.error('Error fetching projects:', error)
     } finally {
@@ -224,11 +262,19 @@ function CustomerProjectsPageContent() {
                         <span id={`health-indicator-${index}`}>{getHealthIcon(project.health_status)}</span>
                         <CardTitle className="text-lg">{project.project_name}</CardTitle>
                       </div>
-                      {project.project_code && (
-                        <Badge variant="outline" className="text-xs">
-                          {project.project_code}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {project.tenants?.name && (
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                            <Building className="h-3 w-3 mr-1" />
+                            {project.tenants.name}
+                          </Badge>
+                        )}
+                        {project.project_code && (
+                          <Badge variant="outline" className="text-xs">
+                            {project.project_code}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getHealthColor(project.health_status)}`}>
                       {project.health_status.toUpperCase()}
