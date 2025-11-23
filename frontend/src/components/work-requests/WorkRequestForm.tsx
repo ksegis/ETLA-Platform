@@ -5,6 +5,7 @@ import { X, Upload, File, Trash2, AlertCircle, Info, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useFormPersist } from '@/hooks/useFormPersist'
+import { saveFiles, getFiles, clearFiles } from '@/lib/fileStorage'
 
 // Types matching the database schema with HR/Payroll focus
 interface WorkRequestFormData {
@@ -318,9 +319,31 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       } else {
         setExistingAttachments([])
       }
+      
+      // Restore persisted files from IndexedDB
+      const storageKey = request?.id ? `work_request_form_${request.id}` : 'work_request_form_new'
+      getFiles(storageKey).then(files => {
+        if (files.length > 0) {
+          const restoredFiles: UploadedFile[] = files.map(file => ({
+            file,
+            preview: {
+              file_name: file.name,
+              file_size: file.size,
+              file_type: file.type
+            }
+          }))
+          setUploadedFiles(restoredFiles)
+        } else {
+          setUploadedFiles([])
+        }
+      }).catch(err => {
+        console.error('Error restoring files:', err)
+        setUploadedFiles([])
+      })
+    } else {
+      setUploadedFiles([])
     }
     setErrors({})
-    setUploadedFiles([])
     setDeletedAttachmentIds([])
   }, [request, isOpen])
 
@@ -342,7 +365,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     }))
   }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
 
@@ -355,12 +378,23 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
       }
     }))
 
-    setUploadedFiles(prev => [...prev, ...newFiles])
+    const updatedFiles = [...uploadedFiles, ...newFiles]
+    setUploadedFiles(updatedFiles)
+    
+    // Persist files to IndexedDB
+    const storageKey = request?.id ? `work_request_form_${request.id}` : 'work_request_form_new'
+    await saveFiles(storageKey, updatedFiles.map(uf => uf.file))
+    
     e.target.value = ''
   }
 
-  const handleRemoveUploadedFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+  const handleRemoveUploadedFile = async (index: number) => {
+    const updatedFiles = uploadedFiles.filter((_, i) => i !== index)
+    setUploadedFiles(updatedFiles)
+    
+    // Update persisted files
+    const storageKey = request?.id ? `work_request_form_${request.id}` : 'work_request_form_new'
+    await saveFiles(storageKey, updatedFiles.map(uf => uf.file))
   }
 
   const handleRemoveExistingAttachment = (attachmentId: string) => {
@@ -459,6 +493,10 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     
     // Clear persisted data after successful save
     clearPersistedData()
+    
+    // Clear persisted files
+    const storageKey = request?.id ? `work_request_form_${request.id}` : 'work_request_form_new'
+    clearFiles(storageKey)
     
     onSave(submitData, files)
   }
