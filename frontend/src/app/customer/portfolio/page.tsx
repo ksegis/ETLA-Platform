@@ -8,6 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_TOKEN!
+)
 import { 
   Building, 
   TrendingUp, 
@@ -75,11 +81,114 @@ export default function CustomerPortfolioPage() {
   const fetchPortfolioData = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/customer/portfolio')
-      if (!response.ok) throw new Error('Failed to fetch portfolio data')
+      if (!user?.id) {
+        console.error('User not loaded yet')
+        setLoading(false)
+        return
+      }
+
+      // Get all tenants the user has access to
+      const { data: tenantUsers, error: tenantError } = await supabase
+        .from('tenant_users')
+        .select('tenant_id, tenants(id, name)')
+        .eq('user_id', user.id)
+
+      if (tenantError) throw tenantError
+
+      const userTenantIds = tenantUsers?.map(tu => tu.tenant_id) || []
       
-      const data = await response.json()
-      setPortfolio(data)
+      if (userTenantIds.length === 0) {
+        setPortfolio({
+          total_projects: 0,
+          active_projects: 0,
+          at_risk_projects: 0,
+          total_budget: 0,
+          budget_spent: 0,
+          avg_completion: 0,
+          sub_clients: []
+        })
+        setLoading(false)
+        return
+      }
+
+      // Fetch all projects for these tenants
+      const { data: projects, error: projectError } = await supabase
+        .from('project_charters')
+        .select('*')
+        .in('tenant_id', userTenantIds)
+
+      if (projectError) throw projectError
+
+      // Group projects by tenant
+      const tenantProjects = new Map<string, any[]>()
+      
+      projects?.forEach(project => {
+        const tenantId = project.tenant_id
+        if (!tenantProjects.has(tenantId)) {
+          tenantProjects.set(tenantId, [])
+        }
+        tenantProjects.get(tenantId)!.push(project)
+      })
+
+      // Calculate portfolio summary for each tenant
+      const subClients = Array.from(tenantProjects.entries()).map(([tenantId, tenantProjectsList]) => {
+        const tenant = tenantUsers?.find(tu => tu.tenant_id === tenantId)
+        const activeCount = tenantProjectsList.filter(p => 
+          p.health_status !== 'completed' && p.health_status !== 'cancelled'
+        ).length
+        const atRiskCount = tenantProjectsList.filter(p => p.health_status === 'red').length
+        const totalBudget = tenantProjectsList.reduce((sum, p) => sum + (p.budget || 0), 0)
+        const avgCompletion = tenantProjectsList.length > 0
+          ? tenantProjectsList.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / tenantProjectsList.length
+          : 0
+
+        const projectSummaries = tenantProjectsList.map(p => ({
+          id: p.id,
+          project_name: p.project_name || p.title || 'Untitled Project',
+          project_code: p.project_code || 'N/A',
+          health_status: p.health_status || 'yellow',
+          completion_percentage: p.completion_percentage || 0,
+          budget: p.budget || 0,
+          budget_spent: p.budget_spent || 0,
+          start_date: p.start_date || p.created_at,
+          end_date: p.end_date || p.target_completion_date,
+          next_milestone: p.next_milestone || 'No milestone set',
+          at_risk: p.health_status === 'red'
+        }))
+
+        return {
+          tenant_id: tenantId,
+          tenant_name: (tenant?.tenants as any)?.name || 'Unknown Tenant',
+          project_count: tenantProjectsList.length,
+          active_count: activeCount,
+          at_risk_count: atRiskCount,
+          total_budget: totalBudget,
+          avg_completion: Math.round(avgCompletion),
+          projects: projectSummaries
+        }
+      })
+
+      // Calculate overall totals
+      const totalProjects = projects?.length || 0
+      const activeProjects = projects?.filter(p => 
+        p.health_status !== 'completed' && p.health_status !== 'cancelled'
+      ).length || 0
+      const atRiskProjects = projects?.filter(p => p.health_status === 'red').length || 0
+      const totalBudget = projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0
+      const budgetSpent = projects?.reduce((sum, p) => sum + (p.budget_spent || 0), 0) || 0
+      const avgCompletion = totalProjects > 0
+        ? projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / totalProjects
+        : 0
+
+      setPortfolio({
+        total_projects: totalProjects,
+        active_projects: activeProjects,
+        at_risk_projects: atRiskProjects,
+        total_budget: totalBudget,
+        budget_spent: budgetSpent,
+        avg_completion: Math.round(avgCompletion),
+        sub_clients: subClients
+      })
     } catch (error) {
       console.error('Error fetching portfolio:', error)
     } finally {

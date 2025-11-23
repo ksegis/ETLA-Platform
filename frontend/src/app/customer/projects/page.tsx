@@ -59,6 +59,7 @@ function CustomerProjectsPageContent() {
   const [projects, setProjects] = useState<Project[]>([])
   const [tenants, setTenants] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [tenantFilter, setTenantFilter] = useState<string>('all')
 
   useEffect(() => {
     if (user) {
@@ -149,11 +150,16 @@ function CustomerProjectsPageContent() {
   }
 
   const filteredProjects = projects.filter((project) => {
-    if (!searchTerm) return true
-    return (
+    // Filter by search term
+    const matchesSearch = !searchTerm || (
       project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.project_code?.toLowerCase().includes(searchTerm.toLowerCase())
     )
+    
+    // Filter by tenant
+    const matchesTenant = tenantFilter === 'all' || project.tenant_id === tenantFilter
+    
+    return matchesSearch && matchesTenant
   })
 
   const activeProjects = filteredProjects.filter(p => p.completion_percentage < 100)
@@ -229,18 +235,34 @@ function CustomerProjectsPageContent() {
           </Card>
         </div>
 
-        {/* Search */}
+        {/* Search and Filters */}
         <Card>
           <CardContent className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                id="project-search"
-                placeholder="Search projects by name or code..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  id="project-search"
+                  placeholder="Search projects by name or code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="w-64">
+                <select
+                  value={tenantFilter}
+                  onChange={(e) => setTenantFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Tenants</option>
+                  {tenants.map((tenant) => (
+                    <option key={tenant.id} value={tenant.id}>
+                      {tenant.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </CardContent>
         </Card>
