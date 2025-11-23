@@ -69,11 +69,18 @@ function CustomerProjectsPageContent() {
   const fetchProjectsForAllTenants = async () => {
     setLoading(true)
     try {
+      // Check if user exists
+      if (!user?.id) {
+        console.error('User not loaded yet')
+        setLoading(false)
+        return
+      }
+
       // First, get all tenants the user has access to
       const { data: tenantUsers, error: tenantError } = await supabase
         .from('tenant_users')
         .select('tenant_id, tenants(id, name)')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
 
       if (tenantError) throw tenantError
 
