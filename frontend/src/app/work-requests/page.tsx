@@ -394,13 +394,24 @@ function WorkRequestsPageContent() {
 
   // Update work request with file handling
   const handleUpdateRequest = async (requestData: Partial<WorkRequest>, files: File[]) => {
+    // Debug logging
+    console.log('handleUpdateRequest called with:', {
+      requestDataId: requestData.id,
+      selectedRequestId: selectedRequest?.id,
+      requestData,
+      hasFiles: files.length
+    })
+    
     // Use requestData.id if selectedRequest is lost
     const requestId = selectedRequest?.id || requestData.id
     
     if (!requestId) {
+      console.error('No request ID found!', { selectedRequest, requestData })
       setError('No request selected for update')
       return
     }
+    
+    console.log('Using requestId:', requestId)
 
     try {
       const updateData = {
