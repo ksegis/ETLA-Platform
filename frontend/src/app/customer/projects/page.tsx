@@ -80,12 +80,32 @@ function CustomerProjectsPageContent() {
       // First, get all tenants the user has access to
       const { data: tenantUsers, error: tenantError } = await supabase
         .from('tenant_users')
-        .select('tenant_id, tenants(id, name)')
+        .select('tenant_id, role, tenants(id, name)')
         .eq('user_id', user.id)
 
       if (tenantError) throw tenantError
 
-      const userTenantIds = tenantUsers?.map(tu => tu.tenant_id) || []
+      // Check if user is a host admin
+      const isHostAdmin = tenantUsers?.some(tu => tu.role === 'host_admin')
+
+      let userTenantIds: string[]
+      let allTenants: any[]
+
+      if (isHostAdmin) {
+        // Host admin sees ALL tenants and projects
+        const { data: allTenantsData, error: allTenantsError } = await supabase
+          .from('tenants')
+          .select('id, name')
+        
+        if (allTenantsError) throw allTenantsError
+        
+        userTenantIds = allTenantsData?.map(t => t.id) || []
+        allTenants = allTenantsData || []
+      } else {
+        // Regular users see only their assigned tenants
+        userTenantIds = tenantUsers?.map(tu => tu.tenant_id) || []
+        allTenants = tenantUsers?.map(tu => tu.tenants as any).filter(t => t) || []
+      }
       
       if (userTenantIds.length === 0) {
         setProjects([])
@@ -107,14 +127,7 @@ function CustomerProjectsPageContent() {
       if (projectError) throw projectError
 
       setProjects(projectData || [])
-      
-      // Extract unique tenants from tenant_users
-      const uniqueTenants = tenantUsers
-        ?.map(tu => tu.tenants as any)
-        .filter((t: any, index: number, self: any[]) => 
-          t && self.findIndex((s: any) => s?.id === t?.id) === index
-        ) || []
-      setTenants(uniqueTenants)
+      setTenants(allTenants)
 
     } catch (error) {
       console.error('Error fetching projects:', error)
