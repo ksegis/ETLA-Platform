@@ -59,6 +59,25 @@ interface WorkRequest {
   dependencies?: string
   stakeholders?: string
   success_criteria?: string
+  // Comprehensive fields
+  affectedSystems?: string[]
+  estimatedEmployeeImpact?: string
+  complianceRelated?: string
+  specificRequirements?: string
+  estimatedDocumentCount?: string
+  estimatedDataVolume?: string
+  longTermStorageRequired?: string
+  ongoingApiMonitoring?: string
+  ongoingSupportNeeded?: string
+  expectedFrequency?: string
+  integrationComplexity?: string
+  helixBridgeAccess?: string
+  currentPayrollSystem?: string
+  currentHRIS?: string
+  currentVersion?: string
+  currentIntegrationCount?: string
+  dataMigrationNeeded?: string
+  currentPainPoints?: string
 }
 
 interface WorkRequestStats {
