@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import WorkRequestForm from '@/components/work-requests/WorkRequestForm'
 import { ViewWorkRequestModal } from '@/components/work-requests/ViewWorkRequestModal'
+import { ApprovalButton } from '@/components/work-requests/ApprovalButton'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
@@ -94,6 +95,7 @@ const statusConfig = {
   submitted: { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Submitted' },
   under_review: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-100', label: 'Under Review' },
   approved: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', label: 'Approved' },
+  converted_to_project: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', label: 'Converted to Project' },
   rejected: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100', label: 'Rejected' },
   scheduled: { icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-100', label: 'Scheduled' },
   in_progress: { icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-100', label: 'In Progress' },
@@ -532,6 +534,77 @@ function WorkRequestsPageContent() {
     }
   }
 
+  // Approve work request
+  const handleApprove = async (workRequestId: string, tenantId?: string, projectManagerId?: string) => {
+    if (!user?.id || !tenantUser?.role) {
+      setError('Missing user information')
+      return { projectCode: undefined }
+    }
+
+    try {
+      const response = await fetch('/api/work-requests/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          work_request_id: workRequestId,
+          action: 'approve',
+          user_id: user.id,
+          user_role: tenantUser.role,
+          tenant_id: tenantId,
+          project_manager_id: projectManagerId
+        })
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to approve work request')
+      }
+
+      // Reload work requests to show updated status
+      await loadWorkRequests()
+      return { projectCode: result.project_code }
+    } catch (err: any) {
+      console.error('Error approving work request:', err)
+      setError(err.message || 'Failed to approve work request')
+      return { projectCode: undefined }
+    }
+  }
+
+  // Reject work request
+  const handleReject = async (workRequestId: string, reason: string) => {
+    if (!user?.id || !tenantUser?.role) {
+      setError('Missing user information')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/work-requests/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          work_request_id: workRequestId,
+          action: 'reject',
+          user_id: user.id,
+          user_role: tenantUser.role,
+          rejection_reason: reason
+        })
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to reject work request')
+      }
+
+      // Reload work requests to show updated status
+      await loadWorkRequests()
+    } catch (err: any) {
+      console.error('Error rejecting work request:', err)
+      setError(err.message || 'Failed to reject work request')
+    }
+  }
+
   // Delete work request
   const handleDeleteRequest = async (requestId: string) => {
     if (!confirm('Are you sure you want to delete this work request?')) return
@@ -914,8 +987,8 @@ function WorkRequestsPageContent() {
                                   setSelectedRequest(request)
                                   setIsEditModalOpen(true)
                                 }}
-                                disabled={request.status === 'approved'}
-                                title={request.status === 'approved' ? 'Approved work requests cannot be edited' : 'Edit work request'}
+                                disabled={request.status === 'approved' || request.status === 'converted_to_project'}
+                                title={request.status === 'approved' || request.status === 'converted_to_project' ? 'Approved work requests cannot be edited' : 'Edit work request'}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -939,6 +1012,13 @@ function WorkRequestsPageContent() {
                               >
                                 <Copy className="h-4 w-4" />
                               </Button>
+                              <ApprovalButton
+                                workRequestId={request.id}
+                                currentStatus={request.status}
+                                onApprove={handleApprove}
+                                onReject={handleReject}
+                                className="inline-flex"
+                              />
                               <Button 
                                 variant="ghost" 
                                 size="sm"
@@ -986,8 +1066,8 @@ function WorkRequestsPageContent() {
                                 setSelectedRequest(request)
                                 setIsEditModalOpen(true)
                               }}
-                              disabled={request.status === 'approved'}
-                              title={request.status === 'approved' ? 'Approved work requests cannot be edited' : 'Edit work request'}
+                              disabled={request.status === 'approved' || request.status === 'converted_to_project'}
+                              title={request.status === 'approved' || request.status === 'converted_to_project' ? 'Approved work requests cannot be edited' : 'Edit work request'}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -1015,6 +1095,13 @@ function WorkRequestsPageContent() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
+                          <ApprovalButton
+                            workRequestId={request.id}
+                            currentStatus={request.status}
+                            onApprove={handleApprove}
+                            onReject={handleReject}
+                            className="w-full mb-3"
+                          />
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Status:</span>
                             <Badge className="status-badge" variant={request.status === 'approved' ? 'default' : 'secondary'}>
