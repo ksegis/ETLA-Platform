@@ -66,7 +66,6 @@ function CustomerProjectsPageContent() {
         .from('project_charters')
         .select('*')
         .eq('tenant_id', selectedTenant?.id)
-        .eq('customer_visible', true)
         .order('created_at', { ascending: false })
 
       if (error) throw error

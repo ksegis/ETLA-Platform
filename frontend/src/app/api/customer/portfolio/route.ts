@@ -15,39 +15,61 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Call the database function to get portfolio summary
-    const { data, error } = await supabase
-      .rpc('get_customer_portfolio_summary', {
-        p_customer_tenant_id: tenantId
-      })
+    // Fetch all projects for the tenant
+    const { data: projects, error } = await supabase
+      .from('project_charters')
+      .select('*')
+      .eq('tenant_id', tenantId)
 
     if (error) {
-      console.error('Error fetching portfolio:', error)
+      console.error('Error fetching projects:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // If no data returned, create empty structure
-    if (!data || data.length === 0) {
-      return NextResponse.json({
-        total_projects: 0,
-        active_projects: 0,
-        at_risk_projects: 0,
-        total_budget: 0,
-        budget_spent: 0,
-        avg_completion: 0,
-        sub_clients: []
-      })
-    }
+    // Calculate portfolio summary
+    const totalProjects = projects?.length || 0
+    const activeProjects = projects?.filter(p => 
+      p.health_status !== 'completed' && p.health_status !== 'cancelled'
+    ).length || 0
+    const atRiskProjects = projects?.filter(p => p.health_status === 'red').length || 0
+    const totalBudget = projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0
+    const budgetSpent = projects?.reduce((sum, p) => sum + (p.budget_spent || 0), 0) || 0
+    const avgCompletion = totalProjects > 0
+      ? projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / totalProjects
+      : 0
 
-    // Transform the data into the expected format
+    // Transform projects into portfolio format
+    const portfolioProjects = projects?.map(p => ({
+      id: p.id,
+      project_name: p.project_name || p.title || 'Untitled Project',
+      project_code: p.project_code || 'N/A',
+      health_status: p.health_status || 'yellow',
+      completion_percentage: p.completion_percentage || 0,
+      budget: p.budget || 0,
+      budget_spent: p.budget_spent || 0,
+      start_date: p.start_date || p.created_at,
+      end_date: p.end_date || p.target_completion_date,
+      next_milestone: p.next_milestone || 'No milestone set',
+      at_risk: p.health_status === 'red'
+    })) || []
+
     const portfolioData = {
-      total_projects: data[0]?.total_projects || 0,
-      active_projects: data[0]?.active_projects || 0,
-      at_risk_projects: data[0]?.at_risk_projects || 0,
-      total_budget: data[0]?.total_budget || 0,
-      budget_spent: data[0]?.budget_spent || 0,
-      avg_completion: data[0]?.avg_completion || 0,
-      sub_clients: data[0]?.sub_clients || []
+      total_projects: totalProjects,
+      active_projects: activeProjects,
+      at_risk_projects: atRiskProjects,
+      total_budget: totalBudget,
+      budget_spent: budgetSpent,
+      avg_completion: Math.round(avgCompletion),
+      sub_clients: [{
+        tenant_id: tenantId,
+        tenant_name: 'Current Tenant',
+        project_count: totalProjects,
+        active_count: activeProjects,
+        at_risk_count: atRiskProjects,
+        total_budget: totalBudget,
+        avg_completion: Math.round(avgCompletion),
+        projects: portfolioProjects
+      }]
     }
 
     return NextResponse.json(portfolioData)
