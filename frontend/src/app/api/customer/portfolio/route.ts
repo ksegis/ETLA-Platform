@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 
       return {
         tenant_id: tenantId,
-        tenant_name: tenant?.tenants?.name || 'Unknown Tenant',
+        tenant_name: (tenant?.tenants as any)?.name || 'Unknown Tenant',
         project_count: tenantProjectsList.length,
         active_count: activeCount,
         at_risk_count: atRiskCount,
