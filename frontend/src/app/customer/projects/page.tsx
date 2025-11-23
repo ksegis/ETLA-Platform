@@ -58,7 +58,7 @@ function CustomerProjectsPageContent() {
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState<Project[]>([])
   const [tenants, setTenants] = useState<any[]>([])
-  const [searchTerm, setSearchTerm('')
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (user) {
