@@ -109,9 +109,9 @@ function CustomerProjectsPageContent() {
       
       // Extract unique tenants from tenant_users
       const uniqueTenants = tenantUsers
-        ?.map(tu => tu.tenants)
-        .filter((t, index, self) => 
-          t && self.findIndex(s => s?.id === t?.id) === index
+        ?.map(tu => tu.tenants as any)
+        .filter((t: any, index: number, self: any[]) => 
+          t && self.findIndex((s: any) => s?.id === t?.id) === index
         ) || []
       setTenants(uniqueTenants)
 
