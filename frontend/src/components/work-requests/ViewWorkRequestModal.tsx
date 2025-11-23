@@ -95,8 +95,32 @@ export function ViewWorkRequestModal({ isOpen, onClose, request }: ViewWorkReque
     }
   }
 
-  const categories = Array.isArray(request.category) ? request.category : [request.category]
-  const affectedSystems = Array.isArray(request.affectedSystems) ? request.affectedSystems : []
+  // Parse categories - handle both array and PostgreSQL array string format
+  const parseCategories = (cat: string | string[] | undefined): string[] => {
+    if (!cat) return []
+    if (Array.isArray(cat)) return cat
+    if (typeof cat === 'string') {
+      // Handle PostgreSQL array format: {"value1","value2"}
+      if (cat.startsWith('{') && cat.endsWith('}')) {
+        return cat
+          .slice(1, -1) // Remove { }
+          .split(',')
+          .map(item => item.replace(/^"|"$/g, '').trim()) // Remove quotes
+          .filter(item => item.length > 0)
+      }
+      // Handle JSON array string
+      try {
+        const parsed = JSON.parse(cat)
+        return Array.isArray(parsed) ? parsed : [cat]
+      } catch {
+        return [cat]
+      }
+    }
+    return []
+  }
+
+  const categories = parseCategories(request.category)
+  const affectedSystems = parseCategories(request.affectedSystems as any)
   const hasComprehensiveData = affectedSystems.length > 0 || request.estimatedEmployeeImpact || request.estimatedDocumentCount
   const hasSystemData = request.currentPayrollSystem || request.currentHRIS || request.currentPainPoints
 
