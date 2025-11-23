@@ -452,9 +452,18 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('WorkRequestForm handleSubmit called', {
+      hasRequest: !!request,
+      requestId: request?.id,
+      formData
+    })
+    
     if (!validateForm()) {
+      console.log('Form validation failed')
       return
     }
+    
+    console.log('Form validation passed')
     
     const submitData: Partial<WorkRequest> = {
       id: request?.id, // Include request ID for updates
@@ -492,6 +501,12 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     
     const files = uploadedFiles.map(uf => uf.file)
     
+    console.log('About to call onSave with:', {
+      submitDataId: submitData.id,
+      filesCount: files.length,
+      submitData
+    })
+    
     // Clear persisted data after successful save
     clearPersistedData()
     
@@ -500,6 +515,8 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     clearFiles(storageKey)
     
     onSave(submitData, files)
+    
+    console.log('onSave called successfully')
   }
 
   if (!isOpen) return null
