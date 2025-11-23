@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import WorkRequestForm from '@/components/work-requests/WorkRequestForm'
+import { ViewWorkRequestModal } from '@/components/work-requests/ViewWorkRequestModal'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant, useAccessibleTenantIds, useMultiTenantMode } from '@/contexts/TenantContext'
@@ -236,6 +237,7 @@ function WorkRequestsPageContent() {
         title: requestData.title,
         description: requestData.description,
         category: requestData.category,
+        category_other: requestData.categoryOther || null,
         priority: requestData.priority,
         urgency: requestData.urgency || 'medium',
         customer_id: customerId,
@@ -264,6 +266,25 @@ function WorkRequestsPageContent() {
         project_id: null,
         business_justification: requestData.business_justification || null,
         impact_assessment: requestData.impact_assessment || null,
+        // Comprehensive fields
+        affected_systems: requestData.affectedSystems || null,
+        estimated_employee_impact: requestData.estimatedEmployeeImpact || null,
+        compliance_related: requestData.complianceRelated || null,
+        specific_requirements: requestData.specificRequirements || null,
+        estimated_document_count: requestData.estimatedDocumentCount || null,
+        estimated_data_volume: requestData.estimatedDataVolume || null,
+        long_term_storage_required: requestData.longTermStorageRequired || null,
+        ongoing_api_monitoring: requestData.ongoingApiMonitoring || null,
+        ongoing_support_needed: requestData.ongoingSupportNeeded || null,
+        expected_frequency: requestData.expectedFrequency || null,
+        integration_complexity: requestData.integrationComplexity || null,
+        helix_bridge_access: requestData.helixBridgeAccess || null,
+        current_payroll_system: requestData.currentPayrollSystem || null,
+        current_hris: requestData.currentHRIS || null,
+        current_version: requestData.currentVersion || null,
+        current_integration_count: requestData.currentIntegrationCount || null,
+        data_migration_needed: requestData.dataMigrationNeeded || null,
+        current_pain_points: requestData.currentPainPoints || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -364,6 +385,7 @@ function WorkRequestsPageContent() {
         title: requestData.title,
         description: requestData.description,
         category: requestData.category,
+        category_other: requestData.categoryOther || null,
         priority: requestData.priority,
         urgency: requestData.urgency,
         status: requestData.status,
@@ -374,6 +396,25 @@ function WorkRequestsPageContent() {
         requested_completion_date: requestData.requested_completion_date || null,
         business_justification: requestData.business_justification || null,
         impact_assessment: requestData.impact_assessment || null,
+        // Comprehensive fields
+        affected_systems: requestData.affectedSystems || null,
+        estimated_employee_impact: requestData.estimatedEmployeeImpact || null,
+        compliance_related: requestData.complianceRelated || null,
+        specific_requirements: requestData.specificRequirements || null,
+        estimated_document_count: requestData.estimatedDocumentCount || null,
+        estimated_data_volume: requestData.estimatedDataVolume || null,
+        long_term_storage_required: requestData.longTermStorageRequired || null,
+        ongoing_api_monitoring: requestData.ongoingApiMonitoring || null,
+        ongoing_support_needed: requestData.ongoingSupportNeeded || null,
+        expected_frequency: requestData.expectedFrequency || null,
+        integration_complexity: requestData.integrationComplexity || null,
+        helix_bridge_access: requestData.helixBridgeAccess || null,
+        current_payroll_system: requestData.currentPayrollSystem || null,
+        current_hris: requestData.currentHRIS || null,
+        current_version: requestData.currentVersion || null,
+        current_integration_count: requestData.currentIntegrationCount || null,
+        data_migration_needed: requestData.dataMigrationNeeded || null,
+        current_pain_points: requestData.currentPainPoints || null,
         updated_at: new Date().toISOString()
       }
 
@@ -446,7 +487,8 @@ function WorkRequestsPageContent() {
         }
       }
 
-      setWorkRequests(prev => prev.map((req: any) => req.id === selectedRequest.id ? data : req))
+      // Reload work requests to get fresh data with all fields
+      await loadWorkRequests()
       setIsEditModalOpen(false)
       setSelectedRequest(null)
       setError(null)
@@ -1005,8 +1047,20 @@ function WorkRequestsPageContent() {
           onCustomerChange={setSelectedCustomerId}
         />
 
-        {/* View Modal - Redesigned */}
+        {/* View Modal */}
         {isViewModalOpen && selectedRequest && (
+          <ViewWorkRequestModal
+            isOpen={isViewModalOpen}
+            onClose={() => {
+              setIsViewModalOpen(false)
+              setSelectedRequest(null)
+            }}
+            request={selectedRequest}
+          />
+        )}
+
+        {/* Old View Modal - Keeping for reference, can be deleted */}
+        {false && isViewModalOpen && selectedRequest && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] flex flex-col">
               {/* Status-based colored header */}
