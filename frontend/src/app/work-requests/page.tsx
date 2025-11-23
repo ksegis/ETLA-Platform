@@ -394,7 +394,10 @@ function WorkRequestsPageContent() {
 
   // Update work request with file handling
   const handleUpdateRequest = async (requestData: Partial<WorkRequest>, files: File[]) => {
-    if (!selectedRequest?.id) {
+    // Use requestData.id if selectedRequest is lost
+    const requestId = selectedRequest?.id || requestData.id
+    
+    if (!requestId) {
       setError('No request selected for update')
       return
     }
@@ -440,7 +443,7 @@ function WorkRequestsPageContent() {
       const { data, error } = await supabase
         .from('work_requests')
         .update(updateData)
-        .eq('id', selectedRequest.id)
+        .eq('id', requestId)
         .select()
         .single()
 
@@ -456,7 +459,7 @@ function WorkRequestsPageContent() {
           try {
             const timestamp = Date.now()
             const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-            const filePath = `${selectedTenant.id}/${selectedRequest.id}/${timestamp}_${sanitizedFileName}`
+            const filePath = `${selectedTenant.id}/${requestId}/${timestamp}_${sanitizedFileName}`
 
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('work-request-attachments')
@@ -470,7 +473,7 @@ function WorkRequestsPageContent() {
             await supabase
               .from('work_request_attachments')
               .insert({
-                work_request_id: selectedRequest.id,
+                work_request_id: requestId,
                 tenant_id: selectedTenant.id,
                 file_name: file.name,
                 file_size: file.size,

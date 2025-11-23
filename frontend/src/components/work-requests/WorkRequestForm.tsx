@@ -457,6 +457,7 @@ const WorkRequestForm: React.FC<WorkRequestFormProps> = ({
     }
     
     const submitData: Partial<WorkRequest> = {
+      id: request?.id, // Include request ID for updates
       title: formData.title.trim(),
       description: formData.description.trim(),
       category: formData.category,
