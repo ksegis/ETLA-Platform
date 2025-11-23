@@ -96,7 +96,31 @@ interface ViewProjectModalProps {
 }
 
 export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'work_request'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'work_request' | 'documents'>('overview')
+  const [attachments, setAttachments] = React.useState<any[]>([])
+  const [loadingAttachments, setLoadingAttachments] = React.useState(false)
+  
+  // Fetch attachments when modal opens and work_request_id exists
+  React.useEffect(() => {
+    const fetchAttachments = async () => {
+      if (!project.work_request_id || !isOpen) return
+      
+      setLoadingAttachments(true)
+      try {
+        const response = await fetch(`/api/work-requests/${project.work_request_id}/attachments`)
+        if (response.ok) {
+          const data = await response.json()
+          setAttachments(data.attachments || [])
+        }
+      } catch (error) {
+        console.error('Error fetching attachments:', error)
+      } finally {
+        setLoadingAttachments(false)
+      }
+    }
+    
+    fetchAttachments()
+  }, [project.work_request_id, isOpen])
   
   if (!isOpen) return null
 
@@ -114,7 +138,32 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
     return `$${amount.toLocaleString()}`
   }
   
-  const hasWorkRequestData = project.work_request_id || project.category || project.affected_systems
+  const parseArray = (value: any): string[] => {
+    if (!value) return []
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string') {
+      // Handle PostgreSQL array format: {"value1","value2"}
+      if (value.startsWith('{') && value.endsWith('}')) {
+        return value
+          .slice(1, -1)
+          .split(',')
+          .map(v => v.replace(/^"|"$/g, '').trim())
+          .filter(v => v.length > 0)
+      }
+      // Try parsing as JSON
+      try {
+        const parsed = JSON.parse(value)
+        return Array.isArray(parsed) ? parsed : [value]
+      } catch {
+        return [value]
+      }
+    }
+    return []
+  }
+  
+  const categories = parseArray(project.category)
+  const affectedSystems = parseArray(project.affected_systems)
+  const hasWorkRequestData = project.work_request_id || categories.length > 0 || affectedSystems.length > 0
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -152,6 +201,18 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
                 }`}
               >
                 Work Request Details
+              </button>
+            )}
+            {project.work_request_id && (
+              <button
+                onClick={() => setActiveTab('documents')}
+                className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                  activeTab === 'documents'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Documents
               </button>
             )}
           </div>
@@ -312,21 +373,15 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Categories & Systems</h3>
                   
-                  {project.category && (
+                  {categories.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Categories</label>
                       <div className="mt-1 flex flex-wrap gap-2">
-                        {Array.isArray(project.category) ? (
-                          project.category.map((cat, idx) => (
-                            <span key={idx} className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                              {cat}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {project.category}
+                        {categories.map((cat, idx) => (
+                          <span key={idx} className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {cat}
                           </span>
-                        )}
+                        ))}
                       </div>
                     </div>
                   )}
@@ -338,21 +393,15 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
                     </div>
                   )}
                   
-                  {project.affected_systems && (
+                  {affectedSystems.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Affected Systems</label>
                       <div className="mt-1 flex flex-wrap gap-2">
-                        {Array.isArray(project.affected_systems) ? (
-                          project.affected_systems.map((sys, idx) => (
-                            <span key={idx} className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                              {sys}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                            {project.affected_systems}
+                        {affectedSystems.map((sys, idx) => (
+                          <span key={idx} className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                            {sys}
                           </span>
-                        )}
+                        ))}
                       </div>
                     </div>
                   )}
@@ -492,6 +541,52 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Specific Requirements</h3>
                   <p className="text-sm text-gray-900 whitespace-pre-wrap">{project.specific_requirements}</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Documents Tab */}
+          {activeTab === 'documents' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Work Request Documents</h3>
+              
+              {loadingAttachments ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Loading documents...</p>
+                </div>
+              ) : attachments.length === 0 ? (
+                <div className="text-center py-8">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="mt-2 text-sm text-gray-500">No documents attached</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {attachments.map((attachment, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-3">
+                        <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{attachment.file_name}</p>
+                          <p className="text-xs text-gray-500">
+                            {attachment.file_size ? `${(attachment.file_size / 1024).toFixed(2)} KB` : 'Unknown size'}
+                          </p>
+                        </div>
+                      </div>
+                      <a
+                        href={attachment.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        Download
+                      </a>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

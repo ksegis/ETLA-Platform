@@ -914,6 +914,8 @@ function WorkRequestsPageContent() {
                                   setSelectedRequest(request)
                                   setIsEditModalOpen(true)
                                 }}
+                                disabled={request.status === 'approved'}
+                                title={request.status === 'approved' ? 'Approved work requests cannot be edited' : 'Edit work request'}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -984,6 +986,8 @@ function WorkRequestsPageContent() {
                                 setSelectedRequest(request)
                                 setIsEditModalOpen(true)
                               }}
+                              disabled={request.status === 'approved'}
+                              title={request.status === 'approved' ? 'Approved work requests cannot be edited' : 'Edit work request'}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
